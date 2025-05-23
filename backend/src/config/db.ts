@@ -3,19 +3,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/acpn-ota-zone';
-
 const connectDB = async (): Promise<void> => {
   try {
-    const conn = await mongoose.connect(MONGODB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    await mongoose.connect(process.env.MONGODB_URI as string);
+    console.log('MongoDB connected');
   } catch (error) {
-    console.error(
-      `Error connecting to MongoDB: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
