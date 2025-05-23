@@ -19,12 +19,27 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 import userRoutes from './routes/user.routes';
+import authRoutes from './routes/auth.routes';
+import pharmacyRoutes from './routes/pharmacy.routes';
+import documentRoutes from './routes/document.routes';
+import dueRoutes from './routes/donation.routes';
+import donationRoutes from './routes/donation.routes';
+import eventRoutes from './routes/event.routes';
+import electionRoutes from './routes/election.routes';
 
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
 });
 
+// Define Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/pharmacies', pharmacyRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/dues', dueRoutes);
+app.use('/api/donations', donationRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/elections', electionRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';
