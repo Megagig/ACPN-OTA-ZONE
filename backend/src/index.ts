@@ -22,10 +22,13 @@ import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import pharmacyRoutes from './routes/pharmacy.routes';
 import documentRoutes from './routes/document.routes';
-import dueRoutes from './routes/donation.routes';
+import dueRoutes from './routes/due.routes';
 import donationRoutes from './routes/donation.routes';
 import eventRoutes from './routes/event.routes';
 import electionRoutes from './routes/election.routes';
+import pollRoutes from './routes/poll.routes';
+import communicationRoutes from './routes/communication.routes';
+import financialRecordRoutes from './routes/financialRecord.routes';
 
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
@@ -40,6 +43,9 @@ app.use('/api/dues', dueRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/elections', electionRoutes);
+app.use('/api/polls', pollRoutes);
+app.use('/api/communications', communicationRoutes);
+app.use('/api/financial-records', financialRecordRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';

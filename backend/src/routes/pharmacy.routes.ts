@@ -46,4 +46,12 @@ router
   .put(updatePharmacy)
   .delete(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), deletePharmacy);
 
+// Import due and donation routes so they can be re-used
+import dueRoutes from './due.routes';
+import donationRoutes from './donation.routes';
+
+// Re-route into other resource routers
+router.use('/:pharmacyId/dues', dueRoutes);
+router.use('/:pharmacyId/donations', donationRoutes);
+
 export default router;
