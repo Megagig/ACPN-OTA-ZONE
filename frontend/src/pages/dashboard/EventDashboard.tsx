@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import eventService from '../../services/event.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
-import { Event, EventSummary, EventType } from '../../types/event.types';
+import type { Event, EventSummary, EventType } from '../../types/event.types';
 
 const EventDashboard = () => {
   const navigate = useNavigate();

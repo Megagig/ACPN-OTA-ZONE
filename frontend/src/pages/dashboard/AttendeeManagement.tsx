@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import eventService from '../../services/event.service';
-import { Event, EventAttendee, AttendeeStatus } from '../../types/event.types';
+import type {
+  Event,
+  EventAttendee,
+  AttendeeStatus,
+} from '../../types/event.types';
 
 // Type for form errors
 type FormErrors = {

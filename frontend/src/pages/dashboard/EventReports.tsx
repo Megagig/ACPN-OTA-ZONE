@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import eventService from '../../services/event.service';
 import ChartComponent from '../../components/common/ChartComponent';
-import { Event, EventAttendee } from '../../types/event.types';
+import type { Event, EventAttendee } from '../../types/event.types';
 
 const EventReports: React.FC = () => {
   const navigate = useNavigate();

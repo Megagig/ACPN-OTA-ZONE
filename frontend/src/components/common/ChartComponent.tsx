@@ -10,9 +10,10 @@ import {
   Tooltip,
   Legend,
   ArcElement,
-  ChartData,
-  ChartOptions,
 } from 'chart.js';
+
+import type { ChartData, ChartOptions } from 'chart.js';
+
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 
 // Register ChartJS components

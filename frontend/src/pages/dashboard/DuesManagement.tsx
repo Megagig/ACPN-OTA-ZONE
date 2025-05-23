@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
-import { Due, DuePayment } from '../../types/financial.types';
+import type { Due, DuePayment } from '../../types/financial.types';
 
 const DuesManagement = () => {
   const navigate = useNavigate();

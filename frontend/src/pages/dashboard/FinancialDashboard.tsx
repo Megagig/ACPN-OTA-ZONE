@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
 import financialService from '../../services/financial.service';
-import { FinancialSummary, FinancialRecord } from '../../types/financial.types';
+import type {
+  FinancialSummary,
+  FinancialRecord,
+} from '../../types/financial.types';
 
 const FinancialDashboard = () => {
   const navigate = useNavigate();

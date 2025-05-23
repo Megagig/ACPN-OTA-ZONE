@@ -1,5 +1,5 @@
 import api from './api';
-import { Event, EventAttendee, EventSummary } from '../types/event.types';
+import type { Event, EventAttendee, EventSummary } from '../types/event.types';
 
 const BASE_URL = '/api';
 

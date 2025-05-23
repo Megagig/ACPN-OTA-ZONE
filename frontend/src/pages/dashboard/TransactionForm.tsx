@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import financialService from '../../services/financial.service';
-import {
+import type {
   FinancialRecord,
   FinancialCategory,
   PaymentMethod,

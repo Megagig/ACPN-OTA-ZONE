@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import eventService from '../../services/event.service';
-import { Event, EventType, EventStatus } from '../../types/event.types';
+import type { Event, EventType, EventStatus } from '../../types/event.types';
 
 const EventList = () => {
   const navigate = useNavigate();
