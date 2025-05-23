@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import electionService from '../../services/election.service';
-import { ElectionSummary, Election } from '../../types/election.types';
+import type { ElectionSummary, Election } from '../../types/election.types';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
 

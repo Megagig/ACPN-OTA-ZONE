@@ -47,6 +47,18 @@ import MessagingInterface from './pages/dashboard/MessagingInterface';
 // Election Pages
 import ElectionDashboard from './pages/dashboard/ElectionDashboard';
 import ElectionsList from './pages/dashboard/ElectionsList';
+import ElectionForm from './pages/dashboard/ElectionForm';
+import ElectionDetail from './pages/dashboard/ElectionDetail';
+import VotingInterface from './pages/dashboard/VotingInterface';
+import ElectionResults from './pages/dashboard/ElectionResults';
+import CandidateForm from './pages/dashboard/CandidateForm';
+
+// Poll Pages
+import PollDashboard from './pages/dashboard/PollDashboard';
+import PollsList from './pages/dashboard/PollsList';
+import PollForm from './pages/dashboard/PollForm';
+import PollDetail from './pages/dashboard/PollDetail';
+import PollResponse from './pages/dashboard/PollResponse';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -207,7 +219,33 @@ function App() {
                 element={<Navigate to="/elections/dashboard" replace />}
               />
               <Route path="/elections/list" element={<ElectionsList />} />
-              <Route path="/polls" element={<div>Polls (Coming Soon)</div>} />
+              <Route path="/elections/create" element={<ElectionForm />} />
+              <Route path="/elections/:id" element={<ElectionDetail />} />
+              <Route path="/elections/:id/edit" element={<ElectionForm />} />
+              <Route path="/elections/:id/vote" element={<VotingInterface />} />
+              <Route
+                path="/elections/:id/results"
+                element={<ElectionResults />}
+              />
+              <Route
+                path="/elections/:electionId/positions/:positionId/candidates/add"
+                element={<CandidateForm />}
+              />
+              <Route
+                path="/elections/:electionId/positions/:positionId/candidates/:candidateId/edit"
+                element={<CandidateForm />}
+              />
+
+              <Route path="/polls/dashboard" element={<PollDashboard />} />
+              <Route
+                path="/polls"
+                element={<Navigate to="/polls/dashboard" replace />}
+              />
+              <Route path="/polls/list" element={<PollsList />} />
+              <Route path="/polls/create" element={<PollForm />} />
+              <Route path="/polls/:id" element={<PollDetail />} />
+              <Route path="/polls/:id/edit" element={<PollForm />} />
+              <Route path="/polls/:id/respond" element={<PollResponse />} />
             </Route>
           </Route>
 

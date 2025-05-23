@@ -1,5 +1,5 @@
 import api from './api';
-import {
+import type {
   Election,
   Candidate,
   Position,
@@ -617,6 +617,138 @@ export const getUserVoteStatus = async (
   // return response.data.data;
 };
 
+export const updateElectionStatus = async (
+  id: string,
+  status: string
+): Promise<Election> => {
+  // For demo purposes, just return a mock result
+  await delay(800);
+
+  return {
+    _id: id,
+    status: status as any,
+    updatedAt: new Date().toISOString(),
+  } as Election;
+
+  // Real API call
+  // const response = await api.put(`${BASE_URL}/elections/${id}/status`, { status });
+  // return response.data.data;
+};
+
+export const addCandidate = async (
+  electionId: string,
+  positionId: string,
+  candidateData: any
+): Promise<Candidate> => {
+  // For demo purposes, just return a mock result
+  await delay(800);
+
+  const position = mockPositions.find((p) => p._id === positionId);
+
+  return {
+    _id: 'cand-new-' + Date.now(),
+    name: candidateData.name,
+    email: candidateData.email,
+    phoneNumber: candidateData.phoneNumber,
+    bio: candidateData.bio,
+    photoUrl: candidateData.photoUrl,
+    manifesto: candidateData.manifesto,
+    voteCount: 0,
+    createdAt: new Date().toISOString(),
+  } as Candidate;
+
+  // Real API call
+  // const response = await api.post(`${BASE_URL}/elections/${electionId}/positions/${positionId}/candidates`, candidateData);
+  // return response.data.data;
+};
+
+export const updateCandidate = async (
+  electionId: string,
+  positionId: string,
+  candidateId: string,
+  candidateData: any
+): Promise<Candidate> => {
+  // For demo purposes, just return a mock result
+  await delay(800);
+
+  return {
+    _id: candidateId,
+    ...candidateData,
+    updatedAt: new Date().toISOString(),
+  } as Candidate;
+
+  // Real API call
+  // const response = await api.put(`${BASE_URL}/elections/${electionId}/positions/${positionId}/candidates/${candidateId}`, candidateData);
+  // return response.data.data;
+};
+
+export const removeCandidate = async (
+  electionId: string,
+  positionId: string,
+  candidateId: string
+): Promise<void> => {
+  // For demo purposes, just add a delay
+  await delay(800);
+
+  // Real API call
+  // await api.delete(`${BASE_URL}/elections/${electionId}/positions/${positionId}/candidates/${candidateId}`);
+};
+
+export const submitVotes = async (
+  electionId: string,
+  votes: Array<{ positionId: string; candidateId: string }>
+): Promise<{ success: boolean }> => {
+  // For demo purposes, just return a mock result
+  await delay(1200);
+
+  return { success: true };
+
+  // Real API call
+  // const response = await api.post(`${BASE_URL}/elections/${electionId}/votes`, { votes });
+  // return response.data;
+};
+
+export const checkUserVoted = async (electionId: string): Promise<boolean> => {
+  // For demo purposes, return mock result
+  await delay(500);
+
+  // Simulate that user hasn't voted yet
+  return false;
+
+  // Real API call
+  // const response = await api.get(`${BASE_URL}/elections/${electionId}/user-voted`);
+  // return response.data.hasVoted;
+};
+
+export const getElectionStatistics = async (
+  electionId: string
+): Promise<any> => {
+  // For demo purposes, return mock data
+  await delay(800);
+
+  return {
+    totalEligibleVoters: 150,
+    totalVotesCast: 95,
+    votingPercentage: 63.3,
+    votersByAge: {
+      '18-30': 25,
+      '31-40': 35,
+      '41-50': 20,
+      '51-60': 10,
+      '60+': 5,
+    },
+    votersByGender: {
+      male: 45,
+      female: 48,
+      other: 2,
+    },
+  };
+
+  // Real API call
+  // const response = await api.get(`${BASE_URL}/elections/${electionId}/statistics`);
+  // return response.data;
+};
+
 // All exported functions
 const electionService = {
   getElections,
@@ -627,15 +759,21 @@ const electionService = {
   publishElection,
   startElection,
   endElection,
+  updateElectionStatus,
   getElectionSummary,
   getElectionResults,
   submitVote,
   getPositions,
   getCandidates,
   createCandidate,
+  addCandidate,
   updateCandidate,
+  removeCandidate,
   changeApplicationStatus,
   getUserVoteStatus,
+  submitVotes,
+  checkUserVoted,
+  getElectionStatistics,
 };
 
 export default electionService;

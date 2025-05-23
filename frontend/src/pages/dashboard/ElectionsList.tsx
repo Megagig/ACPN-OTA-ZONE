@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import electionService from '../../services/election.service';
-import { Election, ElectionStatus } from '../../types/election.types';
+import type { Election, ElectionStatus } from '../../types/election.types';
 
 const ElectionsList = () => {
   const navigate = useNavigate();
