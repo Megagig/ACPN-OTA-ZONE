@@ -19,11 +19,23 @@ import NotFound from './pages/auth/NotFound';
 // Dashboard Pages
 import DashboardHome from './pages/dashboard/DashboardHome';
 import UserProfile from './pages/dashboard/UserProfile';
+
+// Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
 import TransactionList from './pages/dashboard/TransactionList';
 import TransactionForm from './pages/dashboard/TransactionForm';
 import TransactionDetail from './pages/dashboard/TransactionDetail';
 import DuesManagement from './pages/dashboard/DuesManagement';
+
+// Event Management Pages
+import EventDashboard from './pages/dashboard/EventDashboard';
+import EventList from './pages/dashboard/EventList';
+import EventForm from './pages/dashboard/EventForm';
+import EventDetail from './pages/dashboard/EventDetail';
+import EventCalendar from './pages/dashboard/EventCalendar';
+import EventReports from './pages/dashboard/EventReports';
+import EventCheckIn from './pages/dashboard/EventCheckIn';
+import AttendeeManagement from './pages/dashboard/AttendeeManagement';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -108,9 +120,21 @@ function App() {
                   />
                 }
               >
+                <Route path="/events" element={<EventList />} />
+                <Route path="/events/dashboard" element={<EventDashboard />} />
+                <Route path="/events/calendar" element={<EventCalendar />} />
+                <Route path="/events/create" element={<EventForm />} />
+                <Route path="/events/report" element={<EventReports />} />
+                <Route path="/events/:id" element={<EventDetail />} />
+                <Route path="/events/:id/edit" element={<EventForm />} />
                 <Route
-                  path="/events"
-                  element={<div>Events Management (Coming Soon)</div>}
+                  path="/events/:id/register"
+                  element={<AttendeeManagement />}
+                />
+                <Route path="/events/:id/check-in" element={<EventCheckIn />} />
+                <Route
+                  path="/events/:id/attendees/:attendeeId"
+                  element={<AttendeeManagement />}
                 />
                 <Route
                   path="/communications"
