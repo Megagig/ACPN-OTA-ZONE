@@ -6,18 +6,32 @@ const LandingPage: React.FC = () => {
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
       <header className="bg-indigo-600">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+        <nav
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+          aria-label="Top"
+        >
           <div className="w-full py-6 flex items-center justify-between border-b border-indigo-500 lg:border-none">
             <div className="flex items-center">
-              <span className="text-white text-xl font-bold">ACPN Ota Zone</span>
+              <span className="text-white text-xl font-bold">
+                ACPN Ota Zone
+              </span>
               <div className="hidden ml-10 space-x-8 lg:block">
-                <Link to="#about" className="text-base font-medium text-white hover:text-indigo-50">
+                <Link
+                  to="#about"
+                  className="text-base font-medium text-white hover:text-indigo-50"
+                >
                   About
                 </Link>
-                <Link to="#features" className="text-base font-medium text-white hover:text-indigo-50">
+                <Link
+                  to="#features"
+                  className="text-base font-medium text-white hover:text-indigo-50"
+                >
                   Features
                 </Link>
-                <Link to="#contact" className="text-base font-medium text-white hover:text-indigo-50">
+                <Link
+                  to="#contact"
+                  className="text-base font-medium text-white hover:text-indigo-50"
+                >
                   Contact
                 </Link>
               </div>
@@ -56,13 +70,18 @@ const LandingPage: React.FC = () => {
               </div>
               <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
                 <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  <span className="block text-white">Association of Community</span>
-                  <span className="block text-indigo-200">Pharmacists of Nigeria</span>
+                  <span className="block text-white">
+                    Association of Community
+                  </span>
+                  <span className="block text-indigo-200">
+                    Pharmacists of Nigeria
+                  </span>
                   <span className="block text-white">Ota Zone</span>
                 </h1>
                 <p className="mt-6 max-w-lg mx-auto text-center text-xl text-indigo-200 sm:max-w-3xl">
-                  A comprehensive portal for managing pharmacy registrations, dues, events, 
-                  elections, and communications for ACPN Ota Zone members.
+                  A comprehensive portal for managing pharmacy registrations,
+                  dues, events, elections, and communications for ACPN Ota Zone
+                  members.
                 </p>
                 <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
                   <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
@@ -86,15 +105,19 @@ const LandingPage: React.FC = () => {
         </div>
 
         {/* Features section */}
-        <div id="features" className="py-16 bg-gray-100 overflow-hidden lg:py-24">
+        <div
+          id="features"
+          className="py-16 bg-gray-100 overflow-hidden lg:py-24"
+        >
           <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-8 lg:max-w-7xl">
             <div className="relative">
               <h2 className="text-center text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                 A Modern Portal for Pharmacy Management
               </h2>
               <p className="mt-4 max-w-3xl mx-auto text-center text-xl text-gray-500">
-                Our platform provides comprehensive tools to streamline pharmacy operations,
-                increase collaboration, and improve administrative efficiency.
+                Our platform provides comprehensive tools to streamline pharmacy
+                operations, increase collaboration, and improve administrative
+                efficiency.
               </p>
             </div>
 
@@ -104,7 +127,8 @@ const LandingPage: React.FC = () => {
                   For Pharmacy Owners
                 </h3>
                 <p className="mt-3 text-lg text-gray-500">
-                  Manage your pharmacy profile, track dues payments, and stay informed about zone activities.
+                  Manage your pharmacy profile, track dues payments, and stay
+                  informed about zone activities.
                 </p>
 
                 <dl className="mt-10 space-y-10">
@@ -113,10 +137,13 @@ const LandingPage: React.FC = () => {
                       <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                         <i className="fas fa-building"></i>
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Pharmacy Registration</p>
+                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                        Pharmacy Registration
+                      </p>
                     </dt>
                     <dd className="mt-2 ml-16 text-base text-gray-500">
-                      Register your pharmacy details including location, license information, and contact details.
+                      Register your pharmacy details including location, license
+                      information, and contact details.
                     </dd>
                   </div>
 
@@ -125,10 +152,13 @@ const LandingPage: React.FC = () => {
                       <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                         <i className="fas fa-money-bill"></i>
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Dues Management</p>
+                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                        Dues Management
+                      </p>
                     </dt>
                     <dd className="mt-2 ml-16 text-base text-gray-500">
-                      Track your dues payments, payment history, and upcoming financial obligations.
+                      Track your dues payments, payment history, and upcoming
+                      financial obligations.
                     </dd>
                   </div>
 
@@ -137,10 +167,13 @@ const LandingPage: React.FC = () => {
                       <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                         <i className="fas fa-calendar"></i>
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Event Participation</p>
+                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                        Event Participation
+                      </p>
                     </dt>
                     <dd className="mt-2 ml-16 text-base text-gray-500">
-                      Register for zone events, track attendance, and access event materials.
+                      Register for zone events, track attendance, and access
+                      event materials.
                     </dd>
                   </div>
                 </dl>
@@ -162,7 +195,8 @@ const LandingPage: React.FC = () => {
                     For Zone Administrators
                   </h3>
                   <p className="mt-3 text-lg text-gray-500">
-                    Comprehensive tools for managing the zone's operations, communications, and governance.
+                    Comprehensive tools for managing the zone's operations,
+                    communications, and governance.
                   </p>
 
                   <dl className="mt-10 space-y-10">
@@ -171,10 +205,13 @@ const LandingPage: React.FC = () => {
                         <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                           <i className="fas fa-users"></i>
                         </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Member Management</p>
+                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                          Member Management
+                        </p>
                       </dt>
                       <dd className="mt-2 ml-16 text-base text-gray-500">
-                        Complete user and pharmacy management with approval workflows and detailed reporting.
+                        Complete user and pharmacy management with approval
+                        workflows and detailed reporting.
                       </dd>
                     </div>
 
@@ -183,10 +220,14 @@ const LandingPage: React.FC = () => {
                         <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                           <i className="fas fa-vote-yea"></i>
                         </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Elections & Polls</p>
+                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                          Elections & Polls
+                        </p>
                       </dt>
                       <dd className="mt-2 ml-16 text-base text-gray-500">
-                        Create and manage elections, process candidate registrations, and collect member feedback through polls.
+                        Create and manage elections, process candidate
+                        registrations, and collect member feedback through
+                        polls.
                       </dd>
                     </div>
 
@@ -195,10 +236,13 @@ const LandingPage: React.FC = () => {
                         <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                           <i className="fas fa-chart-line"></i>
                         </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Financial Oversight</p>
+                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                          Financial Oversight
+                        </p>
                       </dt>
                       <dd className="mt-2 ml-16 text-base text-gray-500">
-                        Track zone finances, manage dues collection, and maintain transparency with financial reports.
+                        Track zone finances, manage dues collection, and
+                        maintain transparency with financial reports.
                       </dd>
                     </div>
                   </dl>
@@ -224,7 +268,8 @@ const LandingPage: React.FC = () => {
               <span className="block">Join ACPN Ota Zone today.</span>
             </h2>
             <p className="mt-4 text-lg leading-6 text-indigo-200">
-              Register your pharmacy and become a part of our growing community of professional pharmacists.
+              Register your pharmacy and become a part of our growing community
+              of professional pharmacists.
             </p>
             <Link
               to="/register"
@@ -239,29 +284,47 @@ const LandingPage: React.FC = () => {
       {/* Footer */}
       <footer className="bg-gray-800">
         <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
-          <nav className="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
+          <nav
+            className="-mx-5 -my-2 flex flex-wrap justify-center"
+            aria-label="Footer"
+          >
             <div className="px-5 py-2">
-              <Link to="#" className="text-base text-gray-400 hover:text-gray-300">
+              <Link
+                to="#"
+                className="text-base text-gray-400 hover:text-gray-300"
+              >
                 About
               </Link>
             </div>
             <div className="px-5 py-2">
-              <Link to="#" className="text-base text-gray-400 hover:text-gray-300">
+              <Link
+                to="#"
+                className="text-base text-gray-400 hover:text-gray-300"
+              >
                 Features
               </Link>
             </div>
             <div className="px-5 py-2">
-              <Link to="#" className="text-base text-gray-400 hover:text-gray-300">
+              <Link
+                to="#"
+                className="text-base text-gray-400 hover:text-gray-300"
+              >
                 Privacy
               </Link>
             </div>
             <div className="px-5 py-2">
-              <Link to="#" className="text-base text-gray-400 hover:text-gray-300">
+              <Link
+                to="#"
+                className="text-base text-gray-400 hover:text-gray-300"
+              >
                 Terms
               </Link>
             </div>
             <div className="px-5 py-2">
-              <Link to="#" className="text-base text-gray-400 hover:text-gray-300">
+              <Link
+                to="#"
+                className="text-base text-gray-400 hover:text-gray-300"
+              >
                 Contact
               </Link>
             </div>
@@ -281,7 +344,8 @@ const LandingPage: React.FC = () => {
             </a>
           </div>
           <p className="mt-8 text-center text-base text-gray-400">
-            &copy; {new Date().getFullYear()} Association of Community Pharmacists of Nigeria, Ota Zone. All rights reserved.
+            &copy; {new Date().getFullYear()} Association of Community
+            Pharmacists of Nigeria, Ota Zone. All rights reserved.
           </p>
         </div>
       </footer>

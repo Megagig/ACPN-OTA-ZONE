@@ -48,18 +48,20 @@ const DashboardLayout: React.FC = () => {
     if (['admin', 'superadmin'].includes(user?.role)) {
       return [...commonItems, ...adminItems];
     } else if (user?.role === 'treasurer') {
-      return [...commonItems, 
+      return [
+        ...commonItems,
         { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
         { name: 'Finances', path: '/finances', icon: 'money-bill' },
         { name: 'Dues', path: '/dues', icon: 'receipt' },
-        { name: 'Donations', path: '/donations', icon: 'gift' }
+        { name: 'Donations', path: '/donations', icon: 'gift' },
       ];
     } else if (user?.role === 'secretary') {
-      return [...commonItems, 
+      return [
+        ...commonItems,
         { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
         { name: 'Events', path: '/events', icon: 'calendar' },
         { name: 'Communications', path: '/communications', icon: 'envelope' },
-        { name: 'Documents', path: '/documents', icon: 'file-alt' }
+        { name: 'Documents', path: '/documents', icon: 'file-alt' },
       ];
     } else {
       return [...commonItems, ...memberItems];
@@ -119,7 +121,9 @@ const DashboardLayout: React.FC = () => {
                 <p className="text-sm font-medium text-gray-700">
                   {user ? `${user.firstName} ${user.lastName}` : 'User'}
                 </p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role || 'Member'}</p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {user?.role || 'Member'}
+                </p>
               </div>
               <button
                 onClick={handleLogout}
