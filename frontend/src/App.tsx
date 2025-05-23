@@ -1,9 +1,4 @@
-import { useState } from 'react';
-import './App.css';
-
 function App() {
-  const [loading, setLoading] = useState(false);
-
   return (
     <div className="app-container">
       <header className="app-header">
@@ -13,7 +8,9 @@ function App() {
 
       <main className="app-main">
         <section className="welcome-section">
-          <h2>Welcome to the ACPN OTA Zone Management System</h2>
+          <h2 className="bg-red-800 text-7xl">
+            Welcome to the ACPN OTA Zone Management System
+          </h2>
           <p>
             This platform helps manage over-the-air updates and zone management.
           </p>
