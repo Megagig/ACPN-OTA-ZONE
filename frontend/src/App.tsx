@@ -60,6 +60,18 @@ import PollForm from './pages/dashboard/PollForm';
 import PollDetail from './pages/dashboard/PollDetail';
 import PollResponse from './pages/dashboard/PollResponse';
 
+// Document Management Pages
+import DocumentDashboard from './pages/dashboard/DocumentDashboard';
+import DocumentsList from './pages/dashboard/DocumentsList';
+import DocumentForm from './pages/dashboard/DocumentForm';
+import DocumentDetail from './pages/dashboard/DocumentDetail';
+import VersionUploadForm from './pages/dashboard/VersionUploadForm';
+
+// Pharmacy Management Pages
+import PharmacyProfile from './pages/dashboard/PharmacyProfile';
+import PharmacyForm from './pages/dashboard/PharmacyForm';
+import PharmacyDues from './pages/dashboard/PharmacyDues';
+
 // Public Pages
 import LandingPage from './pages/LandingPage';
 
@@ -188,16 +200,28 @@ function App() {
                   element={<MessagingInterface />}
                 />
                 <Route
+                  path="/documents/dashboard"
+                  element={<DocumentDashboard />}
+                />
+                <Route
                   path="/documents"
-                  element={<div>Documents (Coming Soon)</div>}
+                  element={<Navigate to="/documents/dashboard" replace />}
+                />
+                <Route path="/documents/list" element={<DocumentsList />} />
+                <Route path="/documents/upload" element={<DocumentForm />} />
+                <Route path="/documents/:id" element={<DocumentDetail />} />
+                <Route
+                  path="/documents/:id/upload-version"
+                  element={<VersionUploadForm />}
                 />
               </Route>
 
               {/* Member Routes */}
-              <Route
-                path="/my-pharmacy"
-                element={<div>My Pharmacy (Coming Soon)</div>}
-              />
+              <Route path="/my-pharmacy" element={<PharmacyProfile />} />
+              <Route path="/my-pharmacy/create" element={<PharmacyForm />} />
+              <Route path="/my-pharmacy/edit" element={<PharmacyForm />} />
+              <Route path="/payments" element={<PharmacyDues />} />
+              <Route path="/my-documents" element={<DocumentsList />} />
               <Route
                 path="/my-documents"
                 element={<div>My Documents (Coming Soon)</div>}

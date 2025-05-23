@@ -49,7 +49,7 @@ import { useFormik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { v4 as uuidv4 } from 'uuid';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import {
+import type {
   Poll,
   PollQuestion,
   PollOption,
