@@ -37,6 +37,17 @@ import EventReports from './pages/dashboard/EventReports';
 import EventCheckIn from './pages/dashboard/EventCheckIn';
 import AttendeeManagement from './pages/dashboard/AttendeeManagement';
 
+// Communication Pages
+import CommunicationsDashboard from './pages/dashboard/CommunicationsDashboard';
+import CommunicationsList from './pages/dashboard/CommunicationsList';
+import CommunicationForm from './pages/dashboard/CommunicationForm';
+import CommunicationDetail from './pages/dashboard/CommunicationDetail';
+import MessagingInterface from './pages/dashboard/MessagingInterface';
+
+// Election Pages
+import ElectionDashboard from './pages/dashboard/ElectionDashboard';
+import ElectionsList from './pages/dashboard/ElectionsList';
+
 // Public Pages
 import LandingPage from './pages/LandingPage';
 
@@ -137,8 +148,32 @@ function App() {
                   element={<AttendeeManagement />}
                 />
                 <Route
+                  path="/communications/dashboard"
+                  element={<CommunicationsDashboard />}
+                />
+                <Route
                   path="/communications"
-                  element={<div>Communications (Coming Soon)</div>}
+                  element={<Navigate to="/communications/dashboard" replace />}
+                />
+                <Route
+                  path="/communications/list"
+                  element={<CommunicationsList />}
+                />
+                <Route
+                  path="/communications/compose"
+                  element={<CommunicationForm />}
+                />
+                <Route
+                  path="/communications/:id"
+                  element={<CommunicationDetail />}
+                />
+                <Route
+                  path="/communications/:id/edit"
+                  element={<CommunicationForm />}
+                />
+                <Route
+                  path="/communications/messages"
+                  element={<MessagingInterface />}
                 />
                 <Route
                   path="/documents"
@@ -164,9 +199,14 @@ function App() {
                 element={<div>Messages (Coming Soon)</div>}
               />
               <Route
-                path="/elections"
-                element={<div>Elections (Coming Soon)</div>}
+                path="/elections/dashboard"
+                element={<ElectionDashboard />}
               />
+              <Route
+                path="/elections"
+                element={<Navigate to="/elections/dashboard" replace />}
+              />
+              <Route path="/elections/list" element={<ElectionsList />} />
               <Route path="/polls" element={<div>Polls (Coming Soon)</div>} />
             </Route>
           </Route>
