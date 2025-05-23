@@ -19,6 +19,11 @@ import NotFound from './pages/auth/NotFound';
 // Dashboard Pages
 import DashboardHome from './pages/dashboard/DashboardHome';
 import UserProfile from './pages/dashboard/UserProfile';
+import FinancialDashboard from './pages/dashboard/FinancialDashboard';
+import TransactionList from './pages/dashboard/TransactionList';
+import TransactionForm from './pages/dashboard/TransactionForm';
+import TransactionDetail from './pages/dashboard/TransactionDetail';
+import DuesManagement from './pages/dashboard/DuesManagement';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -71,14 +76,24 @@ function App() {
                   />
                 }
               >
+                <Route path="/finances" element={<FinancialDashboard />} />
                 <Route
-                  path="/finances"
-                  element={<div>Financial Management (Coming Soon)</div>}
+                  path="/finances/transactions"
+                  element={<TransactionList />}
                 />
                 <Route
-                  path="/dues"
-                  element={<div>Dues Management (Coming Soon)</div>}
+                  path="/finances/transactions/new"
+                  element={<TransactionForm />}
                 />
+                <Route
+                  path="/finances/transactions/:id"
+                  element={<TransactionDetail />}
+                />
+                <Route
+                  path="/finances/transactions/:id/edit"
+                  element={<TransactionForm />}
+                />
+                <Route path="/finances/dues" element={<DuesManagement />} />
                 <Route
                   path="/donations"
                   element={<div>Donations Management (Coming Soon)</div>}
