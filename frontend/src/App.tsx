@@ -20,11 +20,17 @@ import NotFound from './pages/auth/NotFound';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import UserProfile from './pages/dashboard/UserProfile';
 
+// Public Pages
+import LandingPage from './pages/LandingPage';
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public Routes */}
+          <Route path="/landing" element={<LandingPage />} />
+
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -32,8 +38,8 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Redirect root to dashboard if logged in, otherwise to login */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Redirect root to landing */}
+          <Route path="/" element={<Navigate to="/landing" replace />} />
 
           {/* Protected Dashboard Routes */}
           <Route element={<ProtectedRoute />}>
