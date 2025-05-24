@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer';
-import { TransactionalEmailsApi, SendSmtpEmail } from 'sib-api-v3-typescript';
 import { Resend } from 'resend';
 import fs from 'fs';
 import path from 'path';
 import handlebars from 'handlebars';
+import axios from 'axios';
 
 /**
  * Email service interface
@@ -22,17 +22,14 @@ export interface EmailOptions {
  * and Resend as fallback
  */
 class EmailService {
-  private brevoClient: TransactionalEmailsApi;
+  private brevoApiKey: string;
   private resendClient: Resend;
   private sender: { name: string; email: string };
   private templatesDir: string;
 
   constructor() {
-    // Initialize Brevo client
-    this.brevoClient = new TransactionalEmailsApi();
-    this.brevoClient.setApiKey(
-      process.env.BREVO_API_KEY || 'default-api-key'
-    );
+    // Initialize Brevo API key
+    this.brevoApiKey = process.env.BREVO_API_KEY || 'default-api-key';
 
     // Initialize Resend client (fallback)
     this.resendClient = new Resend(process.env.RESEND_API_KEY);
@@ -96,15 +93,29 @@ class EmailService {
     text: string;
     html: string;
   }): Promise<boolean> {
-    const sendSmtpEmail = new SendSmtpEmail();
-    sendSmtpEmail.sender = this.sender;
-    sendSmtpEmail.to = [{ email: options.to }];
-    sendSmtpEmail.subject = options.subject;
-    sendSmtpEmail.textContent = options.text;
-    sendSmtpEmail.htmlContent = options.html;
+    try {
+      const response = await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: this.sender,
+          to: [{ email: options.to }],
+          subject: options.subject,
+          textContent: options.text,
+          htmlContent: options.html,
+        },
+        {
+          headers: {
+            'api-key': this.brevoApiKey,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-    await this.brevoClient.sendTransacEmail(sendSmtpEmail);
-    return true;
+      return response.status >= 200 && response.status < 300;
+    } catch (error) {
+      console.error('Error sending email with Brevo:', error);
+      throw error;
+    }
   }
 
   /**
@@ -141,7 +152,7 @@ class EmailService {
     context: Record<string, any>
   ): Promise<string> {
     const filePath = path.join(this.templatesDir, `${templateName}.hbs`);
-    
+
     try {
       const template = fs.readFileSync(filePath, 'utf8');
       const compiledTemplate = handlebars.compile(template);
@@ -167,7 +178,7 @@ class EmailService {
     verificationCode: string
   ): Promise<boolean> {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-    
+
     return this.sendEmail({
       to: email,
       subject: 'Verify Your ACPN Ota Zone Account',
@@ -194,7 +205,7 @@ class EmailService {
     resetToken: string
   ): Promise<boolean> {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    
+
     return this.sendEmail({
       to: email,
       subject: 'Reset Your ACPN Ota Zone Password',
@@ -218,7 +229,7 @@ class EmailService {
     name: string
   ): Promise<boolean> {
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
-    
+
     return this.sendEmail({
       to: email,
       subject: 'Your ACPN Ota Zone Account Has Been Approved',

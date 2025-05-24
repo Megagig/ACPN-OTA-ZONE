@@ -82,3 +82,22 @@ Professional email templates are used for:
 
 Administrators can approve new accounts through the admin dashboard.
 When an account is approved, the user receives an email notification.
+
+## Email Service Implementation
+
+The system uses a dual-provider email delivery strategy:
+
+1. **Primary Provider: Brevo API**
+
+   - Direct API integration using axios for reliable delivery
+   - Professional templating with dynamic content
+
+2. **Fallback Provider: Resend**
+   - Automatically used if Brevo delivery fails
+   - Ensures high availability of email services
+
+The email service handles:
+
+- Email verification with secure tokens and codes
+- Password reset communications
+- Account approval notifications
