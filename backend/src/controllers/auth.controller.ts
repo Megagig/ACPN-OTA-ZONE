@@ -4,8 +4,8 @@ import User, { UserRole, UserStatus } from '../models/user.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
 import { sendTokenResponse } from '../utils/jwt';
-// Import email service (to be implemented)
-// import { sendEmail } from '../services/email.service';
+import emailService from '../services/email.service';
+import { generateVerificationCode } from '../utils/verification';
 
 /**
  * @desc    Register user
@@ -38,37 +38,41 @@ export const register = asyncHandler(
       status: UserStatus.PENDING,
     });
 
+    // Generate 6-digit verification code
+    const verificationCode = generateVerificationCode();
+    user.emailVerificationCode = verificationCode;
+
     // Generate email verification token
     const verificationToken = user.getEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    // Create verification URL
-    const verificationUrl = `${req.protocol}://${req.get(
-      'host'
-    )}/api/auth/verify-email/${verificationToken}`;
-
-    const message = `Please click on the link to verify your email: ${verificationUrl}`;
+    // Create verification URL (used in the email template)
+    const verificationUrl = `${process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`}/verify-email/${verificationToken}`;
 
     try {
-      // TODO: Implement email service with Brevo
-      // await sendEmail({
-      //   email: user.email,
-      //   subject: 'Email verification',
-      //   message,
-      // });
+      // Send verification email with both link and code
+      await emailService.sendVerificationEmail(
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        verificationToken,
+        verificationCode
+      );
 
       res.status(201).json({
         success: true,
         message: 'User registered. Email verification sent.',
-        // For development, return the verification URL
-        verificationUrl:
-          process.env.NODE_ENV === 'development' ? verificationUrl : undefined,
+        // For development, return the verification details
+        ...(process.env.NODE_ENV === 'development' && {
+          verificationUrl,
+          verificationCode,
+        }),
       });
     } catch (err) {
       console.error('Email sending error:', err);
 
       user.emailVerificationToken = undefined;
       user.emailVerificationExpire = undefined;
+      user.emailVerificationCode = undefined;
       await user.save({ validateBeforeSave: false });
 
       return next(new ErrorResponse('Email could not be sent', 500));
@@ -77,7 +81,7 @@ export const register = asyncHandler(
 );
 
 /**
- * @desc    Verify email
+ * @desc    Verify email with token
  * @route   GET /api/auth/verify-email/:token
  * @access  Public
  */
@@ -99,6 +103,59 @@ export const verifyEmail = asyncHandler(
     }
 
     // Set email as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    user.emailVerificationCode = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully. Please wait for admin approval.',
+    });
+  }
+);
+
+/**
+ * @desc    Verify email with 6-digit code
+ * @route   POST /api/auth/verify-email-code
+ * @access  Public
+ */
+export const verifyEmailWithCode = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return next(
+        new ErrorResponse('Please provide email and verification code', 400)
+      );
+    }
+
+    const user = await User.findOne({
+      email,
+      emailVerificationCode: code,
+      emailVerificationExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(new ErrorResponse('Invalid or expired verification code', 400));
+    }
+
+    // Set email as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    user.emailVerificationCode = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully. Please wait for admin approval.',
+    });
+  }
+);
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpire = undefined;
