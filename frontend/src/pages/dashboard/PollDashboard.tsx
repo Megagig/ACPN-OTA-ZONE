@@ -15,6 +15,7 @@ import {
   HStack,
   VStack,
   Badge,
+  Icon,
 } from '../../components/ui/TailwindComponentsFixed';
 import {
   FaPlus,
@@ -24,7 +25,6 @@ import {
   FaRegClock,
   FaChartBar,
 } from 'react-icons/fa';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
 import { Card, CardBody } from '../../components/common/CardComponent';
@@ -112,198 +112,192 @@ const PollDashboard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <Box p={5}>
-        <Flex justify="space-between" align="center" mb={6}>
-          <Heading size="lg">Polls & Surveys Dashboard</Heading>
-          <Button
-            leftIcon={<FaPlus />}
-            colorScheme="blue"
-            onClick={() => navigate('/polls/create')}
-          >
-            Create New Poll
-          </Button>
-        </Flex>
+    <Box p={5}>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="lg">Polls & Surveys Dashboard</Heading>
+        <Button
+          leftIcon={<FaPlus />}
+          colorScheme="blue"
+          onClick={() => navigate('/polls/create')}
+        >
+          Create New Poll
+        </Button>
+      </Flex>
 
-        {loading ? (
-          <Text>Loading dashboard data...</Text>
-        ) : (
-          <>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
-              <StatCard
-                title="Total Polls"
-                value={summary?.total || 0}
-                icon={FaPoll}
-                colorScheme="purple"
-              />
-              <StatCard
-                title="Active Polls"
-                value={summary?.active || 0}
-                icon={FaCheckCircle}
-                colorScheme="green"
-              />
-              <StatCard
-                title="Completed Polls"
-                value={summary?.closed || 0}
-                icon={FaChartBar}
-                colorScheme="blue"
-              />
-              <StatCard
-                title="Draft Polls"
-                value={summary?.draft || 0}
-                icon={FaEdit}
-                colorScheme="gray"
-              />
-            </SimpleGrid>
+      {loading ? (
+        <Text>Loading dashboard data...</Text>
+      ) : (
+        <>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
+            <StatCard
+              title="Total Polls"
+              value={summary?.total || 0}
+              icon={FaPoll}
+              colorScheme="purple"
+            />
+            <StatCard
+              title="Active Polls"
+              value={summary?.active || 0}
+              icon={FaCheckCircle}
+              colorScheme="green"
+            />
+            <StatCard
+              title="Completed Polls"
+              value={summary?.closed || 0}
+              icon={FaChartBar}
+              colorScheme="blue"
+            />
+            <StatCard
+              title="Draft Polls"
+              value={summary?.draft || 0}
+              icon={FaEdit}
+              colorScheme="gray"
+            />
+          </SimpleGrid>
 
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} mb={8}>
-              <Card>
-                <CardBody>
-                  <Heading size="md" mb={4}>
-                    Responses Over Time
-                  </Heading>
-                  <Box height="250px">
-                    <ChartComponent type="line" data={responsesOverTimeData} />
-                  </Box>
-                </CardBody>
-              </Card>
-
-              <Card>
-                <CardBody>
-                  <Heading size="md" mb={4}>
-                    Participation by Poll Type
-                  </Heading>
-                  <Box height="250px">
-                    <ChartComponent type="bar" data={participationByTypeData} />
-                  </Box>
-                </CardBody>
-              </Card>
-            </SimpleGrid>
-
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
-              <Box>
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} mb={8}>
+            <Card>
+              <CardBody>
                 <Heading size="md" mb={4}>
-                  Active Polls
+                  Responses Over Time
                 </Heading>
-                {activePolls.length > 0 ? (
-                  <VStack spacing={4} align="stretch">
-                    {activePolls.map((poll) => (
-                      <Card
-                        key={poll._id}
-                        variant="outline"
-                        _hover={{ boxShadow: 'md' }}
-                      >
-                        <CardBody>
-                          <Flex justify="space-between" align="center">
-                            <VStack align="start" spacing={1}>
-                              <Heading size="sm">{poll.title}</Heading>
-                              <Text
-                                fontSize="sm"
-                                color="gray.600"
-                                noOfLines={1}
+                <Box height="250px">
+                  <ChartComponent type="line" data={responsesOverTimeData} />
+                </Box>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardBody>
+                <Heading size="md" mb={4}>
+                  Participation by Poll Type
+                </Heading>
+                <Box height="250px">
+                  <ChartComponent type="bar" data={participationByTypeData} />
+                </Box>
+              </CardBody>
+            </Card>
+          </SimpleGrid>
+
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
+            <Box>
+              <Heading size="md" mb={4}>
+                Active Polls
+              </Heading>
+              {activePolls.length > 0 ? (
+                <VStack spacing={4} align="stretch">
+                  {activePolls.map((poll) => (
+                    <Card
+                      key={poll._id}
+                      variant="outline"
+                      _hover={{ boxShadow: 'md' }}
+                    >
+                      <CardBody>
+                        <Flex justify="space-between" align="center">
+                          <VStack align="start" spacing={1}>
+                            <Heading size="sm">{poll.title}</Heading>
+                            <Text fontSize="sm" color="gray.600" noOfLines={1}>
+                              {poll.description}
+                            </Text>
+                            <HStack mt={2}>
+                              <Badge
+                                colorScheme={getPollStatusColor(poll.status)}
                               >
-                                {poll.description}
+                                {poll.status.toUpperCase()}
+                              </Badge>
+                              <Text fontSize="xs">
+                                Responses: {poll.responseCount || 0}
                               </Text>
-                              <HStack mt={2}>
-                                <Badge
-                                  colorScheme={getPollStatusColor(poll.status)}
-                                >
-                                  {poll.status.toUpperCase()}
-                                </Badge>
-                                <Text fontSize="xs">
-                                  Responses: {poll.responseCount || 0}
-                                </Text>
-                              </HStack>
-                            </VStack>
-                            <Button
-                              size="sm"
-                              colorScheme="blue"
-                              onClick={() =>
-                                navigate(`/polls/${poll._id}/respond`)
-                              }
-                            >
-                              Respond
-                            </Button>
-                          </Flex>
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </VStack>
-                ) : (
-                  <Card variant="outline">
-                    <CardBody>
-                      <Text color="gray.500" textAlign="center">
-                        No active polls at the moment
-                      </Text>
-                    </CardBody>
-                  </Card>
-                )}
-                <Button
-                  mt={4}
-                  variant="outline"
-                  rightIcon={<Icon as={FaPoll} />}
-                  onClick={() => navigate('/polls/list')}
-                >
-                  View All Polls
-                </Button>
-              </Box>
+                            </HStack>
+                          </VStack>
+                          <Button
+                            size="sm"
+                            colorScheme="blue"
+                            onClick={() =>
+                              navigate(`/polls/${poll._id}/respond`)
+                            }
+                          >
+                            Respond
+                          </Button>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </VStack>
+              ) : (
+                <Card variant="outline">
+                  <CardBody>
+                    <Text color="gray.500" textAlign="center">
+                      No active polls at the moment
+                    </Text>
+                  </CardBody>
+                </Card>
+              )}
+              <Button
+                mt={4}
+                variant="outline"
+                rightIcon={<FaPoll />}
+                onClick={() => navigate('/polls/list')}
+              >
+                View All Polls
+              </Button>
+            </Box>
 
-              <Box>
-                <Heading size="md" mb={4}>
-                  Recent Polls
-                </Heading>
-                {recentPolls.length > 0 ? (
-                  <VStack spacing={4} align="stretch">
-                    {recentPolls.map((poll) => (
-                      <Card
-                        key={poll._id}
-                        variant="outline"
-                        _hover={{ boxShadow: 'md' }}
-                      >
-                        <CardBody>
-                          <Flex justify="space-between" align="center">
-                            <VStack align="start" spacing={1}>
-                              <Heading size="sm">{poll.title}</Heading>
-                              <HStack>
-                                <Badge
-                                  colorScheme={getPollStatusColor(poll.status)}
-                                >
-                                  {poll.status.toUpperCase()}
-                                </Badge>
-                                <Icon as={FaRegClock} size="sm" />
-                                <Text fontSize="xs">
-                                  {new Date(poll.endDate).toLocaleDateString()}
-                                </Text>
-                              </HStack>
-                            </VStack>
-                            <Button
-                              size="sm"
-                              colorScheme="purple"
-                              variant="outline"
-                              onClick={() => navigate(`/polls/${poll._id}`)}
-                            >
-                              View Details
-                            </Button>
-                          </Flex>
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </VStack>
-                ) : (
-                  <Card variant="outline">
-                    <CardBody>
-                      <Text color="gray.500" textAlign="center">
-                        No recent polls
-                      </Text>
-                    </CardBody>
-                  </Card>
-                )}
-              </Box>
-            </SimpleGrid>
-          </>
-        )}
-      </Box>
-    </DashboardLayout>
+            <Box>
+              <Heading size="md" mb={4}>
+                Recent Polls
+              </Heading>
+              {recentPolls.length > 0 ? (
+                <VStack spacing={4} align="stretch">
+                  {recentPolls.map((poll) => (
+                    <Card
+                      key={poll._id}
+                      variant="outline"
+                      _hover={{ boxShadow: 'md' }}
+                    >
+                      <CardBody>
+                        <Flex justify="space-between" align="center">
+                          <VStack align="start" spacing={1}>
+                            <Heading size="sm">{poll.title}</Heading>
+                            <HStack>
+                              <Badge
+                                colorScheme={getPollStatusColor(poll.status)}
+                              >
+                                {poll.status.toUpperCase()}
+                              </Badge>
+                              <FaRegClock size="1em" />
+                              <Text fontSize="xs">
+                                {new Date(poll.endDate).toLocaleDateString()}
+                              </Text>
+                            </HStack>
+                          </VStack>
+                          <Button
+                            size="sm"
+                            colorScheme="purple"
+                            variant="outline"
+                            onClick={() => navigate(`/polls/${poll._id}`)}
+                          >
+                            View Details
+                          </Button>
+                        </Flex>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </VStack>
+              ) : (
+                <Card variant="outline">
+                  <CardBody>
+                    <Text color="gray.500" textAlign="center">
+                      No recent polls
+                    </Text>
+                  </CardBody>
+                </Card>
+              )}
+            </Box>
+          </SimpleGrid>
+        </>
+      )}
+    </Box>
   );
 };
 

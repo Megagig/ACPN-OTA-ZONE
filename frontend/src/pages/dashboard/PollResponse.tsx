@@ -21,7 +21,6 @@ import {
 } from '../../components/ui/TailwindComponentsFixed';
 import type { Poll, PollQuestion } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Card, CardBody } from '../../components/common/CardComponent';
 import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import { useToast } from '../../hooks/useToast';
@@ -199,110 +198,100 @@ const PollResponse: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <Box className="p-5">
-          <Text>Loading poll...</Text>
-        </Box>
-      </DashboardLayout>
+      <Box className="p-5">
+        <Text>Loading poll...</Text>
+      </Box>
     );
   }
 
   if (!poll) {
     return (
-      <DashboardLayout>
-        <Box className="p-5">
-          <Alert status="error" className="mb-4">
-            <AlertIcon />
-            Poll not found
-          </Alert>
-          <Button onClick={() => navigate('/polls/list')}>Back to Polls</Button>
-        </Box>
-      </DashboardLayout>
+      <Box className="p-5">
+        <Alert status="error" className="mb-4">
+          <AlertIcon />
+          Poll not found
+        </Alert>
+        <Button onClick={() => navigate('/polls/list')}>Back to Polls</Button>
+      </Box>
     );
   }
 
   if (hasResponded) {
     return (
-      <DashboardLayout>
-        <Box className="p-5">
-          <Alert status="info" className="mb-4">
-            <AlertIcon />
-            You have already submitted a response to this poll.
-          </Alert>
-          <Button onClick={() => navigate(`/polls/${id}`)}>
-            View Poll Details
-          </Button>
-        </Box>
-      </DashboardLayout>
+      <Box className="p-5">
+        <Alert status="info" className="mb-4">
+          <AlertIcon />
+          You have already submitted a response to this poll.
+        </Alert>
+        <Button onClick={() => navigate(`/polls/${id}`)}>
+          View Poll Details
+        </Button>
+      </Box>
     );
   }
 
   const currentQuestion = poll.questions[currentStep];
 
   return (
-    <DashboardLayout>
-      <Box className="p-5">
-        <Heading size="lg" className="mb-2">
-          {poll.title}
-        </Heading>
-        <Text className="mb-4">{poll.description}</Text>
+    <Box className="p-5">
+      <Heading size="lg" className="mb-2">
+        {poll.title}
+      </Heading>
+      <Text className="mb-4">{poll.description}</Text>
 
-        <Progress
-          value={(currentStep / poll.questions.length) * 100}
-          size="sm"
-          colorScheme="blue"
-          className="mb-5 rounded-md"
-        />
+      <Progress
+        value={(currentStep / poll.questions.length) * 100}
+        size="sm"
+        colorScheme="blue"
+        className="mb-5 rounded-md"
+      />
 
-        <Card className="mb-5">
-          <CardBody>
-            <Heading size="md" className="mb-3">
-              Question {currentStep + 1} of {poll.questions.length}
-            </Heading>
-            <Text className="font-medium mb-3">
-              {currentQuestion.text}
-              {currentQuestion.isRequired && (
-                <Badge colorScheme="red" className="ml-2">
-                  Required
-                </Badge>
-              )}
-            </Text>
+      <Card className="mb-5">
+        <CardBody>
+          <Heading size="md" className="mb-3">
+            Question {currentStep + 1} of {poll.questions.length}
+          </Heading>
+          <Text className="font-medium mb-3">
+            {currentQuestion.text}
+            {currentQuestion.isRequired && (
+              <Badge colorScheme="red" className="ml-2">
+                Required
+              </Badge>
+            )}
+          </Text>
 
-            <FormControl
-              isInvalid={!!errors[currentQuestion._id]}
-              className="mt-4"
-            >
-              {renderQuestionByType(currentQuestion)}
-              {errors[currentQuestion._id] && (
-                <FormErrorMessage>
-                  {errors[currentQuestion._id]}
-                </FormErrorMessage>
-              )}
-            </FormControl>
-          </CardBody>
-        </Card>
+          <FormControl
+            isInvalid={!!errors[currentQuestion._id]}
+            className="mt-4"
+          >
+            {renderQuestionByType(currentQuestion)}
+            {errors[currentQuestion._id] && (
+              <FormErrorMessage>{errors[currentQuestion._id]}</FormErrorMessage>
+            )}
+          </FormControl>
+        </CardBody>
+      </Card>
 
-        <Flex justify="between" className="mt-4">
-          <Button onClick={handlePrevious} isDisabled={currentStep === 0}>
-            Previous
+      <Flex justify="between" className="mt-4">
+        <Button onClick={handlePrevious} isDisabled={currentStep === 0}>
+          Previous
+        </Button>
+
+        {currentStep < poll.questions.length - 1 ? (
+          <Button colorScheme="blue" onClick={handleNext}>
+            Next
           </Button>
-
-          {currentStep < poll.questions.length - 1 ? (
-            <Button colorScheme="blue" onClick={handleNext}>
-              Next
-            </Button>
-          ) : (
-            <Button
-              colorScheme="green"
-              onClick={handleSubmit}
-              isLoading={submitting}
-            >
-              Submit
-            </Button>
-          )}
-        </Flex>
-      </Box>
-    </DashboardLayout>
+        ) : (
+          <Button
+            colorScheme="green"
+            onClick={handleSubmit}
+            isLoading={submitting}
+          >
+            Submit
+          </Button>
+        )}
+      </Flex>
+    </Box>
   );
 };
 

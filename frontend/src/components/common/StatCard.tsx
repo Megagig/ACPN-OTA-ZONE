@@ -3,10 +3,11 @@ import { ReactNode } from 'react';
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon?: ReactNode;
+  icon?: ReactNode | React.ComponentType<React.SVGProps<SVGSVGElement>>;
   change?: number; // percentage change
   className?: string;
   isLoading?: boolean;
+  colorScheme?: 'blue' | 'green' | 'red' | 'gray' | 'purple' | 'teal';
 }
 
 const StatCard = ({
@@ -16,7 +17,34 @@ const StatCard = ({
   change,
   className = '',
   isLoading = false,
+  colorScheme = 'blue',
 }: StatCardProps) => {
+  // Function to render the icon properly
+  const renderIcon = () => {
+    if (!icon) return null;
+
+    // If icon is a React component (function), render it
+    if (typeof icon === 'function') {
+      const IconComponent = icon;
+      return <IconComponent className="w-5 h-5" />;
+    }
+
+    // If icon is already a ReactNode, render it directly
+    return icon;
+  };
+
+  // Get color scheme classes
+  const getColorScheme = () => {
+    const schemes = {
+      blue: 'text-blue-500',
+      green: 'text-green-500',
+      red: 'text-red-500',
+      gray: 'text-gray-500',
+      purple: 'text-purple-500',
+      teal: 'text-teal-500',
+    };
+    return schemes[colorScheme] || schemes.blue;
+  };
   return (
     <div className={`rounded-lg bg-white shadow-md p-4 ${className}`}>
       {isLoading ? (
@@ -29,7 +57,7 @@ const StatCard = ({
         <>
           <div className="flex justify-between items-start">
             <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
-            {icon && <span className="text-blue-500">{icon}</span>}
+            {icon && <span className={getColorScheme()}>{renderIcon()}</span>}
           </div>
 
           <div className="flex items-baseline">

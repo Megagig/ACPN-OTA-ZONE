@@ -1,5 +1,5 @@
 import api from './api';
-import { User } from '../types/auth.types';
+import type { User } from '../types/auth.types';
 
 export interface UserListResponse {
   success: boolean;

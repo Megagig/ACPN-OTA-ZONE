@@ -110,7 +110,7 @@ export const Badge: React.FC<BadgeProps> = ({
 // Button Component
 interface ButtonProps {
   children: ReactNode;
-  colorScheme?: 'blue' | 'green' | 'red' | 'gray' | 'teal';
+  colorScheme?: 'blue' | 'green' | 'red' | 'gray' | 'teal' | 'purple';
   variant?: 'solid' | 'outline' | 'ghost';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   isLoading?: boolean;
@@ -173,8 +173,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             'border border-teal-600 text-teal-600 hover:bg-teal-50 focus:ring-teal-500',
           ghost: 'text-teal-600 hover:bg-teal-50 focus:ring-teal-500',
         },
+        purple: {
+          solid:
+            'bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500',
+          outline:
+            'border border-purple-600 text-purple-600 hover:bg-purple-50 focus:ring-purple-500',
+          ghost: 'text-purple-600 hover:bg-purple-50 focus:ring-purple-500',
+        },
       };
-      return baseClasses[colorScheme][variant];
+      return (
+        baseClasses[colorScheme]?.[variant] || baseClasses['blue'][variant]
+      );
     };
 
     const getSizeClasses = () => {
