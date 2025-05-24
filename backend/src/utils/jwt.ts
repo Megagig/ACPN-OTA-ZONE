@@ -10,7 +10,7 @@ export interface TokenData {
 }
 
 /**
- * Generate JWT token for authenticated users
+ * Generate JWT access token for authenticated users
  * @param user The user object
  * @returns JWT token
  */
@@ -21,8 +21,8 @@ export const generateToken = (user: IUser): string => {
   // Create a properly typed options object
   const options: SignOptions = {};
 
-  // Handle JWT expiration
-  const defaultExpire = '30d' as StringValue;
+  // Access tokens have shorter lifespan
+  const defaultExpire = '1h' as StringValue;
   options.expiresIn = process.env.JWT_EXPIRE
     ? (process.env.JWT_EXPIRE as StringValue)
     : defaultExpire;
@@ -41,13 +41,23 @@ export const sendTokenResponse = (
   statusCode: number,
   res: Response
 ): void => {
-  // Create token
+  // Create access token
   const token = generateToken(user);
+
+  // Generate refresh token
+  const refreshToken = user.generateRefreshToken();
+
+  // Save the user with the refresh token
+  user.save({ validateBeforeSave: false });
 
   const cookieOptions = {
     expires: new Date(
       Date.now() +
-        parseInt(process.env.JWT_COOKIE_EXPIRE as string) * 24 * 60 * 60 * 1000
+        parseInt((process.env.JWT_COOKIE_EXPIRE as string) || '1') *
+          24 *
+          60 *
+          60 *
+          1000
     ),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -59,6 +69,7 @@ export const sendTokenResponse = (
     .json({
       success: true,
       token,
+      refreshToken,
       user: {
         _id: user._id,
         firstName: user.firstName,

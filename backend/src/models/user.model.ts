@@ -38,11 +38,14 @@ export interface IUser extends Document {
   emailVerificationToken?: string;
   emailVerificationExpire?: Date;
   emailVerificationCode?: string;
+  refreshToken?: string;
+  refreshTokenExpire?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(enteredPassword: string): Promise<boolean>;
   getResetPasswordToken(): string;
   getEmailVerificationToken(): string;
+  generateRefreshToken(): string;
 }
 
 const userSchema = new Schema<IUser>(
@@ -137,6 +140,14 @@ const userSchema = new Schema<IUser>(
       type: String,
       select: false,
     },
+    refreshToken: {
+      type: String,
+      select: false,
+    },
+    refreshTokenExpire: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -193,6 +204,23 @@ userSchema.methods.getEmailVerificationToken = function (): string {
   this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
   return verificationToken;
+};
+
+// Generate refresh token
+userSchema.methods.generateRefreshToken = function (): string {
+  // Generate token
+  const refreshToken = crypto.randomBytes(30).toString('hex');
+
+  // Hash token and set to refreshToken field
+  this.refreshToken = crypto
+    .createHash('sha256')
+    .update(refreshToken)
+    .digest('hex');
+
+  // Set expire (longer than the access token)
+  this.refreshTokenExpire = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+
+  return refreshToken;
 };
 
 const User = mongoose.model<IUser>('User', userSchema);
