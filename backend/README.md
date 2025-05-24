@@ -101,3 +101,41 @@ The email service handles:
 - Email verification with secure tokens and codes
 - Password reset communications
 - Account approval notifications
+
+## Creating Superadmin User
+
+To create the initial superadmin user, run:
+
+```bash
+npm run seed
+```
+
+This will create a superadmin user with the following credentials:
+
+- Email: Megagigdev@gmail.com
+- Password: Exploit4ever@247
+
+**Note**: This script will only create the superadmin if one doesn't already exist.
+
+## Authentication Endpoints
+
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login a user
+- `GET /api/auth/logout` - Logout a user
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/forgot-password` - Request password reset
+- `PUT /api/auth/reset-password/:token` - Reset password
+- `PUT /api/auth/update-details` - Update user details
+- `PUT /api/auth/update-password` - Update password
+- `GET /api/auth/verify-email/:token` - Verify email with token
+- `POST /api/auth/verify-email-code` - Verify email with 6-digit code
+- `POST /api/auth/refresh-token` - Refresh access token
+
+## Token System
+
+The authentication system uses a dual-token approach:
+
+1. **Access Token** - Short-lived JWT (1 hour by default) used for API authorization
+2. **Refresh Token** - Long-lived token (7 days by default) used to obtain new access tokens
+
+This approach provides better security while maintaining a good user experience.

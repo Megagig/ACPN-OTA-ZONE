@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import User, { UserRole, UserStatus } from '../models/user.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
-import { sendTokenResponse } from '../utils/jwt';
+import { sendTokenResponse, generateToken } from '../utils/jwt';
 import emailService from '../services/email.service';
 import { generateVerificationCode } from '../utils/verification';
 
@@ -387,5 +387,48 @@ export const updatePassword = asyncHandler(
     await user.save();
 
     sendTokenResponse(user, 200, res);
+  }
+);
+
+/**
+ * @desc    Refresh access token using refresh token
+ * @route   POST /api/auth/refresh-token
+ * @access  Public
+ */
+export const refreshToken = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return next(new ErrorResponse('Refresh token is required', 400));
+    }
+
+    try {
+      // Get hashed refresh token
+      const hashedRefreshToken = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+
+      // Find user with this refresh token and check if it's still valid
+      const user = await User.findOne({
+        refreshToken: hashedRefreshToken,
+        refreshTokenExpire: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return next(new ErrorResponse('Invalid or expired refresh token', 401));
+      }
+
+      // Generate new access token
+      const newAccessToken = generateToken(user);
+
+      res.status(200).json({
+        success: true,
+        token: newAccessToken,
+      });
+    } catch (err) {
+      return next(new ErrorResponse('Error refreshing token', 500));
+    }
   }
 );

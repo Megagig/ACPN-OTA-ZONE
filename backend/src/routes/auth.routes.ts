@@ -10,6 +10,7 @@ import {
   updatePassword,
   verifyEmail,
   verifyEmailWithCode,
+  refreshToken,
 } from '../controllers/auth.controller';
 import { protect } from '../middleware/auth.middleware';
 import {
@@ -34,5 +35,6 @@ router.post(
   emailVerificationLimiter,
   verifyEmailWithCode
 );
+router.post('/refresh-token', authRateLimiter, refreshToken);
 
 export default router;

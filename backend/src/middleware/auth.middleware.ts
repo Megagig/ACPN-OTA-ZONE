@@ -44,7 +44,7 @@ export const protect = asyncHandler(
       const decoded = verifyToken(token);
 
       if (!decoded) {
-        return next(new ErrorResponse('Invalid token', 401));
+        return next(new ErrorResponse('Token is invalid or expired', 401));
       }
 
       // Find user by id
