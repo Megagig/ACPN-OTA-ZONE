@@ -139,7 +139,9 @@ export const verifyEmailWithCode = asyncHandler(
     });
 
     if (!user) {
-      return next(new ErrorResponse('Invalid or expired verification code', 400));
+      return next(
+        new ErrorResponse('Invalid or expired verification code', 400)
+      );
     }
 
     // Set email as verified
@@ -147,18 +149,6 @@ export const verifyEmailWithCode = asyncHandler(
     user.emailVerificationToken = undefined;
     user.emailVerificationExpire = undefined;
     user.emailVerificationCode = undefined;
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Email verified successfully. Please wait for admin approval.',
-    });
-  }
-);
-    user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpire = undefined;
 
     await user.save();
 
@@ -283,26 +273,21 @@ export const forgotPassword = asyncHandler(
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    // Create reset URL
-    const resetUrl = `${req.protocol}://${req.get(
-      'host'
-    )}/api/auth/reset-password/${resetToken}`;
-
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please click on the link below: ${resetUrl}`;
-
     try {
-      // TODO: Implement email service with Brevo
-      // await sendEmail({
-      //   email: user.email,
-      //   subject: 'Password reset token',
-      //   message,
-      // });
+      // Send password reset email
+      await emailService.sendPasswordResetEmail(
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        resetToken
+      );
 
       res.status(200).json({
         success: true,
-        message: 'Email sent',
-        // For development, return the reset URL
-        resetUrl: process.env.NODE_ENV === 'development' ? resetUrl : undefined,
+        message: 'Password reset email sent',
+        // For development, return the reset token
+        ...(process.env.NODE_ENV === 'development' && {
+          resetToken,
+        }),
       });
     } catch (err) {
       console.error('Email sending error:', err);
