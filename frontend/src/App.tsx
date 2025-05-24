@@ -20,6 +20,9 @@ import NotFound from './pages/auth/NotFound';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import UserProfile from './pages/dashboard/UserProfile';
 
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+
 // Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
 import TransactionList from './pages/dashboard/TransactionList';
@@ -105,6 +108,7 @@ function App() {
                   <ProtectedRoute allowedRoles={['admin', 'superadmin']} />
                 }
               >
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route
                   path="/users"
                   element={<div>Users Management (Coming Soon)</div>}

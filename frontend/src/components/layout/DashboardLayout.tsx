@@ -30,6 +30,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     ];
 
     const adminItems = [
+      {
+        name: 'Admin Dashboard',
+        path: '/admin/dashboard',
+        icon: 'tachometer-alt',
+      },
       { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
       { name: 'Users', path: '/users', icon: 'users' },
       { name: 'Events', path: '/events', icon: 'calendar' },

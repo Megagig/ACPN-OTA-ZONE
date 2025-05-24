@@ -26,6 +26,29 @@ const createSuperAdmin = async () => {
       process.exit(0);
     }
 
+    // Check if user exists with this email but not as superadmin
+    const existingUser = await User.findOne({
+      email: 'Megagigdev@gmail.com',
+    });
+
+    if (existingUser) {
+      console.log('User exists but not as superadmin. Updating role...');
+      existingUser.role = UserRole.SUPERADMIN;
+      existingUser.status = UserStatus.ACTIVE;
+      existingUser.isEmailVerified = true;
+      existingUser.isApproved = true;
+      await existingUser.save();
+
+      console.log('User updated to superadmin successfully:', {
+        email: existingUser.email,
+        role: existingUser.role,
+        id: existingUser._id,
+      });
+
+      mongoose.connection.close();
+      process.exit(0);
+    }
+
     // Create a new superadmin user
     const superAdmin = await User.create({
       firstName: 'Super',
