@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import User, { UserRole, UserStatus } from '../models/user.model';
-import { connectDB } from '../config/db';
+import connectDB from '../config/db';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -32,7 +32,7 @@ const createSuperAdmin = async () => {
       lastName: 'Admin',
       email: 'Megagigdev@gmail.com',
       password: 'Exploit4ever@247',
-      phone: '1234567890', // placeholder phone number
+      phone: '08060374755', // placeholder phone number
       role: UserRole.SUPERADMIN,
       status: UserStatus.ACTIVE,
       isEmailVerified: true,
