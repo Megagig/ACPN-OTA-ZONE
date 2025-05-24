@@ -12,10 +12,10 @@ import {
   verifyEmailWithCode,
 } from '../controllers/auth.controller';
 import { protect } from '../middleware/auth.middleware';
-import { 
-  authRateLimiter, 
+import {
+  authRateLimiter,
   passwordResetLimiter,
-  emailVerificationLimiter 
+  emailVerificationLimiter,
 } from '../middleware/rate-limit.middleware';
 
 const router = express.Router();
@@ -29,6 +29,10 @@ router.put('/reset-password/:token', passwordResetLimiter, resetPassword);
 router.put('/update-details', protect, updateDetails);
 router.put('/update-password', protect, updatePassword);
 router.get('/verify-email/:token', emailVerificationLimiter, verifyEmail);
-router.post('/verify-email-code', emailVerificationLimiter, verifyEmailWithCode);
+router.post(
+  '/verify-email-code',
+  emailVerificationLimiter,
+  verifyEmailWithCode
+);
 
 export default router;

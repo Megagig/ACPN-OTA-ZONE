@@ -14,11 +14,12 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://acpnotazone.org', 'https://www.acpnotazone.org']
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin:
+    process.env.NODE_ENV === 'production'
+      ? ['https://acpnotazone.org', 'https://www.acpnotazone.org']
+      : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 app.use(express.json());

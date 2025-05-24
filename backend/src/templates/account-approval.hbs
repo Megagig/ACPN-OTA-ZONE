@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Account Approved</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #006837;
+        padding: 20px;
+        text-align: center;
+        color: white;
+      }
+      .content {
+        padding: 20px;
+        background-color: #f9f9f9;
+      }
+      .footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        color: #777777;
+      }
+      .button {
+        display: inline-block;
+        background-color: #006837;
+        color: white;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='header'>
+        <h1>ACPN Ota Zone</h1>
+      </div>
+      <div class='content'>
+        <h2>Account Approved!</h2>
+        <p>Hello {{name}},</p>
+        <p>We are pleased to inform you that your ACPN Ota Zone account has been
+          approved by an administrator. You can now log in to access all member
+          features and benefits.</p>
+
+        <a href='{{loginUrl}}' class='button'>Login to Your Account</a>
+
+        <p>Thank you for your patience during the approval process. We look
+          forward to your active participation in our community.</p>
+
+        <p>Thank you,<br />ACPN Ota Zone Team</p>
+      </div>
+      <div class='footer'>
+        <p>&copy;
+          {{year}}
+          Association of Community Pharmacists of Nigeria, Ota Zone. All rights
+          reserved.</p>
+        <p>This is an automated message, please do not reply.</p>
+      </div>
+    </div>
+  </body>
+</html>
