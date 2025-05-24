@@ -14,6 +14,7 @@ import {
   getEventStats,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
+import { UserRole } from '../models/user.model';
 
 const router = express.Router();
 
@@ -29,32 +30,55 @@ router
   .delete(unregisterFromEvent);
 
 // Admin/Secretary routes
-router.route('/stats').get(authorize('admin', 'superadmin'), getEventStats);
+router
+  .route('/stats')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getEventStats);
 
 router
   .route('/')
-  .post(authorize('admin', 'superadmin', 'secretary'), createEvent);
+  .post(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    createEvent
+  );
 
 router
   .route('/:id')
-  .put(authorize('admin', 'superadmin', 'secretary'), updateEvent)
-  .delete(authorize('admin', 'superadmin', 'secretary'), deleteEvent);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    updateEvent
+  )
+  .delete(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    deleteEvent
+  );
 
 router
   .route('/:id/cancel')
-  .put(authorize('admin', 'superadmin', 'secretary'), cancelEvent);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    cancelEvent
+  );
 
 router
   .route('/:id/attendees')
-  .get(authorize('admin', 'superadmin', 'secretary'), getEventAttendees);
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    getEventAttendees
+  );
 
 router
   .route('/:id/attendance/:userId')
-  .put(authorize('admin', 'superadmin', 'secretary'), markAttendance);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    markAttendance
+  );
 
 // Admin/Treasurer routes
 router
   .route('/:id/payment/:userId')
-  .put(authorize('admin', 'superadmin', 'treasurer'), updatePaymentStatus);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.TREASURER),
+    updatePaymentStatus
+  );
 
 export default router;

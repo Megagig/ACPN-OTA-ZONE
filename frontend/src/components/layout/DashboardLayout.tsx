@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const DashboardLayout: React.FC = () => {
+interface DashboardLayoutProps {
+  children?: ReactNode;
+}
+
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,7 +164,7 @@ const DashboardLayout: React.FC = () => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
-          <Outlet />
+          {children ? children : <Outlet />}
         </main>
       </div>
     </div>

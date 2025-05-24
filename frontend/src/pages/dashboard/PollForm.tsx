@@ -16,16 +16,12 @@ import {
   IconButton,
   RadioGroup,
   Radio,
-  Card,
-  CardBody,
   Divider,
   Flex,
-  useToast,
   FormErrorMessage,
   Switch,
   Badge,
   Tooltip,
-  useDisclosure,
   Collapse,
   AlertDialog,
   AlertDialogBody,
@@ -33,7 +29,11 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-} from '@chakra-ui/react';
+} from '../../components/ui/TailwindComponentsFixed';
+import { Card } from '../../components/common/CardComponent';
+import { CardBody } from '../../components/ui/TailwindComponentsFixed';
+import { useToast } from '../../hooks/useToast';
+import { useDisclosure } from '../../hooks/useDisclosure';
 import {
   FaPlus,
   FaTrash,
@@ -41,11 +41,10 @@ import {
   FaArrowDown,
   FaEye,
   FaSave,
-  FaCheckCircle,
   FaEdit,
   FaTimes,
 } from 'react-icons/fa';
-import { useFormik, FormikHelpers } from 'formik';
+import { useFormik, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { v4 as uuidv4 } from 'uuid';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -70,7 +69,7 @@ interface PollFormValues {
 const PollForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(true);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [currentEditQuestion, setCurrentEditQuestion] = useState<number | null>(
@@ -91,16 +90,17 @@ const PollForm: React.FC = () => {
         Yup.object({
           text: Yup.string().required('Question text is required'),
           type: Yup.string().required('Question type is required'),
-          options: Yup.array().when('type', {
-            is: (type: string) =>
-              type === 'multiple_choice' || type === 'single_choice',
-            then: Yup.array()
-              .of(
-                Yup.object({
-                  text: Yup.string().required('Option text is required'),
-                })
-              )
-              .min(2, 'At least 2 options are required'),
+          options: Yup.array().when('type', ([type], schema) => {
+            if (type === 'multiple_choice' || type === 'single_choice') {
+              return schema
+                .of(
+                  Yup.object({
+                    text: Yup.string().required('Option text is required'),
+                  })
+                )
+                .min(2, 'At least 2 options are required');
+            }
+            return schema;
           }),
         })
       )
@@ -119,8 +119,12 @@ const PollForm: React.FC = () => {
     questions: [],
   };
 
+  const [initialFormValues, setInitialFormValues] =
+    useState<PollFormValues>(initialValues);
+
   const formik = useFormik({
-    initialValues,
+    initialValues: initialFormValues,
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (
       values: PollFormValues,
@@ -153,7 +157,8 @@ const PollForm: React.FC = () => {
         }
 
         navigate('/polls/list');
-      } catch (error) {
+      } catch (err) {
+        console.error('Error saving poll:', err);
         toast({
           title: 'Error saving poll',
           description: 'There was an error saving the poll',
@@ -193,7 +198,7 @@ const PollForm: React.FC = () => {
             .split('T')[0];
           const endDate = new Date(data.endDate).toISOString().split('T')[0];
 
-          formik.setValues({
+          setInitialFormValues({
             title: data.title,
             description: data.description,
             startDate,
@@ -202,7 +207,8 @@ const PollForm: React.FC = () => {
             allowResultViewing: data.allowResultViewing,
             questions: data.questions,
           });
-        } catch (error) {
+        } catch (err) {
+          console.error('Error loading poll:', err);
           toast({
             title: 'Error loading poll',
             description: 'Unable to load poll details',
@@ -220,7 +226,7 @@ const PollForm: React.FC = () => {
     };
 
     fetchPoll();
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast]); // setInitialFormValues is stable
 
   const addQuestion = () => {
     const newQuestion: PollQuestion = {
@@ -351,9 +357,9 @@ const PollForm: React.FC = () => {
       question.type === 'single_choice' || question.type === 'multiple_choice';
 
     return (
-      <Card key={question._id} variant="outline" mb={4}>
+      <Card key={question._id} className="border border-gray-200 mb-4">
         <CardBody>
-          <Flex justify="space-between" align="center" mb={3}>
+          <Flex justify="between" align="center" className="mb-3">
             <HStack>
               <Badge colorScheme="blue">Q{index + 1}</Badge>
               <Heading size="sm">
@@ -429,6 +435,7 @@ const PollForm: React.FC = () => {
                   isInvalid={
                     !!(
                       formik.touched.questions?.[index]?.text &&
+                      typeof formik.errors.questions?.[index] === 'object' &&
                       formik.errors.questions?.[index]?.text
                     )
                   }
@@ -443,6 +450,7 @@ const PollForm: React.FC = () => {
                   />
                   <FormErrorMessage>
                     {formik.touched.questions?.[index]?.text &&
+                      typeof formik.errors.questions?.[index] === 'object' &&
                       formik.errors.questions?.[index]?.text}
                   </FormErrorMessage>
                 </FormControl>
@@ -483,7 +491,7 @@ const PollForm: React.FC = () => {
 
                 {hasOptions && (
                   <Box>
-                    <Flex justify="space-between" align="center" mb={2}>
+                    <Flex justify="between" align="center" className="mb-2">
                       <FormLabel mb="0">Options</FormLabel>
                       <Button
                         size="xs"
@@ -498,6 +506,8 @@ const PollForm: React.FC = () => {
                       isInvalid={
                         !!(
                           formik.touched.questions?.[index]?.options &&
+                          typeof formik.errors.questions?.[index] ===
+                            'object' &&
                           formik.errors.questions?.[index]?.options
                         )
                       }
@@ -519,7 +529,7 @@ const PollForm: React.FC = () => {
                               size="sm"
                               colorScheme="red"
                               variant="ghost"
-                              isDisabled={question.options?.length <= 2}
+                              isDisabled={(question.options?.length ?? 0) <= 2}
                               onClick={() => removeOption(index, optIndex)}
                             />
                           </Flex>
@@ -528,6 +538,8 @@ const PollForm: React.FC = () => {
 
                       <FormErrorMessage>
                         {formik.touched.questions?.[index]?.options &&
+                          typeof formik.errors.questions?.[index] ===
+                            'object' &&
                           formik.errors.questions?.[index]?.options}
                       </FormErrorMessage>
                     </FormControl>
@@ -554,7 +566,7 @@ const PollForm: React.FC = () => {
   return (
     <DashboardLayout>
       <Box p={5}>
-        <Flex justify="space-between" align="center" mb={6}>
+        <Flex justify="between" align="center" className="mb-6">
           <Heading size="lg">
             {isEdit ? 'Edit Poll' : 'Create New Poll'}
           </Heading>
@@ -582,7 +594,7 @@ const PollForm: React.FC = () => {
           </HStack>
         </Flex>
 
-        <Card mb={6}>
+        <Card className="mb-6">
           <CardBody>
             <VStack spacing={6} align="stretch">
               <FormControl
@@ -685,7 +697,7 @@ const PollForm: React.FC = () => {
           </CardBody>
         </Card>
 
-        <Flex justify="space-between" align="center" mb={4}>
+        <Flex justify="between" align="center" className="mb-4">
           <Heading size="md">Poll Questions</Heading>
           <Button
             leftIcon={<FaPlus />}
@@ -697,7 +709,7 @@ const PollForm: React.FC = () => {
         </Flex>
 
         {formik.values.questions.length === 0 ? (
-          <Card variant="outline">
+          <Card className="border border-gray-200">
             <CardBody textAlign="center" py={8}>
               <Text mb={4}>No questions added yet</Text>
               <Button

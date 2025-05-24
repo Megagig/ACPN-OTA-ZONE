@@ -7,24 +7,22 @@ import {
   Button,
   VStack,
   Divider,
-  useToast,
-  Card,
-  CardBody,
   Radio,
   RadioGroup,
   Stack,
-  Image,
-  Avatar,
   Badge,
   Flex,
   Progress,
   SimpleGrid,
-  Alert,
-  AlertIcon,
-} from '@chakra-ui/react';
+  Image,
+} from '../../components/ui/TailwindComponentsFixed';
+import { Alert, AlertIcon } from '../../components/common/AlertComponent';
+import { Avatar } from '../../components/ui/TailwindComponentsFixed';
+import { Card, CardBody } from '../../components/common/CardComponent';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Election, Position, Candidate } from '../../types/election.types';
-import { electionService } from '../../services/election.service';
+import type { Election, Position, Candidate } from '../../types/election.types';
+import electionService from '../../services/election.service';
+import { useToast } from '../../hooks/useToast';
 
 interface SelectedCandidates {
   [positionId: string]: string;
@@ -33,7 +31,7 @@ interface SelectedCandidates {
 const VotingInterface: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showToast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -49,14 +47,12 @@ const VotingInterface: React.FC = () => {
           setLoading(true);
           const data = await electionService.getElectionById(id);
 
-          if (data.status !== 'active') {
-            toast({
-              title: 'Voting unavailable',
-              description: 'This election is not currently active for voting',
-              status: 'warning',
-              duration: 5000,
-              isClosable: true,
-            });
+          if (data.status !== 'ongoing') {
+            showToast(
+              'Voting unavailable',
+              'This election is not currently active for voting',
+              'warning'
+            );
             navigate(`/elections/${id}`);
             return;
           }
@@ -68,20 +64,19 @@ const VotingInterface: React.FC = () => {
           setHasVoted(hasUserVoted);
         }
       } catch (error) {
-        toast({
-          title: 'Error loading election',
-          description: 'Unable to load election details',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        console.error('Error loading election:', error);
+        showToast(
+          'Error loading election',
+          'Unable to load election details',
+          'error'
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchElection();
-  }, [id, navigate, toast]);
+  }, [id, navigate, showToast]);
 
   const handleSelectCandidate = (positionId: string, candidateId: string) => {
     setSelectedCandidates({
@@ -118,23 +113,20 @@ const VotingInterface: React.FC = () => {
 
       await electionService.submitVotes(id, votes);
 
-      toast({
-        title: 'Votes submitted successfully',
-        description: 'Your votes have been recorded',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      showToast(
+        'Votes submitted successfully',
+        'Your votes have been recorded',
+        'success'
+      );
 
       navigate(`/elections/${id}`);
     } catch (error) {
-      toast({
-        title: 'Error submitting votes',
-        description: 'There was a problem recording your votes',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      console.error('Error submitting votes:', error);
+      showToast(
+        'Error submitting votes',
+        'There was a problem recording your votes',
+        'error'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +135,7 @@ const VotingInterface: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <Box p={5}>
+        <Box className="p-5">
           <Text>Loading election details...</Text>
         </Box>
       </DashboardLayout>
@@ -153,9 +145,9 @@ const VotingInterface: React.FC = () => {
   if (!election) {
     return (
       <DashboardLayout>
-        <Box p={5}>
+        <Box className="p-5">
           <Text>Election not found</Text>
-          <Button mt={4} onClick={() => navigate('/elections/list')}>
+          <Button className="mt-4" onClick={() => navigate('/elections/list')}>
             Back to Elections
           </Button>
         </Box>
@@ -166,8 +158,8 @@ const VotingInterface: React.FC = () => {
   if (hasVoted) {
     return (
       <DashboardLayout>
-        <Box p={5}>
-          <Alert status="info" mb={5}>
+        <Box className="p-5">
+          <Alert status="info" className="mb-5">
             <AlertIcon />
             You have already cast your vote in this election.
           </Alert>
@@ -183,103 +175,98 @@ const VotingInterface: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box p={5}>
-        <Heading size="lg" mb={2}>
+      <Box className="p-5">
+        <Heading size="lg" className="mb-2">
           {election.title}
         </Heading>
-        <Text mb={4}>Cast your vote for each position</Text>
+        <Text className="mb-4">Cast your vote for each position</Text>
 
         <Progress
           value={(currentStep / election.positions.length) * 100}
           size="sm"
           colorScheme="blue"
-          mb={5}
-          borderRadius="md"
+          className="mb-5 rounded-md"
         />
 
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
           <Box>
-            <Card variant="outline" mb={5}>
+            <Card variant="outline" className="mb-5">
               <CardBody>
-                <Heading size="md" mb={3}>
+                <Heading size="md" className="mb-3">
                   Position {currentStep + 1} of {election.positions.length}:{' '}
-                  {currentPosition?.title}
+                  {currentPosition?.name}
                 </Heading>
-                <Text mb={4}>{currentPosition?.description}</Text>
+                <Text className="mb-4">{currentPosition?.description}</Text>
 
-                <Divider my={4} />
+                <Divider className="my-4" />
 
-                {currentPosition?.candidates &&
-                currentPosition.candidates.length > 0 ? (
+                {election.candidates.filter(
+                  (candidate) =>
+                    candidate.position === currentPosition?._id &&
+                    candidate.status === 'approved'
+                ).length > 0 ? (
                   <RadioGroup
                     onChange={(value) =>
-                      handleSelectCandidate(currentPosition._id, value)
+                      handleSelectCandidate(currentPosition?._id || '', value)
                     }
-                    value={selectedCandidates[currentPosition._id] || ''}
+                    value={selectedCandidates[currentPosition?._id || ''] || ''}
                   >
                     <Stack direction="column" spacing={4}>
-                      {currentPosition.candidates.map(
-                        (candidate: Candidate) => (
+                      {election.candidates
+                        .filter(
+                          (candidate) =>
+                            candidate.position === currentPosition?._id &&
+                            candidate.status === 'approved'
+                        )
+                        .map((candidate: Candidate) => (
                           <Card
                             key={candidate._id}
-                            p={3}
-                            variant="outline"
-                            borderColor={
-                              selectedCandidates[currentPosition._id] ===
+                            className={`p-3 border ${
+                              selectedCandidates[currentPosition?._id || ''] ===
                               candidate._id
-                                ? 'blue.300'
-                                : 'gray.200'
-                            }
-                            bg={
-                              selectedCandidates[currentPosition._id] ===
-                              candidate._id
-                                ? 'blue.50'
-                                : 'white'
-                            }
+                                ? 'border-blue-300 bg-blue-50'
+                                : 'border-gray-200 bg-white'
+                            }`}
                           >
-                            <Radio value={candidate._id} w="100%">
+                            <Radio value={candidate._id} className="w-full">
                               <Flex align="center">
                                 {candidate.photoUrl ? (
                                   <Image
                                     src={candidate.photoUrl}
-                                    alt={candidate.name}
-                                    boxSize="50px"
-                                    objectFit="cover"
-                                    borderRadius="full"
-                                    mr={3}
+                                    alt={candidate.fullName}
+                                    className="w-[50px] h-[50px] object-cover rounded-full mr-3"
                                   />
                                 ) : (
                                   <Avatar
                                     size="md"
-                                    name={candidate.name}
-                                    mr={3}
+                                    name={candidate.fullName}
+                                    className="mr-3"
                                   />
                                 )}
                                 <Box>
-                                  <Text fontWeight="semibold">
-                                    {candidate.name}
+                                  <Text className="font-semibold">
+                                    {candidate.fullName}
                                   </Text>
-                                  <Text fontSize="sm" noOfLines={1}>
-                                    {candidate.bio?.substring(0, 70) ||
-                                      'No bio available'}
+                                  <Text className="text-sm line-clamp-1">
+                                    {candidate.manifesto?.substring(0, 70) ||
+                                      'No manifesto available'}
                                   </Text>
                                 </Box>
                               </Flex>
                             </Radio>
                           </Card>
-                        )
-                      )}
+                        ))}
                     </Stack>
                   </RadioGroup>
                 ) : (
-                  <Text color="gray.500">
+                  <Text className="text-gray-500">
                     No candidates available for this position
                   </Text>
                 )}
               </CardBody>
             </Card>
 
-            <Flex justify="space-between">
+            <Flex justify="between">
               <Button onClick={handlePrevious} isDisabled={currentStep === 0}>
                 Previous
               </Button>
@@ -289,8 +276,11 @@ const VotingInterface: React.FC = () => {
                   colorScheme="blue"
                   onClick={handleNext}
                   isDisabled={
-                    !currentPosition?.candidates?.length ||
-                    !selectedCandidates[currentPosition._id]
+                    !election.candidates.filter(
+                      (candidate) =>
+                        candidate.position === currentPosition?._id &&
+                        candidate.status === 'approved'
+                    ).length || !selectedCandidates[currentPosition?._id || '']
                   }
                 >
                   Next
@@ -303,9 +293,12 @@ const VotingInterface: React.FC = () => {
                   isDisabled={
                     !Object.keys(selectedCandidates).length ||
                     Object.keys(selectedCandidates).length !==
-                      election.positions.filter(
-                        (p) => p.candidates && p.candidates.length > 0
-                      ).length
+                      election.positions.filter((p) => {
+                        const positionCandidates = election.candidates.filter(
+                          (c) => c.position === p._id && c.status === 'approved'
+                        );
+                        return positionCandidates.length > 0;
+                      }).length
                   }
                 >
                   Submit Votes
@@ -317,7 +310,7 @@ const VotingInterface: React.FC = () => {
           <Box>
             <Card variant="outline">
               <CardBody>
-                <Heading size="md" mb={4}>
+                <Heading size="md" className="mb-4">
                   Your Selections
                 </Heading>
                 <VStack align="stretch" spacing={4}>
@@ -325,22 +318,20 @@ const VotingInterface: React.FC = () => {
                     (position: Position, index: number) => (
                       <Box
                         key={position._id}
-                        p={3}
-                        borderWidth={1}
-                        borderRadius="md"
-                        borderColor={
-                          currentStep === index ? 'blue.300' : 'gray.200'
-                        }
-                        bg={currentStep === index ? 'blue.50' : 'white'}
+                        className={`p-3 border rounded-md ${
+                          currentStep === index
+                            ? 'border-blue-300 bg-blue-50'
+                            : 'border-gray-200 bg-white'
+                        }`}
                       >
-                        <Flex justify="space-between" align="center">
-                          <Text fontWeight="medium">{position.title}</Text>
+                        <Flex justify="between" align="center">
+                          <Text className="font-medium">{position.name}</Text>
                           {selectedCandidates[position._id] ? (
                             <Badge colorScheme="green">
-                              {position.candidates?.find(
+                              {election.candidates.find(
                                 (c) =>
                                   c._id === selectedCandidates[position._id]
-                              )?.name || 'Selected'}
+                              )?.fullName || 'Selected'}
                             </Badge>
                           ) : (
                             <Badge colorScheme="gray">Not selected</Badge>
@@ -352,10 +343,9 @@ const VotingInterface: React.FC = () => {
                 </VStack>
 
                 <Button
-                  mt={6}
+                  className="mt-6 w-full"
                   colorScheme="red"
                   variant="outline"
-                  width="full"
                   onClick={() => navigate(`/elections/${id}`)}
                 >
                   Cancel Voting

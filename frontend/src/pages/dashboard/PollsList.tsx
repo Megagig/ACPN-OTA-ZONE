@@ -1,41 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Heading,
-  Text,
-  Button,
-  HStack,
-  Badge,
-  Flex,
-  Divider,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Card,
-  CardBody,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  IconButton,
-  Input,
-  Select,
-  InputGroup,
-  InputLeftElement,
-  useDisclosure,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  useToast,
-} from '@chakra-ui/react';
-import {
   FaPlus,
   FaSearch,
   FaEllipsisV,
@@ -45,15 +10,46 @@ import {
   FaCalendar,
   FaCheck,
   FaTimes,
-  FaFilter,
 } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Poll, PollStatus } from '../../types/poll.types';
+import { useToast } from '../../hooks/useToast';
+import { useDisclosure } from '../../hooks/useDisclosure';
+import {
+  Box,
+  Heading,
+  Text,
+  Button,
+  Badge,
+  Flex,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton,
+  Input,
+  Select,
+  InputGroup,
+  InputLeftElement,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+} from '../../components/ui/TailwindComponents';
+import { Card, CardBody } from '../../components/common/CardComponent';
+import type { Poll, PollStatus } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
 
 const PollsList: React.FC = () => {
   const navigate = useNavigate();
-  const toast = useToast();
+  const { toast } = useToast();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [filteredPolls, setFilteredPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -70,8 +66,8 @@ const PollsList: React.FC = () => {
         const data = await pollService.getPolls();
         setPolls(data);
         setFilteredPolls(data);
-      } catch (error) {
-        console.error('Error fetching polls:', error);
+      } catch {
+        console.error('Error fetching polls');
         toast({
           title: 'Error fetching polls',
           description: 'There was an error loading the polls.',
@@ -122,7 +118,7 @@ const PollsList: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error deleting poll',
         description: 'There was an error deleting the poll.',
@@ -156,7 +152,7 @@ const PollsList: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error updating poll status',
         description: 'There was an error updating the poll status.',
@@ -167,7 +163,9 @@ const PollsList: React.FC = () => {
     }
   };
 
-  const getStatusBadgeColor = (status: PollStatus): string => {
+  const getStatusBadgeColor = (
+    status: PollStatus
+  ): 'blue' | 'green' | 'red' | 'gray' | 'orange' | 'purple' => {
     switch (status) {
       case 'active':
         return 'green';
@@ -187,7 +185,7 @@ const PollsList: React.FC = () => {
   return (
     <DashboardLayout>
       <Box p={5}>
-        <Flex justify="space-between" align="center" mb={6}>
+        <Flex justify="between" align="center" className="mb-6">
           <Heading size="lg">Polls & Surveys</Heading>
           <Button
             leftIcon={<FaPlus />}
@@ -198,10 +196,10 @@ const PollsList: React.FC = () => {
           </Button>
         </Flex>
 
-        <Card mb={6}>
+        <Card className="mb-6">
           <CardBody>
-            <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
-              <InputGroup maxW={{ md: '300px' }}>
+            <Flex direction="column" className="md:flex-row gap-4">
+              <InputGroup className="w-full md:max-w-xs">
                 <InputLeftElement pointerEvents="none">
                   <FaSearch color="gray.300" />
                 </InputLeftElement>
@@ -213,10 +211,9 @@ const PollsList: React.FC = () => {
               </InputGroup>
 
               <Select
-                maxW={{ md: '200px' }}
+                className="w-full md:max-w-48"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                leftIcon={<FaFilter />}
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -231,7 +228,7 @@ const PollsList: React.FC = () => {
           <Text>Loading polls...</Text>
         ) : (
           <Card variant="outline">
-            <CardBody p={0}>
+            <CardBody className="p-0">
               {filteredPolls.length > 0 ? (
                 <Table variant="simple">
                   <Thead>
@@ -249,7 +246,11 @@ const PollsList: React.FC = () => {
                         <Td>
                           <Box>
                             <Text fontWeight="medium">{poll.title}</Text>
-                            <Text fontSize="sm" color="gray.600" noOfLines={1}>
+                            <Text
+                              fontSize="sm"
+                              color="gray"
+                              className="line-clamp-1"
+                            >
                               {poll.description}
                             </Text>
                           </Box>
@@ -260,7 +261,7 @@ const PollsList: React.FC = () => {
                           </Badge>
                         </Td>
                         <Td>
-                          <Flex align="center" gap={2}>
+                          <Flex align="center" className="gap-2">
                             <FaCalendar size="12px" />
                             <Text fontSize="sm">
                               {formatDate(poll.startDate)} -{' '}
@@ -277,7 +278,9 @@ const PollsList: React.FC = () => {
                               icon={<FaEllipsisV />}
                               variant="ghost"
                               size="sm"
-                            />
+                            >
+                              <FaEllipsisV />
+                            </MenuButton>
                             <MenuList>
                               <MenuItem
                                 icon={<FaEye />}
@@ -333,7 +336,7 @@ const PollsList: React.FC = () => {
                                 <MenuItem
                                   icon={<FaTrash />}
                                   onClick={() => confirmDelete(poll._id)}
-                                  color="red.500"
+                                  className="text-red-500"
                                 >
                                   Delete
                                 </MenuItem>
@@ -372,10 +375,12 @@ const PollsList: React.FC = () => {
               </AlertDialogBody>
 
               <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button colorScheme="red" onClick={handleDelete} ml={3}>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button
+                  colorScheme="red"
+                  onClick={handleDelete}
+                  className="ml-3"
+                >
                   Delete
                 </Button>
               </AlertDialogFooter>

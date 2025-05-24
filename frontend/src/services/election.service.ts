@@ -662,7 +662,7 @@ export const addCandidate = async (
   // return response.data.data;
 };
 
-export const updateCandidate = async (
+export const updateCandidateInPosition = async (
   electionId: string,
   positionId: string,
   candidateId: string,

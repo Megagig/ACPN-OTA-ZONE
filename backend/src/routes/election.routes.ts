@@ -14,6 +14,7 @@ import {
   getElectionStats,
 } from '../controllers/election.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
+import { UserRole } from '../models/user.model';
 
 const router = express.Router();
 
@@ -28,25 +29,29 @@ router.route('/:id/results').get(getElectionResults);
 router.route('/:id/vote').post(castVote);
 
 // Admin routes
-router.route('/stats').get(authorize('admin', 'superadmin'), getElectionStats);
+router
+  .route('/stats')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getElectionStats);
 
-router.route('/').post(authorize('admin', 'superadmin'), createElection);
+router
+  .route('/')
+  .post(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), createElection);
 
 router
   .route('/:id')
-  .put(authorize('admin', 'superadmin'), updateElection)
-  .delete(authorize('admin', 'superadmin'), deleteElection);
+  .put(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), updateElection)
+  .delete(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), deleteElection);
 
 router
   .route('/:id/cancel')
-  .put(authorize('admin', 'superadmin'), cancelElection);
+  .put(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), cancelElection);
 
 router
   .route('/:id/candidates')
-  .post(authorize('admin', 'superadmin'), addCandidate);
+  .post(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), addCandidate);
 
 router
   .route('/:id/candidates/:candidateId')
-  .delete(authorize('admin', 'superadmin'), removeCandidate);
+  .delete(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), removeCandidate);
 
 export default router;

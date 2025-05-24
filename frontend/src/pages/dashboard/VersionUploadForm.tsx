@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import documentService from '../../services/document.service';
-import { Document } from '../../types/document.types';
+import type { Document } from '../../types/document.types';
 
 const VersionUploadForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();

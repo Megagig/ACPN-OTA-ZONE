@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import communicationService from '../../services/communication.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
-import {
+import type {
   Communication,
   CommunicationSummary,
   CommunicationType,

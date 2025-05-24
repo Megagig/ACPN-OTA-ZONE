@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import documentService from '../../services/document.service';
-import {
+import type {
   DocumentSummary,
   DocumentCategory,
   DocumentAccessLevel,

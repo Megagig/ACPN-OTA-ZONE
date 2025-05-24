@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import documentService from '../../services/document.service';
-import {
+import type {
   DocumentCategory,
   DocumentAccessLevel,
 } from '../../types/document.types';

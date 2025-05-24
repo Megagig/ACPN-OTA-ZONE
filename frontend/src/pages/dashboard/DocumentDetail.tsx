@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import documentService from '../../services/document.service';
-import { Document, DocumentVersion } from '../../types/document.types';
+import type { Document, DocumentVersion } from '../../types/document.types';
 
 const DocumentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

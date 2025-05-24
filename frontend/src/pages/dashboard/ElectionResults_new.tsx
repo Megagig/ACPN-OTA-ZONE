@@ -1,3 +1,4 @@
+// filepath: /home/megagig/PROJECTS/MERN/acpn-ota-zone/frontend/src/pages/dashboard/ElectionResults.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaChartBar, FaMedal } from 'react-icons/fa';
@@ -24,9 +25,9 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-} from '../../components/ui/TailwindComponentsFixed';
+} from '../../components/ui/TailwindComponents';
 import { Card, CardBody } from '../../components/common/CardComponent';
-import type { Election, Position, Candidate } from '../../types/election.types';
+import type { Election, Position } from '../../types/election.types';
 import electionService from '../../services/election.service';
 import ChartComponent from '../../components/common/ChartComponent';
 
@@ -47,7 +48,7 @@ interface VotingStatistics {
 const ElectionResults: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { toast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -62,13 +63,15 @@ const ElectionResults: React.FC = () => {
           setElection(data);
 
           // If election is completed, fetch voting statistics
-          if (data.status === 'ongoing') {
-            showToast(
-              'Election is still active',
-              'Results will be available after the election closes',
-              'info',
-              5000
-            );
+          if (data.status === 'active') {
+            toast({
+              title: 'Election is still active',
+              description:
+                'Results will be available after the election closes',
+              status: 'info',
+              duration: 5000,
+              isClosable: true,
+            });
             navigate(`/elections/${id}`);
             return;
           }
@@ -95,18 +98,20 @@ const ElectionResults: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching election results:', error);
-        showToast(
-          'Error fetching election results',
-          'Unable to load election results',
-          'error'
-        );
+        toast({
+          title: 'Error fetching election results',
+          description: 'Unable to load election results',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElectionResults();
-  }, [id, navigate, showToast]);
+  }, [id, navigate, toast]);
 
   const renderPositionResults = (position: Position) => {
     if (!position.candidates || position.candidates.length === 0) {

@@ -1,29 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
-  Box,
-  Heading,
-  Text,
-  Badge,
-  Button,
-  VStack,
-  HStack,
-  Divider,
-  useToast,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  Flex,
-  Card,
-  CardBody,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-} from '@chakra-ui/react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaEdit,
   FaVoteYea,
@@ -32,19 +8,28 @@ import {
   FaUserPlus,
 } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import { Card, CardBody } from '../../components/common/CardComponent';
+import {
+  Badge,
+  Button,
+  Text,
+  Heading,
+  Divider,
+} from '../../components/ui/TailwindComponents';
+import { useToast } from '../../hooks/useToast';
 import type {
   Election,
   ElectionStatus,
   Position,
   Candidate,
 } from '../../types/election.types';
-import { electionService } from '../../services/election.service';
+import electionService from '../../services/election.service';
 import CandidatesList from './CandidatesList';
 
 const ElectionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { toast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<number>(0);

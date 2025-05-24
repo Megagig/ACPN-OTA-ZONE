@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaChartBar, FaMedal } from 'react-icons/fa';
+import {
+  FaChartBar,
+  FaMedal,
+  FaPercentage,
+  FaUserFriends,
+} from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import { useToast } from '../../hooks/useToast';
@@ -24,7 +29,7 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-} from '../../components/ui/TailwindComponentsFixed';
+} from '../../components/ui/TailwindComponents';
 import { Card, CardBody } from '../../components/common/CardComponent';
 import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
@@ -47,11 +52,10 @@ interface VotingStatistics {
 const ElectionResults: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { toast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<number>(0);
 
   useEffect(() => {
     const fetchElectionResults = async () => {
@@ -62,57 +66,40 @@ const ElectionResults: React.FC = () => {
           setElection(data);
 
           // If election is completed, fetch voting statistics
-          if (data.status === 'ongoing') {
-            showToast(
-              'Election is still active',
-              'Results will be available after the election closes',
-              'info',
-              5000
-            );
+          if (data.status === 'completed') {
+            const stats = await electionService.getElectionStatistics(id);
+            setStatistics(stats);
+          } else {
+            toast({
+              title: 'Results not available',
+              description:
+                'Detailed results are only available for completed elections',
+              status: 'info',
+              duration: 5000,
+              isClosable: true,
+            });
             navigate(`/elections/${id}`);
-            return;
           }
-
-          // Fetch statistics (mock data for now)
-          const stats: VotingStatistics = {
-            totalEligibleVoters: 1500,
-            totalVotesCast: 1200,
-            votingPercentage: 80,
-            votersByAge: {
-              '18-25': 250,
-              '26-35': 400,
-              '36-45': 350,
-              '46-55': 150,
-              '56+': 50,
-            },
-            votersByGender: {
-              male: 600,
-              female: 550,
-              other: 50,
-            },
-          };
-          setStatistics(stats);
         }
       } catch (error) {
-        console.error('Error fetching election results:', error);
-        showToast(
-          'Error fetching election results',
-          'Unable to load election results',
-          'error'
-        );
+        toast({
+          title: 'Error fetching election results',
+          description: 'Unable to load election results',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElectionResults();
-  }, [id, navigate, showToast]);
+  }, [id, navigate, toast]);
 
   const renderPositionResults = (position: Position) => {
     if (!position.candidates || position.candidates.length === 0) {
-      return (
-        <Text className="text-gray-500">No candidates for this position</Text>
-      );
+      return <Text color="gray.500">No candidates for this position</Text>;
     }
 
     // Calculate total votes for this position
@@ -126,8 +113,12 @@ const ElectionResults: React.FC = () => {
       (a, b) => (b.voteCount || 0) - (a.voteCount || 0)
     );
 
+    // Find the winner
+    const winner = sortedCandidates[0];
+    const winnerVotes = winner?.voteCount || 0;
+
     return (
-      <Box className="space-y-4">
+      <Box>
         {sortedCandidates.map((candidate, index) => {
           const votePercentage =
             totalPositionVotes > 0
@@ -137,32 +128,28 @@ const ElectionResults: React.FC = () => {
           return (
             <Box
               key={candidate._id}
-              className={`p-4 border rounded-md ${
-                index === 0
-                  ? 'border-green-300 bg-green-50'
-                  : 'border-gray-200 bg-white'
-              }`}
+              p={4}
+              mb={3}
+              borderWidth={1}
+              borderRadius="md"
+              borderColor={index === 0 ? 'green.300' : 'gray.200'}
+              bg={index === 0 ? 'green.50' : 'white'}
             >
-              <Flex justify="between" align="center" className="mb-2">
+              <Flex justify="space-between" align="center" mb={2}>
                 <HStack>
                   {candidate.photoUrl ? (
-                    <img
+                    <Image
                       src={candidate.photoUrl}
                       alt={candidate.name}
-                      className="w-10 h-10 rounded-full object-cover"
+                      boxSize="40px"
+                      objectFit="cover"
+                      borderRadius="full"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold">
-                      {candidate.name.charAt(0)}
-                    </div>
+                    <Avatar size="sm" name={candidate.name} />
                   )}
-                  <Text
-                    className={`${
-                      index === 0 ? 'font-bold' : 'font-medium'
-                    } flex items-center gap-2`}
-                  >
-                    {candidate.name}{' '}
-                    {index === 0 && <FaMedal className="text-yellow-500" />}
+                  <Text fontWeight={index === 0 ? 'bold' : 'medium'}>
+                    {candidate.name} {index === 0 && <FaMedal color="gold" />}
                   </Text>
                 </HStack>
                 <HStack>
@@ -182,7 +169,7 @@ const ElectionResults: React.FC = () => {
                 value={votePercentage}
                 colorScheme={index === 0 ? 'green' : 'blue'}
                 size="sm"
-                className="rounded-full"
+                borderRadius="full"
               />
             </Box>
           );
@@ -204,38 +191,32 @@ const ElectionResults: React.FC = () => {
     ];
 
     return (
-      <Box className="space-y-6">
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} className="mb-6">
-          <Card className="p-4">
-            <Stat>
-              <StatLabel>Total Eligible Voters</StatLabel>
-              <StatNumber>{statistics.totalEligibleVoters}</StatNumber>
-            </Stat>
-          </Card>
-          <Card className="p-4">
-            <Stat>
-              <StatLabel>Total Votes Cast</StatLabel>
-              <StatNumber>{statistics.totalVotesCast}</StatNumber>
-              <StatHelpText>
-                {statistics.votingPercentage.toFixed(1)}% voter turnout
-              </StatHelpText>
-            </Stat>
-          </Card>
-          <Card className="p-4">
-            <Stat>
-              <StatLabel>Positions Contested</StatLabel>
-              <StatNumber>{election?.positions.length || 0}</StatNumber>
-            </Stat>
-          </Card>
+      <Box>
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={6}>
+          <Stat as={Card} p={4}>
+            <StatLabel>Total Eligible Voters</StatLabel>
+            <StatNumber>{statistics.totalEligibleVoters}</StatNumber>
+          </Stat>
+          <Stat as={Card} p={4}>
+            <StatLabel>Total Votes Cast</StatLabel>
+            <StatNumber>{statistics.totalVotesCast}</StatNumber>
+            <StatHelpText>
+              {statistics.votingPercentage.toFixed(1)}% voter turnout
+            </StatHelpText>
+          </Stat>
+          <Stat as={Card} p={4}>
+            <StatLabel>Positions Contested</StatLabel>
+            <StatNumber>{election?.positions.length || 0}</StatNumber>
+          </Stat>
         </SimpleGrid>
 
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} className="mb-6">
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mb={6}>
           <Card>
             <CardBody>
-              <Heading size="sm" className="mb-4">
+              <Heading size="sm" mb={4}>
                 Voters by Age Group
               </Heading>
-              <Box className="h-64">
+              <Box h="250px">
                 <ChartComponent
                   type="bar"
                   data={{
@@ -274,10 +255,10 @@ const ElectionResults: React.FC = () => {
 
           <Card>
             <CardBody>
-              <Heading size="sm" className="mb-4">
+              <Heading size="sm" mb={4}>
                 Voters by Gender
               </Heading>
-              <Box className="h-64">
+              <Box h="250px">
                 <ChartComponent
                   type="pie"
                   data={{
@@ -311,7 +292,7 @@ const ElectionResults: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <Box className="p-5">
+        <Box p={5}>
           <Text>Loading election results...</Text>
         </Box>
       </DashboardLayout>
@@ -321,9 +302,9 @@ const ElectionResults: React.FC = () => {
   if (!election) {
     return (
       <DashboardLayout>
-        <Box className="p-5">
+        <Box p={5}>
           <Text>Election not found</Text>
-          <Button className="mt-4" onClick={() => navigate('/elections/list')}>
+          <Button mt={4} onClick={() => navigate('/elections/list')}>
             Back to Elections
           </Button>
         </Box>
@@ -334,8 +315,8 @@ const ElectionResults: React.FC = () => {
   if (election.status !== 'completed') {
     return (
       <DashboardLayout>
-        <Box className="p-5">
-          <Alert status="info" className="mb-4">
+        <Box p={5}>
+          <Alert status="info" mb={4}>
             <AlertIcon />
             Results are only available once the election is completed.
           </Alert>
@@ -349,11 +330,11 @@ const ElectionResults: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box className="p-5">
-        <Flex justify="between" align="center" className="mb-4">
+      <Box p={5}>
+        <Flex justify="space-between" align="center" mb={4}>
           <Box>
             <Heading size="lg">{election.title} - Results</Heading>
-            <Text className="text-sm text-gray-600">
+            <Text fontSize="sm" color="gray.600">
               {new Date(election.startDate).toLocaleDateString()} -{' '}
               {new Date(election.endDate).toLocaleDateString()}
             </Text>
@@ -363,17 +344,17 @@ const ElectionResults: React.FC = () => {
           </Button>
         </Flex>
 
-        <Divider className="my-4" />
+        <Divider my={4} />
 
-        <Tabs onChange={(index) => setActiveTab(index)}>
+        <Tabs variant="enclosed" colorScheme="blue" isLazy>
           <TabList>
-            <Tab isSelected={activeTab === 0} onClick={() => setActiveTab(0)}>
+            <Tab>
               <HStack>
                 <FaMedal />
                 <Text>Results by Position</Text>
               </HStack>
             </Tab>
-            <Tab isSelected={activeTab === 1} onClick={() => setActiveTab(1)}>
+            <Tab>
               <HStack>
                 <FaChartBar />
                 <Text>Voting Statistics</Text>
@@ -382,12 +363,12 @@ const ElectionResults: React.FC = () => {
           </TabList>
 
           <TabPanels>
-            <TabPanel isSelected={activeTab === 0} className="px-0">
+            <TabPanel px={0}>
               <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
                 {election.positions.map((position) => (
-                  <Card key={position._id}>
+                  <Card key={position._id} variant="outline">
                     <CardBody>
-                      <Heading size="md" className="mb-4">
+                      <Heading size="md" mb={4}>
                         {position.title}
                       </Heading>
                       {renderPositionResults(position)}
@@ -397,9 +378,7 @@ const ElectionResults: React.FC = () => {
               </SimpleGrid>
             </TabPanel>
 
-            <TabPanel isSelected={activeTab === 1} className="px-0">
-              {renderStatistics()}
-            </TabPanel>
+            <TabPanel px={0}>{renderStatistics()}</TabPanel>
           </TabPanels>
         </Tabs>
       </Box>

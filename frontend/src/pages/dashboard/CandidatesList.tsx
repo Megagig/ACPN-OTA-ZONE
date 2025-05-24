@@ -4,18 +4,17 @@ import {
   Box,
   Text,
   SimpleGrid,
-  Image,
   VStack,
   HStack,
   Button,
   Badge,
   Flex,
-  useToast,
   Avatar,
-} from '@chakra-ui/react';
+} from '../../components/ui/TailwindComponentsFixed';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import type { Candidate, ElectionStatus } from '../../types/election.types';
-import { electionService } from '../../services/election.service';
+import electionService from '../../services/election.service';
+import { useToast } from '../../hooks/useToast';
 
 interface CandidatesListProps {
   candidates: Candidate[];
@@ -31,7 +30,7 @@ const CandidatesList: React.FC<CandidatesListProps> = ({
   electionId,
 }) => {
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showToast } = useToast();
 
   const handleRemoveCandidate = async (candidateId: string) => {
     try {
@@ -40,23 +39,20 @@ const CandidatesList: React.FC<CandidatesListProps> = ({
         positionId,
         candidateId
       );
-      toast({
-        title: 'Candidate removed',
-        description: 'Candidate has been removed successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showToast(
+        'Candidate removed',
+        'Candidate has been removed successfully',
+        'success'
+      );
       // Refresh the page to show updated data
       navigate(0);
     } catch (error) {
-      toast({
-        title: 'Error removing candidate',
-        description: 'Failed to remove candidate',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error('Error removing candidate:', error);
+      showToast(
+        'Error removing candidate',
+        'Failed to remove candidate',
+        'error'
+      );
     }
   };
 
@@ -65,47 +61,39 @@ const CandidatesList: React.FC<CandidatesListProps> = ({
       {candidates.map((candidate) => (
         <Box
           key={candidate._id}
-          borderWidth="1px"
-          borderRadius="lg"
-          overflow="hidden"
-          p={4}
-          boxShadow="sm"
-          transition="all 0.3s"
-          _hover={{ boxShadow: 'md' }}
+          className="border border-gray-200 rounded-lg overflow-hidden p-4 shadow-sm transition-all duration-300 hover:shadow-md"
         >
           <VStack spacing={3} align="stretch">
-            <Flex justifyContent="center">
+            <Flex className="justify-center">
               {candidate.photoUrl ? (
-                <Image
+                <img
                   src={candidate.photoUrl}
-                  alt={candidate.name}
-                  boxSize="100px"
-                  objectFit="cover"
-                  borderRadius="full"
+                  alt={candidate.fullName}
+                  className="w-24 h-24 object-cover rounded-full"
                 />
               ) : (
-                <Avatar size="xl" name={candidate.name} />
+                <Avatar size="xl" name={candidate.fullName} />
               )}
             </Flex>
 
-            <Text fontWeight="bold" fontSize="lg" textAlign="center">
-              {candidate.name}
+            <Text className="font-bold text-lg text-center">
+              {candidate.fullName}
             </Text>
 
-            <Text fontSize="sm" color="gray.600" noOfLines={3}>
-              {candidate.bio || 'No bio available'}
+            <Text className="text-sm text-gray-600 line-clamp-3">
+              {candidate.manifesto || 'No manifesto available'}
             </Text>
 
-            {electionStatus === 'completed' && (
+            {electionStatus === 'ended' && (
               <HStack justify="center">
-                <Badge colorScheme="blue" fontSize="sm" px={2} py={1}>
-                  {candidate.voteCount || 0} votes
+                <Badge colorScheme="blue" className="text-sm px-2 py-1">
+                  {candidate.votes || 0} votes
                 </Badge>
               </HStack>
             )}
 
             {electionStatus === 'draft' && (
-              <HStack spacing={2} justify="center">
+              <HStack spacing={2} className="justify-center">
                 <Button
                   size="sm"
                   leftIcon={<FaEdit />}

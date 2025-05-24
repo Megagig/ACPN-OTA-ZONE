@@ -104,7 +104,11 @@ export const getPoll = asyncHandler(
 
     // Get response count for each option
     const responseCountsByOption = await PollResponse.aggregate([
-      { $match: { pollId: new mongoose.Types.ObjectId(poll._id) } },
+      {
+        $match: {
+          pollId: new mongoose.Types.ObjectId(poll._id as unknown as string),
+        },
+      },
       { $group: { _id: '$optionId', count: { $sum: 1 } } },
     ]);
 
@@ -514,7 +518,11 @@ export const getPollResults = asyncHandler(
 
     // Get response count for each option
     const responseCountsByOption = await PollResponse.aggregate([
-      { $match: { pollId: new mongoose.Types.ObjectId(poll._id) } },
+      {
+        $match: {
+          pollId: new mongoose.Types.ObjectId(poll._id as unknown as string),
+        },
+      },
       { $group: { _id: '$optionId', count: { $sum: 1 } } },
     ]);
 

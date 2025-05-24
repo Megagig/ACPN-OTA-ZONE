@@ -1,6 +1,7 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { Response } from 'express';
 import { IUser } from '../models/user.model';
+import type { StringValue } from 'ms';
 
 // Types for token data
 export interface TokenData {
@@ -14,13 +15,19 @@ export interface TokenData {
  * @returns JWT token
  */
 export const generateToken = (user: IUser): string => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET as string,
-    {
-      expiresIn: process.env.JWT_EXPIRE,
-    }
-  );
+  const payload = { id: user._id, role: user.role };
+  const secret = process.env.JWT_SECRET || 'fallbacksecret';
+
+  // Create a properly typed options object
+  const options: SignOptions = {};
+
+  // Handle JWT expiration
+  const defaultExpire = '30d' as StringValue;
+  options.expiresIn = process.env.JWT_EXPIRE
+    ? (process.env.JWT_EXPIRE as StringValue)
+    : defaultExpire;
+
+  return jwt.sign(payload, secret, options);
 };
 
 /**
@@ -73,7 +80,8 @@ export const sendTokenResponse = (
  */
 export const verifyToken = (token: string): TokenData | null => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET as string) as TokenData;
+    const secret = process.env.JWT_SECRET || 'fallbacksecret';
+    return jwt.verify(token, secret) as TokenData;
   } catch (err) {
     return null;
   }

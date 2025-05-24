@@ -5,27 +5,18 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import ChartComponent from '../../components/common/ChartComponent';
 import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import { useToast } from '../../hooks/useToast';
-import {
-  Badge,
-  Button,
-  Text,
-  Heading,
-  Progress,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  SimpleGrid,
-  VStack,
-  HStack,
-  Flex,
-  Box,
-} from '../../components/ui/TailwindComponents';
+import type {
+  Poll,
+  PollResults,
+  AnswerStatistics,
+} from '../../types/poll.types';
+import pollService from '../../services/poll.service';
+import { Card, CardBody } from '../../components/common/CardComponent'; { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaChartBar, FaUsers, FaRegClock } from 'react-icons/fa';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import ChartComponent from '../../components/common/ChartComponent';
+import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import type {
   Poll,
   PollResults,

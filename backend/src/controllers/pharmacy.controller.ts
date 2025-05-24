@@ -5,6 +5,17 @@ import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
 import cloudinary from '../config/cloudinary';
 
+// Extend Express Request to include files property
+declare global {
+  namespace Express {
+    interface Request {
+      files?: {
+        [fieldname: string]: any;
+      };
+    }
+  }
+}
+
 // @desc    Get all pharmacies
 // @route   GET /api/pharmacies
 // @access  Private/Admin
@@ -108,7 +119,7 @@ export const createPharmacy = asyncHandler(
       const existingPharmacy = await Pharmacy.findOne({ userId: req.user._id });
 
       if (existingPharmacy) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'You already have a registered pharmacy',
         });
@@ -262,7 +273,16 @@ export const pharmacyPhotoUpload = asyncHandler(
       return next(new ErrorResponse(`Please upload a file`, 400));
     }
 
-    const file = req.files.file as any;
+    // Safely access the file with typechecking
+    const fileField = req.files.file;
+    if (!fileField) {
+      return next(
+        new ErrorResponse(`Please provide a file with field name 'file'`, 400)
+      );
+    }
+
+    // Handle both single file and array of files cases
+    const file = Array.isArray(fileField) ? fileField[0] : fileField;
 
     // Make sure the image is a photo
     if (!file.mimetype.startsWith('image')) {
@@ -353,7 +373,7 @@ export const searchPharmacies = asyncHandler(
     const { query } = req.query;
 
     if (!query) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Please provide a search query',
       });

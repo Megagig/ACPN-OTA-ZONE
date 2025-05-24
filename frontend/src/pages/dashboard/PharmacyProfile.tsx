@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
-import { Pharmacy } from '../../types/pharmacy.types';
+import type { Pharmacy } from '../../types/pharmacy.types';
 import { useAuth } from '../../context/AuthContext';
 
 const PharmacyProfile: React.FC = () => {

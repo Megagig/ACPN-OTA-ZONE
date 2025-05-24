@@ -1,3 +1,4 @@
+// filepath: /home/megagig/PROJECTS/MERN/acpn-ota-zone/frontend/src/pages/dashboard/PollDetail.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaChartBar, FaUsers, FaRegClock } from 'react-icons/fa';
@@ -5,15 +6,15 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import ChartComponent from '../../components/common/ChartComponent';
 import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import { useToast } from '../../hooks/useToast';
-import {
-  Badge,
-  Button,
-  Text,
-  Heading,
-  Progress,
-  Stat,
-  StatLabel,
-  StatNumber,
+import { 
+  Badge, 
+  Button, 
+  Text, 
+  Heading, 
+  Progress, 
+  Stat, 
+  StatLabel, 
+  StatNumber, 
   StatHelpText,
   Tabs,
   TabList,
@@ -24,7 +25,7 @@ import {
   VStack,
   HStack,
   Flex,
-  Box,
+  Box
 } from '../../components/ui/TailwindComponents';
 import type {
   Poll,
@@ -58,6 +59,7 @@ const PollDetail: React.FC = () => {
           }
         }
       } catch (error) {
+        console.error('Error loading poll data:', error);
         toast({
           title: 'Error loading poll data',
           description: 'Unable to load poll details or results',
@@ -73,7 +75,7 @@ const PollDetail: React.FC = () => {
     fetchPollData();
   }, [id, toast]);
 
-  const getPollStatusColor = (status: string): string => {
+  const getPollStatusColor = (status: string): 'green' | 'blue' | 'gray' => {
     switch (status) {
       case 'active':
         return 'green';
@@ -93,16 +95,14 @@ const PollDetail: React.FC = () => {
   const renderQuestionResults = (answerStats: AnswerStatistics) => {
     switch (answerStats.questionType) {
       case 'single_choice':
-      case 'multiple_choice':
+      case 'multiple_choice': {
         const chartLabels =
           answerStats.options?.map((opt) => opt.optionText) || [];
         const chartData = answerStats.options?.map((opt) => opt.count) || [];
-        const chartPercentages =
-          answerStats.options?.map((opt) => opt.percentage) || [];
 
         return (
-          <Box>
-            <Box height="250px" mb={4}>
+          <Box className="space-y-4">
+            <Box className="h-64 mb-4">
               <ChartComponent
                 type="bar"
                 data={{
@@ -134,14 +134,14 @@ const PollDetail: React.FC = () => {
 
             <VStack align="stretch" spacing={3}>
               {answerStats.options?.map((option) => (
-                <Box key={option.optionId}>
-                  <Flex justify="space-between" mb={1}>
-                    <Text fontSize="sm">{option.optionText}</Text>
-                    <HStack>
-                      <Text fontSize="sm" fontWeight="bold">
+                <Box key={option.optionId} className="space-y-1">
+                  <Flex justify="between" className="mb-1">
+                    <Text className="text-sm">{option.optionText}</Text>
+                    <HStack spacing={2}>
+                      <Text className="text-sm font-bold">
                         {option.count}
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text className="text-sm text-gray-500">
                         ({option.percentage.toFixed(1)}%)
                       </Text>
                     </HStack>
@@ -150,18 +150,19 @@ const PollDetail: React.FC = () => {
                     value={option.percentage}
                     size="sm"
                     colorScheme="blue"
-                    borderRadius="full"
+                    className="rounded-full"
                   />
                 </Box>
               ))}
             </VStack>
           </Box>
         );
+      }
 
-      case 'rating':
+      case 'rating': {
         return (
-          <Box>
-            <Stat mb={4} textAlign="center">
+          <Box className="space-y-4">
+            <Stat className="mb-4 text-center">
               <StatLabel>Average Rating</StatLabel>
               <StatNumber>
                 {answerStats.averageRating?.toFixed(1) || 0}
@@ -169,7 +170,7 @@ const PollDetail: React.FC = () => {
               <StatHelpText>out of 5</StatHelpText>
             </Stat>
 
-            <Box height="200px">
+            <Box className="h-48">
               <ChartComponent
                 type="bar"
                 data={{
@@ -188,8 +189,9 @@ const PollDetail: React.FC = () => {
             </Box>
           </Box>
         );
+      }
 
-      case 'boolean':
+      case 'boolean': {
         const yesCount =
           answerStats.options?.find((opt) => opt.optionText === 'Yes')?.count ||
           0;
@@ -199,8 +201,8 @@ const PollDetail: React.FC = () => {
         const yesPercentage = (yesCount / (yesCount + noCount)) * 100 || 0;
 
         return (
-          <Box>
-            <Box height="200px">
+          <Box className="space-y-4">
+            <Box className="h-48">
               <ChartComponent
                 type="pie"
                 data={{
@@ -223,16 +225,16 @@ const PollDetail: React.FC = () => {
               />
             </Box>
 
-            <SimpleGrid columns={2} spacing={4} mt={4}>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} className="mt-4">
               <Card>
-                <CardBody textAlign="center">
+                <CardBody className="text-center">
                   <StatLabel>Yes</StatLabel>
                   <StatNumber>{yesCount}</StatNumber>
                   <StatHelpText>{yesPercentage.toFixed(1)}%</StatHelpText>
                 </CardBody>
               </Card>
               <Card>
-                <CardBody textAlign="center">
+                <CardBody className="text-center">
                   <StatLabel>No</StatLabel>
                   <StatNumber>{noCount}</StatNumber>
                   <StatHelpText>
@@ -243,32 +245,38 @@ const PollDetail: React.FC = () => {
             </SimpleGrid>
           </Box>
         );
+      }
 
-      case 'text':
+      case 'text': {
         return (
-          <Box>
-            <Text mb={3} fontWeight="bold">
-              Text Responses ({answerStats.textResponses?.length || 0})
+          <Box className="space-y-4">
+            <Text className="mb-3 font-bold">
+              Responses ({answerStats.responseCount})
             </Text>
             {answerStats.textResponses &&
             answerStats.textResponses.length > 0 ? (
               <VStack align="stretch" spacing={3}>
                 {answerStats.textResponses.map((response, index) => (
-                  <Card key={index} variant="outline">
-                    <CardBody py={2}>
+                  <Card key={index}>
+                    <CardBody className="py-2">
                       <Text>{response}</Text>
                     </CardBody>
                   </Card>
                 ))}
               </VStack>
             ) : (
-              <Text color="gray.500">No text responses available</Text>
+              <Text className="text-gray-500">No text responses available</Text>
             )}
           </Box>
         );
+      }
 
       default:
-        return <Text>No results available for this question type</Text>;
+        return (
+          <Box className="h-72">
+            <Text>No visualization available for this question type.</Text>
+          </Box>
+        );
     }
   };
 
@@ -279,7 +287,7 @@ const PollDetail: React.FC = () => {
     const data = results.responseDistribution.map((item) => item.count);
 
     return (
-      <Box height="300px">
+      <Box className="h-72">
         <ChartComponent
           type="line"
           data={{
@@ -321,7 +329,7 @@ const PollDetail: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <Box p={5}>
+        <Box className="p-5">
           <Text>Loading poll details...</Text>
         </Box>
       </DashboardLayout>
@@ -331,9 +339,9 @@ const PollDetail: React.FC = () => {
   if (!poll) {
     return (
       <DashboardLayout>
-        <Box p={5}>
+        <Box className="p-5">
           <Text>Poll not found</Text>
-          <Button mt={4} onClick={() => navigate('/polls/list')}>
+          <Button className="mt-4" onClick={() => navigate('/polls/list')}>
             Back to Polls
           </Button>
         </Box>
@@ -343,15 +351,15 @@ const PollDetail: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box p={5}>
-        <Flex justify="space-between" align="center" mb={4}>
+      <Box className="p-5">
+        <Flex justify="between" align="center" className="mb-4">
           <Box>
             <Heading size="lg">{poll.title}</Heading>
-            <HStack mt={2}>
+            <HStack className="mt-2">
               <Badge colorScheme={getPollStatusColor(poll.status)}>
                 {poll.status.toUpperCase()}
               </Badge>
-              <Text fontSize="sm">
+              <Text className="text-sm">
                 {formatDate(poll.startDate)} - {formatDate(poll.endDate)}
               </Text>
             </HStack>
@@ -361,49 +369,53 @@ const PollDetail: React.FC = () => {
           </Button>
         </Flex>
 
-        <Text mb={5}>{poll.description}</Text>
+        <Text className="mb-5">{poll.description}</Text>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={6}>
-          <Stat as={Card} p={4}>
-            <StatLabel>Total Questions</StatLabel>
-            <StatNumber>{poll.questions.length}</StatNumber>
-          </Stat>
-          <Stat as={Card} p={4}>
-            <StatLabel>Total Responses</StatLabel>
-            <StatNumber>{poll.responseCount || 0}</StatNumber>
-          </Stat>
-          <Stat as={Card} p={4}>
-            <StatLabel>Status</StatLabel>
-            <StatNumber>
-              <Badge
-                colorScheme={getPollStatusColor(poll.status)}
-                fontSize="md"
-                px={2}
-                py={1}
-              >
-                {poll.status.toUpperCase()}
-              </Badge>
-            </StatNumber>
-            {poll.status === 'active' && (
-              <StatHelpText>
-                <FaRegClock style={{ display: 'inline', marginRight: '5px' }} />
-                Ends {formatDate(poll.endDate)}
-              </StatHelpText>
-            )}
-          </Stat>
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} className="mb-6">
+          <Card className="p-4">
+            <Stat>
+              <StatLabel>Total Questions</StatLabel>
+              <StatNumber>{poll.questions.length}</StatNumber>
+            </Stat>
+          </Card>
+          <Card className="p-4">
+            <Stat>
+              <StatLabel>Total Responses</StatLabel>
+              <StatNumber>{poll.responseCount || 0}</StatNumber>
+            </Stat>
+          </Card>
+          <Card className="p-4">
+            <Stat>
+              <StatLabel>Status</StatLabel>
+              <StatNumber>
+                <Badge
+                  colorScheme={getPollStatusColor(poll.status)}
+                  className="text-base px-2 py-1"
+                >
+                  {poll.status.toUpperCase()}
+                </Badge>
+              </StatNumber>
+              {poll.status === 'active' && (
+                <StatHelpText>
+                  <FaRegClock className="inline mr-1" />
+                  Ends {formatDate(poll.endDate)}
+                </StatHelpText>
+              )}
+            </Stat>
+          </Card>
         </SimpleGrid>
 
         {poll.status === 'active' && (
-          <Card mb={6}>
+          <Card className="mb-6">
             <CardBody>
               <Flex
-                direction={{ base: 'column', md: 'row' }}
-                justify="space-between"
+                direction="column"
+                justify="between"
                 align="center"
-                gap={4}
+                className="md:flex-row gap-4"
               >
                 <Box>
-                  <Heading size="md" mb={2}>
+                  <Heading size="md" className="mb-2">
                     This poll is currently active
                   </Heading>
                   <Text>Share your feedback by responding to this poll</Text>
@@ -422,26 +434,20 @@ const PollDetail: React.FC = () => {
 
         {/* Poll Results Section */}
         {(poll.status === 'closed' || poll.allowResultViewing) && results ? (
-          <Box mt={6}>
-            <Heading size="md" mb={4}>
+          <Box className="mt-6">
+            <Heading size="md" className="mb-4">
               Poll Results
             </Heading>
 
-            <Tabs
-              variant="enclosed"
-              colorScheme="blue"
-              isLazy
-              onChange={(index) => setActiveTab(index)}
-              index={activeTab}
-            >
+            <Tabs onChange={(index) => setActiveTab(index)}>
               <TabList>
-                <Tab>
+                <Tab isSelected={activeTab === 0} onClick={() => setActiveTab(0)}>
                   <HStack>
                     <FaChartBar />
                     <Text>Results by Question</Text>
                   </HStack>
                 </Tab>
-                <Tab>
+                <Tab isSelected={activeTab === 1} onClick={() => setActiveTab(1)}>
                   <HStack>
                     <FaUsers />
                     <Text>Response Statistics</Text>
@@ -450,12 +456,12 @@ const PollDetail: React.FC = () => {
               </TabList>
 
               <TabPanels>
-                <TabPanel px={0}>
+                <TabPanel isSelected={activeTab === 0} className="px-0">
                   <VStack spacing={8} align="stretch">
                     {results.answersStatistics.map((answerStats, index) => (
-                      <Card key={answerStats.questionId} variant="outline">
+                      <Card key={answerStats.questionId}>
                         <CardBody>
-                          <Heading size="sm" mb={4}>
+                          <Heading size="sm" className="mb-4">
                             Question {index + 1}: {answerStats.questionText}
                           </Heading>
                           {renderQuestionResults(answerStats)}
@@ -465,10 +471,10 @@ const PollDetail: React.FC = () => {
                   </VStack>
                 </TabPanel>
 
-                <TabPanel px={0}>
-                  <Card variant="outline" mb={6}>
+                <TabPanel isSelected={activeTab === 1} className="px-0">
+                  <Card className="mb-6">
                     <CardBody>
-                      <Heading size="sm" mb={4}>
+                      <Heading size="sm" className="mb-4">
                         Response Distribution Over Time
                       </Heading>
                       {renderResponseDistribution()}
@@ -476,12 +482,12 @@ const PollDetail: React.FC = () => {
                   </Card>
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                    <Card variant="outline">
+                    <Card>
                       <CardBody>
-                        <Heading size="sm" mb={4}>
+                        <Heading size="sm" className="mb-4">
                           Question Completion Rate
                         </Heading>
-                        <Box height="250px">
+                        <Box className="h-64">
                           <ChartComponent
                             type="bar"
                             data={{
@@ -520,9 +526,9 @@ const PollDetail: React.FC = () => {
                       </CardBody>
                     </Card>
 
-                    <Card variant="outline">
+                    <Card>
                       <CardBody>
-                        <Heading size="sm" mb={4}>
+                        <Heading size="sm" className="mb-4">
                           Respondent Statistics
                         </Heading>
                         <VStack spacing={4} align="stretch">
@@ -556,7 +562,7 @@ const PollDetail: React.FC = () => {
             </Tabs>
           </Box>
         ) : poll.status !== 'draft' && !poll.allowResultViewing ? (
-          <Alert status="info" mt={6}>
+          <Alert status="info" className="mt-6">
             <AlertIcon />
             Poll results will be available once the poll is closed.
           </Alert>
@@ -564,29 +570,29 @@ const PollDetail: React.FC = () => {
 
         {/* Poll Questions Preview */}
         {poll.status === 'draft' && (
-          <Box mt={6}>
-            <Heading size="md" mb={4}>
+          <Box className="mt-6">
+            <Heading size="md" className="mb-4">
               Poll Questions
             </Heading>
             <VStack spacing={4} align="stretch">
               {poll.questions.map((question, index) => (
-                <Card key={question._id} variant="outline">
+                <Card key={question._id}>
                   <CardBody>
-                    <Heading size="sm" mb={2}>
+                    <Heading size="sm" className="mb-2">
                       Question {index + 1}: {question.text}
                       {question.required && (
-                        <Badge ml={2} colorScheme="red">
+                        <Badge className="ml-2" colorScheme="red">
                           Required
                         </Badge>
                       )}
                     </Heading>
-                    <Text color="gray.600" mb={3}>
+                    <Text className="text-gray-600 mb-3">
                       Type: {question.type.replace('_', ' ')}
                     </Text>
 
                     {question.options && question.options.length > 0 && (
                       <Box>
-                        <Text fontWeight="bold" mb={2}>
+                        <Text className="font-bold mb-2">
                           Options:
                         </Text>
                         <VStack align="start" spacing={1}>
@@ -604,7 +610,7 @@ const PollDetail: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <Flex justify="space-between" mt={8}>
+        <Flex justify="between" className="mt-8">
           <Button variant="outline" onClick={() => navigate('/polls/list')}>
             Back to List
           </Button>

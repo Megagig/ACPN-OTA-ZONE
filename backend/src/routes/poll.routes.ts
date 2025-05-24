@@ -12,6 +12,7 @@ import {
   getPollStats,
 } from '../controllers/poll.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
+import { UserRole } from '../models/user.model';
 
 const router = express.Router();
 
@@ -24,27 +25,47 @@ router.route('/:id').get(getPoll);
 router.route('/:id/respond').post(respondToPoll);
 
 // Admin/Secretary routes
-router.route('/stats').get(authorize('admin', 'superadmin'), getPollStats);
+router
+  .route('/stats')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getPollStats);
 
 router
   .route('/')
-  .post(authorize('admin', 'superadmin', 'secretary'), createPoll);
+  .post(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    createPoll
+  );
 
 router
   .route('/:id')
-  .put(authorize('admin', 'superadmin', 'secretary'), updatePoll)
-  .delete(authorize('admin', 'superadmin', 'secretary'), deletePoll);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    updatePoll
+  )
+  .delete(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    deletePoll
+  );
 
 router
   .route('/:id/publish')
-  .put(authorize('admin', 'superadmin', 'secretary'), publishPoll);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    publishPoll
+  );
 
 router
   .route('/:id/close')
-  .put(authorize('admin', 'superadmin', 'secretary'), closePoll);
+  .put(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    closePoll
+  );
 
 router
   .route('/:id/results')
-  .get(authorize('admin', 'superadmin', 'secretary'), getPollResults);
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    getPollResults
+  );
 
 export default router;

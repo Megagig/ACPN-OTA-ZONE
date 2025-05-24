@@ -20,7 +20,7 @@ cloudinary.config({
 export const uploadToCloudinary = async (
   filePath: string,
   folder: string
-): Promise<cloudinary.UploadApiResponse> => {
+): Promise<any> => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder: `acpn-ota/${folder}`,
@@ -36,9 +36,7 @@ export const uploadToCloudinary = async (
  * @param publicId Public ID of the file
  * @returns Delete result
  */
-export const deleteFromCloudinary = async (
-  publicId: string
-): Promise<cloudinary.DeleteApiResponse> => {
+export const deleteFromCloudinary = async (publicId: string): Promise<any> => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
     return result;

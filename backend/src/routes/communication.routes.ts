@@ -10,6 +10,7 @@ import {
   getCommunicationStats,
 } from '../controllers/communication.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
+import { UserRole } from '../models/user.model';
 
 const router = express.Router();
 
@@ -25,12 +26,15 @@ router.route('/:id/read').put(markAsRead);
 router
   .route('/admin')
   .get(
-    authorize('admin', 'superadmin', 'secretary'),
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
     getAllAdminCommunications
   );
 router
   .route('/stats')
-  .get(authorize('admin', 'superadmin', 'secretary'), getCommunicationStats);
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    getCommunicationStats
+  );
 
 // Mixed routes
 router.route('/').post(createCommunication);

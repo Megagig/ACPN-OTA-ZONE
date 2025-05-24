@@ -12,15 +12,10 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow,
-  Card,
-  CardBody,
   HStack,
-  Tag,
   VStack,
-  Icon,
   Badge,
-} from '@chakra-ui/react';
+} from '../../components/ui/TailwindComponentsFixed';
 import {
   FaPlus,
   FaPoll,
@@ -32,7 +27,8 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
-import { Poll, PollSummary } from '../../types/poll.types';
+import { Card, CardBody } from '../../components/common/CardComponent';
+import type { Poll, PollSummary } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
 
 const PollDashboard: React.FC = () => {

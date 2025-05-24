@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export enum DocumentType {
   LICENSE = 'license',
@@ -14,7 +14,7 @@ export enum VerificationStatus {
   REJECTED = 'rejected',
 }
 
-export interface IDocument extends Document {
+export interface IDocument extends mongoose.Document {
   pharmacyId: mongoose.Types.ObjectId;
   documentType: DocumentType;
   fileName: string;

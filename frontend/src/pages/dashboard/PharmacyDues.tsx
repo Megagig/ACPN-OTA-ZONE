@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
-import { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
+import type { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
 
 const PharmacyDues: React.FC = () => {
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);

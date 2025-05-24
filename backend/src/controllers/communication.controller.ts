@@ -284,7 +284,7 @@ export const getCommunication = asyncHandler(
     }
 
     // Get recipients if admin or sender
-    let recipients = [];
+    let recipients: any[] = [];
     if (isAdmin || isSender) {
       recipients = await CommunicationRecipient.find({
         communicationId: communication._id,

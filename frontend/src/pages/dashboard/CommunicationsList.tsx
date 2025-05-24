@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import communicationService from '../../services/communication.service';
-import {
+import type {
   Communication,
   CommunicationType,
   CommunicationStatus,
