@@ -37,6 +37,7 @@ export interface IUser extends Document {
   resetPasswordExpire?: Date;
   emailVerificationToken?: string;
   emailVerificationExpire?: Date;
+  emailVerificationCode?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(enteredPassword: string): Promise<boolean>;
@@ -130,6 +131,10 @@ const userSchema = new Schema<IUser>(
     },
     emailVerificationExpire: {
       type: Date,
+      select: false,
+    },
+    emailVerificationCode: {
+      type: String,
       select: false,
     },
   },
