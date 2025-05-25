@@ -47,7 +47,6 @@ import {
 import { useFormik, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { v4 as uuidv4 } from 'uuid';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import type {
   Poll,
   PollQuestion,
@@ -555,290 +554,275 @@ const PollForm: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <Box p={5}>
-          <Text>Loading...</Text>
-        </Box>
-      </DashboardLayout>
+      <Box p={5}>
+        <Text>Loading...</Text>
+      </Box>
     );
   }
 
   return (
-    <DashboardLayout>
-      <Box p={5}>
-        <Flex justify="between" align="center" className="mb-6">
-          <Heading size="lg">
-            {isEdit ? 'Edit Poll' : 'Create New Poll'}
-          </Heading>
-          <HStack>
-            <Button
-              leftIcon={<FaEye />}
-              variant="outline"
-              onClick={onOpen}
-              isDisabled={formik.values.questions.length === 0}
+    <Box p={5}>
+      <Flex justify="between" align="center" className="mb-6">
+        <Heading size="lg">{isEdit ? 'Edit Poll' : 'Create New Poll'}</Heading>
+        <HStack>
+          <Button
+            leftIcon={<FaEye />}
+            variant="outline"
+            onClick={onOpen}
+            isDisabled={formik.values.questions.length === 0}
+          >
+            Preview
+          </Button>
+          <Button
+            type="submit"
+            colorScheme="blue"
+            leftIcon={<FaSave />}
+            onClick={() => formik.handleSubmit()}
+            isLoading={formik.isSubmitting}
+            isDisabled={
+              Object.keys(formik.errors).length > 0 && formik.touched.title
+            }
+          >
+            Save Poll
+          </Button>
+        </HStack>
+      </Flex>
+
+      <Card className="mb-6">
+        <CardBody>
+          <VStack spacing={6} align="stretch">
+            <FormControl
+              isInvalid={!!(formik.touched.title && formik.errors.title)}
             >
-              Preview
-            </Button>
-            <Button
-              type="submit"
-              colorScheme="blue"
-              leftIcon={<FaSave />}
-              onClick={() => formik.handleSubmit()}
-              isLoading={formik.isSubmitting}
-              isDisabled={
-                Object.keys(formik.errors).length > 0 && formik.touched.title
+              <FormLabel>Poll Title</FormLabel>
+              <Input
+                name="title"
+                value={formik.values.title}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                placeholder="Enter poll title"
+              />
+              <FormErrorMessage>
+                {formik.touched.title && formik.errors.title}
+              </FormErrorMessage>
+            </FormControl>
+
+            <FormControl
+              isInvalid={
+                !!(formik.touched.description && formik.errors.description)
               }
             >
-              Save Poll
-            </Button>
-          </HStack>
-        </Flex>
+              <FormLabel>Description</FormLabel>
+              <Textarea
+                name="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                placeholder="Enter poll description"
+                rows={3}
+              />
+              <FormErrorMessage>
+                {formik.touched.description && formik.errors.description}
+              </FormErrorMessage>
+            </FormControl>
 
-        <Card className="mb-6">
-          <CardBody>
-            <VStack spacing={6} align="stretch">
-              <FormControl
-                isInvalid={!!(formik.touched.title && formik.errors.title)}
-              >
-                <FormLabel>Poll Title</FormLabel>
-                <Input
-                  name="title"
-                  value={formik.values.title}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="Enter poll title"
-                />
-                <FormErrorMessage>
-                  {formik.touched.title && formik.errors.title}
-                </FormErrorMessage>
-              </FormControl>
-
+            <HStack spacing={4}>
               <FormControl
                 isInvalid={
-                  !!(formik.touched.description && formik.errors.description)
+                  !!(formik.touched.startDate && formik.errors.startDate)
                 }
               >
-                <FormLabel>Description</FormLabel>
-                <Textarea
-                  name="description"
-                  value={formik.values.description}
+                <FormLabel>Start Date</FormLabel>
+                <Input
+                  name="startDate"
+                  type="date"
+                  value={formik.values.startDate}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  placeholder="Enter poll description"
-                  rows={3}
                 />
                 <FormErrorMessage>
-                  {formik.touched.description && formik.errors.description}
+                  {formik.touched.startDate && formik.errors.startDate}
                 </FormErrorMessage>
               </FormControl>
 
-              <HStack spacing={4}>
-                <FormControl
-                  isInvalid={
-                    !!(formik.touched.startDate && formik.errors.startDate)
-                  }
-                >
-                  <FormLabel>Start Date</FormLabel>
-                  <Input
-                    name="startDate"
-                    type="date"
-                    value={formik.values.startDate}
+              <FormControl
+                isInvalid={!!(formik.touched.endDate && formik.errors.endDate)}
+              >
+                <FormLabel>End Date</FormLabel>
+                <Input
+                  name="endDate"
+                  type="date"
+                  value={formik.values.endDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+                <FormErrorMessage>
+                  {formik.touched.endDate && formik.errors.endDate}
+                </FormErrorMessage>
+              </FormControl>
+            </HStack>
+
+            <HStack spacing={8}>
+              <FormControl display="flex" alignItems="center">
+                <FormLabel mb="0">Anonymous Responses</FormLabel>
+                <Tooltip label="If enabled, responses will not be linked to user identities">
+                  <Switch
+                    name="isAnonymous"
+                    isChecked={formik.values.isAnonymous}
                     onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                   />
-                  <FormErrorMessage>
-                    {formik.touched.startDate && formik.errors.startDate}
-                  </FormErrorMessage>
-                </FormControl>
+                </Tooltip>
+              </FormControl>
 
-                <FormControl
-                  isInvalid={
-                    !!(formik.touched.endDate && formik.errors.endDate)
-                  }
-                >
-                  <FormLabel>End Date</FormLabel>
-                  <Input
-                    name="endDate"
-                    type="date"
-                    value={formik.values.endDate}
+              <FormControl display="flex" alignItems="center">
+                <FormLabel mb="0">Allow Viewing Results</FormLabel>
+                <Tooltip label="If enabled, members can view results while the poll is active">
+                  <Switch
+                    name="allowResultViewing"
+                    isChecked={formik.values.allowResultViewing}
                     onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                   />
-                  <FormErrorMessage>
-                    {formik.touched.endDate && formik.errors.endDate}
-                  </FormErrorMessage>
-                </FormControl>
-              </HStack>
+                </Tooltip>
+              </FormControl>
+            </HStack>
+          </VStack>
+        </CardBody>
+      </Card>
 
-              <HStack spacing={8}>
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0">Anonymous Responses</FormLabel>
-                  <Tooltip label="If enabled, responses will not be linked to user identities">
-                    <Switch
-                      name="isAnonymous"
-                      isChecked={formik.values.isAnonymous}
-                      onChange={formik.handleChange}
-                    />
-                  </Tooltip>
-                </FormControl>
+      <Flex justify="between" align="center" className="mb-4">
+        <Heading size="md">Poll Questions</Heading>
+        <Button leftIcon={<FaPlus />} colorScheme="teal" onClick={addQuestion}>
+          Add Question
+        </Button>
+      </Flex>
 
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0">Allow Viewing Results</FormLabel>
-                  <Tooltip label="If enabled, members can view results while the poll is active">
-                    <Switch
-                      name="allowResultViewing"
-                      isChecked={formik.values.allowResultViewing}
-                      onChange={formik.handleChange}
-                    />
-                  </Tooltip>
-                </FormControl>
-              </HStack>
-            </VStack>
+      {formik.values.questions.length === 0 ? (
+        <Card className="border border-gray-200">
+          <CardBody textAlign="center" py={8}>
+            <Text mb={4}>No questions added yet</Text>
+            <Button
+              leftIcon={<FaPlus />}
+              colorScheme="teal"
+              onClick={addQuestion}
+            >
+              Add Your First Question
+            </Button>
           </CardBody>
         </Card>
+      ) : (
+        <VStack spacing={4} align="stretch">
+          {formik.values.questions.map((question, index) =>
+            renderQuestionForm(question, index)
+          )}
+        </VStack>
+      )}
 
-        <Flex justify="between" align="center" className="mb-4">
-          <Heading size="md">Poll Questions</Heading>
-          <Button
-            leftIcon={<FaPlus />}
-            colorScheme="teal"
-            onClick={addQuestion}
-          >
-            Add Question
+      <Flex justify="flex-end" mt={6}>
+        <HStack>
+          <Button variant="outline" onClick={() => navigate('/polls/list')}>
+            Cancel
           </Button>
-        </Flex>
+          <Button
+            colorScheme="blue"
+            leftIcon={<FaSave />}
+            onClick={() => formik.handleSubmit()}
+            isLoading={formik.isSubmitting}
+            isDisabled={
+              Object.keys(formik.errors).length > 0 && formik.touched.title
+            }
+          >
+            {isEdit ? 'Update Poll' : 'Create Poll'}
+          </Button>
+        </HStack>
+      </Flex>
 
-        {formik.values.questions.length === 0 ? (
-          <Card className="border border-gray-200">
-            <CardBody textAlign="center" py={8}>
-              <Text mb={4}>No questions added yet</Text>
-              <Button
-                leftIcon={<FaPlus />}
-                colorScheme="teal"
-                onClick={addQuestion}
-              >
-                Add Your First Question
-              </Button>
-            </CardBody>
-          </Card>
-        ) : (
-          <VStack spacing={4} align="stretch">
-            {formik.values.questions.map((question, index) =>
-              renderQuestionForm(question, index)
-            )}
-          </VStack>
-        )}
+      {/* Preview Dialog */}
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+        size="xl"
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Poll Preview: {formik.values.title}
+            </AlertDialogHeader>
 
-        <Flex justify="flex-end" mt={6}>
-          <HStack>
-            <Button variant="outline" onClick={() => navigate('/polls/list')}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              leftIcon={<FaSave />}
-              onClick={() => formik.handleSubmit()}
-              isLoading={formik.isSubmitting}
-              isDisabled={
-                Object.keys(formik.errors).length > 0 && formik.touched.title
-              }
-            >
-              {isEdit ? 'Update Poll' : 'Create Poll'}
-            </Button>
-          </HStack>
-        </Flex>
+            <AlertDialogBody>
+              <Text mb={4}>{formik.values.description}</Text>
 
-        {/* Preview Dialog */}
-        <AlertDialog
-          isOpen={isOpen}
-          leastDestructiveRef={cancelRef}
-          onClose={onClose}
-          size="xl"
-        >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Poll Preview: {formik.values.title}
-              </AlertDialogHeader>
+              <Divider my={4} />
 
-              <AlertDialogBody>
-                <Text mb={4}>{formik.values.description}</Text>
-
-                <Divider my={4} />
-
-                <VStack spacing={6} align="stretch">
-                  {formik.values.questions.map((question, index) => (
-                    <Box key={question._id}>
-                      <Heading size="sm" mb={2}>
-                        {index + 1}. {question.text}
-                        {question.required && (
-                          <Badge ml={2} colorScheme="red">
-                            Required
-                          </Badge>
-                        )}
-                      </Heading>
-
-                      {question.type === 'single_choice' &&
-                        question.options && (
-                          <RadioGroup>
-                            <VStack align="start" spacing={2}>
-                              {question.options.map((option) => (
-                                <Radio key={option._id} value={option._id}>
-                                  {option.text}
-                                </Radio>
-                              ))}
-                            </VStack>
-                          </RadioGroup>
-                        )}
-
-                      {question.type === 'multiple_choice' &&
-                        question.options && (
-                          <VStack align="start" spacing={2}>
-                            {question.options.map((option) => (
-                              <Checkbox key={option._id}>
-                                {option.text}
-                              </Checkbox>
-                            ))}
-                          </VStack>
-                        )}
-
-                      {question.type === 'text' && (
-                        <Textarea placeholder="Type your answer here..." />
+              <VStack spacing={6} align="stretch">
+                {formik.values.questions.map((question, index) => (
+                  <Box key={question._id}>
+                    <Heading size="sm" mb={2}>
+                      {index + 1}. {question.text}
+                      {question.required && (
+                        <Badge ml={2} colorScheme="red">
+                          Required
+                        </Badge>
                       )}
+                    </Heading>
 
-                      {question.type === 'rating' && (
-                        <HStack spacing={4} justify="center">
-                          {[1, 2, 3, 4, 5].map((num) => (
-                            <Button key={num} size="md" variant="outline">
-                              {num}
-                            </Button>
+                    {question.type === 'single_choice' && question.options && (
+                      <RadioGroup>
+                        <VStack align="start" spacing={2}>
+                          {question.options.map((option) => (
+                            <Radio key={option._id} value={option._id}>
+                              {option.text}
+                            </Radio>
                           ))}
+                        </VStack>
+                      </RadioGroup>
+                    )}
+
+                    {question.type === 'multiple_choice' &&
+                      question.options && (
+                        <VStack align="start" spacing={2}>
+                          {question.options.map((option) => (
+                            <Checkbox key={option._id}>{option.text}</Checkbox>
+                          ))}
+                        </VStack>
+                      )}
+
+                    {question.type === 'text' && (
+                      <Textarea placeholder="Type your answer here..." />
+                    )}
+
+                    {question.type === 'rating' && (
+                      <HStack spacing={4} justify="center">
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <Button key={num} size="md" variant="outline">
+                            {num}
+                          </Button>
+                        ))}
+                      </HStack>
+                    )}
+
+                    {question.type === 'boolean' && (
+                      <RadioGroup>
+                        <HStack spacing={5}>
+                          <Radio value="true">Yes</Radio>
+                          <Radio value="false">No</Radio>
                         </HStack>
-                      )}
+                      </RadioGroup>
+                    )}
+                  </Box>
+                ))}
+              </VStack>
+            </AlertDialogBody>
 
-                      {question.type === 'boolean' && (
-                        <RadioGroup>
-                          <HStack spacing={5}>
-                            <Radio value="true">Yes</Radio>
-                            <Radio value="false">No</Radio>
-                          </HStack>
-                        </RadioGroup>
-                      )}
-                    </Box>
-                  ))}
-                </VStack>
-              </AlertDialogBody>
-
-              <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onClose}>
-                  Close Preview
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
-        </AlertDialog>
-      </Box>
-    </DashboardLayout>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Close Preview
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </Box>
   );
 };
 

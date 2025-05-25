@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaChartBar, FaUsers, FaRegClock } from 'react-icons/fa';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import ChartComponent from '../../components/common/ChartComponent';
 import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import { useToast } from '../../hooks/useToast';
@@ -320,353 +319,346 @@ const PollDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <Box p={5}>
-          <Text>Loading poll details...</Text>
-        </Box>
-      </DashboardLayout>
+      <Box p={5}>
+        <Text>Loading poll details...</Text>
+      </Box>
     );
   }
 
   if (!poll) {
     return (
-      <DashboardLayout>
-        <Box p={5}>
-          <Text>Poll not found</Text>
-          <Button mt={4} onClick={() => navigate('/polls/list')}>
-            Back to Polls
-          </Button>
-        </Box>
-      </DashboardLayout>
+      <Box p={5}>
+        <Text>Poll not found</Text>
+        <Button mt={4} onClick={() => navigate('/polls/list')}>
+          Back to Polls
+        </Button>
+      </Box>
     );
   }
 
   return (
-    <DashboardLayout>
-      <Box p={5}>
-        <Flex justify="space-between" align="center" mb={4}>
-          <Box>
-            <Heading size="lg">{poll.title}</Heading>
-            <HStack mt={2}>
-              <Badge colorScheme={getPollStatusColor(poll.status)}>
-                {poll.status.toUpperCase()}
-              </Badge>
-              <Text fontSize="sm">
-                {formatDate(poll.startDate)} - {formatDate(poll.endDate)}
-              </Text>
-            </HStack>
-          </Box>
-          <Button variant="outline" onClick={() => navigate('/polls/list')}>
-            Back to List
-          </Button>
-        </Flex>
+    <Box p={5}>
+      <Flex justify="space-between" align="center" mb={4}>
+        <Box>
+          <Heading size="lg">{poll.title}</Heading>
+          <HStack mt={2}>
+            <Badge colorScheme={getPollStatusColor(poll.status)}>
+              {poll.status.toUpperCase()}
+            </Badge>
+            <Text fontSize="sm">
+              {formatDate(poll.startDate)} - {formatDate(poll.endDate)}
+            </Text>
+          </HStack>
+        </Box>
+        <Button variant="outline" onClick={() => navigate('/polls/list')}>
+          Back to List
+        </Button>
+      </Flex>
 
-        <Text mb={5}>{poll.description}</Text>
+      <Text mb={5}>{poll.description}</Text>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={6}>
-          <Stat as={Card} p={4}>
-            <StatLabel>Total Questions</StatLabel>
-            <StatNumber>{poll.questions.length}</StatNumber>
-          </Stat>
-          <Stat as={Card} p={4}>
-            <StatLabel>Total Responses</StatLabel>
-            <StatNumber>{poll.responseCount || 0}</StatNumber>
-          </Stat>
-          <Stat as={Card} p={4}>
-            <StatLabel>Status</StatLabel>
-            <StatNumber>
-              <Badge
-                colorScheme={getPollStatusColor(poll.status)}
-                fontSize="md"
-                px={2}
-                py={1}
-              >
-                {poll.status.toUpperCase()}
-              </Badge>
-            </StatNumber>
-            {poll.status === 'active' && (
-              <StatHelpText>
-                <FaRegClock style={{ display: 'inline', marginRight: '5px' }} />
-                Ends {formatDate(poll.endDate)}
-              </StatHelpText>
-            )}
-          </Stat>
-        </SimpleGrid>
-
-        {poll.status === 'active' && (
-          <Card mb={6}>
-            <CardBody>
-              <Flex
-                direction={{ base: 'column', md: 'row' }}
-                justify="space-between"
-                align="center"
-                gap={4}
-              >
-                <Box>
-                  <Heading size="md" mb={2}>
-                    This poll is currently active
-                  </Heading>
-                  <Text>Share your feedback by responding to this poll</Text>
-                </Box>
-                <Button
-                  colorScheme="blue"
-                  size="lg"
-                  onClick={() => navigate(`/polls/${id}/respond`)}
-                >
-                  Respond to Poll
-                </Button>
-              </Flex>
-            </CardBody>
-          </Card>
-        )}
-
-        {/* Poll Results Section */}
-        {(poll.status === 'closed' || poll.allowResultViewing) && results ? (
-          <Box mt={6}>
-            <Heading size="md" mb={4}>
-              Poll Results
-            </Heading>
-
-            <Tabs
-              variant="enclosed"
-              colorScheme="blue"
-              isLazy
-              onChange={(index) => setActiveTab(index)}
-              index={activeTab}
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={6}>
+        <Stat as={Card} p={4}>
+          <StatLabel>Total Questions</StatLabel>
+          <StatNumber>{poll.questions.length}</StatNumber>
+        </Stat>
+        <Stat as={Card} p={4}>
+          <StatLabel>Total Responses</StatLabel>
+          <StatNumber>{poll.responseCount || 0}</StatNumber>
+        </Stat>
+        <Stat as={Card} p={4}>
+          <StatLabel>Status</StatLabel>
+          <StatNumber>
+            <Badge
+              colorScheme={getPollStatusColor(poll.status)}
+              fontSize="md"
+              px={2}
+              py={1}
             >
-              <TabList>
-                <Tab>
-                  <HStack>
-                    <FaChartBar />
-                    <Text>Results by Question</Text>
-                  </HStack>
-                </Tab>
-                <Tab>
-                  <HStack>
-                    <FaUsers />
-                    <Text>Response Statistics</Text>
-                  </HStack>
-                </Tab>
-              </TabList>
+              {poll.status.toUpperCase()}
+            </Badge>
+          </StatNumber>
+          {poll.status === 'active' && (
+            <StatHelpText>
+              <FaRegClock style={{ display: 'inline', marginRight: '5px' }} />
+              Ends {formatDate(poll.endDate)}
+            </StatHelpText>
+          )}
+        </Stat>
+      </SimpleGrid>
 
-              <TabPanels>
-                <TabPanel px={0}>
-                  <VStack spacing={8} align="stretch">
-                    {results.answersStatistics.map((answerStats, index) => (
-                      <Card key={answerStats.questionId} variant="outline">
-                        <CardBody>
-                          <Heading size="sm" mb={4}>
-                            Question {index + 1}: {answerStats.questionText}
-                          </Heading>
-                          {renderQuestionResults(answerStats)}
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </VStack>
-                </TabPanel>
+      {poll.status === 'active' && (
+        <Card mb={6}>
+          <CardBody>
+            <Flex
+              direction={{ base: 'column', md: 'row' }}
+              justify="space-between"
+              align="center"
+              gap={4}
+            >
+              <Box>
+                <Heading size="md" mb={2}>
+                  This poll is currently active
+                </Heading>
+                <Text>Share your feedback by responding to this poll</Text>
+              </Box>
+              <Button
+                colorScheme="blue"
+                size="lg"
+                onClick={() => navigate(`/polls/${id}/respond`)}
+              >
+                Respond to Poll
+              </Button>
+            </Flex>
+          </CardBody>
+        </Card>
+      )}
 
-                <TabPanel px={0}>
-                  <Card variant="outline" mb={6}>
+      {/* Poll Results Section */}
+      {(poll.status === 'closed' || poll.allowResultViewing) && results ? (
+        <Box mt={6}>
+          <Heading size="md" mb={4}>
+            Poll Results
+          </Heading>
+
+          <Tabs
+            variant="enclosed"
+            colorScheme="blue"
+            isLazy
+            onChange={(index) => setActiveTab(index)}
+            index={activeTab}
+          >
+            <TabList>
+              <Tab>
+                <HStack>
+                  <FaChartBar />
+                  <Text>Results by Question</Text>
+                </HStack>
+              </Tab>
+              <Tab>
+                <HStack>
+                  <FaUsers />
+                  <Text>Response Statistics</Text>
+                </HStack>
+              </Tab>
+            </TabList>
+
+            <TabPanels>
+              <TabPanel px={0}>
+                <VStack spacing={8} align="stretch">
+                  {results.answersStatistics.map((answerStats, index) => (
+                    <Card key={answerStats.questionId} variant="outline">
+                      <CardBody>
+                        <Heading size="sm" mb={4}>
+                          Question {index + 1}: {answerStats.questionText}
+                        </Heading>
+                        {renderQuestionResults(answerStats)}
+                      </CardBody>
+                    </Card>
+                  ))}
+                </VStack>
+              </TabPanel>
+
+              <TabPanel px={0}>
+                <Card variant="outline" mb={6}>
+                  <CardBody>
+                    <Heading size="sm" mb={4}>
+                      Response Distribution Over Time
+                    </Heading>
+                    {renderResponseDistribution()}
+                  </CardBody>
+                </Card>
+
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                  <Card variant="outline">
                     <CardBody>
                       <Heading size="sm" mb={4}>
-                        Response Distribution Over Time
+                        Question Completion Rate
                       </Heading>
-                      {renderResponseDistribution()}
+                      <Box height="250px">
+                        <ChartComponent
+                          type="bar"
+                          data={{
+                            labels: results.answersStatistics.map(
+                              (_, idx) => `Q${idx + 1}`
+                            ),
+                            datasets: [
+                              {
+                                label: 'Completion Rate (%)',
+                                data: results.answersStatistics.map(
+                                  (q) =>
+                                    (q.totalResponses /
+                                      (results.totalResponses || 1)) *
+                                    100
+                                ),
+                                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 1,
+                              },
+                            ],
+                          }}
+                          options={{
+                            scales: {
+                              y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                  display: true,
+                                  text: 'Completion Rate (%)',
+                                },
+                              },
+                            },
+                          }}
+                        />
+                      </Box>
                     </CardBody>
                   </Card>
 
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                    <Card variant="outline">
-                      <CardBody>
-                        <Heading size="sm" mb={4}>
-                          Question Completion Rate
-                        </Heading>
-                        <Box height="250px">
-                          <ChartComponent
-                            type="bar"
-                            data={{
-                              labels: results.answersStatistics.map(
-                                (_, idx) => `Q${idx + 1}`
-                              ),
-                              datasets: [
-                                {
-                                  label: 'Completion Rate (%)',
-                                  data: results.answersStatistics.map(
-                                    (q) =>
-                                      (q.totalResponses /
-                                        (results.totalResponses || 1)) *
-                                      100
-                                  ),
-                                  backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                                  borderColor: 'rgba(153, 102, 255, 1)',
-                                  borderWidth: 1,
-                                },
-                              ],
-                            }}
-                            options={{
-                              scales: {
-                                y: {
-                                  beginAtZero: true,
-                                  max: 100,
-                                  title: {
-                                    display: true,
-                                    text: 'Completion Rate (%)',
-                                  },
-                                },
-                              },
-                            }}
-                          />
-                        </Box>
-                      </CardBody>
-                    </Card>
+                  <Card variant="outline">
+                    <CardBody>
+                      <Heading size="sm" mb={4}>
+                        Respondent Statistics
+                      </Heading>
+                      <VStack spacing={4} align="stretch">
+                        <Stat>
+                          <StatLabel>Total Respondents</StatLabel>
+                          <StatNumber>{results.totalResponses}</StatNumber>
+                        </Stat>
+                        <Stat>
+                          <StatLabel>Average Completion Time</StatLabel>
+                          <StatNumber>4m 32s</StatNumber>
+                          <StatHelpText>Per respondent</StatHelpText>
+                        </Stat>
+                        <Stat>
+                          <StatLabel>Completion Rate</StatLabel>
+                          <StatNumber>
+                            {poll.responseCount && poll.targetAudience?.length
+                              ? `${(
+                                  (poll.responseCount /
+                                    poll.targetAudience.length) *
+                                  100
+                                ).toFixed(1)}%`
+                              : 'N/A'}
+                          </StatNumber>
+                        </Stat>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                </SimpleGrid>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Box>
+      ) : poll.status !== 'draft' && !poll.allowResultViewing ? (
+        <Alert status="info" mt={6}>
+          <AlertIcon />
+          Poll results will be available once the poll is closed.
+        </Alert>
+      ) : null}
 
-                    <Card variant="outline">
-                      <CardBody>
-                        <Heading size="sm" mb={4}>
-                          Respondent Statistics
-                        </Heading>
-                        <VStack spacing={4} align="stretch">
-                          <Stat>
-                            <StatLabel>Total Respondents</StatLabel>
-                            <StatNumber>{results.totalResponses}</StatNumber>
-                          </Stat>
-                          <Stat>
-                            <StatLabel>Average Completion Time</StatLabel>
-                            <StatNumber>4m 32s</StatNumber>
-                            <StatHelpText>Per respondent</StatHelpText>
-                          </Stat>
-                          <Stat>
-                            <StatLabel>Completion Rate</StatLabel>
-                            <StatNumber>
-                              {poll.responseCount && poll.targetAudience?.length
-                                ? `${(
-                                    (poll.responseCount /
-                                      poll.targetAudience.length) *
-                                    100
-                                  ).toFixed(1)}%`
-                                : 'N/A'}
-                            </StatNumber>
-                          </Stat>
-                        </VStack>
-                      </CardBody>
-                    </Card>
-                  </SimpleGrid>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </Box>
-        ) : poll.status !== 'draft' && !poll.allowResultViewing ? (
-          <Alert status="info" mt={6}>
-            <AlertIcon />
-            Poll results will be available once the poll is closed.
-          </Alert>
-        ) : null}
-
-        {/* Poll Questions Preview */}
-        {poll.status === 'draft' && (
-          <Box mt={6}>
-            <Heading size="md" mb={4}>
-              Poll Questions
-            </Heading>
-            <VStack spacing={4} align="stretch">
-              {poll.questions.map((question, index) => (
-                <Card key={question._id} variant="outline">
-                  <CardBody>
-                    <Heading size="sm" mb={2}>
-                      Question {index + 1}: {question.text}
-                      {question.required && (
-                        <Badge ml={2} colorScheme="red">
-                          Required
-                        </Badge>
-                      )}
-                    </Heading>
-                    <Text color="gray.600" mb={3}>
-                      Type: {question.type.replace('_', ' ')}
-                    </Text>
-
-                    {question.options && question.options.length > 0 && (
-                      <Box>
-                        <Text fontWeight="bold" mb={2}>
-                          Options:
-                        </Text>
-                        <VStack align="start" spacing={1}>
-                          {question.options.map((option) => (
-                            <Text key={option._id}>{option.text}</Text>
-                          ))}
-                        </VStack>
-                      </Box>
+      {/* Poll Questions Preview */}
+      {poll.status === 'draft' && (
+        <Box mt={6}>
+          <Heading size="md" mb={4}>
+            Poll Questions
+          </Heading>
+          <VStack spacing={4} align="stretch">
+            {poll.questions.map((question, index) => (
+              <Card key={question._id} variant="outline">
+                <CardBody>
+                  <Heading size="sm" mb={2}>
+                    Question {index + 1}: {question.text}
+                    {question.required && (
+                      <Badge ml={2} colorScheme="red">
+                        Required
+                      </Badge>
                     )}
-                  </CardBody>
-                </Card>
-              ))}
-            </VStack>
-          </Box>
+                  </Heading>
+                  <Text color="gray.600" mb={3}>
+                    Type: {question.type.replace('_', ' ')}
+                  </Text>
+
+                  {question.options && question.options.length > 0 && (
+                    <Box>
+                      <Text fontWeight="bold" mb={2}>
+                        Options:
+                      </Text>
+                      <VStack align="start" spacing={1}>
+                        {question.options.map((option) => (
+                          <Text key={option._id}>{option.text}</Text>
+                        ))}
+                      </VStack>
+                    </Box>
+                  )}
+                </CardBody>
+              </Card>
+            ))}
+          </VStack>
+        </Box>
+      )}
+
+      {/* Action Buttons */}
+      <Flex justify="space-between" mt={8}>
+        <Button variant="outline" onClick={() => navigate('/polls/list')}>
+          Back to List
+        </Button>
+
+        {poll.status === 'draft' && (
+          <HStack>
+            <Button
+              colorScheme="blue"
+              onClick={() => navigate(`/polls/${id}/edit`)}
+            >
+              Edit Poll
+            </Button>
+            <Button
+              colorScheme="green"
+              onClick={() => {
+                pollService.updatePollStatus(id!, 'active');
+                navigate('/polls/list');
+                toast({
+                  title: 'Poll Activated',
+                  description: 'The poll is now active and open for responses',
+                  status: 'success',
+                  duration: 3000,
+                  isClosable: true,
+                });
+              }}
+            >
+              Activate Poll
+            </Button>
+          </HStack>
         )}
 
-        {/* Action Buttons */}
-        <Flex justify="space-between" mt={8}>
-          <Button variant="outline" onClick={() => navigate('/polls/list')}>
-            Back to List
-          </Button>
-
-          {poll.status === 'draft' && (
-            <HStack>
-              <Button
-                colorScheme="blue"
-                onClick={() => navigate(`/polls/${id}/edit`)}
-              >
-                Edit Poll
-              </Button>
-              <Button
-                colorScheme="green"
-                onClick={() => {
-                  pollService.updatePollStatus(id!, 'active');
-                  navigate('/polls/list');
-                  toast({
-                    title: 'Poll Activated',
-                    description:
-                      'The poll is now active and open for responses',
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                  });
-                }}
-              >
-                Activate Poll
-              </Button>
-            </HStack>
-          )}
-
-          {poll.status === 'active' && (
-            <HStack>
-              <Button
-                colorScheme="blue"
-                onClick={() => navigate(`/polls/${id}/respond`)}
-              >
-                Respond
-              </Button>
-              <Button
-                colorScheme="red"
-                variant="outline"
-                onClick={() => {
-                  pollService.updatePollStatus(id!, 'closed');
-                  navigate('/polls/list');
-                  toast({
-                    title: 'Poll Closed',
-                    description: 'The poll has been closed',
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                  });
-                }}
-              >
-                Close Poll
-              </Button>
-            </HStack>
-          )}
-        </Flex>
-      </Box>
-    </DashboardLayout>
+        {poll.status === 'active' && (
+          <HStack>
+            <Button
+              colorScheme="blue"
+              onClick={() => navigate(`/polls/${id}/respond`)}
+            >
+              Respond
+            </Button>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              onClick={() => {
+                pollService.updatePollStatus(id!, 'closed');
+                navigate('/polls/list');
+                toast({
+                  title: 'Poll Closed',
+                  description: 'The poll has been closed',
+                  status: 'success',
+                  duration: 3000,
+                  isClosable: true,
+                });
+              }}
+            >
+              Close Poll
+            </Button>
+          </HStack>
+        )}
+      </Flex>
+    </Box>
   );
 };
 

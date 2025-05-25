@@ -7,7 +7,6 @@ import {
   FaListAlt,
   FaUserPlus,
 } from 'react-icons/fa';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Card, CardBody } from '../../components/common/CardComponent';
 import {
   Badge,
@@ -212,204 +211,193 @@ const ElectionDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <Box p={5}>
-          <Text>Loading election details...</Text>
-        </Box>
-      </DashboardLayout>
+      <Box p={5}>
+        <Text>Loading election details...</Text>
+      </Box>
     );
   }
 
   if (!election) {
     return (
-      <DashboardLayout>
-        <Box p={5}>
-          <Text>Election not found</Text>
-          <Button mt={4} onClick={() => navigate('/elections/list')}>
-            Back to Elections
-          </Button>
-        </Box>
-      </DashboardLayout>
+      <Box p={5}>
+        <Text>Election not found</Text>
+        <Button mt={4} onClick={() => navigate('/elections/list')}>
+          Back to Elections
+        </Button>
+      </Box>
     );
   }
 
   return (
-    <DashboardLayout>
-      <Box p={5}>
-        <Flex justifyContent="space-between" alignItems="center" mb={4}>
-          <Box>
-            <Heading size="lg">{election.title}</Heading>
-            <HStack mt={2}>
-              <Badge colorScheme={getStatusBadgeColor(election.status)}>
-                {election.status.toUpperCase()}
-              </Badge>
-              <Text fontSize="sm">
-                {new Date(election.startDate).toLocaleDateString()} -{' '}
-                {new Date(election.endDate).toLocaleDateString()}
-              </Text>
+    <Box p={5}>
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+        <Box>
+          <Heading size="lg">{election.title}</Heading>
+          <HStack mt={2}>
+            <Badge colorScheme={getStatusBadgeColor(election.status)}>
+              {election.status.toUpperCase()}
+            </Badge>
+            <Text fontSize="sm">
+              {new Date(election.startDate).toLocaleDateString()} -{' '}
+              {new Date(election.endDate).toLocaleDateString()}
+            </Text>
+          </HStack>
+        </Box>
+        <Button variant="outline" onClick={() => navigate('/elections/list')}>
+          Back to List
+        </Button>
+      </Flex>
+
+      <Divider my={5} />
+
+      {renderElectionStats()}
+      {renderActionButtons()}
+
+      <Text mb={4}>{election.description}</Text>
+
+      <Tabs
+        isFitted
+        variant="enclosed"
+        onChange={(index) => setActiveTab(index)}
+        index={activeTab}
+      >
+        <TabList mb="1em">
+          <Tab>
+            <HStack>
+              <FaListAlt />
+              <Text>Positions & Candidates</Text>
             </HStack>
-          </Box>
-          <Button variant="outline" onClick={() => navigate('/elections/list')}>
-            Back to List
-          </Button>
-        </Flex>
+          </Tab>
+          <Tab>
+            <HStack>
+              <FaChartBar />
+              <Text>Results</Text>
+            </HStack>
+          </Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel p={0}>
+            <VStack spacing={4} align="stretch">
+              {election.positions.map((position: Position) => (
+                <Card key={position._id} variant="outline" mb={4}>
+                  <CardBody>
+                    <Flex
+                      justifyContent="space-between"
+                      alignItems="center"
+                      mb={3}
+                    >
+                      <Heading size="md">{position.title}</Heading>
+                      {election.status === 'draft' && (
+                        <Button
+                          leftIcon={<FaUserPlus />}
+                          size="sm"
+                          colorScheme="teal"
+                          onClick={() =>
+                            navigate(
+                              `/elections/${id}/positions/${position._id}/candidates/add`
+                            )
+                          }
+                        >
+                          Add Candidate
+                        </Button>
+                      )}
+                    </Flex>
+                    <Text mb={4}>{position.description}</Text>
 
-        <Divider my={5} />
-
-        {renderElectionStats()}
-        {renderActionButtons()}
-
-        <Text mb={4}>{election.description}</Text>
-
-        <Tabs
-          isFitted
-          variant="enclosed"
-          onChange={(index) => setActiveTab(index)}
-          index={activeTab}
-        >
-          <TabList mb="1em">
-            <Tab>
-              <HStack>
-                <FaListAlt />
-                <Text>Positions & Candidates</Text>
-              </HStack>
-            </Tab>
-            <Tab>
-              <HStack>
-                <FaChartBar />
-                <Text>Results</Text>
-              </HStack>
-            </Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel p={0}>
-              <VStack spacing={4} align="stretch">
+                    {position.candidates && position.candidates.length > 0 ? (
+                      <CandidatesList
+                        candidates={position.candidates}
+                        electionStatus={election.status}
+                        positionId={position._id}
+                        electionId={election._id}
+                      />
+                    ) : (
+                      <Text color="gray.500">
+                        No candidates registered for this position
+                      </Text>
+                    )}
+                  </CardBody>
+                </Card>
+              ))}
+            </VStack>
+          </TabPanel>
+          <TabPanel p={0}>
+            {election.status === 'completed' ? (
+              <Box>
+                <Heading size="md" mb={4}>
+                  Election Results
+                </Heading>
                 {election.positions.map((position: Position) => (
                   <Card key={position._id} variant="outline" mb={4}>
                     <CardBody>
-                      <Flex
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mb={3}
-                      >
-                        <Heading size="md">{position.title}</Heading>
-                        {election.status === 'draft' && (
-                          <Button
-                            leftIcon={<FaUserPlus />}
-                            size="sm"
-                            colorScheme="teal"
-                            onClick={() =>
-                              navigate(
-                                `/elections/${id}/positions/${position._id}/candidates/add`
-                              )
-                            }
-                          >
-                            Add Candidate
-                          </Button>
-                        )}
-                      </Flex>
-                      <Text mb={4}>{position.description}</Text>
-
+                      <Heading size="md" mb={3}>
+                        {position.title}
+                      </Heading>
                       {position.candidates && position.candidates.length > 0 ? (
-                        <CandidatesList
-                          candidates={position.candidates}
-                          electionStatus={election.status}
-                          positionId={position._id}
-                          electionId={election._id}
-                        />
+                        <VStack align="stretch" spacing={3}>
+                          {position.candidates
+                            .sort(
+                              (a: Candidate, b: Candidate) =>
+                                (b.voteCount || 0) - (a.voteCount || 0)
+                            )
+                            .map((candidate: Candidate, index: number) => (
+                              <Box
+                                key={candidate._id}
+                                p={3}
+                                borderWidth={1}
+                                borderRadius="md"
+                                bg={index === 0 ? 'green.50' : 'white'}
+                                borderColor={
+                                  index === 0 ? 'green.200' : 'gray.200'
+                                }
+                              >
+                                <Flex justifyContent="space-between">
+                                  <Text
+                                    fontWeight={index === 0 ? 'bold' : 'normal'}
+                                  >
+                                    {candidate.name} {index === 0 && '🏆'}
+                                  </Text>
+                                  <Text>{candidate.voteCount || 0} votes</Text>
+                                </Flex>
+                              </Box>
+                            ))}
+                        </VStack>
                       ) : (
                         <Text color="gray.500">
-                          No candidates registered for this position
+                          No candidates for this position
                         </Text>
                       )}
                     </CardBody>
                   </Card>
                 ))}
-              </VStack>
-            </TabPanel>
-            <TabPanel p={0}>
-              {election.status === 'completed' ? (
-                <Box>
-                  <Heading size="md" mb={4}>
-                    Election Results
-                  </Heading>
-                  {election.positions.map((position: Position) => (
-                    <Card key={position._id} variant="outline" mb={4}>
-                      <CardBody>
-                        <Heading size="md" mb={3}>
-                          {position.title}
-                        </Heading>
-                        {position.candidates &&
-                        position.candidates.length > 0 ? (
-                          <VStack align="stretch" spacing={3}>
-                            {position.candidates
-                              .sort(
-                                (a: Candidate, b: Candidate) =>
-                                  (b.voteCount || 0) - (a.voteCount || 0)
-                              )
-                              .map((candidate: Candidate, index: number) => (
-                                <Box
-                                  key={candidate._id}
-                                  p={3}
-                                  borderWidth={1}
-                                  borderRadius="md"
-                                  bg={index === 0 ? 'green.50' : 'white'}
-                                  borderColor={
-                                    index === 0 ? 'green.200' : 'gray.200'
-                                  }
-                                >
-                                  <Flex justifyContent="space-between">
-                                    <Text
-                                      fontWeight={
-                                        index === 0 ? 'bold' : 'normal'
-                                      }
-                                    >
-                                      {candidate.name} {index === 0 && '🏆'}
-                                    </Text>
-                                    <Text>
-                                      {candidate.voteCount || 0} votes
-                                    </Text>
-                                  </Flex>
-                                </Box>
-                              ))}
-                          </VStack>
-                        ) : (
-                          <Text color="gray.500">
-                            No candidates for this position
-                          </Text>
-                        )}
-                      </CardBody>
-                    </Card>
-                  ))}
+                <Button
+                  leftIcon={<FaChartBar />}
+                  colorScheme="blue"
+                  mt={4}
+                  onClick={() => navigate(`/elections/${id}/results`)}
+                >
+                  View Detailed Results
+                </Button>
+              </Box>
+            ) : (
+              <Box textAlign="center" p={10}>
+                <Text fontSize="lg" mb={4}>
+                  Results will be available once the election is completed.
+                </Text>
+                {election.status === 'active' && (
                   <Button
-                    leftIcon={<FaChartBar />}
                     colorScheme="blue"
-                    mt={4}
-                    onClick={() => navigate(`/elections/${id}/results`)}
+                    onClick={() => navigate(`/elections/${id}/vote`)}
                   >
-                    View Detailed Results
+                    Cast Your Vote
                   </Button>
-                </Box>
-              ) : (
-                <Box textAlign="center" p={10}>
-                  <Text fontSize="lg" mb={4}>
-                    Results will be available once the election is completed.
-                  </Text>
-                  {election.status === 'active' && (
-                    <Button
-                      colorScheme="blue"
-                      onClick={() => navigate(`/elections/${id}/vote`)}
-                    >
-                      Cast Your Vote
-                    </Button>
-                  )}
-                </Box>
-              )}
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
-      </Box>
-    </DashboardLayout>
+                )}
+              </Box>
+            )}
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </Box>
   );
 };
 

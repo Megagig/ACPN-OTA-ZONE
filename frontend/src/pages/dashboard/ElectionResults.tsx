@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaChartBar, FaMedal } from 'react-icons/fa';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Alert, AlertIcon } from '../../components/common/AlertComponent';
 import { useToast } from '../../hooks/useToast';
 import {
@@ -310,24 +309,20 @@ const ElectionResults: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <Box className="p-5">
-          <Text>Loading election results...</Text>
-        </Box>
-      </DashboardLayout>
+      <Box className="p-5">
+        <Text>Loading election results...</Text>
+      </Box>
     );
   }
 
   if (!election) {
     return (
-      <DashboardLayout>
-        <Box className="p-5">
-          <Text>Election not found</Text>
-          <Button className="mt-4" onClick={() => navigate('/elections/list')}>
-            Back to Elections
-          </Button>
-        </Box>
-      </DashboardLayout>
+      <Box className="p-5">
+        <Text>Election not found</Text>
+        <Button className="mt-4" onClick={() => navigate('/elections/list')}>
+          Back to Elections
+        </Button>
+      </Box>
     );
   }
 
@@ -348,62 +343,60 @@ const ElectionResults: React.FC = () => {
   }
 
   return (
-    <DashboardLayout>
-      <Box className="p-5">
-        <Flex justify="between" align="center" className="mb-4">
-          <Box>
-            <Heading size="lg">{election.title} - Results</Heading>
-            <Text className="text-sm text-gray-600">
-              {new Date(election.startDate).toLocaleDateString()} -{' '}
-              {new Date(election.endDate).toLocaleDateString()}
-            </Text>
-          </Box>
-          <Button onClick={() => navigate(`/elections/${id}`)}>
-            Back to Election
-          </Button>
-        </Flex>
+    <Box className="p-5">
+      <Flex justify="between" align="center" className="mb-4">
+        <Box>
+          <Heading size="lg">{election.title} - Results</Heading>
+          <Text className="text-sm text-gray-600">
+            {new Date(election.startDate).toLocaleDateString()} -{' '}
+            {new Date(election.endDate).toLocaleDateString()}
+          </Text>
+        </Box>
+        <Button onClick={() => navigate(`/elections/${id}`)}>
+          Back to Election
+        </Button>
+      </Flex>
 
-        <Divider className="my-4" />
+      <Divider className="my-4" />
 
-        <Tabs onChange={(index) => setActiveTab(index)}>
-          <TabList>
-            <Tab isSelected={activeTab === 0} onClick={() => setActiveTab(0)}>
-              <HStack>
-                <FaMedal />
-                <Text>Results by Position</Text>
-              </HStack>
-            </Tab>
-            <Tab isSelected={activeTab === 1} onClick={() => setActiveTab(1)}>
-              <HStack>
-                <FaChartBar />
-                <Text>Voting Statistics</Text>
-              </HStack>
-            </Tab>
-          </TabList>
+      <Tabs onChange={(index) => setActiveTab(index)}>
+        <TabList>
+          <Tab isSelected={activeTab === 0} onClick={() => setActiveTab(0)}>
+            <HStack>
+              <FaMedal />
+              <Text>Results by Position</Text>
+            </HStack>
+          </Tab>
+          <Tab isSelected={activeTab === 1} onClick={() => setActiveTab(1)}>
+            <HStack>
+              <FaChartBar />
+              <Text>Voting Statistics</Text>
+            </HStack>
+          </Tab>
+        </TabList>
 
-          <TabPanels>
-            <TabPanel isSelected={activeTab === 0} className="px-0">
-              <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
-                {election.positions.map((position) => (
-                  <Card key={position._id}>
-                    <CardBody>
-                      <Heading size="md" className="mb-4">
-                        {position.title}
-                      </Heading>
-                      {renderPositionResults(position)}
-                    </CardBody>
-                  </Card>
-                ))}
-              </SimpleGrid>
-            </TabPanel>
+        <TabPanels>
+          <TabPanel isSelected={activeTab === 0} className="px-0">
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+              {election.positions.map((position) => (
+                <Card key={position._id}>
+                  <CardBody>
+                    <Heading size="md" className="mb-4">
+                      {position.title}
+                    </Heading>
+                    {renderPositionResults(position)}
+                  </CardBody>
+                </Card>
+              ))}
+            </SimpleGrid>
+          </TabPanel>
 
-            <TabPanel isSelected={activeTab === 1} className="px-0">
-              {renderStatistics()}
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
-      </Box>
-    </DashboardLayout>
+          <TabPanel isSelected={activeTab === 1} className="px-0">
+            {renderStatistics()}
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </Box>
   );
 };
 
