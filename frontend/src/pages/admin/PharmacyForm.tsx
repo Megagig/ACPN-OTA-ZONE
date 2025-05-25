@@ -1,104 +1,143 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
-import { PharmacyFormData } from '../../types/pharmacy.types';
+import type {
+  PharmacyFormData,
+  Pharmacy,
+  SocialMediaLinks,
+} from '../../types/pharmacy.types';
 
 const PharmacyForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isEditMode = !!id;
 
-  const [formData, setFormData] = useState<PharmacyFormData>({
+  const initialFormData: PharmacyFormData = {
     name: '',
-    address: '',
-    city: '',
-    state: '',
-    registrationNumber: '',
-    licenseNumber: '',
-    licenseExpiryDate: '',
-    superintendentPharmacist: '',
-    superintendentLicenseNumber: '',
-    staffCount: 0,
-    phone: '',
     email: '',
-    establishedYear: new Date().getFullYear(),
-    services: [],
+    phone: '',
+    yearEstablished: undefined,
+    address: '', // Street Address
+    landmark: '',
+    townArea: '',
+    pcnLicense: '', // "Previous Pharmacy License Number"
+    licenseExpiryDate: '',
+    numberOfStaff: undefined,
+    superintendentName: '',
+    superintendentLicenseNumber: '',
+    superintendentPhoto: undefined,
+    superintendentPhone: '',
+    directorName: '',
+    directorPhoto: undefined,
+    directorPhone: '',
     operatingHours: '',
-    website: '',
+    websiteUrl: '',
     socialMedia: {
-      facebook: '',
-      twitter: '',
-      instagram: '',
+      facebookUrl: '',
+      twitterUrl: '',
+      instagramUrl: '',
     },
-  });
+    servicesOffered: [],
+  };
 
+  const [formData, setFormData] = useState<PharmacyFormData>(initialFormData);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [currentService, setCurrentService] = useState('');
 
-  // List of available pharmacy services
-  const availableServices = [
-    'Prescription Filling',
-    'Over-the-Counter Medicine',
-    'Health Consultation',
-    'Blood Pressure Monitoring',
-    'Glucose Testing',
-    'Vaccination',
-    'Health Screening',
-    'Medicine Delivery',
-    'Wellness Products',
-    'First Aid',
-    'Chronic Disease Management',
-    'Home Healthcare',
-    'Electronic Prescription',
-    'Compounding',
-    'Medical Equipment',
-  ];
+  // DEBUG: Log formData state
+  console.log('DEBUG: PharmacyForm formData state:', formData);
+  // DEBUG: Log isEditMode
+  console.log('DEBUG: PharmacyForm isEditMode:', isEditMode);
+
+  const handleAddService = () => {
+    if (
+      currentService.trim() !== '' &&
+      !formData.servicesOffered?.includes(currentService.trim())
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        servicesOffered: [
+          ...(prev.servicesOffered || []),
+          currentService.trim(),
+        ],
+      }));
+      setCurrentService('');
+    }
+  };
+
+  const handleRemoveService = (serviceToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      servicesOffered: prev.servicesOffered?.filter(
+        (service) => service !== serviceToRemove
+      ),
+    }));
+  };
+
+  const fetchPharmacyData = useCallback(async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const pharmacy: Pharmacy = await pharmacyService.getPharmacy(id);
+
+      const formatDateForInput = (dateString?: string | Date): string => {
+        if (!dateString) return '';
+        try {
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0]; // YYYY-MM-DD
+        } catch {
+          // Error during date parsing, return empty string. No need to use the error object.
+          return '';
+        }
+      };
+
+      setFormData({
+        name: pharmacy.name || '',
+        email: pharmacy.email || '',
+        phone: pharmacy.phone || '',
+        yearEstablished: pharmacy.yearEstablished,
+        address: pharmacy.address || '',
+        landmark: pharmacy.landmark || '',
+        townArea: pharmacy.townArea || '',
+        pcnLicense: pharmacy.pcnLicense || '',
+        licenseExpiryDate: formatDateForInput(pharmacy.licenseExpiryDate),
+        numberOfStaff: pharmacy.numberOfStaff,
+        superintendentName: pharmacy.superintendentName || '',
+        superintendentLicenseNumber: pharmacy.superintendentLicenseNumber || '',
+        superintendentPhone: pharmacy.superintendentPhone || '',
+        directorName: pharmacy.directorName || '',
+        directorPhone: pharmacy.directorPhone || '',
+        operatingHours: pharmacy.operatingHours || '',
+        websiteUrl: pharmacy.websiteUrl || '',
+        socialMedia: {
+          facebookUrl: pharmacy.socialMedia?.facebookUrl || '',
+          twitterUrl: pharmacy.socialMedia?.twitterUrl || '',
+          instagramUrl: pharmacy.socialMedia?.instagramUrl || '',
+        },
+        servicesOffered: pharmacy.servicesOffered || [],
+        // Keep photo fields as undefined initially, they will show current if available via URL string
+        superintendentPhoto: pharmacy.superintendentPhoto || undefined,
+        directorPhoto: pharmacy.directorPhoto || undefined,
+      });
+      setLoading(false);
+    } catch (err) {
+      let errorMessage = 'Failed to load pharmacy data';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (isEditMode) {
       fetchPharmacyData();
     }
-  }, [id]);
-
-  const fetchPharmacyData = async () => {
-    try {
-      setLoading(true);
-      const pharmacy = await pharmacyService.getPharmacy(id!);
-
-      // Format the data for the form
-      setFormData({
-        name: pharmacy.name,
-        address: pharmacy.address,
-        city: pharmacy.city,
-        state: pharmacy.state,
-        registrationNumber: pharmacy.registrationNumber,
-        licenseNumber: pharmacy.licenseNumber,
-        licenseExpiryDate: pharmacy.licenseExpiryDate.split('T')[0], // Format date for input
-        superintendentPharmacist: pharmacy.superintendentPharmacist || '',
-        superintendentLicenseNumber: pharmacy.superintendentLicenseNumber || '',
-        staffCount: pharmacy.staffCount || 0,
-        phone: pharmacy.phone,
-        email: pharmacy.email,
-        establishedYear:
-          pharmacy.additionalInfo?.establishedYear || new Date().getFullYear(),
-        services: pharmacy.additionalInfo?.services || [],
-        operatingHours: pharmacy.additionalInfo?.operatingHours || '',
-        website: pharmacy.additionalInfo?.website || '',
-        socialMedia: {
-          facebook: pharmacy.additionalInfo?.socialMedia?.facebook || '',
-          twitter: pharmacy.additionalInfo?.socialMedia?.twitter || '',
-          instagram: pharmacy.additionalInfo?.socialMedia?.instagram || '',
-        },
-      });
-
-      setLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load pharmacy data');
-      setLoading(false);
-    }
-  };
+  }, [isEditMode, fetchPharmacyData]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -106,15 +145,13 @@ const PharmacyForm: React.FC = () => {
     >
   ) => {
     const { name, value } = e.target;
-
-    if (name.includes('.')) {
-      // Handle nested objects like socialMedia.facebook
-      const [parent, child] = name.split('.');
+    if (name.startsWith('socialMedia.')) {
+      const socialKey = name.split('.')[1] as keyof SocialMediaLinks;
       setFormData((prev) => ({
         ...prev,
-        [parent]: {
-          ...prev[parent as keyof PharmacyFormData],
-          [child]: value,
+        socialMedia: {
+          ...(prev.socialMedia || {}),
+          [socialKey]: value,
         },
       }));
     } else {
@@ -122,75 +159,64 @@ const PharmacyForm: React.FC = () => {
     }
   };
 
-  const handleServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = e.target;
-
-    if (checked) {
-      setFormData((prev) => ({
-        ...prev,
-        services: [...(prev.services || []), value],
-      }));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files } = e.target;
+    if (files && files.length > 0) {
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        services: (prev.services || []).filter((service) => service !== value),
-      }));
+      setFormData((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
-    setError(null);
-    setSuccess(null);
+    setSuccess('');
+    setError('');
+
+    const data = new FormData();
+
+    // Iterate through formData and add to FormData object
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === 'socialMedia' && value !== undefined && value !== null) {
+        // Convert socialMedia to a JSON string to maintain its structure
+        data.append('socialMedia', JSON.stringify(value));
+      } else if (key === 'servicesOffered' && Array.isArray(value)) {
+        value.forEach((service, index) => {
+          data.append(`servicesOffered[${index}]`, service);
+        });
+      } else if (value !== undefined && value !== null) {
+        if (typeof value === 'number') {
+          data.append(key, String(value));
+        } else {
+          data.append(key, value as string);
+        }
+      }
+    });
 
     try {
       if (isEditMode) {
-        await pharmacyService.updatePharmacy(id!, formData);
+        await pharmacyService.updatePharmacy(id!, data);
         setSuccess('Pharmacy updated successfully');
       } else {
-        await pharmacyService.createPharmacy(formData);
+        await pharmacyService.createPharmacy(data);
         setSuccess('Pharmacy created successfully');
-        // Clear form after successful creation
-        if (!isEditMode) {
-          setFormData({
-            name: '',
-            address: '',
-            city: '',
-            state: '',
-            registrationNumber: '',
-            licenseNumber: '',
-            licenseExpiryDate: '',
-            superintendentPharmacist: '',
-            superintendentLicenseNumber: '',
-            staffCount: 0,
-            phone: '',
-            email: '',
-            establishedYear: new Date().getFullYear(),
-            services: [],
-            operatingHours: '',
-            website: '',
-            socialMedia: {
-              facebook: '',
-              twitter: '',
-              instagram: '',
-            },
-          });
-        }
+        navigate('/dashboard/pharmacies');
       }
-
-      // Redirect back to pharmacy list after a delay
-      setTimeout(() => {
-        navigate('/pharmacies');
-      }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save pharmacy');
+    } catch (err) {
+      let displayMessage = 'Failed to save pharmacy';
+      let consoleDetails = err;
+      if (err instanceof Error) {
+        consoleDetails = err.message;
+      }
+      setError(displayMessage);
+      console.error('Submission error:', consoleDetails);
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading && isEditMode) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -214,13 +240,18 @@ const PharmacyForm: React.FC = () => {
         <div className="mt-4 flex md:ml-4 md:mt-0">
           <button
             type="button"
-            onClick={() => navigate('/pharmacies')}
+            onClick={() => navigate('/admin/pharmacies-management')}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Back to List
           </button>
         </div>
       </div>
+
+      {/* DEBUG: Simple text to confirm this part renders */}
+      <p className="text-red-500 font-bold p-4">
+        DEBUG: FORM RENDERING TEST POINT 1
+      </p>
 
       {error && (
         <div className="mt-6 rounded-md bg-red-50 p-4">
@@ -231,10 +262,11 @@ const PharmacyForm: React.FC = () => {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
+                aria-hidden="true"
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -255,10 +287,11 @@ const PharmacyForm: React.FC = () => {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
+                aria-hidden="true"
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -272,20 +305,18 @@ const PharmacyForm: React.FC = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="mt-6 space-y-6 bg-white shadow-sm rounded-lg p-6"
+        className="mt-6 space-y-8 bg-white shadow-sm rounded-lg p-6 divide-y divide-gray-200"
       >
-        <div className="space-y-6 sm:space-y-5">
+        {/* Section 1: Basic Information */}
+        <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
             <h3 className="text-lg font-medium leading-6 text-gray-900">
               Basic Information
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Pharmacy identification details.
-            </p>
           </div>
-
           <div className="space-y-6 sm:space-y-5">
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Pharmacy Name */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
@@ -297,103 +328,15 @@ const PharmacyForm: React.FC = () => {
                   type="text"
                   name="name"
                   id="name"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="address"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Address<span className="text-red-500">*</span>
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="text"
-                  name="address"
-                  id="address"
                   className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="city"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                City<span className="text-red-500">*</span>
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="text"
-                  name="city"
-                  id="city"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.city}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="state"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                State<span className="text-red-500">*</span>
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <select
-                  id="state"
-                  name="state"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.state}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select a state</option>
-                  <option value="Ogun">Ogun</option>
-                  <option value="Lagos">Lagos</option>
-                  <option value="Oyo">Oyo</option>
-                  <option value="Ondo">Ondo</option>
-                  <option value="Osun">Osun</option>
-                  <option value="Ekiti">Ekiti</option>
-                  <option value="FCT">FCT</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Phone Number<span className="text-red-500">*</span>
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="tel"
-                  name="phone"
-                  id="phone"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Email Address */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
@@ -405,68 +348,155 @@ const PharmacyForm: React.FC = () => {
                   type="email"
                   name="email"
                   id="email"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Phone Number */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Phone Number<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="tel"
+                  name="phone"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Year Established */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="yearEstablished"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Year Established
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="number"
+                  name="yearEstablished"
+                  id="yearEstablished"
+                  value={formData.yearEstablished || ''}
+                  onChange={handleChange}
+                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
           </div>
         </div>
-
-        <div className="space-y-6 sm:space-y-5 pt-6">
+        {/* Section 2: Address Information */}
+        <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
             <h3 className="text-lg font-medium leading-6 text-gray-900">
-              Licensing Information
+              Address Information
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Pharmacy registration and licensing details.
-            </p>
           </div>
-
           <div className="space-y-6 sm:space-y-5">
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Street Address */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
-                htmlFor="registrationNumber"
+                htmlFor="address"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
               >
-                Registration Number<span className="text-red-500">*</span>
+                Street Address<span className="text-red-500">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
                   type="text"
-                  name="registrationNumber"
-                  id="registrationNumber"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.registrationNumber}
+                  name="address"
+                  id="address"
+                  value={formData.address}
                   onChange={handleChange}
                   required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Landmark */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
-                htmlFor="licenseNumber"
+                htmlFor="landmark"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
               >
-                License Number<span className="text-red-500">*</span>
+                Landmark<span className="text-red-500">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
                   type="text"
-                  name="licenseNumber"
-                  id="licenseNumber"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.licenseNumber}
+                  name="landmark"
+                  id="landmark"
+                  value={formData.landmark}
                   onChange={handleChange}
                   required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Town/Area */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="townArea"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Town/Area<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="text"
+                  name="townArea"
+                  id="townArea"
+                  value={formData.townArea}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Section 3: Registration Information */}
+        <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
+          <div>
+            <h3 className="text-lg font-medium leading-6 text-gray-900">
+              Registration & Personnel
+            </h3>
+          </div>
+          <div className="space-y-6 sm:space-y-5">
+            {/* PCN License Number */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="pcnLicense"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Previous Pharmacy License Number
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="text"
+                  name="pcnLicense"
+                  id="pcnLicense"
+                  value={formData.pcnLicense}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* License Expiry Date */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="licenseExpiryDate"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
@@ -478,55 +508,17 @@ const PharmacyForm: React.FC = () => {
                   type="date"
                   name="licenseExpiryDate"
                   id="licenseExpiryDate"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
                   value={formData.licenseExpiryDate}
                   onChange={handleChange}
                   required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Number of Staff */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
-                htmlFor="superintendentPharmacist"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Superintendent Pharmacist
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="text"
-                  name="superintendentPharmacist"
-                  id="superintendentPharmacist"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.superintendentPharmacist}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="superintendentLicenseNumber"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Superintendent License Number
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="text"
-                  name="superintendentLicenseNumber"
-                  id="superintendentLicenseNumber"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.superintendentLicenseNumber}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="staffCount"
+                htmlFor="numberOfStaff"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
               >
                 Number of Staff
@@ -534,92 +526,212 @@ const PharmacyForm: React.FC = () => {
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
                   type="number"
-                  name="staffCount"
-                  id="staffCount"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.staffCount || ''}
+                  name="numberOfStaff"
+                  id="numberOfStaff"
+                  value={formData.numberOfStaff || ''}
                   onChange={handleChange}
-                  min="0"
+                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Superintendent Pharmacist Name */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="superintendentName"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Superintendent Pharmacist Name
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="text"
+                  name="superintendentName"
+                  id="superintendentName"
+                  value={formData.superintendentName}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Superintendent License Number */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="superintendentLicenseNumber"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Superintendent License Number
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="text"
+                  name="superintendentLicenseNumber"
+                  id="superintendentLicenseNumber"
+                  value={formData.superintendentLicenseNumber}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Superintendent Picture */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="superintendentPhoto"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Superintendent Picture<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="file"
+                  name="superintendentPhoto"
+                  id="superintendentPhoto"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  required={
+                    !isEditMode ||
+                    !(
+                      typeof formData.superintendentPhoto === 'string' &&
+                      formData.superintendentPhoto
+                    )
+                  }
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+                {isEditMode &&
+                  typeof formData.superintendentPhoto === 'string' &&
+                  formData.superintendentPhoto && (
+                    <p className="mt-2 text-sm text-gray-500">
+                      Current photo:{' '}
+                      <a
+                        href={formData.superintendentPhoto}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-500"
+                      >
+                        View
+                      </a>{' '}
+                      (Upload new to replace)
+                    </p>
+                  )}
+              </div>
+            </div>
+            {/* Superintendent Phone */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="superintendentPhone"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Superintendent Phone<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="tel"
+                  name="superintendentPhone"
+                  id="superintendentPhone"
+                  value={formData.superintendentPhone}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Pharmacy Director Name */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="directorName"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Pharmacy Director Name<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="text"
+                  name="directorName"
+                  id="directorName"
+                  value={formData.directorName}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+            {/* Pharmacy Director Picture */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="directorPhoto"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Pharmacy Director Picture<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="file"
+                  name="directorPhoto"
+                  id="directorPhoto"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  required={
+                    !isEditMode ||
+                    !(
+                      typeof formData.directorPhoto === 'string' &&
+                      formData.directorPhoto
+                    )
+                  }
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+                {isEditMode &&
+                  typeof formData.directorPhoto === 'string' &&
+                  formData.directorPhoto && (
+                    <p className="mt-2 text-sm text-gray-500">
+                      Current photo:{' '}
+                      <a
+                        href={formData.directorPhoto}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-500"
+                      >
+                        View
+                      </a>{' '}
+                      (Upload new to replace)
+                    </p>
+                  )}
+              </div>
+            </div>
+            {/* Pharmacy Director Phone */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label
+                htmlFor="directorPhone"
+                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+              >
+                Pharmacy Director Phone<span className="text-red-500">*</span>
+              </label>
+              <div className="mt-1 sm:col-span-2 sm:mt-0">
+                <input
+                  type="tel"
+                  name="directorPhone"
+                  id="directorPhone"
+                  value={formData.directorPhone}
+                  onChange={handleChange}
+                  required
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
           </div>
         </div>
-
-        <div className="space-y-6 sm:space-y-5 pt-6">
+        {/* Section 4: Additional Information (Optional) */}
+        <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
             <h3 className="text-lg font-medium leading-6 text-gray-900">
-              Additional Information
+              Additional Information (Optional)
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Optional details about the pharmacy.
-            </p>
           </div>
-
           <div className="space-y-6 sm:space-y-5">
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="establishedYear"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Established Year
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="number"
-                  name="establishedYear"
-                  id="establishedYear"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
-                  value={formData.establishedYear || new Date().getFullYear()}
-                  onChange={handleChange}
-                  min="1900"
-                  max={new Date().getFullYear()}
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="services"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Services Offered
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <fieldset>
-                  <legend className="sr-only">Services</legend>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2">
-                    {availableServices.map((service) => (
-                      <div className="relative flex items-start" key={service}>
-                        <div className="flex items-center h-5">
-                          <input
-                            id={`service-${service}`}
-                            name="services"
-                            type="checkbox"
-                            value={service}
-                            checked={(formData.services || []).includes(
-                              service
-                            )}
-                            onChange={handleServiceChange}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                          />
-                        </div>
-                        <div className="ml-3 text-sm">
-                          <label
-                            htmlFor={`service-${service}`}
-                            className="font-medium text-gray-700"
-                          >
-                            {service}
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </fieldset>
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Operating Hours */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="operatingHours"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
@@ -631,109 +743,131 @@ const PharmacyForm: React.FC = () => {
                   type="text"
                   name="operatingHours"
                   id="operatingHours"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   value={formData.operatingHours || ''}
                   onChange={handleChange}
-                  placeholder="E.g., Mon-Fri: 8am-6pm, Sat: 9am-3pm"
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
+            {/* Website URL */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
-                htmlFor="website"
+                htmlFor="websiteUrl"
                 className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
               >
-                Website
+                Website URL
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
                   type="url"
-                  name="website"
-                  id="website"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={formData.website || ''}
+                  name="websiteUrl"
+                  id="websiteUrl"
+                  value={formData.websiteUrl || ''}
                   onChange={handleChange}
-                  placeholder="https://www.example.com"
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="socialMedia.facebook"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Facebook
+            {/* Social Media Links */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                Social Media
               </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
+              <div className="mt-1 sm:col-span-2 sm:mt-0 space-y-2">
                 <input
                   type="url"
-                  name="socialMedia.facebook"
-                  id="socialMedia.facebook"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={formData.socialMedia?.facebook || ''}
+                  name="socialMedia.facebookUrl"
+                  placeholder="Facebook URL"
+                  value={formData.socialMedia?.facebookUrl || ''}
                   onChange={handleChange}
-                  placeholder="https://facebook.com/yourpharmacy"
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+                <input
+                  type="url"
+                  name="socialMedia.twitterUrl"
+                  placeholder="Twitter URL"
+                  value={formData.socialMedia?.twitterUrl || ''}
+                  onChange={handleChange}
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+                <input
+                  type="url"
+                  name="socialMedia.instagramUrl"
+                  placeholder="Instagram URL"
+                  value={formData.socialMedia?.instagramUrl || ''}
+                  onChange={handleChange}
+                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="socialMedia.twitter"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Twitter
+            {/* Services Offered */}
+            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
+              <label className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                Services Offered
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="url"
-                  name="socialMedia.twitter"
-                  id="socialMedia.twitter"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={formData.socialMedia?.twitter || ''}
-                  onChange={handleChange}
-                  placeholder="https://twitter.com/yourpharmacy"
-                />
-              </div>
-            </div>
-
-            <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:border-t sm:border-gray-200 sm:pt-5">
-              <label
-                htmlFor="socialMedia.instagram"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
-              >
-                Instagram
-              </label>
-              <div className="mt-1 sm:col-span-2 sm:mt-0">
-                <input
-                  type="url"
-                  name="socialMedia.instagram"
-                  id="socialMedia.instagram"
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={formData.socialMedia?.instagram || ''}
-                  onChange={handleChange}
-                  placeholder="https://instagram.com/yourpharmacy"
-                />
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={currentService}
+                    onChange={(e) => setCurrentService(e.target.value)}
+                    className="block w-full max-w-lg rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="Add a service (e.g., Prescription Dispensing, Consultations)"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddService}
+                    className="rounded-r-md border border-l-0 border-gray-300 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formData.servicesOffered?.map((service, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center bg-gray-100 rounded-full px-3 py-1"
+                    >
+                      <span className="text-sm">{service}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveService(service)}
+                        className="ml-2 text-gray-500 hover:text-gray-700"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="pt-5 border-t border-gray-200">
+        <div className="pt-5">
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => navigate('/pharmacies')}
-              className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              onClick={() => navigate('/admin/pharmacies-management')}
+              className="mr-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={submitLoading}
-              className="ml-3 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
+              disabled={submitLoading || (isEditMode && loading)}
+              className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
             >
               {submitLoading ? (
                 <>
@@ -759,8 +893,10 @@ const PharmacyForm: React.FC = () => {
                   </svg>
                   Saving...
                 </>
+              ) : isEditMode ? (
+                'Update Pharmacy'
               ) : (
-                'Save'
+                'Create Pharmacy'
               )}
             </button>
           </div>

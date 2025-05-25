@@ -1,195 +1,186 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
-import type { PharmacyFormData, Pharmacy } from '../../types/pharmacy.types';
-import { useAuth } from '../../context/AuthContext';
+import type { PharmacyFormData } from '../../types/pharmacy.types';
 
 const PharmacyForm: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isEdit = location.pathname.includes('/edit');
 
-  const [formData, setFormData] = useState<PharmacyFormData>({
+  const initialFormData: PharmacyFormData = {
     name: '',
-    address: '',
-    city: '',
-    state: '',
-    registrationNumber: '',
-    licenseNumber: '',
-    licenseExpiryDate: '',
-    superintendentPharmacist: '',
-    superintendentLicenseNumber: '',
-    staffCount: undefined,
-    phone: '',
     email: '',
-    establishedYear: undefined,
-    services: [],
+    phone: '',
+    yearEstablished: undefined,
+    address: '',
+    landmark: '',
+    townArea: '',
+    pcnLicense: '',
+    licenseExpiryDate: '',
+    numberOfStaff: undefined,
+    superintendentName: '',
+    superintendentLicenseNumber: '',
+    superintendentPhoto: undefined,
+    superintendentPhone: '',
+    directorName: '',
+    directorPhoto: undefined,
+    directorPhone: '',
     operatingHours: '',
-    website: '',
+    websiteUrl: '',
     socialMedia: {
-      facebook: '',
-      twitter: '',
-      instagram: '',
+      facebookUrl: '',
+      twitterUrl: '',
+      instagramUrl: '',
     },
-  });
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [fetchLoading, setFetchLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<boolean>(false);
-  const [serviceInput, setServiceInput] = useState<string>('');
-
-  useEffect(() => {
-    if (isEdit) {
-      fetchPharmacy();
-    }
-  }, [isEdit]);
-
-  const fetchPharmacy = async () => {
-    try {
-      setFetchLoading(true);
-      const data = await pharmacyService.getPharmacyByUser();
-
-      if (data) {
-        // Transform Pharmacy object to PharmacyFormData
-        setFormData({
-          name: data.name,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          registrationNumber: data.registrationNumber,
-          licenseNumber: data.licenseNumber,
-          licenseExpiryDate: data.licenseExpiryDate
-            ? data.licenseExpiryDate.split('T')[0]
-            : '',
-          superintendentPharmacist: data.superintendentPharmacist || '',
-          superintendentLicenseNumber: data.superintendentLicenseNumber || '',
-          staffCount: data.staffCount,
-          phone: data.phone,
-          email: data.email,
-          establishedYear: data.additionalInfo?.establishedYear,
-          services: data.additionalInfo?.services || [],
-          operatingHours: data.additionalInfo?.operatingHours || '',
-          website: data.additionalInfo?.website || '',
-          socialMedia: {
-            facebook: data.additionalInfo?.socialMedia?.facebook || '',
-            twitter: data.additionalInfo?.socialMedia?.twitter || '',
-            instagram: data.additionalInfo?.socialMedia?.instagram || '',
-          },
-        });
-      }
-    } catch (err) {
-      setError('Failed to load pharmacy data');
-      console.error(err);
-    } finally {
-      setFetchLoading(false);
-    }
+    servicesOffered: [],
   };
 
-  const handleInputChange = (
+  const [formData, setFormData] = useState<PharmacyFormData>(initialFormData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [currentService, setCurrentService] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (isEdit) {
+        try {
+          setLoading(true);
+          const data = await pharmacyService.getPharmacyByUser();
+          if (data) {
+            setFormData({
+              ...data,
+              superintendentPhoto: data.superintendentPhoto || undefined,
+              directorPhoto: data.directorPhoto || undefined,
+            });
+          }
+        } catch (err) {
+          setError('Failed to load pharmacy data');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [isEdit]);
+
+  const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
     const { name, value, type } = e.target;
 
-    if (name.includes('.')) {
-      // Handle nested objects like socialMedia.facebook
-      const [parent, child] = name.split('.');
+    if (name.startsWith('socialMedia.')) {
+      const [, key] = name.split('.');
       setFormData((prev) => ({
         ...prev,
-        [parent]: {
-          ...prev[parent as keyof PharmacyFormData],
-          [child]: value,
+        socialMedia: {
+          ...prev.socialMedia!,
+          [key]: value,
         },
       }));
-    } else if (type === 'number') {
-      // Handle number inputs
+      return;
+    }
+
+    if (type === 'number') {
       setFormData((prev) => ({
         ...prev,
         [name]: value === '' ? undefined : Number(value),
       }));
-    } else {
-      // Handle regular inputs
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      return;
     }
-  };
 
-  const handleServiceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setServiceInput(e.target.value);
-  };
-
-  const addService = () => {
-    if (
-      serviceInput.trim() !== '' &&
-      !formData.services?.includes(serviceInput.trim())
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        services: [...(prev.services || []), serviceInput.trim()],
-      }));
-      setServiceInput('');
-    }
-  };
-
-  const removeService = (service: string) => {
     setFormData((prev) => ({
       ...prev,
-      services: prev.services?.filter((s) => s !== service) || [],
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files } = e.target;
+    if (files && files.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: files[0],
+      }));
+    }
+  };
+
+  const handleAddService = () => {
+    if (
+      currentService.trim() &&
+      !formData.servicesOffered?.includes(currentService.trim())
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        servicesOffered: [
+          ...(prev.servicesOffered || []),
+          currentService.trim(),
+        ],
+      }));
+      setCurrentService('');
+    }
+  };
+
+  const handleRemoveService = (serviceToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      servicesOffered:
+        prev.servicesOffered?.filter(
+          (service) => service !== serviceToRemove
+        ) || [],
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
-      setLoading(true);
-      setError(null);
+      const formDataToSend = new FormData();
 
-      if (isEdit) {
-        // Update existing pharmacy
-        await pharmacyService.updatePharmacy(formData._id!, formData);
-        setSuccess(true);
+      // Append all form fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'superintendentPhoto' || key === 'directorPhoto') {
+          if (value instanceof File) {
+            formDataToSend.append(key, value);
+          }
+        } else if (key === 'socialMedia' && value) {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else if (key === 'servicesOffered' && Array.isArray(value)) {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else if (value !== undefined && value !== null) {
+          formDataToSend.append(key, String(value));
+        }
+      });
 
-        // Redirect to profile after a short delay
-        setTimeout(() => {
-          navigate('/my-pharmacy');
-        }, 1500);
+      if (isEdit && formData._id) {
+        await pharmacyService.updatePharmacy(formData._id, formDataToSend);
       } else {
-        // Create new pharmacy
-        await pharmacyService.createPharmacy(formData);
-        setSuccess(true);
-
-        // Redirect to profile after a short delay
-        setTimeout(() => {
-          navigate('/my-pharmacy');
-        }, 1500);
+        await pharmacyService.createPharmacy(formDataToSend);
       }
-    } catch (err) {
-      setError(
-        `Failed to ${
-          isEdit ? 'update' : 'create'
-        } pharmacy profile. Please try again.`
-      );
-      console.error(err);
+
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/my-pharmacy');
+      }, 2000);
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to save pharmacy');
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetchLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="spinner-border text-indigo-500" role="status">
-            <i className="fas fa-circle-notch fa-spin text-3xl"></i>
-          </div>
-          <p className="mt-2 text-gray-600">Loading pharmacy data...</p>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
@@ -212,25 +203,51 @@ const PharmacyForm: React.FC = () => {
       </div>
 
       {error && (
-        <div
-          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6"
-          role="alert"
-        >
-          <p className="font-bold">Error</p>
-          <p>{error}</p>
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 
       {success && (
-        <div
-          className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6"
-          role="alert"
-        >
-          <p className="font-bold">Success!</p>
-          <p>
-            Pharmacy profile {isEdit ? 'updated' : 'created'} successfully.
-            Redirecting to profile...
-          </p>
+        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-green-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-green-700">
+                Pharmacy successfully {isEdit ? 'updated' : 'created'}!
+                Redirecting...
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -243,79 +260,57 @@ const PharmacyForm: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Pharmacy Name*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pharmacy Name<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="name"
                   name="name"
                   value={formData.name}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter pharmacy name"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Email Address*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
-                  id="email"
                   name="email"
                   value={formData.email}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter email address"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Phone Number*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
-                  id="phone"
                   name="phone"
                   value={formData.phone}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter phone number"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="establishedYear"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Year Established
                 </label>
                 <input
                   type="number"
-                  id="establishedYear"
-                  name="establishedYear"
-                  value={formData.establishedYear || ''}
-                  onChange={handleInputChange}
-                  min="1900"
-                  max={new Date().getFullYear()}
+                  name="yearEstablished"
+                  value={formData.yearEstablished || ''}
+                  onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter year established"
                 />
               </div>
             </div>
@@ -327,179 +322,193 @@ const PharmacyForm: React.FC = () => {
               Address Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="address"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Street Address*
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Street Address<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="address"
                   name="address"
                   value={formData.address}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter street address"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="city"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  City*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Landmark<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
+                  name="landmark"
+                  value={formData.landmark}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter city"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="state"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  State*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Town/Area<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="state"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleInputChange}
+                  name="townArea"
+                  value={formData.townArea}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter state"
                 />
               </div>
             </div>
           </div>
 
-          {/* Registration Information */}
+          {/* Registration & Personnel */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Registration Information
+              Registration & Personnel
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label
-                  htmlFor="registrationNumber"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Registration Number*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  PCN License Number<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="registrationNumber"
-                  name="registrationNumber"
-                  value={formData.registrationNumber}
-                  onChange={handleInputChange}
+                  name="pcnLicense"
+                  value={formData.pcnLicense}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter registration number"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="licenseNumber"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  License Number*
-                </label>
-                <input
-                  type="text"
-                  id="licenseNumber"
-                  name="licenseNumber"
-                  value={formData.licenseNumber}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter license number"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="licenseExpiryDate"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  License Expiry Date*
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  License Expiry Date<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
-                  id="licenseExpiryDate"
                   name="licenseExpiryDate"
                   value={formData.licenseExpiryDate}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="staffCount"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Number of Staff
                 </label>
                 <input
                   type="number"
-                  id="staffCount"
-                  name="staffCount"
-                  value={formData.staffCount || ''}
-                  onChange={handleInputChange}
-                  min="1"
+                  name="numberOfStaff"
+                  value={formData.numberOfStaff || ''}
+                  onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter number of staff"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="superintendentPharmacist"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Superintendent Pharmacist
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Superintendent Name<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="superintendentPharmacist"
-                  name="superintendentPharmacist"
-                  value={formData.superintendentPharmacist || ''}
-                  onChange={handleInputChange}
+                  name="superintendentName"
+                  value={formData.superintendentName}
+                  onChange={handleChange}
+                  required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter superintendent pharmacist name"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="superintendentLicenseNumber"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Superintendent License Number
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="superintendentLicenseNumber"
                   name="superintendentLicenseNumber"
-                  value={formData.superintendentLicenseNumber || ''}
-                  onChange={handleInputChange}
+                  value={formData.superintendentLicenseNumber}
+                  onChange={handleChange}
+                  required
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter superintendent license number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Superintendent Photo<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="file"
+                  name="superintendentPhoto"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  required={!isEdit || !formData.superintendentPhoto}
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Superintendent Phone<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="superintendentPhone"
+                  value={formData.superintendentPhone}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Director Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="directorName"
+                  value={formData.directorName}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Director Photo<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="file"
+                  name="directorPhoto"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  required={!isEdit || !formData.directorPhoto}
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Director Phone<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="directorPhone"
+                  value={formData.directorPhone}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -512,128 +521,96 @@ const PharmacyForm: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label
-                  htmlFor="operatingHours"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Operating Hours
                 </label>
                 <input
                   type="text"
-                  id="operatingHours"
                   name="operatingHours"
-                  value={formData.operatingHours || ''}
-                  onChange={handleInputChange}
+                  value={formData.operatingHours}
+                  onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="E.g., Mon-Fri: 8AM-6PM, Sat: 9AM-3PM"
+                  placeholder="e.g., Mon-Fri: 9am-5pm"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="website"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Website
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Website URL
                 </label>
                 <input
                   type="url"
-                  id="website"
-                  name="website"
-                  value={formData.website || ''}
-                  onChange={handleInputChange}
+                  name="websiteUrl"
+                  value={formData.websiteUrl}
+                  onChange={handleChange}
                   className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter website URL"
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Social Media Links
+                </label>
+                <input
+                  type="url"
+                  name="socialMedia.facebookUrl"
+                  value={formData.socialMedia?.facebookUrl}
+                  onChange={handleChange}
+                  placeholder="Facebook URL"
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <input
+                  type="url"
+                  name="socialMedia.twitterUrl"
+                  value={formData.socialMedia?.twitterUrl}
+                  onChange={handleChange}
+                  placeholder="Twitter URL"
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <input
+                  type="url"
+                  name="socialMedia.instagramUrl"
+                  value={formData.socialMedia?.instagramUrl}
+                  onChange={handleChange}
+                  placeholder="Instagram URL"
+                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="socialMedia.facebook"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Facebook Page
-                </label>
-                <input
-                  type="url"
-                  id="socialMedia.facebook"
-                  name="socialMedia.facebook"
-                  value={formData.socialMedia?.facebook || ''}
-                  onChange={handleInputChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter Facebook page URL"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="socialMedia.twitter"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Twitter Profile
-                </label>
-                <input
-                  type="url"
-                  id="socialMedia.twitter"
-                  name="socialMedia.twitter"
-                  value={formData.socialMedia?.twitter || ''}
-                  onChange={handleInputChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter Twitter profile URL"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="socialMedia.instagram"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Instagram Profile
-                </label>
-                <input
-                  type="url"
-                  id="socialMedia.instagram"
-                  name="socialMedia.instagram"
-                  value={formData.socialMedia?.instagram || ''}
-                  onChange={handleInputChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter Instagram profile URL"
-                />
-              </div>
-
-              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Services Offered
                 </label>
-                <div className="flex">
+                <div className="flex space-x-2">
                   <input
                     type="text"
-                    value={serviceInput}
-                    onChange={handleServiceInputChange}
+                    value={currentService}
+                    onChange={(e) => setCurrentService(e.target.value)}
                     className="flex-1 rounded-l-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Add a service (e.g., Prescription Dispensing, Consultations)"
+                    placeholder="Add a service"
                   />
                   <button
                     type="button"
-                    onClick={addService}
-                    className="rounded-r-md border border-l-0 border-gray-300 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                    onClick={handleAddService}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Add
                   </button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {formData.services?.map((service, index) => (
+                  {formData.servicesOffered?.map((service, index) => (
                     <div
                       key={index}
-                      className="flex items-center bg-gray-100 rounded-full px-3 py-1"
+                      className="inline-flex items-center bg-gray-100 rounded-full px-3 py-1"
                     >
                       <span className="text-sm">{service}</span>
                       <button
                         type="button"
-                        onClick={() => removeService(service)}
+                        onClick={() => handleRemoveService(service)}
                         className="ml-2 text-gray-500 hover:text-gray-700"
                       >
-                        <i className="fas fa-times-circle"></i>
+                        ×
                       </button>
                     </div>
                   ))}
@@ -642,36 +619,24 @@ const PharmacyForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end">
+          {/* Form Actions */}
+          <div className="flex justify-end space-x-4">
             <Link
               to="/my-pharmacy"
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 mr-4"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              disabled={loading || success}
-              className={`px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                loading || success ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              disabled={loading}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? (
-                <>
-                  <i className="fas fa-circle-notch fa-spin mr-2"></i>
-                  Saving...
-                </>
-              ) : success ? (
-                <>
-                  <i className="fas fa-check mr-2"></i>
-                  Saved
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-save mr-2"></i>
-                  {isEdit ? 'Update Pharmacy' : 'Register Pharmacy'}
-                </>
-              )}
+              {loading
+                ? 'Saving...'
+                : isEdit
+                ? 'Update Pharmacy'
+                : 'Create Pharmacy'}
             </button>
           </div>
         </form>

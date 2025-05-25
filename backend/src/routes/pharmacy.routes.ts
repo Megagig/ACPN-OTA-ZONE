@@ -6,9 +6,9 @@ import {
   updatePharmacy,
   deletePharmacy,
   updatePharmacyStatus,
-  pharmacyPhotoUpload,
   getPharmaciesDueStatus,
   searchPharmacies,
+  getMyPharmacy, // Import the new controller function
 } from '../controllers/pharmacy.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -29,8 +29,8 @@ router
     getPharmaciesDueStatus
   );
 
-// Photo upload route
-router.route('/:id/photo').put(pharmacyPhotoUpload);
+// Route for the logged-in user's pharmacy
+router.route('/me').get(getMyPharmacy); // Add this BEFORE the /:id route
 
 // Status update route
 router
@@ -41,7 +41,7 @@ router
 router.route('/').get(getPharmacies).post(createPharmacy);
 
 router
-  .route('/:id')
+  .route('/:id') // This should come AFTER /me
   .get(getPharmacy)
   .put(updatePharmacy)
   .delete(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), deletePharmacy);

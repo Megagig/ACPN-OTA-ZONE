@@ -1,62 +1,48 @@
-export interface Pharmacy {
-  _id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  registrationNumber: string;
-  ownerName: string;
-  phone: string;
-  email: string;
-  licenseNumber: string;
-  licenseExpiryDate: string;
-  isActive: boolean;
-  isApproved: boolean;
-  createdAt: string;
-  updatedAt: string;
-  userId: string; // Reference to the user who created/owns the pharmacy
-  superintendentPharmacist?: string;
-  superintendentLicenseNumber?: string;
-  staffCount?: number;
-  location?: {
-    coordinates: [number, number]; // [longitude, latitude]
-    type: string;
-  };
-  additionalInfo?: {
-    establishedYear?: number;
-    services?: string[];
-    operatingHours?: string;
-    website?: string;
-    socialMedia?: {
-      facebook?: string;
-      twitter?: string;
-      instagram?: string;
-    };
-  };
+export interface SocialMediaLinks {
+  facebookUrl: string;
+  twitterUrl: string;
+  instagramUrl: string;
 }
+
+export type PharmacyRegistrationStatus =
+  | 'active'
+  | 'pending'
+  | 'expired'
+  | 'suspended';
 
 export interface PharmacyFormData {
   name: string;
-  address: string;
-  city: string;
-  state: string;
-  registrationNumber: string;
-  licenseNumber: string;
-  licenseExpiryDate: string;
-  superintendentPharmacist?: string;
-  superintendentLicenseNumber?: string;
-  staffCount?: number;
-  phone: string;
   email: string;
-  establishedYear?: number;
-  services?: string[];
+  phone: string;
+  yearEstablished?: number;
+  address: string; // Street Address
+  landmark: string;
+  townArea: string;
+  // registrationNumber is auto-generated, so not in form data for creation
+  pcnLicense: string; // "Previous Pharmacy License Number"
+  licenseExpiryDate: string; // Should be string for input[type=date], converted in backend
+  numberOfStaff?: number;
+  superintendentName: string;
+  superintendentLicenseNumber: string;
+  superintendentPhoto?: File | string; // File for upload, string for existing URL
+  superintendentPhone: string;
+  directorName: string;
+  directorPhoto?: File | string; // File for upload, string for existing URL
+  directorPhone: string;
   operatingHours?: string;
-  website?: string;
-  socialMedia?: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-  };
+  websiteUrl?: string;
+  socialMedia?: SocialMediaLinks;
+  servicesOffered?: string[];
+  _id?: string;
+}
+
+export interface Pharmacy extends PharmacyFormData {
+  _id: string;
+  registrationNumber: string;
+  registrationStatus: PharmacyRegistrationStatus;
+  registrationDate: string; // Should be string
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PharmacyDue {

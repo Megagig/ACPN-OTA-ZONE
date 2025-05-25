@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
+import fileUpload from 'express-fileupload'; // Import express-fileupload
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +29,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' })); // Add express-fileupload middleware
 
 // Routes
 import userRoutes from './routes/user.routes';

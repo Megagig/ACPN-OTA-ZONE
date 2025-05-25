@@ -1,7 +1,6 @@
 import api from './api';
 import type {
   Pharmacy,
-  PharmacyFormData,
   PharmacyDue,
   PharmacyStats,
 } from '../types/pharmacy.types';
@@ -26,17 +25,22 @@ class PharmacyService {
   }
 
   // Create a new pharmacy
-  async createPharmacy(pharmacyData: PharmacyFormData): Promise<Pharmacy> {
-    const response = await api.post('/pharmacies', pharmacyData);
+  async createPharmacy(pharmacyData: FormData): Promise<Pharmacy> {
+    const response = await api.post('/pharmacies', pharmacyData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data.data;
   }
 
   // Update a pharmacy
-  async updatePharmacy(
-    id: string,
-    pharmacyData: Partial<PharmacyFormData>
-  ): Promise<Pharmacy> {
-    const response = await api.put(`/pharmacies/${id}`, pharmacyData);
+  async updatePharmacy(id: string, pharmacyData: FormData): Promise<Pharmacy> {
+    const response = await api.put(`/pharmacies/${id}`, pharmacyData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data.data;
   }
 
@@ -92,7 +96,7 @@ class PharmacyService {
     try {
       const response = await api.get('/pharmacies/me');
       return response.data.data;
-    } catch (error) {
+    } catch (error: any) {
       if (error.response && error.response.status === 404) {
         return null;
       }

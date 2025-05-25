@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 export enum RegistrationStatus {
   ACTIVE = 'active',
@@ -7,20 +8,39 @@ export enum RegistrationStatus {
   SUSPENDED = 'suspended',
 }
 
+// New interface for SocialMedia
+export interface ISocialMedia {
+  facebookUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+}
+
 export interface IPharmacy extends Document {
   name: string;
-  registrationNumber: string;
-  location: string;
-  address: string;
-  wardArea: string;
+  email: string; // New
+  phone: string; // New
+  yearEstablished?: number; // New
+  address: string; // Street Address
+  landmark: string; // New
+  townArea: string; // New (replaces former location and wardArea)
+  registrationNumber: string; // Auto-generated UUID
+  pcnLicense: string; // Was Previous Pharmacy License Number
+  licenseExpiryDate: Date; // New
+  numberOfStaff?: number; // Ensured this line is clean
+  superintendentName: string;
+  superintendentLicenseNumber: string; // New
+  superintendentPhoto: string; // Now required
+  superintendentPhone: string; // New
+  directorName: string;
+  directorPhoto: string; // Now required
+  directorPhone: string; // New
+  operatingHours?: string; // New
+  websiteUrl?: string; // New
+  socialMedia?: ISocialMedia; // New
+  servicesOffered?: string[]; // New
   registrationStatus: RegistrationStatus;
   registrationDate: Date;
   userId: mongoose.Types.ObjectId;
-  superintendentName: string;
-  superintendentPhoto?: string;
-  directorName: string;
-  directorPhoto?: string;
-  pcnLicense: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,22 +52,104 @@ const pharmacySchema = new Schema<IPharmacy>(
       required: [true, 'Pharmacy name is required'],
       trim: true,
     },
-    registrationNumber: {
+    email: {
       type: String,
-      required: [true, 'Registration number is required'],
+      required: [true, 'Email address is required'],
       unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/.+\@.+\..+/, 'Please fill a valid email address'],
     },
-    location: {
+    phone: {
       type: String,
-      required: [true, 'Location is required'],
+      required: [true, 'Phone number is required'],
+      trim: true,
+    },
+    yearEstablished: {
+      type: Number,
+      min: 1800, // Optional: Add validation for sensible year
+      max: new Date().getFullYear(), // Optional: Max current year
     },
     address: {
       type: String,
-      required: [true, 'Address is required'],
+      required: [true, 'Street address is required'],
     },
-    wardArea: {
+    landmark: {
       type: String,
-      required: [true, 'Ward/Area is required'],
+      required: [true, 'Landmark is required'],
+    },
+    townArea: {
+      type: String,
+      required: [true, 'Town/Area is required'],
+    },
+    registrationNumber: {
+      type: String,
+      unique: true,
+      default: () => uuidv4(), // Auto-generate UUID
+    },
+    pcnLicense: {
+      type: String,
+      required: [
+        true,
+        'PCN license number (Previous Pharmacy License Number) is required',
+      ],
+    },
+    licenseExpiryDate: {
+      type: Date,
+      required: [true, 'License expiry date is required'],
+    },
+    numberOfStaff: {
+      // Ensured this block is clean
+      type: Number,
+      min: 0, // Optional: Staff count cannot be negative
+    },
+    superintendentName: {
+      type: String,
+      required: [true, 'Superintendent name is required'],
+    },
+    superintendentLicenseNumber: {
+      type: String,
+      required: [true, 'Superintendent license number is required'],
+    },
+    superintendentPhoto: {
+      type: String,
+      required: [true, 'Superintendent photo URL is required'], // URL from Cloudinary
+    },
+    superintendentPhone: {
+      type: String,
+      required: [true, 'Superintendent phone number is required'],
+    },
+    directorName: {
+      type: String,
+      required: [true, 'Director name is required'],
+    },
+    directorPhoto: {
+      type: String,
+      required: [true, 'Director photo URL is required'], // URL from Cloudinary
+    },
+    directorPhone: {
+      type: String,
+      required: [true, 'Director phone number is required'],
+    },
+    operatingHours: {
+      type: String,
+      trim: true, // Added trim
+    },
+    websiteUrl: {
+      type: String,
+      trim: true, // Added trim
+    },
+    socialMedia: {
+      type: {
+        facebookUrl: { type: String, trim: true }, // Added trim
+        twitterUrl: { type: String, trim: true }, // Added trim
+        instagramUrl: { type: String, trim: true }, // Added trim
+      },
+      default: {},
+    },
+    servicesOffered: {
+      type: [String],
+      default: [],
     },
     registrationStatus: {
       type: String,
@@ -63,50 +165,37 @@ const pharmacySchema = new Schema<IPharmacy>(
       ref: 'User',
       required: true,
     },
-    superintendentName: {
-      type: String,
-      required: [true, 'Superintendent name is required'],
-    },
-    superintendentPhoto: {
-      type: String,
-    },
-    directorName: {
-      type: String,
-      required: [true, 'Director name is required'],
-    },
-    directorPhoto: {
-      type: String,
-    },
-    pcnLicense: {
-      type: String,
-      required: [true, 'PCN license is required'],
-    },
+    // Removed: location, wardArea (replaced by townArea and landmark)
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true }, // Keep if you have virtuals
+    toObject: { virtuals: true }, // Keep if you have virtuals
   }
 );
 
-// Virtual populate for documents
-pharmacySchema.virtual('documents', {
-  ref: 'Document',
-  localField: '_id',
-  foreignField: 'pharmacyId',
-  justOne: false,
-});
+// Comment out or remove virtuals if not actively used or if they reference removed fields
+// pharmacySchema.virtual('documents', {
+//   ref: 'Document',
+//   localField: '_id',
+//   foreignField: 'pharmacyId',
+//   justOne: false,
+// });
 
-// Virtual populate for dues
-pharmacySchema.virtual('dues', {
-  ref: 'Due',
-  localField: '_id',
-  foreignField: 'pharmacyId',
-  justOne: false,
-});
+// pharmacySchema.virtual('dues', {
+//   ref: 'Due',
+//   localField: '_id',
+//   foreignField: 'pharmacyId',
+//   justOne: false,
+// });
 
-// Create index for faster searches
-pharmacySchema.index({ name: 'text', location: 'text' });
+// Update index for searches
+pharmacySchema.index({
+  name: 'text',
+  townArea: 'text',
+  pcnLicense: 'text',
+  email: 'text',
+});
 
 const Pharmacy = mongoose.model<IPharmacy>('Pharmacy', pharmacySchema);
 
