@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -6,14 +6,30 @@ const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
 
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    pcnLicense: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        pcnLicense: user.pcnLicense || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    }
+  }, [user]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState<{
@@ -34,30 +50,25 @@ const UserProfile: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
-
     try {
-      // Only include fields that are editable
       const profileData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
+        pcnLicense: formData.pcnLicense,
       };
-
-      const response = await api.put('/users/profile', profileData);
-
-      // Update local user state
-      updateUser(profileData);
-
+      const response = await api.put('/auth/update-details', profileData);
+      updateUser(response.data.user);
       setMessage({
         type: 'success',
-        text: 'Profile updated successfully',
+        text: response.data.message || 'Profile updated successfully',
       });
-
       setIsEditing(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       setMessage({
         type: 'error',
-        text: err.response?.data?.message || 'Failed to update profile',
+        text: error.response?.data?.message || 'Failed to update profile',
       });
     } finally {
       setIsLoading(false);
@@ -68,8 +79,6 @@ const UserProfile: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
-
-    // Validate passwords match
     if (formData.newPassword !== formData.confirmPassword) {
       setMessage({
         type: 'error',
@@ -78,31 +87,27 @@ const UserProfile: React.FC = () => {
       setIsLoading(false);
       return;
     }
-
     try {
       const passwordData = {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       };
-
-      const response = await api.put('/users/change-password', passwordData);
-
+      const response = await api.put('/auth/change-password', passwordData);
       setMessage({
         type: 'success',
-        text: 'Password changed successfully',
+        text: response.data.message || 'Password changed successfully',
       });
-
-      // Clear password fields
       setFormData((prev) => ({
         ...prev,
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       }));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       setMessage({
         type: 'error',
-        text: err.response?.data?.message || 'Failed to change password',
+        text: error.response?.data?.message || 'Failed to change password',
       });
     } finally {
       setIsLoading(false);
@@ -257,6 +262,25 @@ const UserProfile: React.FC = () => {
                     id="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    required
+                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  />
+                </div>
+
+                <div className="col-span-6 sm:col-span-4">
+                  <label
+                    htmlFor="pcnLicense"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    PCN License Number
+                  </label>
+                  <input
+                    type="text"
+                    name="pcnLicense"
+                    id="pcnLicense"
+                    value={formData.pcnLicense}
+                    onChange={handleChange}
+                    required
                     className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                   />
                 </div>
@@ -306,12 +330,20 @@ const UserProfile: React.FC = () => {
                 </dd>
               </div>
               <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">
+                  PCN License Number
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {user?.pcnLicense || 'Not set'}
+                </dd>
+              </div>
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Role</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 capitalize">
                   {user?.role || 'Member'}
                 </dd>
               </div>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">
                   Member since
                 </dt>

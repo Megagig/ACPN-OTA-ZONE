@@ -10,7 +10,7 @@ export interface RegistrationData {
   password: string;
   confirmPassword: string;
   phone: string;
-  pcnLicense?: string;
+  pcnLicense: string; // Changed from optional to required
 }
 
 export interface ResetPasswordData {
@@ -22,6 +22,8 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string; // Added
+  pcnLicense: string; // Added
   role: string;
   profilePicture?: string;
   isEmailVerified: boolean;

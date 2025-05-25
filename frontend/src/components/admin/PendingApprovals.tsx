@@ -5,10 +5,8 @@ import { Button } from '../shadcn/button';
 import { useToast } from '../../hooks/useToast';
 
 interface PendingUserType extends User {
-  createdAt?: string;
-  registrationDate?: string;
-  phone?: string;
-  pcnLicense?: string;
+  createdAt?: string; // This is fine as it's not in the frontend User type
+  registrationDate?: string; // This is fine as it's not in the frontend User type
 }
 
 const PendingApprovals: React.FC = () => {

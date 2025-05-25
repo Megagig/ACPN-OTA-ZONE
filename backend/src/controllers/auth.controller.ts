@@ -394,7 +394,9 @@ export const updateDetails = asyncHandler(
       // If pcnLicense is being updated, check for uniqueness if it's different from the current one
       const currentUser = await User.findById(req.user.id);
       if (currentUser && currentUser.pcnLicense !== pcnLicense) {
-        const existingUserByPcn = await User.findOne({ pcnLicense });
+        const existingUserByPcn = (await User.findOne({
+          pcnLicense,
+        })) as typeof User.prototype;
         if (
           existingUserByPcn &&
           existingUserByPcn._id.toString() !== req.user.id

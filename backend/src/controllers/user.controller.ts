@@ -194,18 +194,57 @@ export const getUserById = asyncHandler(
 // @route   POST /api/users
 // @access  Private/Admin
 export const createUser = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    const { firstName, lastName, email, password, role } = req.body;
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { firstName, lastName, email, phone, password, pcnLicense, role } =
+      req.body;
+
+    // Basic validation for required fields
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !password ||
+      !pcnLicense ||
+      !role
+    ) {
+      return next(
+        // Use next to pass error to error handling middleware
+        new ErrorResponse(
+          'Please provide firstName, lastName, email, phone, password, pcnLicense, and role',
+          400
+        )
+      );
+    }
+
+    // Check if user already exists by email
+    const existingUserByEmail = await User.findOne({ email });
+    if (existingUserByEmail) {
+      return next(
+        new ErrorResponse('User with this email already exists', 400)
+      );
+    }
+
+    // Check if user already exists by PCN license
+    const existingUserByPcn = await User.findOne({ pcnLicense });
+    if (existingUserByPcn) {
+      return next(
+        new ErrorResponse('User with this PCN license already exists', 400)
+      );
+    }
 
     // Create a new user
     const user = new User({
       firstName,
       lastName,
       email,
+      phone, // Added phone
       password,
+      pcnLicense, // Added pcnLicense
       role,
-      isApproved: false,
-      status: UserStatus.PENDING,
+      isApproved: true, // Admins create users as approved by default
+      isEmailVerified: true, // Admins create users as email verified by default
+      status: UserStatus.ACTIVE, // Admins create users as active by default
     });
 
     await user.save();
@@ -223,23 +262,80 @@ export const createUser = asyncHandler(
 // @access  Private/Admin
 export const updateUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const user = (await User.findById(req.params.id)) as IUser | null; // Added type assertion
+    const userFromDb = (await User.findById(req.params.id)) as IUser | null;
 
-    if (!user) {
+    if (!userFromDb) {
       return next(
         new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
       );
     }
+    // Now userFromDb is confirmed to be IUser, so we can safely use its properties
+    const user: IUser = userFromDb;
 
-    const { firstName, lastName, email, password, role, isApproved } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      pcnLicense,
+      password,
+      role,
+      isApproved,
+      status,
+    } = req.body;
 
     // Update user fields
     if (firstName !== undefined) user.firstName = firstName;
     if (lastName !== undefined) user.lastName = lastName;
-    if (email !== undefined) user.email = email;
-    if (password !== undefined) user.password = password;
+    if (phone !== undefined) user.phone = phone;
+
+    // Email uniqueness check if email is being changed
+    if (email !== undefined && email !== user.email) {
+      const existingUserByEmailFromDb = (await User.findOne({
+        email,
+      })) as IUser | null;
+      if (existingUserByEmailFromDb) {
+        // existingUserByEmailFromDb is confirmed to be IUser here
+        const existingUserByEmail: IUser = existingUserByEmailFromDb;
+        if (
+          (existingUserByEmail._id as any).toString() !==
+          (user._id as any).toString()
+        ) {
+          return next(
+            new ErrorResponse('Email already in use by another user', 400)
+          );
+        }
+      }
+      user.email = email;
+    }
+
+    // PCN License uniqueness check if pcnLicense is being changed
+    if (pcnLicense !== undefined && pcnLicense !== user.pcnLicense) {
+      const existingUserByPcnFromDb = (await User.findOne({
+        pcnLicense,
+      })) as IUser | null;
+      if (existingUserByPcnFromDb) {
+        // existingUserByPcnFromDb is confirmed to be IUser here
+        const existingUserByPcn: IUser = existingUserByPcnFromDb;
+        if (
+          (existingUserByPcn._id as any).toString() !==
+          (user._id as any).toString()
+        ) {
+          return next(
+            new ErrorResponse('PCN License already in use by another user', 400)
+          );
+        }
+      }
+      user.pcnLicense = pcnLicense;
+    }
+
+    if (password !== undefined) {
+      // If password is provided, it will be hashed by the pre-save hook
+      user.password = password;
+    }
     if (role !== undefined) user.role = role;
     if (isApproved !== undefined) user.isApproved = isApproved;
+    if (status !== undefined) user.status = status; // Added status update
 
     await user.save();
 
