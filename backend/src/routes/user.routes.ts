@@ -6,7 +6,9 @@ import {
   updateUser,
   deleteUser,
   approveUser,
+  denyUser,
   changeUserRole,
+  getPendingApprovalUsers,
 } from '../controllers/user.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -15,6 +17,11 @@ const router = express.Router();
 
 // Apply protection to all routes
 router.use(protect);
+
+// Route to get pending approval users
+router
+  .route('/pending-approvals')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getPendingApprovalUsers);
 
 // Apply authorization for admin-only routes
 router
@@ -32,11 +39,16 @@ router
     getUserById
   )
   .put(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), updateUser)
-  .delete(authorize(UserRole.SUPERADMIN), deleteUser);
+  .delete(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), deleteUser);
 
 router
   .route('/:id/approve')
   .put(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), approveUser);
+
+// Route to deny a user
+router
+  .route('/:id/deny')
+  .put(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), denyUser);
 
 router.route('/:id/role').put(authorize(UserRole.SUPERADMIN), changeUserRole);
 

@@ -1,26 +1,29 @@
 import React, { useState } from 'react';
 import PendingApprovals from '../../components/admin/PendingApprovals';
+import ApprovedUsers from '../../components/admin/ApprovedUsers';
 
-// Admin dashboard tabs
-enum AdminTab {
-  OVERVIEW = 'overview',
-  APPROVALS = 'approvals',
-  USERS = 'users',
-  SETTINGS = 'settings',
-}
+// Admin dashboard tabs - using string literal union type
+type AdminTab =
+  | 'overview'
+  | 'approvals'
+  | 'approved_users'
+  | 'users'
+  | 'settings';
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>(AdminTab.APPROVALS);
+  const [activeTab, setActiveTab] = useState<AdminTab>('approvals');
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case AdminTab.APPROVALS:
+      case 'approvals':
         return <PendingApprovals />;
-      case AdminTab.USERS:
+      case 'approved_users':
+        return <ApprovedUsers />;
+      case 'users':
         return <div>User Management (Coming Soon)</div>;
-      case AdminTab.SETTINGS:
+      case 'settings':
         return <div>Admin Settings (Coming Soon)</div>;
-      case AdminTab.OVERVIEW:
+      case 'overview':
       default:
         return <div>Admin Overview (Coming Soon)</div>;
     }
@@ -34,42 +37,52 @@ const AdminDashboard: React.FC = () => {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex" aria-label="Tabs">
             <button
-              onClick={() => setActiveTab(AdminTab.OVERVIEW)}
+              onClick={() => setActiveTab('overview')}
               className={`${
-                activeTab === AdminTab.OVERVIEW
+                activeTab === 'overview'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Overview
             </button>
             <button
-              onClick={() => setActiveTab(AdminTab.APPROVALS)}
+              onClick={() => setActiveTab('approvals')}
               className={`${
-                activeTab === AdminTab.APPROVALS
+                activeTab === 'approvals'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Pending Approvals
             </button>
             <button
-              onClick={() => setActiveTab(AdminTab.USERS)}
+              onClick={() => setActiveTab('approved_users')}
               className={`${
-                activeTab === AdminTab.USERS
+                activeTab === 'approved_users'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+            >
+              Approved Users
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`${
+                activeTab === 'users'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               User Management
             </button>
             <button
-              onClick={() => setActiveTab(AdminTab.SETTINGS)}
+              onClick={() => setActiveTab('settings')}
               className={`${
-                activeTab === AdminTab.SETTINGS
+                activeTab === 'settings'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Settings
             </button>

@@ -3,16 +3,16 @@ import userService from '../../services/user.service';
 import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
 import { useToast } from '../../hooks/useToast';
+import ConfirmationModal from '../common/ConfirmationModal'; // Import the modal
 
-interface PendingUserType extends User {
+interface ApprovedUserType extends User {
   createdAt?: string;
-  registrationDate?: string;
   phone?: string;
   pcnLicense?: string;
 }
 
-const PendingApprovals: React.FC = () => {
-  const [pendingUsers, setPendingUsers] = useState<PendingUserType[]>([]);
+const ApprovedUsers: React.FC = () => {
+  const [approvedUsers, setApprovedUsers] = useState<ApprovedUserType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -22,14 +22,20 @@ const PendingApprovals: React.FC = () => {
     total: 0,
   });
   const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userIdToDelete, setUserIdToDelete] = useState<string | null>(null);
 
-  const fetchPendingUsers = useCallback(
+  const fetchApprovedUsers = useCallback(
     async (page: number, limit: number) => {
       try {
         setLoading(true);
-        const response = await userService.getPendingApprovals({ page, limit });
-        setPendingUsers(response.data as PendingUserType[]);
-        // Ensure all pagination fields are explicitly set
+        // Fetch users with status 'active'
+        const response = await userService.getUsers({
+          page,
+          limit,
+          status: 'active',
+        });
+        setApprovedUsers(response.data as ApprovedUserType[]);
         setPagination({
           page: response.pagination.page,
           limit: response.pagination.limit,
@@ -38,11 +44,9 @@ const PendingApprovals: React.FC = () => {
         });
         setError(null);
       } catch (err) {
-        console.error('Error fetching pending users:', err);
+        console.error('Error fetching approved users:', err);
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Failed to load pending approvals.';
+          err instanceof Error ? err.message : 'Failed to load approved users.';
         setError(errorMessage);
         toast({ title: 'Error', description: errorMessage, status: 'error' });
       } finally {
@@ -50,78 +54,48 @@ const PendingApprovals: React.FC = () => {
       }
     },
     [toast]
-  ); // Removed userService.getPendingApprovals from deps as it's a stable function from an imported object
+  );
 
   useEffect(() => {
-    fetchPendingUsers(pagination.page, pagination.limit);
-  }, [fetchPendingUsers, pagination.page, pagination.limit]);
+    fetchApprovedUsers(pagination.page, pagination.limit);
+  }, [fetchApprovedUsers, pagination.page, pagination.limit]);
 
-  const handleApprove = async (userId: string) => {
-    try {
-      await userService.approveUser(userId);
-      toast({
-        title: 'Success',
-        description: 'User approved successfully.',
-        status: 'success',
-      });
-      fetchPendingUsers(pagination.page, pagination.limit);
-    } catch (err) {
-      console.error('Error approving user:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to approve user.';
-      setError(errorMessage);
-      toast({ title: 'Error', description: errorMessage, status: 'error' });
-    }
+  const openDeleteModal = (userId: string) => {
+    setUserIdToDelete(userId);
+    setIsModalOpen(true);
   };
 
-  const handleDeny = async (userId: string) => {
-    try {
-      await userService.denyUser(userId);
-      toast({
-        title: 'Success',
-        description: 'User denied successfully.',
-        status: 'success',
-      });
-      fetchPendingUsers(pagination.page, pagination.limit);
-    } catch (err) {
-      console.error('Error denying user:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to deny user.';
-      setError(errorMessage);
-      toast({ title: 'Error', description: errorMessage, status: 'error' });
-    }
+  const closeDeleteModal = () => {
+    setUserIdToDelete(null);
+    setIsModalOpen(false);
   };
 
-  const handleDelete = async (userId: string) => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this user? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const confirmDeleteUser = async () => {
+    if (!userIdToDelete) return;
+
     try {
-      await userService.deleteUser(userId);
+      await userService.deleteUser(userIdToDelete);
       toast({
         title: 'Success',
         description: 'User deleted successfully.',
         status: 'success',
       });
-      fetchPendingUsers(pagination.page, pagination.limit);
+      closeDeleteModal();
+      // Refresh the list after deletion
+      fetchApprovedUsers(pagination.page, pagination.limit);
     } catch (err) {
       console.error('Error deleting user:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete user.';
-      setError(errorMessage);
       toast({ title: 'Error', description: errorMessage, status: 'error' });
+      closeDeleteModal();
     }
   };
 
-  if (loading && pendingUsers.length === 0) {
-    // Show loader only on initial load or when users array is empty
+  if (loading && approvedUsers.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
@@ -135,7 +109,7 @@ const PendingApprovals: React.FC = () => {
         <strong className="font-bold">Error!</strong>
         <span className="block sm:inline"> {error}</span>
         <Button
-          onClick={() => fetchPendingUsers(pagination.page, pagination.limit)}
+          onClick={() => fetchApprovedUsers(pagination.page, pagination.limit)}
           className="ml-4"
         >
           Retry
@@ -144,23 +118,23 @@ const PendingApprovals: React.FC = () => {
     );
   }
 
-  if (!loading && pendingUsers.length === 0 && !error) {
+  if (!loading && approvedUsers.length === 0 && !error) {
     return (
       <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
-        No pending approvals at this time.
+        No approved users found.
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
       <div className="px-4 py-5 sm:px-6">
         <h3 className="text-lg leading-6 font-medium text-gray-900">
-          Pending Account Approvals
+          Approved Users
         </h3>
         <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Review and manage new user registrations that require approval.
-          (Total: {pagination.total})
+          List of users whose accounts have been activated. (Total:{' '}
+          {pagination.total})
         </p>
       </div>
 
@@ -192,8 +166,8 @@ const PendingApprovals: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {pendingUsers
-              .filter((user): user is PendingUserType => !!user)
+            {approvedUsers
+              .filter((user): user is ApprovedUserType => !!user)
               .map((user) => (
                 <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -212,45 +186,21 @@ const PendingApprovals: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(
-                      user.createdAt || user.registrationDate || Date.now()
+                      user.createdAt || Date.now()
                     ).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : user.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : user.status === 'rejected'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}
                     >
                       {user.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Button
-                      onClick={() => handleApprove(user._id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-green-600 hover:text-green-900 border-green-600 hover:bg-green-50"
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      onClick={() => handleDeny(user._id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-yellow-600 hover:text-yellow-900 border-yellow-600 hover:bg-yellow-50"
-                    >
-                      Deny
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(user._id)}
                       variant="destructive"
                       size="sm"
+                      onClick={() => openDeleteModal(user._id)} // Open modal instead
                     >
                       Delete
                     </Button>
@@ -259,13 +209,12 @@ const PendingApprovals: React.FC = () => {
               ))}
           </tbody>
         </table>
-        {/* Basic Pagination Controls */}
         {pagination.total > 0 && pagination.totalPages > 1 && (
           <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <Button
                 onClick={() =>
-                  fetchPendingUsers(pagination.page - 1, pagination.limit)
+                  fetchApprovedUsers(pagination.page - 1, pagination.limit)
                 }
                 disabled={pagination.page <= 1}
               >
@@ -273,7 +222,7 @@ const PendingApprovals: React.FC = () => {
               </Button>
               <Button
                 onClick={() =>
-                  fetchPendingUsers(pagination.page + 1, pagination.limit)
+                  fetchApprovedUsers(pagination.page + 1, pagination.limit)
                 }
                 disabled={pagination.page >= pagination.totalPages}
               >
@@ -305,7 +254,7 @@ const PendingApprovals: React.FC = () => {
                 >
                   <Button
                     onClick={() =>
-                      fetchPendingUsers(pagination.page - 1, pagination.limit)
+                      fetchApprovedUsers(pagination.page - 1, pagination.limit)
                     }
                     disabled={pagination.page <= 1}
                     variant="outline"
@@ -313,10 +262,9 @@ const PendingApprovals: React.FC = () => {
                   >
                     Previous
                   </Button>
-                  {/* Consider adding page number buttons here for better UX */}
                   <Button
                     onClick={() =>
-                      fetchPendingUsers(pagination.page + 1, pagination.limit)
+                      fetchApprovedUsers(pagination.page + 1, pagination.limit)
                     }
                     disabled={pagination.page >= pagination.totalPages}
                     variant="outline"
@@ -330,8 +278,18 @@ const PendingApprovals: React.FC = () => {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteUser}
+        title="Confirm Deletion"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 };
 
-export default PendingApprovals;
+export default ApprovedUsers;

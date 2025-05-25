@@ -15,6 +15,7 @@ export enum UserStatus {
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
   PENDING = 'pending',
+  REJECTED = 'rejected', // Added REJECTED status
 }
 
 export interface IUser extends Document {

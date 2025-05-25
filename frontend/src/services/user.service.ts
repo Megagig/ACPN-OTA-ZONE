@@ -60,9 +60,11 @@ class UserService {
   }
 
   /**
-   * Delete a user (superadmin only)
+   * Delete a user (admin/superadmin only)
    */
-  async deleteUser(id: string): Promise<{ success: boolean; data: {} }> {
+  async deleteUser(
+    id: string
+  ): Promise<{ success: boolean; data: Record<string, unknown> }> {
     const response = await api.delete(`/users/${id}`);
     return response.data;
   }
@@ -74,6 +76,16 @@ class UserService {
     id: string
   ): Promise<{ success: boolean; data: User; message: string }> {
     const response = await api.put(`/users/${id}/approve`);
+    return response.data;
+  }
+
+  /**
+   * Deny a user (admin/superadmin only)
+   */
+  async denyUser(
+    id: string
+  ): Promise<{ success: boolean; data: User; message: string }> {
+    const response = await api.put(`/users/${id}/deny`);
     return response.data;
   }
 
@@ -91,8 +103,15 @@ class UserService {
   /**
    * Get pending approval users
    */
-  async getPendingApprovals(): Promise<UserListResponse> {
-    return this.getUsers({ isApproved: false });
+  async getPendingApprovals(
+    params: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<UserListResponse> {
+    // Updated to use the new dedicated endpoint
+    const response = await api.get('/users/pending-approvals', { params });
+    return response.data;
   }
 }
 
