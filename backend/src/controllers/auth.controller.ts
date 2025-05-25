@@ -18,12 +18,36 @@ export const register = asyncHandler(
     const { firstName, lastName, email, phone, password, pcnLicense } =
       req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    // Basic validation for required fields
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !password ||
+      !pcnLicense
+    ) {
+      return next(
+        new ErrorResponse(
+          'Please provide firstName, lastName, email, phone, password, and pcnLicense',
+          400
+        )
+      );
+    }
 
-    if (existingUser) {
+    // Check if user already exists by email
+    const existingUserByEmail = await User.findOne({ email });
+    if (existingUserByEmail) {
       return next(
         new ErrorResponse('User with this email already exists', 400)
+      );
+    }
+
+    // Check if user already exists by PCN license
+    const existingUserByPcn = await User.findOne({ pcnLicense });
+    if (existingUserByPcn) {
+      return next(
+        new ErrorResponse('User with this PCN license already exists', 400)
       );
     }
 
@@ -355,11 +379,36 @@ export const resetPassword = asyncHandler(
  */
 export const updateDetails = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const fieldsToUpdate = {
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      phone: req.body.phone,
-    };
+    const { firstName, lastName, phone, pcnLicense } = req.body; // Added pcnLicense
+
+    // Basic validation for required fields that can be updated here
+    if (!firstName && !lastName && !phone && !pcnLicense) {
+      return next(new ErrorResponse('No fields to update', 400));
+    }
+
+    const fieldsToUpdate: any = {};
+    if (firstName) fieldsToUpdate.firstName = firstName;
+    if (lastName) fieldsToUpdate.lastName = lastName;
+    if (phone) fieldsToUpdate.phone = phone;
+    if (pcnLicense) {
+      // If pcnLicense is being updated, check for uniqueness if it's different from the current one
+      const currentUser = await User.findById(req.user.id);
+      if (currentUser && currentUser.pcnLicense !== pcnLicense) {
+        const existingUserByPcn = await User.findOne({ pcnLicense });
+        if (
+          existingUserByPcn &&
+          existingUserByPcn._id.toString() !== req.user.id
+        ) {
+          return next(
+            new ErrorResponse(
+              'Another user with this PCN license already exists',
+              400
+            )
+          );
+        }
+      }
+      fieldsToUpdate.pcnLicense = pcnLicense;
+    }
 
     const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
       new: true,

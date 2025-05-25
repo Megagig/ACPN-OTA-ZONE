@@ -22,10 +22,10 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone: string; // Already required, ensure it stays that way
   password: string;
   role: UserRole;
-  pcnLicense?: string;
+  pcnLicense: string; // Changed from optional to required
   profilePicture?: string;
   isEmailVerified: boolean;
   isApproved: boolean;
@@ -75,6 +75,9 @@ const userSchema = new Schema<IUser>(
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
+      trim: true, // Added trim
+      // Add a regex for basic phone number validation if desired, e.g.:
+      // match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number'],
     },
     password: {
       type: String,
@@ -89,6 +92,9 @@ const userSchema = new Schema<IUser>(
     },
     pcnLicense: {
       type: String,
+      required: [true, 'PCN License number is required'], // Added required validator
+      trim: true, // Added trim
+      unique: true, // Assuming PCN license should be unique
     },
     profilePicture: {
       type: String,
