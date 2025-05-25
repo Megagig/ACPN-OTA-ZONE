@@ -10,6 +10,7 @@ const Register: React.FC = () => {
     phone: '',
     password: '',
     confirmPassword: '',
+    pcnLicense: '',
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -39,16 +40,26 @@ const Register: React.FC = () => {
     }
 
     try {
-      const response = await authService.register(formData);
+      await authService.register(formData);
       setSuccess(true);
-      // Optionally redirect to login after a delay
+      // Redirect to verification page after a delay
       setTimeout(() => {
-        navigate('/login');
+        navigate('/verify-email');
       }, 3000);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || 'Registration failed. Please try again.'
-      );
+    } catch (err: unknown) {
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+          ? (err.response.data.message as string)
+          : 'Registration failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -77,15 +88,21 @@ const Register: React.FC = () => {
               Registration Successful!
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Please check your email to verify your account. Redirecting to
-              login...
+              Please check your email for a verification link and 6-digit code.
+              You will be redirected to the verification page shortly.
             </p>
-            <div className="mt-5">
+            <div className="mt-5 space-y-3">
+              <Link
+                to="/verify-email"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+              >
+                Verify Email Now
+              </Link>
               <Link
                 to="/login"
-                className="text-indigo-600 hover:text-indigo-500"
+                className="text-indigo-600 hover:text-indigo-500 text-sm"
               >
-                Click here to login
+                Back to Login
               </Link>
             </div>
           </div>
@@ -192,6 +209,20 @@ const Register: React.FC = () => {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Phone Number"
                 value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="pcnLicense" className="sr-only">
+                PCN License Number
+              </label>
+              <input
+                id="pcnLicense"
+                name="pcnLicense"
+                type="text"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="PCN License Number (Optional)"
+                value={formData.pcnLicense}
                 onChange={handleChange}
               />
             </div>

@@ -10,6 +10,7 @@ export interface RegistrationData {
   password: string;
   confirmPassword: string;
   phone: string;
+  pcnLicense?: string;
 }
 
 export interface ResetPasswordData {

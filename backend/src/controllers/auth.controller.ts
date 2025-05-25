@@ -14,6 +14,7 @@ import { generateVerificationCode } from '../utils/verification';
  */
 export const register = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log('Registration request received:', req.body);
     const { firstName, lastName, email, phone, password, pcnLicense } =
       req.body;
 
