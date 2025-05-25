@@ -44,6 +44,15 @@ export const register = asyncHandler(
 
     // Generate email verification token
     const verificationToken = user.getEmailVerificationToken();
+
+    // Log for debugging purposes
+    console.log('Verification details:', {
+      email: user.email,
+      code: verificationCode,
+      token: verificationToken,
+      tokenExpire: user.emailVerificationExpire,
+    });
+
     await user.save({ validateBeforeSave: false });
 
     // Create verification URL (used in the email template)

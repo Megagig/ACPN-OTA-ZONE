@@ -24,6 +24,7 @@ export interface EmailOptions {
 class EmailService {
   private brevoApiKey: string;
   private resendClient: Resend;
+  private gmailTransporter: nodemailer.Transporter | null = null;
   private sender: { name: string; email: string };
   private templatesDir: string;
 
@@ -34,14 +35,36 @@ class EmailService {
     // Initialize Resend client (fallback)
     this.resendClient = new Resend(process.env.RESEND_API_KEY);
 
-    // Set default sender
+    // Set default sender - use verified email for Resend
     this.sender = {
-      name: process.env.EMAIL_FROM_NAME || 'ACPN Ota Zone',
-      email: process.env.EMAIL_FROM || 'no-reply@acpnotazone.org',
+      name: process.env.BREVO_FROM_NAME || 'ACPN Ota Zone',
+      email: 'admin@megagigsolution.com', // Verified email for Resend
     };
+
+    // Initialize Gmail SMTP transporter (third fallback)
+    if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+      this.gmailTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASS, // Use App Password for Gmail
+        },
+      });
+    }
 
     // Set templates directory
     this.templatesDir = path.resolve(__dirname, '../templates');
+
+    // Log email configuration for debugging
+    console.log('Email Service Configuration:', {
+      brevoApiKey: this.brevoApiKey ? 'Set (hidden for security)' : 'Not set',
+      resendApiKey: process.env.RESEND_API_KEY
+        ? 'Set (hidden for security)'
+        : 'Not set',
+      gmailConfigured: !!this.gmailTransporter,
+      sender: this.sender,
+      templatesDir: this.templatesDir,
+    });
   }
 
   /**
@@ -52,32 +75,78 @@ class EmailService {
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       // If template is provided, compile it
-      let html = options.html;
+      let html = options.html || '';
+      let text = options.text || '';
+
       if (options.template && options.context) {
-        html = await this.compileTemplate(options.template, options.context);
+        try {
+          html = await this.compileTemplate(options.template, options.context);
+          // Generate text from HTML if no text provided
+          if (!text) {
+            text = html
+              .replace(/<[^>]*>/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+          }
+        } catch (templateError) {
+          console.error('Template compilation failed:', templateError);
+          throw new Error(
+            `Failed to compile email template: ${options.template}`
+          );
+        }
       }
 
-      // Try to send with Brevo first
-      return await this.sendWithBrevo({
+      console.log('Attempting to send email:', {
         to: options.to,
         subject: options.subject,
-        text: options.text || '',
-        html: html || '',
+        hasHtml: !!html,
+        hasText: !!text,
+        template: options.template,
       });
-    } catch (error) {
-      console.error('Brevo email sending failed, trying Resend:', error);
+
+      // Try to send with Brevo first
       try {
-        // Fallback to Resend
-        return await this.sendWithResend({
+        const brevoResult = await this.sendWithBrevo({
           to: options.to,
           subject: options.subject,
-          text: options.text || '',
-          html: options.html || '',
+          text,
+          html,
         });
-      } catch (fallbackError) {
-        console.error('Both email providers failed:', fallbackError);
-        return false;
+        console.log('Email sent successfully with Brevo');
+        return brevoResult;
+      } catch (brevoError) {
+        console.error('Brevo email sending failed, trying Resend:', brevoError);
+
+        // Fallback to Resend
+        try {
+          const resendResult = await this.sendWithResend({
+            to: options.to,
+            subject: options.subject,
+            text,
+            html,
+          });
+          console.log('Email sent successfully with Resend fallback');
+          return resendResult;
+        } catch (resendError) {
+          console.error(
+            'Resend email sending failed, trying Gmail:',
+            resendError
+          );
+
+          // Final fallback to Gmail SMTP
+          const gmailResult = await this.sendWithGmail({
+            to: options.to,
+            subject: options.subject,
+            text,
+            html,
+          });
+          console.log('Email sent successfully with Gmail fallback');
+          return gmailResult;
+        }
       }
+    } catch (error) {
+      console.error('Email sending completely failed:', error);
+      return false;
     }
   }
 
@@ -93,11 +162,24 @@ class EmailService {
     text: string;
     html: string;
   }): Promise<boolean> {
+    if (!this.brevoApiKey || this.brevoApiKey === 'default-api-key') {
+      throw new Error('Brevo API key not configured');
+    }
+
+    console.log('Sending email with Brevo:', {
+      to: options.to,
+      subject: options.subject,
+      sender: this.sender,
+    });
+
     try {
       const response = await axios.post(
         'https://api.brevo.com/v3/smtp/email',
         {
-          sender: this.sender,
+          sender: {
+            name: this.sender.name,
+            email: this.sender.email, // Using verified email
+          },
           to: [{ email: options.to }],
           subject: options.subject,
           textContent: options.text,
@@ -108,12 +190,22 @@ class EmailService {
             'api-key': this.brevoApiKey,
             'Content-Type': 'application/json',
           },
+          timeout: 10000, // 10 second timeout
         }
       );
 
+      console.log('Brevo API response:', {
+        status: response.status,
+        messageId: response.data?.messageId,
+      });
+
       return response.status >= 200 && response.status < 300;
-    } catch (error) {
-      console.error('Error sending email with Brevo:', error);
+    } catch (error: any) {
+      console.error('Error sending email with Brevo:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
       throw error;
     }
   }
@@ -130,14 +222,89 @@ class EmailService {
     text: string;
     html: string;
   }): Promise<boolean> {
-    await this.resendClient.emails.send({
-      from: `${this.sender.name} <${this.sender.email}>`,
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('Resend API key not configured');
+    }
+
+    console.log('Sending email with Resend:', {
       to: options.to,
       subject: options.subject,
-      text: options.text,
-      html: options.html,
+      from: `${this.sender.name} <${this.sender.email}>`,
     });
-    return true;
+
+    try {
+      const response = await this.resendClient.emails.send({
+        from: `${this.sender.name} <${this.sender.email}>`,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+      });
+
+      console.log('Resend email response:', {
+        id: response.data?.id,
+        error: response.error,
+      });
+
+      if (response.error) {
+        throw new Error(`Resend API error: ${response.error.message}`);
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error('Error sending email with Resend:', {
+        message: error.message,
+        name: error.name,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Send email using Gmail SMTP (final fallback)
+   * @param options Email options
+   * @returns Promise<boolean>
+   * @private
+   */
+  private async sendWithGmail(options: {
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }): Promise<boolean> {
+    if (!this.gmailTransporter) {
+      throw new Error('Gmail SMTP not configured');
+    }
+
+    console.log('Sending email with Gmail SMTP:', {
+      to: options.to,
+      subject: options.subject,
+      from: `${this.sender.name} <${this.sender.email}>`,
+    });
+
+    try {
+      const result = await this.gmailTransporter.sendMail({
+        from: `${this.sender.name} <${this.sender.email}>`,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+      });
+
+      console.log('Gmail SMTP response:', {
+        messageId: result.messageId,
+        accepted: result.accepted,
+        rejected: result.rejected,
+      });
+
+      return result.accepted.length > 0;
+    } catch (error: any) {
+      console.error('Error sending email with Gmail SMTP:', {
+        message: error.message,
+        name: error.name,
+      });
+      throw error;
+    }
   }
 
   /**

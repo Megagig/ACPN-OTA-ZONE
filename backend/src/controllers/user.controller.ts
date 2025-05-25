@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import User, { UserRole, UserStatus, IUser } from '../models/user.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
+import emailService from '../services/email.service';
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -188,7 +189,6 @@ export const approveUser = asyncHandler(
 
       // Send approval notification email
       try {
-        const emailService = require('../services/email.service').default;
         await emailService.sendAccountApprovalEmail(
           user.email,
           `${user.firstName} ${user.lastName}`
