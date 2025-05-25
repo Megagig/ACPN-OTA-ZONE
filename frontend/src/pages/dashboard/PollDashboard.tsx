@@ -19,15 +19,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardFooter,
   Badge,
   StatCard,
-  Alert,
-  AlertTitle,
-  AlertDescription,
   Skeleton,
-  SkeletonText,
 } from '../../components/shadcn';
 
 const PollDashboard: React.FC = () => {
@@ -97,21 +91,6 @@ const PollDashboard: React.FC = () => {
     ],
   };
 
-  const getPollStatusVariant = (
-    status: string
-  ): 'default' | 'success' | 'warning' | 'outline' => {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'closed':
-        return 'default';
-      case 'draft':
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -123,7 +102,7 @@ const PollDashboard: React.FC = () => {
 
       {loading ? (
         <div className="space-y-4">
-          <SkeletonText lines={1} className="h-8 w-48 mb-6" />
+          <Skeleton className="h-8 w-48 mb-6" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-32 w-full rounded-xl" />
@@ -211,41 +190,37 @@ const PollDashboard: React.FC = () => {
             <div>
               <h2 className="text-xl font-semibold mb-4">Active Polls</h2>
               {activePolls.length > 0 ? (
-                <div className="space-y-4">
-                  {activePolls.map((poll) => (
-                    <Card
-                      key={poll._id}
-                      className="hover:shadow-md transition-shadow"
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div className="space-y-2">
-                            <h3 className="font-medium">{poll.title}</h3>
-                            <p className="text-sm text-gray-600 line-clamp-1">
-                              {poll.description}
-                            </p>
-                            <div className="flex items-center space-x-3 mt-2">
-                              <Badge variant="success">
-                                {poll.status.toUpperCase()}
-                              </Badge>
-                              <span className="text-xs">
-                                Responses: {poll.responseCount || 0}
-                              </span>
-                            </div>
+                activePolls.map((poll) => (
+                  <Card
+                    key={poll._id}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div className="space-y-2">
+                          <h3 className="font-medium">{poll.title}</h3>
+                          <p className="text-sm text-gray-600 line-clamp-1">
+                            {poll.description}
+                          </p>
+                          <div className="flex items-center space-x-3 mt-2">
+                            <Badge variant="success">
+                              {poll.status.toUpperCase()}
+                            </Badge>
+                            <span className="text-xs">
+                              Responses: {poll.responseCount || 0}
+                            </span>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              navigate(`/polls/${poll._id}/respond`)
-                            }
-                          >
-                            Respond
-                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/polls/${poll._id}/respond`)}
+                        >
+                          Respond
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               ) : (
                 <Card>
                   <CardContent className="p-6 text-center">
