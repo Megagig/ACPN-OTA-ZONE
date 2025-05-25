@@ -1,0 +1,215 @@
+import * as React from 'react';
+import { cn } from '../../lib/utils/cn';
+
+export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
+  defaultValue?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+}
+
+const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
+  ({ className, defaultValue, value, onValueChange, ...props }, ref) => {
+    const [selectedValue, setSelectedValue] = React.useState(
+      value || defaultValue
+    );
+
+    React.useEffect(() => {
+      if (value !== undefined) {
+        setSelectedValue(value);
+      }
+    }, [value]);
+
+    const handleValueChange = React.useCallback(
+      (newValue: string) => {
+        if (value === undefined) {
+          setSelectedValue(newValue);
+        }
+        onValueChange?.(newValue);
+      },
+      [onValueChange, value]
+    );
+
+    return (
+      <div
+        ref={ref}
+        className={cn('space-y-4', className)}
+        {...props}
+        data-selected-value={selectedValue}
+        data-state={value !== undefined ? 'controlled' : 'uncontrolled'}
+      />
+    );
+  }
+);
+Tabs.displayName = 'Tabs';
+
+export interface TabsListProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'pills' | 'underline';
+}
+
+const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
+  ({ className, variant = 'default', ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          'flex',
+          variant === 'default' && 'bg-gray-100 p-1 rounded-lg',
+          variant === 'pills' && 'space-x-2',
+          variant === 'underline' && 'border-b border-gray-200',
+          className
+        )}
+        role="tablist"
+        {...props}
+      />
+    );
+  }
+);
+TabsList.displayName = 'TabsList';
+
+export interface TabsTriggerProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  value: string;
+  variant?: 'default' | 'pills' | 'underline';
+}
+
+const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
+  ({ className, value, variant = 'default', ...props }, ref) => {
+    const tabsEl = React.useRef<HTMLElement | null>(null);
+    const [isSelected, setIsSelected] = React.useState(false);
+
+    // Find closest parent tabs element
+    React.useLayoutEffect(() => {
+      let el = ref.current;
+      while (el && !el.hasAttribute('data-selected-value')) {
+        el = el.parentElement;
+      }
+      tabsEl.current = el as HTMLElement;
+    }, []);
+
+    // Check if this tab is selected
+    React.useLayoutEffect(() => {
+      if (tabsEl.current) {
+        const selectedValue = tabsEl.current.getAttribute(
+          'data-selected-value'
+        );
+        setIsSelected(selectedValue === value);
+      }
+    }, [value]);
+
+    // Handle tab click
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      props.onClick?.(e);
+
+      if (tabsEl.current) {
+        const onValueChange = tabsEl.current.parentElement?.__onValueChange;
+        if (typeof onValueChange === 'function') {
+          onValueChange(value);
+        }
+      }
+    };
+
+    return (
+      <button
+        ref={ref}
+        role="tab"
+        type="button"
+        aria-selected={isSelected}
+        data-state={isSelected ? 'active' : 'inactive'}
+        data-value={value}
+        className={cn(
+          'focus:outline-none transition-all',
+          // Default variant
+          variant === 'default' && 'px-3 py-1.5 text-sm font-medium',
+          variant === 'default' && isSelected
+            ? 'bg-white text-gray-900 shadow rounded-md'
+            : 'text-gray-600 hover:text-gray-900',
+          // Pills variant
+          variant === 'pills' && 'px-4 py-2 text-sm font-medium rounded-full',
+          variant === 'pills' && isSelected
+            ? 'bg-primary-100 text-primary-800'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+          // Underline variant
+          variant === 'underline' &&
+            'px-4 py-2 text-sm font-medium border-b-2 -mb-px',
+          variant === 'underline' && isSelected
+            ? 'border-primary-500 text-primary-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+          className
+        )}
+        onClick={handleClick}
+        {...props}
+      />
+    );
+  }
+);
+TabsTrigger.displayName = 'TabsTrigger';
+
+export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  value: string;
+}
+
+const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
+  ({ className, value, ...props }, ref) => {
+    const tabsEl = React.useRef<HTMLElement | null>(null);
+    const [isSelected, setIsSelected] = React.useState(false);
+
+    // Find closest parent tabs element
+    React.useLayoutEffect(() => {
+      let el = ref.current;
+      while (el && !el.hasAttribute('data-selected-value')) {
+        el = el.parentElement;
+      }
+      tabsEl.current = el as HTMLElement;
+    }, []);
+
+    // Check if this content should be shown
+    React.useLayoutEffect(() => {
+      if (tabsEl.current) {
+        const selectedValue = tabsEl.current.getAttribute(
+          'data-selected-value'
+        );
+        setIsSelected(selectedValue === value);
+      }
+
+      // Listen for changes in the parent's data-selected-value
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.type === 'attributes' &&
+            mutation.attributeName === 'data-selected-value' &&
+            tabsEl.current
+          ) {
+            const selectedValue = tabsEl.current.getAttribute(
+              'data-selected-value'
+            );
+            setIsSelected(selectedValue === value);
+          }
+        });
+      });
+
+      if (tabsEl.current) {
+        observer.observe(tabsEl.current, { attributes: true });
+      }
+
+      return () => {
+        observer.disconnect();
+      };
+    }, [value]);
+
+    if (!isSelected) return null;
+
+    return (
+      <div
+        ref={ref}
+        role="tabpanel"
+        data-state={isSelected ? 'active' : 'inactive'}
+        data-value={value}
+        className={cn('mt-2', className)}
+        {...props}
+      />
+    );
+  }
+);
+TabsContent.displayName = 'TabsContent';
+
+export { Tabs, TabsList, TabsTrigger, TabsContent };

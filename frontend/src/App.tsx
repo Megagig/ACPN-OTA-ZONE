@@ -75,6 +75,8 @@ import PharmacyProfile from './pages/dashboard/PharmacyProfile';
 import PharmacyForm from './pages/dashboard/PharmacyForm';
 import PharmacyDues from './pages/dashboard/PharmacyDues';
 
+import ComponentPreview from './pages/dashboard/ComponentPreview';
+
 // Public Pages
 import LandingPage from './pages/LandingPage';
 
@@ -274,6 +276,9 @@ function App() {
               <Route path="/polls/:id" element={<PollDetail />} />
               <Route path="/polls/:id/edit" element={<PollForm />} />
               <Route path="/polls/:id/respond" element={<PollResponse />} />
+
+              {/* Component Preview */}
+              <Route path="/component-preview" element={<ComponentPreview />} />
             </Route>
           </Route>
 

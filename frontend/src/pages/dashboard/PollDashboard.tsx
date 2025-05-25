@@ -1,23 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Heading,
-  Text,
-  SimpleGrid,
-  Button,
-  Flex,
-  Divider,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  HStack,
-  VStack,
-  Badge,
-  Icon,
-} from '../../components/ui/TailwindComponentsFixed';
-import {
   FaPlus,
   FaPoll,
   FaCheckCircle,
@@ -26,10 +9,26 @@ import {
   FaChartBar,
 } from 'react-icons/fa';
 import ChartComponent from '../../components/common/ChartComponent';
-import StatCard from '../../components/common/StatCard';
-import { Card, CardBody } from '../../components/common/CardComponent';
 import type { Poll, PollSummary } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
+
+// Import Shadcn UI components
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+  Badge,
+  StatCard,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  Skeleton,
+  SkeletonText,
+} from '../../components/shadcn';
 
 const PollDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -98,206 +97,226 @@ const PollDashboard: React.FC = () => {
     ],
   };
 
-  const getPollStatusColor = (status: string): string => {
+  const getPollStatusVariant = (
+    status: string
+  ): 'default' | 'success' | 'warning' | 'outline' => {
     switch (status) {
       case 'active':
-        return 'green';
+        return 'success';
       case 'closed':
-        return 'blue';
+        return 'default';
       case 'draft':
-        return 'gray';
+        return 'outline';
       default:
-        return 'gray';
+        return 'outline';
     }
   };
 
   return (
-    <Box p={5}>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg">Polls & Surveys Dashboard</Heading>
-        <Button
-          leftIcon={<FaPlus />}
-          colorScheme="blue"
-          onClick={() => navigate('/polls/create')}
-        >
-          Create New Poll
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Polls & Surveys Dashboard</h1>
+        <Button onClick={() => navigate('/polls/create')}>
+          <FaPlus className="mr-2" /> Create New Poll
         </Button>
-      </Flex>
+      </div>
 
       {loading ? (
-        <Text>Loading dashboard data...</Text>
+        <div className="space-y-4">
+          <SkeletonText lines={1} className="h-8 w-48 mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-80 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
       ) : (
         <>
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               title="Total Polls"
               value={summary?.total || 0}
-              icon={FaPoll}
-              colorScheme="purple"
+              icon={<FaPoll className="h-5 w-5" />}
+              trend={{
+                value: '+12%',
+                direction: 'up',
+                label: 'since last month',
+              }}
             />
             <StatCard
               title="Active Polls"
               value={summary?.active || 0}
-              icon={FaCheckCircle}
-              colorScheme="green"
+              icon={<FaCheckCircle className="h-5 w-5" />}
+              variant="success"
+              trend={{
+                value: '+5%',
+                direction: 'up',
+                label: 'since last month',
+              }}
             />
             <StatCard
               title="Completed Polls"
               value={summary?.closed || 0}
-              icon={FaChartBar}
-              colorScheme="blue"
+              icon={<FaChartBar className="h-5 w-5" />}
+              variant="info"
+              trend={{
+                value: '18',
+                direction: 'same',
+                label: 'total this month',
+              }}
             />
             <StatCard
               title="Draft Polls"
               value={summary?.draft || 0}
-              icon={FaEdit}
-              colorScheme="gray"
+              icon={<FaEdit className="h-5 w-5" />}
+              variant="secondary"
+              trend={{
+                value: '3',
+                direction: 'down',
+                label: 'fewer than last month',
+              }}
             />
-          </SimpleGrid>
+          </div>
 
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} mb={8}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <Card>
-              <CardBody>
-                <Heading size="md" mb={4}>
-                  Responses Over Time
-                </Heading>
-                <Box height="250px">
+              <CardHeader>
+                <CardTitle>Responses Over Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
                   <ChartComponent type="line" data={responsesOverTimeData} />
-                </Box>
-              </CardBody>
+                </div>
+              </CardContent>
             </Card>
 
             <Card>
-              <CardBody>
-                <Heading size="md" mb={4}>
-                  Participation by Poll Type
-                </Heading>
-                <Box height="250px">
+              <CardHeader>
+                <CardTitle>Participation by Poll Type</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
                   <ChartComponent type="bar" data={participationByTypeData} />
-                </Box>
-              </CardBody>
+                </div>
+              </CardContent>
             </Card>
-          </SimpleGrid>
+          </div>
 
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
-            <Box>
-              <Heading size="md" mb={4}>
-                Active Polls
-              </Heading>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Active Polls</h2>
               {activePolls.length > 0 ? (
-                <VStack spacing={4} align="stretch">
+                <div className="space-y-4">
                   {activePolls.map((poll) => (
                     <Card
                       key={poll._id}
-                      variant="outline"
-                      _hover={{ boxShadow: 'md' }}
+                      className="hover:shadow-md transition-shadow"
                     >
-                      <CardBody>
-                        <Flex justify="space-between" align="center">
-                          <VStack align="start" spacing={1}>
-                            <Heading size="sm">{poll.title}</Heading>
-                            <Text fontSize="sm" color="gray.600" noOfLines={1}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center">
+                          <div className="space-y-2">
+                            <h3 className="font-medium">{poll.title}</h3>
+                            <p className="text-sm text-gray-600 line-clamp-1">
                               {poll.description}
-                            </Text>
-                            <HStack mt={2}>
-                              <Badge
-                                colorScheme={getPollStatusColor(poll.status)}
-                              >
+                            </p>
+                            <div className="flex items-center space-x-3 mt-2">
+                              <Badge variant="success">
                                 {poll.status.toUpperCase()}
                               </Badge>
-                              <Text fontSize="xs">
+                              <span className="text-xs">
                                 Responses: {poll.responseCount || 0}
-                              </Text>
-                            </HStack>
-                          </VStack>
+                              </span>
+                            </div>
+                          </div>
                           <Button
                             size="sm"
-                            colorScheme="blue"
                             onClick={() =>
                               navigate(`/polls/${poll._id}/respond`)
                             }
                           >
                             Respond
                           </Button>
-                        </Flex>
-                      </CardBody>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))}
-                </VStack>
+                </div>
               ) : (
-                <Card variant="outline">
-                  <CardBody>
-                    <Text color="gray.500" textAlign="center">
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-gray-500">
                       No active polls at the moment
-                    </Text>
-                  </CardBody>
+                    </p>
+                  </CardContent>
                 </Card>
               )}
               <Button
-                mt={4}
                 variant="outline"
-                rightIcon={<FaPoll />}
+                className="mt-4"
                 onClick={() => navigate('/polls/list')}
               >
-                View All Polls
+                View All Polls <FaPoll className="ml-2" />
               </Button>
-            </Box>
+            </div>
 
-            <Box>
-              <Heading size="md" mb={4}>
-                Recent Polls
-              </Heading>
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Recent Polls</h2>
               {recentPolls.length > 0 ? (
-                <VStack spacing={4} align="stretch">
+                <div className="space-y-4">
                   {recentPolls.map((poll) => (
                     <Card
                       key={poll._id}
-                      variant="outline"
-                      _hover={{ boxShadow: 'md' }}
+                      className="hover:shadow-md transition-shadow"
                     >
-                      <CardBody>
-                        <Flex justify="space-between" align="center">
-                          <VStack align="start" spacing={1}>
-                            <Heading size="sm">{poll.title}</Heading>
-                            <HStack>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center">
+                          <div className="space-y-2">
+                            <h3 className="font-medium">{poll.title}</h3>
+                            <div className="flex items-center space-x-3">
                               <Badge
-                                colorScheme={getPollStatusColor(poll.status)}
+                                variant={
+                                  poll.status === 'active'
+                                    ? 'success'
+                                    : 'default'
+                                }
                               >
                                 {poll.status.toUpperCase()}
                               </Badge>
-                              <FaRegClock size="1em" />
-                              <Text fontSize="xs">
+                              <div className="flex items-center text-xs text-gray-500">
+                                <FaRegClock className="mr-1" />
                                 {new Date(poll.endDate).toLocaleDateString()}
-                              </Text>
-                            </HStack>
-                          </VStack>
+                              </div>
+                            </div>
+                          </div>
                           <Button
-                            size="sm"
-                            colorScheme="purple"
                             variant="outline"
+                            size="sm"
                             onClick={() => navigate(`/polls/${poll._id}`)}
                           >
                             View Details
                           </Button>
-                        </Flex>
-                      </CardBody>
+                        </div>
+                      </CardContent>
                     </Card>
                   ))}
-                </VStack>
+                </div>
               ) : (
-                <Card variant="outline">
-                  <CardBody>
-                    <Text color="gray.500" textAlign="center">
-                      No recent polls
-                    </Text>
-                  </CardBody>
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-gray-500">No recent polls</p>
+                  </CardContent>
                 </Card>
               )}
-            </Box>
-          </SimpleGrid>
+            </div>
+          </div>
         </>
       )}
-    </Box>
+    </div>
   );
 };
 
