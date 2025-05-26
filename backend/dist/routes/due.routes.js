@@ -13,7 +13,20 @@ router.use(auth_middleware_1.protect);
 // Routes with specific access
 router
     .route('/')
-    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.TREASURER), due_controller_1.getAllDues);
+    .get((req, res, next) => {
+    // If pharmacyId is present in params (from mergeParams), use getPharmacyDues
+    // Otherwise, use getAllDues with admin authorization
+    if (req.params.pharmacyId) {
+        (0, due_controller_1.getPharmacyDues)(req, res, next);
+    }
+    else {
+        // Check admin authorization for getAllDues
+        (0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.TREASURER)(req, res, () => {
+            (0, due_controller_1.getAllDues)(req, res, next);
+        });
+    }
+})
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.TREASURER), due_controller_1.createDue);
 // Individual due routes
 router
     .route('/:id')

@@ -24,6 +24,7 @@ const PharmacyDues: React.FC = () => {
   const fetchPharmacyAndDues = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
       const pharmacyData = await pharmacyService.getPharmacyByUser();
 
       if (pharmacyData) {
@@ -35,15 +36,17 @@ const PharmacyDues: React.FC = () => {
           itemsPerPage
         );
 
-        setDues(duesData.dues);
-        setTotalPages(Math.ceil(duesData.total / itemsPerPage));
+        setDues(duesData.dues || []); // Ensure it's always an array
+        setTotalPages(Math.ceil((duesData.total || 0) / itemsPerPage));
       } else {
         setError(
           'Pharmacy profile not found. Please register your pharmacy first.'
         );
+        setDues([]); // Reset dues to empty array
       }
     } catch (err) {
       setError('Failed to load dues data');
+      setDues([]); // Reset dues to empty array on error
       console.error(err);
     } finally {
       setLoading(false);
@@ -188,7 +191,7 @@ const PharmacyDues: React.FC = () => {
               <h2 className="text-sm font-medium text-gray-500">Paid Dues</h2>
               <p className="text-2xl font-semibold text-gray-800">
                 {formatCurrency(
-                  dues
+                  (dues || [])
                     .filter((due) => due.isPaid)
                     .reduce((sum, due) => sum + due.amount, 0)
                 )}
@@ -208,7 +211,7 @@ const PharmacyDues: React.FC = () => {
               </h2>
               <p className="text-2xl font-semibold text-gray-800">
                 {formatCurrency(
-                  dues
+                  (dues || [])
                     .filter((due) => !due.isPaid)
                     .reduce((sum, due) => sum + due.amount, 0)
                 )}
@@ -228,7 +231,7 @@ const PharmacyDues: React.FC = () => {
               </h2>
               <p className="text-2xl font-semibold text-gray-800">
                 {formatCurrency(
-                  dues
+                  (dues || [])
                     .filter((due) => {
                       const dueDate = new Date(due.dueDate);
                       const now = new Date();
@@ -353,7 +356,7 @@ const PharmacyDues: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-800">Dues History</h2>
         </div>
 
-        {dues.length === 0 ? (
+        {(dues || []).length === 0 ? (
           <div className="p-6 text-center">
             <i className="fas fa-file-invoice-dollar text-gray-400 text-5xl mb-4"></i>
             <h3 className="text-lg font-medium text-gray-900 mb-1">
@@ -392,7 +395,7 @@ const PharmacyDues: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {dues.map((due) => (
+                {(dues || []).map((due) => (
                   <tr key={due._id} className={due.isPaid ? 'bg-green-50' : ''}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-medium text-gray-900 capitalize">
@@ -459,12 +462,12 @@ const PharmacyDues: React.FC = () => {
                   <span className="font-medium">
                     {Math.min(
                       currentPage * itemsPerPage,
-                      dues.length + (currentPage - 1) * itemsPerPage
+                      (dues || []).length + (currentPage - 1) * itemsPerPage
                     )}
                   </span>{' '}
                   of{' '}
                   <span className="font-medium">
-                    {dues.length + (currentPage - 1) * itemsPerPage}
+                    {(dues || []).length + (currentPage - 1) * itemsPerPage}
                   </span>{' '}
                   results
                 </p>
