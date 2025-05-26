@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import type { DueType } from '../../types/pharmacy.types';
+import type {
+  DueType,
+  Pharmacy as PharmacyType,
+} from '../../types/pharmacy.types';
 import financialService from '../../services/financial.service';
 
 interface FormData {
@@ -14,7 +17,7 @@ interface FormData {
 
 interface Pharmacy {
   _id: string;
-  businessName: string;
+  name: string; // Changed from businessName to name to match the actual API response
   registrationNumber: string;
   owner: {
     firstName: string;
@@ -55,18 +58,22 @@ const DueAssignment: React.FC = () => {
 
   const fetchPharmacies = async () => {
     try {
-      // This would need to be implemented in the financial service
-      // For now, we'll use a placeholder
-      const response = await fetch('/api/pharmacies', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const pharmaciesData = await financialService.getAllPharmacies();
 
-      if (response.ok) {
-        const data = await response.json();
-        setPharmacies(data.data || []);
-      }
+      // Map the API response to match our local Pharmacy interface structure
+      const mappedPharmacies = (pharmaciesData || []).map(
+        (pharmacy: PharmacyType) => ({
+          _id: pharmacy._id,
+          name: pharmacy.name || '', // Use name or empty string as fallback
+          registrationNumber: pharmacy.registrationNumber || '',
+          owner: {
+            firstName: pharmacy.superintendentName?.split(' ')[0] || '',
+            lastName: pharmacy.superintendentName?.split(' ')[1] || '',
+          },
+        })
+      );
+
+      setPharmacies(mappedPharmacies);
     } catch (err) {
       console.error('Failed to fetch pharmacies:', err);
       setError('Failed to load pharmacies');
@@ -122,7 +129,7 @@ const DueAssignment: React.FC = () => {
 
   const filteredPharmacies = pharmacies.filter(
     (pharmacy) =>
-      pharmacy.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pharmacy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pharmacy.registrationNumber
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
@@ -191,8 +198,8 @@ const DueAssignment: React.FC = () => {
                     <option value="">Select a pharmacy</option>
                     {filteredPharmacies.map((pharmacy) => (
                       <option key={pharmacy._id} value={pharmacy._id}>
-                        {pharmacy.businessName} - {pharmacy.registrationNumber}{' '}
-                        ({pharmacy.owner.firstName} {pharmacy.owner.lastName})
+                        {pharmacy.name} - {pharmacy.registrationNumber} (
+                        {pharmacy.owner.firstName} {pharmacy.owner.lastName})
                       </option>
                     ))}
                   </select>
@@ -214,7 +221,8 @@ const DueAssignment: React.FC = () => {
                   <option value="">Select due type</option>
                   {dueTypes.map((dueType) => (
                     <option key={dueType._id} value={dueType._id}>
-                      {dueType.name} - ₦{dueType.defaultAmount.toLocaleString()}
+                      {dueType.name} - ₦
+                      {dueType.defaultAmount?.toLocaleString() || '0'}
                     </option>
                   ))}
                 </select>
@@ -241,7 +249,7 @@ const DueAssignment: React.FC = () => {
                 {selectedDueType && (
                   <p className="mt-1 text-sm text-gray-500">
                     Default amount: ₦
-                    {selectedDueType.defaultAmount.toLocaleString()}
+                    {selectedDueType.defaultAmount?.toLocaleString() || '0'}
                   </p>
                 )}
               </div>
@@ -342,7 +350,7 @@ const DueAssignment: React.FC = () => {
                   <p className="text-sm font-medium text-gray-700">Pharmacy:</p>
                   <p className="text-sm text-gray-600">
                     {pharmacies.find((p) => p._id === formData.pharmacyId)
-                      ?.businessName || 'Not selected'}
+                      ?.name || 'Not selected'}
                   </p>
                 </div>
               )}
@@ -363,7 +371,7 @@ const DueAssignment: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-700">Amount:</p>
                   <p className="text-lg font-semibold text-green-600">
-                    ₦{formData.amount.toLocaleString()}
+                    ₦{Number(formData.amount).toLocaleString()}
                   </p>
                 </div>
               )}
