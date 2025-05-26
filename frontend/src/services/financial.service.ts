@@ -17,7 +17,8 @@ import type {
 import type { DueType, Pharmacy } from '../types/pharmacy.types';
 import mockFinancialService from './mockData.service';
 
-const BASE_URL = '/api';
+// Remove the /api prefix since it's already included in the axios baseURL
+const BASE_URL = '';
 
 // ============== ORIGINAL FINANCIAL RECORDS API ==============
 
