@@ -29,6 +29,27 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
       [onValueChange, value]
     );
 
+    // Listen for tab change events
+    React.useEffect(() => {
+      const handleTabChange = (event: CustomEvent) => {
+        handleValueChange(event.detail.value);
+      };
+
+      const element = ref as React.MutableRefObject<HTMLDivElement>;
+      if (element?.current) {
+        element.current.addEventListener(
+          'tabchange',
+          handleTabChange as EventListener
+        );
+        return () => {
+          element.current?.removeEventListener(
+            'tabchange',
+            handleTabChange as EventListener
+          );
+        };
+      }
+    }, [handleValueChange, ref]);
+
     return (
       <div
         ref={ref}
@@ -79,12 +100,14 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
 
     // Find closest parent tabs element
     React.useLayoutEffect(() => {
-      let el = ref.current;
+      if (typeof ref === 'function' || !ref?.current) return;
+
+      let el: HTMLElement | null = ref.current;
       while (el && !el.hasAttribute('data-selected-value')) {
         el = el.parentElement;
       }
-      tabsEl.current = el as HTMLElement;
-    }, []);
+      tabsEl.current = el;
+    }, [ref]);
 
     // Check if this tab is selected
     React.useLayoutEffect(() => {
@@ -101,10 +124,12 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
       props.onClick?.(e);
 
       if (tabsEl.current) {
-        const onValueChange = tabsEl.current.parentElement?.__onValueChange;
-        if (typeof onValueChange === 'function') {
-          onValueChange(value);
-        }
+        // Trigger a custom event that the parent Tabs component can listen to
+        const event = new CustomEvent('tabchange', {
+          detail: { value },
+          bubbles: true,
+        });
+        tabsEl.current.dispatchEvent(event);
       }
     };
 
@@ -155,12 +180,14 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
 
     // Find closest parent tabs element
     React.useLayoutEffect(() => {
-      let el = ref.current;
+      if (typeof ref === 'function' || !ref?.current) return;
+
+      let el: HTMLElement | null = ref.current;
       while (el && !el.hasAttribute('data-selected-value')) {
         el = el.parentElement;
       }
-      tabsEl.current = el as HTMLElement;
-    }, []);
+      tabsEl.current = el;
+    }, [ref]);
 
     // Check if this content should be shown
     React.useLayoutEffect(() => {

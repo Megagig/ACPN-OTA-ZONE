@@ -1,7 +1,7 @@
 export interface SocialMediaLinks {
-  facebookUrl: string;
-  twitterUrl: string;
-  instagramUrl: string;
+  facebookUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
 }
 
 export type PharmacyRegistrationStatus =
@@ -43,6 +43,9 @@ export interface Pharmacy extends PharmacyFormData {
   registrationDate: string; // Should be string
   createdAt: string;
   updatedAt: string;
+  // Override photo types to be strings only for API responses
+  superintendentPhoto: string;
+  directorPhoto: string;
 }
 
 export interface PharmacyDue {

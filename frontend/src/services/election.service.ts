@@ -7,6 +7,7 @@ import type {
   ElectionSummary,
   ElectionResults,
   VoteSubmission,
+  CandidateStatus,
 } from '../types/election.types';
 
 const BASE_URL = '/api';
@@ -647,15 +648,18 @@ export const addCandidate = async (
 
   return {
     _id: 'cand-new-' + Date.now(),
-    name: candidateData.name,
-    email: candidateData.email,
-    phoneNumber: candidateData.phoneNumber,
-    bio: candidateData.bio,
+    election: electionId,
+    position: positionId,
+    positionName: position?.name || 'Unknown Position',
+    user: candidateData.userId || 'user-temp-' + Date.now(),
+    fullName: candidateData.name,
     photoUrl: candidateData.photoUrl,
     manifesto: candidateData.manifesto,
-    voteCount: 0,
+    status: 'pending' as CandidateStatus,
+    votes: 0,
     createdAt: new Date().toISOString(),
-  } as Candidate;
+    updatedAt: new Date().toISOString(),
+  };
 
   // Real API call
   // const response = await api.post(`${BASE_URL}/elections/${electionId}/positions/${positionId}/candidates`, candidateData);
@@ -768,6 +772,7 @@ const electionService = {
   createCandidate,
   addCandidate,
   updateCandidate,
+  updateCandidateInPosition,
   removeCandidate,
   changeApplicationStatus,
   getUserVoteStatus,

@@ -15,7 +15,10 @@ class PharmacyService {
     const response = await api.get('/pharmacies', {
       params: { page, limit, ...filters },
     });
-    return response.data;
+    return {
+      pharmacies: response.data.data.pharmacies,
+      total: response.data.data.total,
+    };
   }
 
   // Get a single pharmacy by ID
@@ -49,9 +52,9 @@ class PharmacyService {
     await api.delete(`/pharmacies/${id}`);
   }
 
-  // Approve a pharmacy
+  // Update pharmacy status
   async approvePharmacy(id: string): Promise<Pharmacy> {
-    const response = await api.put(`/pharmacies/${id}/approve`);
+    const response = await api.put(`/pharmacies/${id}/status`);
     return response.data.data;
   }
 
@@ -96,8 +99,16 @@ class PharmacyService {
     try {
       const response = await api.get('/pharmacies/me');
       return response.data.data;
-    } catch (error: any) {
-      if (error.response && error.response.status === 404) {
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as any).response === 'object' &&
+        (error as any).response !== null &&
+        'status' in (error as any).response &&
+        (error as any).response.status === 404
+      ) {
         return null;
       }
       throw error;

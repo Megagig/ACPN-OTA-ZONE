@@ -7,8 +7,6 @@ import ConfirmationModal from '../common/ConfirmationModal'; // Import the modal
 
 interface ApprovedUserType extends User {
   createdAt?: string;
-  phone?: string;
-  pcnLicense?: string;
 }
 
 const ApprovedUsers: React.FC = () => {

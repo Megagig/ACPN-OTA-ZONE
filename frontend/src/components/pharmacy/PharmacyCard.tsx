@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Pharmacy } from '../../types/pharmacy.types';
+import type { Pharmacy } from '../../types/pharmacy.types';
 
 interface PharmacyCardProps {
   pharmacy: Pharmacy;
@@ -17,19 +17,19 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
   onDelete,
   onApprove,
 }) => {
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (onEdit) onEdit(pharmacy._id);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (onDelete) onDelete(pharmacy._id);
   };
 
-  const handleApprove = (e: React.MouseEvent) => {
+  const handleApprove = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (onApprove) onApprove(pharmacy._id);
@@ -45,19 +45,40 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
               {pharmacy.name}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {pharmacy.address}, {pharmacy.city}
+              {pharmacy.address}, {pharmacy.townArea}
             </p>
           </div>
           <div className="ml-4 flex-shrink-0">
-            {pharmacy.isApproved ? (
-              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                Approved
-              </span>
-            ) : (
-              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                Pending
-              </span>
-            )}
+            {(() => {
+              switch (pharmacy.registrationStatus) {
+                case 'active':
+                  return (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      Active
+                    </span>
+                  );
+                case 'pending':
+                  return (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      Pending
+                    </span>
+                  );
+                case 'expired':
+                  return (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      Expired
+                    </span>
+                  );
+                case 'suspended':
+                  return (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                      Suspended
+                    </span>
+                  );
+                default:
+                  return null;
+              }
+            })()}
           </div>
         </div>
       </div>
@@ -88,15 +109,20 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
           <div className="sm:col-span-1">
             <dt className="text-xs font-medium text-gray-500">Status</dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {pharmacy.isActive ? (
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  Active
-                </span>
-              ) : (
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                  Inactive
-                </span>
-              )}
+              <span
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  pharmacy.registrationStatus === 'active'
+                    ? 'bg-green-100 text-green-800'
+                    : pharmacy.registrationStatus === 'pending'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : pharmacy.registrationStatus === 'expired'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {pharmacy.registrationStatus.charAt(0).toUpperCase() +
+                  pharmacy.registrationStatus.slice(1)}
+              </span>
             </dd>
           </div>
         </dl>
@@ -114,7 +140,7 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
 
           {showControls && (
             <div className="flex space-x-2">
-              {!pharmacy.isApproved && (
+              {pharmacy.registrationStatus === 'pending' && (
                 <button
                   onClick={handleApprove}
                   className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200"

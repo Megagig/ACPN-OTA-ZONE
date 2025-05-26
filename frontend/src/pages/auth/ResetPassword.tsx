@@ -28,7 +28,7 @@ const ResetPassword: React.FC = () => {
       if (!token) {
         throw new Error('Reset token is missing');
       }
-      const response = await authService.resetPassword(token, password);
+      const _response = await authService.resetPassword(token, password);
       setSuccess(true);
       // Redirect to login after a delay
       setTimeout(() => {

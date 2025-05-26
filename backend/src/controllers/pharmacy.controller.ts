@@ -53,12 +53,17 @@ export const getPharmacies = asyncHandler(
     // Build query
     const query: any = {};
 
-    // Filter by registration status if provided
+    // Filter by registration status
     if (req.query.registrationStatus) {
       query.registrationStatus = req.query.registrationStatus;
+    } else if (req.query.isApproved !== undefined) {
+      query.registrationStatus =
+        req.query.isApproved === 'true'
+          ? RegistrationStatus.ACTIVE
+          : RegistrationStatus.PENDING;
     }
 
-    // Filter by townArea if provided (corrected from location)
+    // Filter by townArea if provided
     if (req.query.townArea) {
       query.townArea = { $regex: req.query.townArea as string, $options: 'i' };
     }
@@ -66,6 +71,17 @@ export const getPharmacies = asyncHandler(
     // Filter by userId if provided
     if (req.query.userId) {
       query.userId = req.query.userId;
+    }
+
+    // Add search functionality
+    if (req.query.search) {
+      const searchTerm = req.query.search as string;
+      query.$or = [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { registrationNumber: { $regex: searchTerm, $options: 'i' } },
+        { townArea: { $regex: searchTerm, $options: 'i' } },
+        { address: { $regex: searchTerm, $options: 'i' } },
+      ];
     }
 
     const pharmacies = await Pharmacy.find(query)
@@ -80,13 +96,10 @@ export const getPharmacies = asyncHandler(
     res.status(200).json({
       success: true,
       count: pharmacies.length,
-      pagination: {
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+      data: {
+        pharmacies,
         total,
       },
-      data: pharmacies,
     });
   }
 );
@@ -644,16 +657,14 @@ export const deletePharmacy = asyncHandler(
 // @access  Private/Admin
 export const updatePharmacyStatus = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { registrationStatus } = req.body;
+    // When approving a pharmacy, we'll set it to ACTIVE status
+    const registrationStatus = RegistrationStatus.ACTIVE;
 
-    if (
-      !registrationStatus ||
-      !Object.values(RegistrationStatus).includes(
-        registrationStatus as RegistrationStatus
-      )
-    ) {
+    // Validate the pharmacy exists
+    const pharmacy = await Pharmacy.findById(req.params.id);
+    if (!pharmacy) {
       return next(
-        new ErrorResponse('Please provide a valid registration status', 400)
+        new ErrorResponse(`Pharmacy not found with id of ${req.params.id}`, 404)
       );
     }
 
@@ -664,14 +675,6 @@ export const updatePharmacyStatus = asyncHandler(
           `User ${req.user._id} is not authorized to update pharmacy status`,
           403
         )
-      );
-    }
-
-    const pharmacy = await Pharmacy.findById(req.params.id);
-
-    if (!pharmacy) {
-      return next(
-        new ErrorResponse(`Pharmacy not found with id of ${req.params.id}`, 404)
       );
     }
 
@@ -769,6 +772,58 @@ export const searchPharmacies = asyncHandler(
     } catch (error) {
       console.error('Search pharmacies error:', error);
       return next(new ErrorResponse('Error searching pharmacies', 500));
+    }
+  }
+);
+
+// @desc    Get pharmacy statistics
+// @route   GET /api/pharmacies/stats
+// @access  Private/Admin
+export const getPharmacyStats = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Get total pharmacies count
+      const totalPharmacies = await Pharmacy.countDocuments();
+
+      // Get active pharmacies count (approved status)
+      const activePharmacies = await Pharmacy.countDocuments({
+        registrationStatus: RegistrationStatus.ACTIVE,
+      });
+
+      // Get pending approval count
+      const pendingApproval = await Pharmacy.countDocuments({
+        registrationStatus: RegistrationStatus.PENDING,
+      });
+
+      // Get recently added pharmacies (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recentlyAdded = await Pharmacy.countDocuments({
+        createdAt: { $gte: thirtyDaysAgo },
+      });
+
+      // For dues information, we would need to query the Due model
+      // For now, setting placeholder values
+      const duesCollected = 0;
+      const duesOutstanding = 0;
+
+      res.status(200).json({
+        success: true,
+        data: {
+          totalPharmacies,
+          activePharmacies,
+          pendingApproval,
+          recentlyAdded,
+          duesCollected,
+          duesOutstanding,
+        },
+      });
+    } catch (error) {
+      console.error('Get pharmacy stats error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error retrieving pharmacy statistics',
+      });
     }
   }
 );

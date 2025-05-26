@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy } from '../../types/pharmacy.types';
-import { useAuth } from '../../context/AuthContext';
 
 const PharmacyProfile: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +104,7 @@ const PharmacyProfile: React.FC = () => {
       </div>
 
       {/* Approval Status */}
-      {!pharmacy.isApproved && (
+      {pharmacy.registrationStatus === 'pending' && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -137,26 +134,30 @@ const PharmacyProfile: React.FC = () => {
               </h2>
               <p className="text-gray-600 mt-1">{pharmacy.address}</p>
               <p className="text-gray-600">
-                {pharmacy.city}, {pharmacy.state}
+                {pharmacy.landmark}, {pharmacy.townArea}
               </p>
               <div className="mt-2">
                 <span
                   className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    pharmacy.isActive
+                    pharmacy.registrationStatus === 'active'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  {pharmacy.isActive ? 'Active' : 'Inactive'}
+                  {pharmacy.registrationStatus === 'active'
+                    ? 'Active'
+                    : 'Inactive'}
                 </span>
                 <span
                   className={`ml-2 px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    pharmacy.isApproved
+                    pharmacy.registrationStatus === 'active'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-yellow-100 text-yellow-800'
                   }`}
                 >
-                  {pharmacy.isApproved ? 'Approved' : 'Pending Approval'}
+                  {pharmacy.registrationStatus === 'active'
+                    ? 'Approved'
+                    : 'Pending Approval'}
                 </span>
               </div>
             </div>
@@ -181,11 +182,9 @@ const PharmacyProfile: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 block">
-                    License Number
+                    PCN License Number
                   </span>
-                  <span className="text-gray-800">
-                    {pharmacy.licenseNumber}
-                  </span>
+                  <span className="text-gray-800">{pharmacy.pcnLicense}</span>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 block">
@@ -197,17 +196,17 @@ const PharmacyProfile: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 block">
-                    Owner
+                    Director
                   </span>
-                  <span className="text-gray-800">{pharmacy.ownerName}</span>
+                  <span className="text-gray-800">{pharmacy.directorName}</span>
                 </div>
-                {pharmacy.superintendentPharmacist && (
+                {pharmacy.superintendentName && (
                   <div>
                     <span className="text-sm font-medium text-gray-500 block">
                       Superintendent Pharmacist
                     </span>
                     <span className="text-gray-800">
-                      {pharmacy.superintendentPharmacist}
+                      {pharmacy.superintendentName}
                     </span>
                   </div>
                 )}
@@ -221,12 +220,14 @@ const PharmacyProfile: React.FC = () => {
                     </span>
                   </div>
                 )}
-                {pharmacy.staffCount !== undefined && (
+                {pharmacy.numberOfStaff !== undefined && (
                   <div>
                     <span className="text-sm font-medium text-gray-500 block">
                       Staff Count
                     </span>
-                    <span className="text-gray-800">{pharmacy.staffCount}</span>
+                    <span className="text-gray-800">
+                      {pharmacy.numberOfStaff}
+                    </span>
                   </div>
                 )}
               </div>
@@ -249,30 +250,30 @@ const PharmacyProfile: React.FC = () => {
                   </span>
                   <span className="text-gray-800">{pharmacy.email}</span>
                 </div>
-                {pharmacy.additionalInfo?.website && (
+                {pharmacy.websiteUrl && (
                   <div>
                     <span className="text-sm font-medium text-gray-500 block">
                       Website
                     </span>
                     <a
-                      href={pharmacy.additionalInfo.website}
+                      href={pharmacy.websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-indigo-600 hover:text-indigo-800"
                     >
-                      {pharmacy.additionalInfo.website}
+                      {pharmacy.websiteUrl}
                     </a>
                   </div>
                 )}
-                {pharmacy.additionalInfo?.socialMedia && (
+                {pharmacy.socialMedia && (
                   <div>
                     <span className="text-sm font-medium text-gray-500 block mb-1">
                       Social Media
                     </span>
                     <div className="flex space-x-2">
-                      {pharmacy.additionalInfo.socialMedia.facebook && (
+                      {pharmacy.socialMedia.facebookUrl && (
                         <a
-                          href={pharmacy.additionalInfo.socialMedia.facebook}
+                          href={pharmacy.socialMedia.facebookUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800"
@@ -280,9 +281,9 @@ const PharmacyProfile: React.FC = () => {
                           <i className="fab fa-facebook-square text-xl"></i>
                         </a>
                       )}
-                      {pharmacy.additionalInfo.socialMedia.twitter && (
+                      {pharmacy.socialMedia.twitterUrl && (
                         <a
-                          href={pharmacy.additionalInfo.socialMedia.twitter}
+                          href={pharmacy.socialMedia.twitterUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-400 hover:text-blue-600"
@@ -290,9 +291,9 @@ const PharmacyProfile: React.FC = () => {
                           <i className="fab fa-twitter-square text-xl"></i>
                         </a>
                       )}
-                      {pharmacy.additionalInfo.socialMedia.instagram && (
+                      {pharmacy.socialMedia.instagramUrl && (
                         <a
-                          href={pharmacy.additionalInfo.socialMedia.instagram}
+                          href={pharmacy.socialMedia.instagramUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-pink-600 hover:text-pink-800"
@@ -308,70 +309,53 @@ const PharmacyProfile: React.FC = () => {
           </div>
 
           {/* Additional Information */}
-          {pharmacy.additionalInfo && (
+          {(pharmacy.yearEstablished ||
+            pharmacy.operatingHours ||
+            (pharmacy.servicesOffered &&
+              pharmacy.servicesOffered.length > 0)) && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Additional Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {pharmacy.additionalInfo.establishedYear && (
+                {pharmacy.yearEstablished && (
                   <div>
                     <span className="text-sm font-medium text-gray-500 block">
                       Established Year
                     </span>
                     <span className="text-gray-800">
-                      {pharmacy.additionalInfo.establishedYear}
+                      {pharmacy.yearEstablished}
                     </span>
                   </div>
                 )}
-                {pharmacy.additionalInfo.operatingHours && (
+                {pharmacy.operatingHours && (
                   <div>
                     <span className="text-sm font-medium text-gray-500 block">
                       Operating Hours
                     </span>
                     <span className="text-gray-800">
-                      {pharmacy.additionalInfo.operatingHours}
+                      {pharmacy.operatingHours}
                     </span>
                   </div>
                 )}
-                {pharmacy.additionalInfo.services &&
-                  pharmacy.additionalInfo.services.length > 0 && (
+                {pharmacy.servicesOffered &&
+                  pharmacy.servicesOffered.length > 0 && (
                     <div className="col-span-1 md:col-span-2">
                       <span className="text-sm font-medium text-gray-500 block mb-2">
                         Services Offered
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {pharmacy.additionalInfo.services.map(
-                          (service, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs"
-                            >
-                              {service}
-                            </span>
-                          )
-                        )}
+                        {pharmacy.servicesOffered.map((service, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs"
+                          >
+                            {service}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   )}
-              </div>
-            </div>
-          )}
-
-          {/* Location Map */}
-          {pharmacy.location && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Location
-              </h3>
-              <div className="h-64 bg-gray-200 rounded-md">
-                {/* In a real app, we would integrate a map component here using the coordinates */}
-                <div className="h-full flex items-center justify-center">
-                  <p className="text-gray-500">
-                    Map would be displayed here using coordinates:{' '}
-                    {pharmacy.location.coordinates.join(', ')}
-                  </p>
-                </div>
               </div>
             </div>
           )}

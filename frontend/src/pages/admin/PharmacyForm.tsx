@@ -47,11 +47,6 @@ const PharmacyForm: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [currentService, setCurrentService] = useState('');
 
-  // DEBUG: Log formData state
-  console.log('DEBUG: PharmacyForm formData state:', formData);
-  // DEBUG: Log isEditMode
-  console.log('DEBUG: PharmacyForm isEditMode:', isEditMode);
-
   const handleAddService = () => {
     if (
       currentService.trim() !== '' &&
@@ -204,7 +199,7 @@ const PharmacyForm: React.FC = () => {
         navigate('/dashboard/pharmacies');
       }
     } catch (err) {
-      let displayMessage = 'Failed to save pharmacy';
+      const displayMessage = 'Failed to save pharmacy';
       let consoleDetails = err;
       if (err instanceof Error) {
         consoleDetails = err.message;

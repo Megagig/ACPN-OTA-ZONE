@@ -1,4 +1,4 @@
-import { User } from './auth.types';
+import type { User } from './auth.types';
 
 export type DocumentStatus = 'active' | 'archived';
 export type DocumentAccessLevel =

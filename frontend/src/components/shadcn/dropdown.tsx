@@ -8,19 +8,11 @@ export interface DropdownProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
   ({ className, open, onOpenChange, ...props }, ref) => {
-    const [isOpen, setIsOpen] = React.useState(open || false);
-
     React.useEffect(() => {
       if (open !== undefined) {
-        setIsOpen(open);
+        // Handle controlled open state if needed
       }
     }, [open]);
-
-    const handleToggle = () => {
-      const newState = !isOpen;
-      setIsOpen(newState);
-      onOpenChange?.(newState);
-    };
 
     return (
       <div

@@ -18,7 +18,7 @@ const VerifyEmail: React.FC = () => {
     const verifyEmailWithToken = async () => {
       if (token) {
         try {
-          const response = await authService.verifyEmail(token);
+          const _response = await authService.verifyEmail(token);
           setVerificationStatus('success');
 
           // Redirect to login page after successful verification
@@ -51,10 +51,7 @@ const VerifyEmail: React.FC = () => {
     setIsSubmittingCode(true);
 
     try {
-      const response = await authService.verifyEmailWithCode(
-        email,
-        verificationCode
-      );
+      await authService.verifyEmailWithCode(email, verificationCode);
       setVerificationStatus('success');
 
       // Redirect to login page after successful verification

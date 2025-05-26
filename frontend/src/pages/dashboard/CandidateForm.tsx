@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Formik, Form, Field, type FieldProps } from 'formik';
+import type { FormikHelpers } from 'formik';
+import * as Yup from 'yup';
 import {
   Box,
   Heading,
@@ -14,30 +17,14 @@ import {
   HStack,
   Divider,
   Flex,
+  Avatar,
+  Stack,
 } from '../../components/ui/TailwindComponentsFixed';
-import { Avatar, Stack } from '../../components/ui/TailwindComponentsFixed';
-import { Formik, Form, Field } from 'formik';
-import type { FormikHelpers } from 'formik';
-import * as Yup from 'yup';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import electionService from '../../services/election.service';
 import type { Election, Position } from '../../types/election.types';
 import { Card, CardBody } from '../../components/common/CardComponent';
 import { useToast } from '../../hooks/useToast';
-
-// Define the structure for our candidate data
-interface CandidateData {
-  _id: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  bio: string;
-  photoUrl: string;
-  manifesto: string;
-  voteCount?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 interface CandidateFormFields {
   name: string;
@@ -214,7 +201,7 @@ const CandidateForm: React.FC = () => {
       <DashboardLayout>
         <Box p={5}>
           <Text>Election or position not found</Text>
-          <Button mt={4} onClick={() => navigate('/elections/list')}>
+          <Button className="mt-4" onClick={() => navigate('/elections/list')}>
             Back to Elections
           </Button>
         </Box>
@@ -259,7 +246,7 @@ const CandidateForm: React.FC = () => {
                 {new Date(election.endDate).toLocaleDateString()}
               </Text>
               <Divider />
-              <Text className="font-bold">Position: {position.title}</Text>
+              <Text className="font-bold">Position: {position.name}</Text>
               <Text>{position.description}</Text>
             </Stack>
           </CardBody>
@@ -274,9 +261,9 @@ const CandidateForm: React.FC = () => {
             <Form>
               <VStack spacing={6} align="stretch">
                 <HStack spacing={6} align="start">
-                  <Box flex="1">
+                  <Box className="flex-1">
                     <Field name="name">
-                      {({ field }: { field: any }) => (
+                      {({ field }: FieldProps) => (
                         <FormControl
                           isInvalid={!!(errors.name && touched.name)}
                         >
@@ -287,7 +274,7 @@ const CandidateForm: React.FC = () => {
                       )}
                     </Field>
                   </Box>
-                  <Box width="150px" className="flex flex-col items-center">
+                  <Box className="w-[150px] flex flex-col items-center">
                     <Avatar
                       size="xl"
                       name={values.name || 'Candidate'}
@@ -295,7 +282,7 @@ const CandidateForm: React.FC = () => {
                       className="mb-3"
                     />
                     <Field name="photoUrl">
-                      {({ field }: { field: any }) => (
+                      {({ field }: FieldProps) => (
                         <FormControl
                           isInvalid={!!(errors.photoUrl && touched.photoUrl)}
                         >
@@ -305,7 +292,7 @@ const CandidateForm: React.FC = () => {
                           <Input
                             {...field}
                             placeholder="URL to photo"
-                            size="sm"
+                            className="text-sm"
                           />
                           <FormErrorMessage>{errors.photoUrl}</FormErrorMessage>
                         </FormControl>
@@ -315,9 +302,9 @@ const CandidateForm: React.FC = () => {
                 </HStack>
 
                 <HStack spacing={6}>
-                  <Box flex="1">
+                  <Box className="flex-1">
                     <Field name="email">
-                      {({ field }: { field: any }) => (
+                      {({ field }: FieldProps) => (
                         <FormControl
                           isInvalid={!!(errors.email && touched.email)}
                         >
@@ -332,9 +319,9 @@ const CandidateForm: React.FC = () => {
                       )}
                     </Field>
                   </Box>
-                  <Box flex="1">
+                  <Box className="flex-1">
                     <Field name="phoneNumber">
-                      {({ field }: { field: any }) => (
+                      {({ field }: FieldProps) => (
                         <FormControl
                           isInvalid={
                             !!(errors.phoneNumber && touched.phoneNumber)
@@ -352,7 +339,7 @@ const CandidateForm: React.FC = () => {
                 </HStack>
 
                 <Field name="bio">
-                  {({ field }: { field: any }) => (
+                  {({ field }: FieldProps) => (
                     <FormControl isInvalid={!!(errors.bio && touched.bio)}>
                       <FormLabel>Bio</FormLabel>
                       <Textarea
@@ -367,7 +354,7 @@ const CandidateForm: React.FC = () => {
                 </Field>
 
                 <Field name="manifesto">
-                  {({ field }: { field: any }) => (
+                  {({ field }: FieldProps) => (
                     <FormControl
                       isInvalid={!!(errors.manifesto && touched.manifesto)}
                     >
@@ -382,7 +369,7 @@ const CandidateForm: React.FC = () => {
                   )}
                 </Field>
 
-                <HStack spacing={4} justify="end" pt={4}>
+                <HStack spacing={4} className="justify-end pt-4">
                   <Button
                     variant="outline"
                     onClick={() => navigate(`/elections/${electionId}`)}

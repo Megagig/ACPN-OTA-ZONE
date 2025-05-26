@@ -1,5 +1,5 @@
 // Enhanced TailwindComponents with proper prop support for Chakra UI migration
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 // Utility function to handle margin/padding props
 const getSpacingClasses = (props: any) => {
@@ -1345,11 +1345,13 @@ export const Collapse: React.FC<CollapseProps> = ({
   children,
   in: isOpen,
   className = '',
-  animateOpacity,
+  animateOpacity = true,
 }) => (
   <div
     className={`transition-all duration-300 overflow-hidden ${
-      isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+      isOpen ? 'max-h-96' : 'max-h-0'
+    } ${
+      animateOpacity ? (isOpen ? 'opacity-100' : 'opacity-0') : ''
     } ${className}`}
   >
     {children}

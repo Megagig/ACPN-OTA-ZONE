@@ -79,7 +79,7 @@ const PharmacyForm: React.FC = () => {
       setFormData((prev) => ({
         ...prev,
         socialMedia: {
-          ...prev.socialMedia!,
+          ...(prev.socialMedia || {}),
           [key]: value,
         },
       }));

@@ -14,7 +14,7 @@ const ForgotPassword: React.FC = () => {
     setError(null);
 
     try {
-      const response = await authService.forgotPassword({ email });
+      const _response = await authService.forgotPassword({ email });
       setSuccess(true);
     } catch (err: any) {
       setError(

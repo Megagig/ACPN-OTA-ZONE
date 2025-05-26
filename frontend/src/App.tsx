@@ -23,6 +23,8 @@ import UserProfile from './pages/dashboard/UserProfile';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import PharmaciesManagement from './pages/admin/PharmaciesManagement';
+import PharmacyDetail from './pages/admin/PharmacyDetail';
 
 // Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
@@ -121,6 +123,14 @@ function App() {
                 <Route
                   path="/pharmacies"
                   element={<div>Pharmacies Management (Coming Soon)</div>}
+                />
+                <Route
+                  path="/admin/pharmacies"
+                  element={<PharmaciesManagement />}
+                />
+                <Route
+                  path="/admin/pharmacies/:id"
+                  element={<PharmacyDetail />}
                 />
               </Route>
 

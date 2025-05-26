@@ -9,6 +9,7 @@ import {
   getPharmaciesDueStatus,
   searchPharmacies,
   getMyPharmacy, // Import the new controller function
+  getPharmacyStats, // Import the stats controller function
 } from '../controllers/pharmacy.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -20,6 +21,11 @@ router.use(protect);
 
 // Search route
 router.route('/search').get(searchPharmacies);
+
+// Stats route - must come before /:id routes to prevent conflict
+router
+  .route('/stats')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getPharmacyStats);
 
 // Dues status route
 router

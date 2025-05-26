@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PharmacyCard from '../../components/pharmacy/PharmacyCard';
 import pharmacyService from '../../services/pharmacy.service';
-import { Pharmacy, PharmacyStats } from '../../types/pharmacy.types';
+import type { Pharmacy, PharmacyStats } from '../../types/pharmacy.types';
+
+interface ApiError {
+  message: string;
+}
 
 const PharmacyList: React.FC = () => {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
@@ -12,7 +16,7 @@ const PharmacyList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterStatus, setFilterStatus] = useState<
-    'all' | 'approved' | 'pending'
+    'all' | 'active' | 'pending' | 'expired' | 'suspended'
   >('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -22,33 +26,35 @@ const PharmacyList: React.FC = () => {
   useEffect(() => {
     fetchPharmacies();
     fetchStats();
-  }, [currentPage, filterStatus]);
+  }, [currentPage, filterStatus, searchQuery]);
 
   const fetchPharmacies = async () => {
     try {
       setLoading(true);
-      const filters: Record<string, any> = {};
+      const filters: Record<string, string> = {};
 
-      if (filterStatus === 'approved') {
-        filters.isApproved = true;
-      } else if (filterStatus === 'pending') {
-        filters.isApproved = false;
+      if (filterStatus !== 'all') {
+        filters.registrationStatus = filterStatus;
       }
 
       if (searchQuery) {
         filters.search = searchQuery;
       }
 
-      const { pharmacies, total } = await pharmacyService.getPharmacies(
+      const result = await pharmacyService.getPharmacies(
         currentPage,
         limit,
         filters
       );
-      setPharmacies(pharmacies);
-      setTotalPages(Math.ceil(total / limit));
+      if (!result.pharmacies) {
+        throw new Error('No pharmacies data received');
+      }
+      setPharmacies(result.pharmacies);
+      setTotalPages(Math.ceil(result.total / limit));
       setLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch pharmacies');
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.message || 'Failed to fetch pharmacies');
       setLoading(false);
     }
   };
@@ -57,8 +63,9 @@ const PharmacyList: React.FC = () => {
     try {
       const stats = await pharmacyService.getPharmacyStats();
       setStats(stats);
-    } catch (err: any) {
-      console.error('Failed to fetch pharmacy stats:', err);
+    } catch (err) {
+      const error = err as ApiError;
+      console.error('Failed to fetch pharmacy stats:', error.message);
     }
   };
 
@@ -72,7 +79,9 @@ const PharmacyList: React.FC = () => {
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterStatus(e.target.value as 'all' | 'approved' | 'pending');
+    setFilterStatus(
+      e.target.value as 'all' | 'active' | 'pending' | 'expired' | 'suspended'
+    );
     setCurrentPage(1);
   };
 
@@ -91,8 +100,9 @@ const PharmacyList: React.FC = () => {
         // Refresh the list
         fetchPharmacies();
         fetchStats();
-      } catch (err: any) {
-        setError(err.message || 'Failed to delete pharmacy');
+      } catch (err) {
+        const error = err as ApiError;
+        setError(error.message || 'Failed to delete pharmacy');
       }
     }
   };
@@ -103,8 +113,9 @@ const PharmacyList: React.FC = () => {
       // Refresh the list
       fetchPharmacies();
       fetchStats();
-    } catch (err: any) {
-      setError(err.message || 'Failed to approve pharmacy');
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.message || 'Failed to approve pharmacy');
     }
   };
 
@@ -273,8 +284,10 @@ const PharmacyList: React.FC = () => {
             onChange={handleFilterChange}
           >
             <option value="all">All</option>
-            <option value="approved">Approved</option>
+            <option value="active">Active</option>
             <option value="pending">Pending</option>
+            <option value="expired">Expired</option>
+            <option value="suspended">Suspended</option>
           </select>
         </div>
       </div>

@@ -31,8 +31,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const [position, setPosition] = React.useState({ top: 0, left: 0 });
   const triggerRef = React.useRef<HTMLElement | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement | null>(null);
-  const showTimeoutRef = React.useRef<number | null>(null);
-  const hideTimeoutRef = React.useRef<number | null>(null);
+  const showTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const hideTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Position the tooltip based on placement
   const updatePosition = React.useCallback(() => {
