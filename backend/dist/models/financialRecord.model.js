@@ -1,0 +1,92 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CategoryType = exports.RecordType = void 0;
+const mongoose_1 = __importStar(require("mongoose"));
+var RecordType;
+(function (RecordType) {
+    RecordType["INCOME"] = "income";
+    RecordType["EXPENSE"] = "expense";
+})(RecordType || (exports.RecordType = RecordType = {}));
+var CategoryType;
+(function (CategoryType) {
+    CategoryType["DUES"] = "dues";
+    CategoryType["DONATION"] = "donation";
+    CategoryType["REGISTRATION"] = "registration";
+    CategoryType["EVENT"] = "event";
+    CategoryType["OPERATIONAL"] = "operational";
+    CategoryType["SALARY"] = "salary";
+    CategoryType["UTILITY"] = "utility";
+    CategoryType["OTHER"] = "other";
+})(CategoryType || (exports.CategoryType = CategoryType = {}));
+const financialRecordSchema = new mongoose_1.Schema({
+    type: {
+        type: String,
+        enum: Object.values(RecordType),
+        required: true,
+    },
+    amount: {
+        type: Number,
+        required: [true, 'Amount is required'],
+    },
+    category: {
+        type: String,
+        enum: Object.values(CategoryType),
+        required: true,
+    },
+    description: {
+        type: String,
+        required: [true, 'Description is required'],
+    },
+    date: {
+        type: Date,
+        default: Date.now,
+    },
+    recordedBy: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    attachmentUrl: {
+        type: String,
+    },
+}, {
+    timestamps: true,
+});
+// Index for faster financial reporting queries
+financialRecordSchema.index({ type: 1, date: 1 });
+financialRecordSchema.index({ category: 1, date: 1 });
+const FinancialRecord = mongoose_1.default.model('FinancialRecord', financialRecordSchema);
+exports.default = FinancialRecord;

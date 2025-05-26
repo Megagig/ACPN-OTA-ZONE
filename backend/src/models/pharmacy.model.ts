@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import { getNextPharmacyRegistrationNumber } from '../utils/registrationNumber';
 
 export enum RegistrationStatus {
   ACTIVE = 'active',
@@ -23,7 +23,7 @@ export interface IPharmacy extends Document {
   address: string; // Street Address
   landmark: string; // New
   townArea: string; // New (replaces former location and wardArea)
-  registrationNumber: string; // Auto-generated UUID
+  registrationNumber: string; // Auto-generated incremental number (ACPN001, ACPN002, etc.)
   pcnLicense: string; // Was Previous Pharmacy License Number
   licenseExpiryDate: Date; // New
   numberOfStaff?: number; // Ensured this line is clean
@@ -85,7 +85,7 @@ const pharmacySchema = new Schema<IPharmacy>(
     registrationNumber: {
       type: String,
       unique: true,
-      default: () => uuidv4(), // Auto-generate UUID
+      // Remove default UUID generation - will be set by pre-save hook
     },
     pcnLicense: {
       type: String,
@@ -195,6 +195,18 @@ pharmacySchema.index({
   townArea: 'text',
   pcnLicense: 'text',
   email: 'text',
+});
+
+// Pre-save hook to generate registration number
+pharmacySchema.pre<IPharmacy>('save', async function (next) {
+  if (this.isNew && !this.registrationNumber) {
+    try {
+      this.registrationNumber = await getNextPharmacyRegistrationNumber();
+    } catch (error) {
+      return next(error as Error);
+    }
+  }
+  next();
 });
 
 const Pharmacy = mongoose.model<IPharmacy>('Pharmacy', pharmacySchema);

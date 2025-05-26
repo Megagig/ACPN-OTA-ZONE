@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const auth_controller_1 = require("../controllers/auth.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const rate_limit_middleware_1 = require("../middleware/rate-limit.middleware");
+const router = express_1.default.Router();
+router.post('/register', rate_limit_middleware_1.authRateLimiter, auth_controller_1.register);
+router.post('/login', rate_limit_middleware_1.authRateLimiter, auth_controller_1.login);
+router.get('/logout', auth_controller_1.logout);
+router.get('/me', auth_middleware_1.protect, auth_controller_1.getMe);
+router.post('/forgot-password', rate_limit_middleware_1.passwordResetLimiter, auth_controller_1.forgotPassword);
+router.put('/reset-password/:token', rate_limit_middleware_1.passwordResetLimiter, auth_controller_1.resetPassword);
+router.put('/update-details', auth_middleware_1.protect, auth_controller_1.updateDetails);
+router.put('/update-password', auth_middleware_1.protect, auth_controller_1.updatePassword);
+router.get('/verify-email/:token', rate_limit_middleware_1.emailVerificationLimiter, auth_controller_1.verifyEmail);
+router.post('/verify-email-code', rate_limit_middleware_1.emailVerificationLimiter, auth_controller_1.verifyEmailWithCode);
+router.post('/refresh-token', rate_limit_middleware_1.authRateLimiter, auth_controller_1.refreshToken);
+exports.default = router;
