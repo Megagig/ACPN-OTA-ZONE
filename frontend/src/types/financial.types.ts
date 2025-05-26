@@ -104,3 +104,87 @@ export interface Donation {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Additional interfaces for the comprehensive dues and payments system
+export interface FinancialAnalytics {
+  totalRevenue: number;
+  pendingPayments: number;
+  completedPayments: number;
+  monthlyData: Array<{
+    month: string;
+    amount: number;
+  }>;
+  topCategories: Array<{
+    name: string;
+    amount: number;
+  }>;
+  stateWiseData: Array<{
+    state: string;
+    amount: number;
+  }>;
+}
+
+export interface FinancialReport {
+  id: string;
+  type: string;
+  period: string;
+  totalAmount: number;
+  generatedAt: Date;
+}
+
+export interface Payment {
+  _id: string;
+  dueId: string;
+  pharmacyId: string;
+  amount: number;
+  paymentDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  receiptUrl?: string;
+  submittedBy: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DueAssignmentData {
+  dueTypeId: string;
+  amount: number;
+  dueDate: string;
+  description?: string;
+  title?: string;
+  isRecurring?: boolean;
+  recurringFrequency?: 'monthly' | 'quarterly' | 'annually';
+}
+
+export interface BulkAssignmentData {
+  dueTypeId: string;
+  amount: number;
+  dueDate: string;
+  description?: string;
+  pharmacyIds: string[];
+}
+
+export interface PenaltyData {
+  amount: number;
+  reason: string;
+}
+
+export interface ClearanceEligibility {
+  isEligible: boolean;
+  reason?: string;
+  details: {
+    totalDuesPaid: number;
+    outstandingAmount: number;
+    lastPaymentDate: string;
+    complianceStatus: 'compliant' | 'non-compliant';
+  };
+}
+
+export interface CertificateData {
+  pharmacyId: string;
+  certificateNumber: string;
+  issueDate: string;
+  validUntil: string;
+  issuedBy: string;
+}

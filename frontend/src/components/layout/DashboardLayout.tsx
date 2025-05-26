@@ -42,6 +42,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       { name: 'Polls', path: '/polls', icon: 'poll' },
       { name: 'Communications', path: '/communications', icon: 'envelope' },
       { name: 'Finances', path: '/finances', icon: 'money-bill' },
+      {
+        name: 'Financial Management',
+        path: '/dashboard/financial-management',
+        icon: 'chart-line',
+      },
       { name: 'Documents', path: '/documents', icon: 'file-alt' },
       { name: 'Settings', path: '/settings', icon: 'cog' },
     ];
@@ -57,11 +62,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
     if (['admin', 'superadmin'].includes(user?.role)) {
       return [...commonItems, ...adminItems];
-    } else if (user?.role === 'treasurer') {
+    } else if (['treasurer', 'financial_secretary'].includes(user?.role)) {
       return [
         ...commonItems,
         { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
         { name: 'Finances', path: '/finances', icon: 'money-bill' },
+        {
+          name: 'Financial Management',
+          path: '/dashboard/financial-management',
+          icon: 'chart-line',
+        },
         { name: 'Dues', path: '/dues', icon: 'receipt' },
         { name: 'Donations', path: '/donations', icon: 'gift' },
       ];

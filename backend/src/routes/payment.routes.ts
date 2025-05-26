@@ -1,20 +1,20 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { authenticateToken, requireRole } from '../middleware/auth';
+import {
+  protect as authenticateToken,
+  authorize as requireRole,
+} from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
 import {
   submitPayment,
-  getPaymentsByDue,
-  getPaymentById,
+  getDuePayments,
+  getAllPayments,
   approvePayment,
   rejectPayment,
-  getAllPayments,
-  getPaymentsByPharmacy,
-  updatePayment,
-  deletePayment,
-  getPaymentStats,
+  reviewPayment,
   getPendingPayments,
+  deletePayment,
 } from '../controllers/payment.controller';
 
 const router = express.Router();
@@ -54,12 +54,12 @@ const upload = multer({
 });
 
 // Middleware for admin roles
-const requireAdminRole = requireRole([
+const requireAdminRole = requireRole(
   UserRole.ADMIN,
   UserRole.SUPERADMIN,
   UserRole.FINANCIAL_SECRETARY,
-  UserRole.TREASURER,
-]);
+  UserRole.TREASURER
+);
 
 // Payment submission routes (for pharmacy owners and admins)
 router.post(
@@ -68,26 +68,17 @@ router.post(
   upload.single('receipt'),
   submitPayment
 );
-router.put('/:id', authenticateToken, upload.single('receipt'), updatePayment);
 
 // Payment viewing routes
-router.get('/due/:dueId', authenticateToken, getPaymentsByDue);
-router.get('/pharmacy/:pharmacyId', authenticateToken, getPaymentsByPharmacy);
-router.get('/:id', authenticateToken, getPaymentById);
+router.get('/due/:dueId', authenticateToken, getDuePayments);
 
 // Admin routes for payment management
-router.get('/', authenticateToken, requireAdminRole, getAllPayments);
+router.get('/admin/all', authenticateToken, requireAdminRole, getAllPayments);
 router.get(
   '/admin/pending',
   authenticateToken,
   requireAdminRole,
   getPendingPayments
-);
-router.get(
-  '/admin/stats',
-  authenticateToken,
-  requireAdminRole,
-  getPaymentStats
 );
 router.post(
   '/:id/approve',
@@ -96,6 +87,7 @@ router.post(
   approvePayment
 );
 router.post('/:id/reject', authenticateToken, requireAdminRole, rejectPayment);
+router.post('/:id/review', authenticateToken, requireAdminRole, reviewPayment);
 router.delete('/:id', authenticateToken, requireAdminRole, deletePayment);
 
 export default router;

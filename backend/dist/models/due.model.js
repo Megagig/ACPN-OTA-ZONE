@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaymentStatus = void 0;
+exports.DueAssignmentType = exports.PaymentStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var PaymentStatus;
 (function (PaymentStatus) {
@@ -42,15 +42,56 @@ var PaymentStatus;
     PaymentStatus["OVERDUE"] = "overdue";
     PaymentStatus["PARTIALLY_PAID"] = "partially_paid";
 })(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+var DueAssignmentType;
+(function (DueAssignmentType) {
+    DueAssignmentType["INDIVIDUAL"] = "individual";
+    DueAssignmentType["BULK"] = "bulk";
+})(DueAssignmentType || (exports.DueAssignmentType = DueAssignmentType = {}));
+const penaltySchema = new mongoose_1.Schema({
+    amount: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    reason: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    addedBy: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    addedAt: {
+        type: Date,
+        default: Date.now,
+    },
+});
 const dueSchema = new mongoose_1.Schema({
     pharmacyId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: 'Pharmacy',
         required: true,
     },
+    dueTypeId: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'DueType',
+        required: true,
+    },
+    title: {
+        type: String,
+        required: [true, 'Due title is required'],
+        trim: true,
+    },
+    description: {
+        type: String,
+        trim: true,
+    },
     amount: {
         type: Number,
         required: [true, 'Amount is required'],
+        min: [0, 'Amount must be non-negative'],
     },
     dueDate: {
         type: Date,
@@ -61,20 +102,77 @@ const dueSchema = new mongoose_1.Schema({
         enum: Object.values(PaymentStatus),
         default: PaymentStatus.PENDING,
     },
-    paymentDate: {
-        type: Date,
+    amountPaid: {
+        type: Number,
+        default: 0,
+        min: 0,
     },
-    paymentReference: {
+    balance: {
+        type: Number,
+        default: function () {
+            return this.totalAmount - this.amountPaid;
+        },
+    },
+    penalties: [penaltySchema],
+    totalAmount: {
+        type: Number,
+        default: function () {
+            var _a;
+            const penaltyAmount = ((_a = this.penalties) === null || _a === void 0 ? void 0 : _a.reduce((sum, penalty) => sum + penalty.amount, 0)) ||
+                0;
+            return this.amount + penaltyAmount;
+        },
+    },
+    assignmentType: {
         type: String,
+        enum: Object.values(DueAssignmentType),
+        required: true,
+    },
+    assignedBy: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    assignedAt: {
+        type: Date,
+        default: Date.now,
     },
     year: {
         type: Number,
         required: true,
     },
+    isRecurring: {
+        type: Boolean,
+        default: false,
+    },
+    nextDueDate: {
+        type: Date,
+    },
 }, {
     timestamps: true,
 });
+// Pre-save middleware to calculate totalAmount and balance
+dueSchema.pre('save', function () {
+    var _a;
+    const penaltyAmount = ((_a = this.penalties) === null || _a === void 0 ? void 0 : _a.reduce((sum, penalty) => sum + penalty.amount, 0)) || 0;
+    this.totalAmount = this.amount + penaltyAmount;
+    this.balance = this.totalAmount - this.amountPaid;
+    // Update payment status based on payment
+    if (this.amountPaid === 0) {
+        this.paymentStatus = PaymentStatus.PENDING;
+    }
+    else if (this.amountPaid >= this.totalAmount) {
+        this.paymentStatus = PaymentStatus.PAID;
+    }
+    else {
+        this.paymentStatus = PaymentStatus.PARTIALLY_PAID;
+    }
+});
 // Index for faster queries
-dueSchema.index({ pharmacyId: 1, year: 1 }, { unique: true });
+dueSchema.index({ pharmacyId: 1, year: 1 });
+dueSchema.index({ dueTypeId: 1 });
+dueSchema.index({ paymentStatus: 1 });
+dueSchema.index({ dueDate: 1 });
+dueSchema.index({ assignedBy: 1 });
 const Due = mongoose_1.default.model('Due', dueSchema);
 exports.default = Due;

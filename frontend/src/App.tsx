@@ -32,6 +32,18 @@ import TransactionList from './pages/dashboard/TransactionList';
 import TransactionForm from './pages/dashboard/TransactionForm';
 import TransactionDetail from './pages/dashboard/TransactionDetail';
 import DuesManagement from './pages/dashboard/DuesManagement';
+import FinancialManagement from './pages/dashboard/FinancialManagement';
+import AdminPaymentReview from './pages/dashboard/AdminPaymentReview';
+import DueAssignment from './pages/dashboard/DueAssignment';
+import PenaltyManagement from './pages/dashboard/PenaltyManagement';
+import DueTypesManagement from './pages/dashboard/DueTypesManagement';
+import BulkDueAssignment from './pages/dashboard/BulkDueAssignment';
+import PaymentHistory from './pages/dashboard/PaymentHistory';
+import FinancialAnalytics from './pages/dashboard/FinancialAnalytics';
+import ClearanceCertificateGeneration from './pages/dashboard/ClearanceCertificateGeneration';
+import PaymentReports from './pages/dashboard/PaymentReports';
+import CollectionReports from './pages/dashboard/CollectionReports';
+import OutstandingDues from './pages/dashboard/OutstandingDues';
 
 // Event Management Pages
 import EventDashboard from './pages/dashboard/EventDashboard';
@@ -138,11 +150,64 @@ function App() {
               <Route
                 element={
                   <ProtectedRoute
-                    allowedRoles={['admin', 'superadmin', 'treasurer']}
+                    allowedRoles={[
+                      'admin',
+                      'superadmin',
+                      'treasurer',
+                      'financial_secretary',
+                    ]}
                   />
                 }
               >
                 <Route path="/finances" element={<FinancialDashboard />} />
+                <Route
+                  path="/dashboard/financial-management"
+                  element={<FinancialManagement />}
+                />
+                <Route
+                  path="/dashboard/assign-dues"
+                  element={<DueAssignment />}
+                />
+                <Route
+                  path="/dashboard/manage-penalties"
+                  element={<PenaltyManagement />}
+                />
+                <Route
+                  path="/dashboard/due-types"
+                  element={<DueTypesManagement />}
+                />
+                <Route
+                  path="/dashboard/bulk-assign-dues"
+                  element={<BulkDueAssignment />}
+                />
+                <Route
+                  path="/dashboard/payment-history"
+                  element={<PaymentHistory />}
+                />
+                <Route
+                  path="/dashboard/financial-analytics"
+                  element={<FinancialAnalytics />}
+                />
+                <Route
+                  path="/dashboard/generate-certificates"
+                  element={<ClearanceCertificateGeneration />}
+                />
+                <Route
+                  path="/dashboard/payment-reports"
+                  element={<PaymentReports />}
+                />
+                <Route
+                  path="/dashboard/collection-reports"
+                  element={<CollectionReports />}
+                />
+                <Route
+                  path="/dashboard/outstanding-dues"
+                  element={<OutstandingDues />}
+                />
+                <Route
+                  path="/dashboard/admin-payment-review"
+                  element={<AdminPaymentReview />}
+                />
                 <Route
                   path="/finances/transactions"
                   element={<TransactionList />}
@@ -163,6 +228,34 @@ function App() {
                 <Route
                   path="/donations"
                   element={<div>Donations Management (Coming Soon)</div>}
+                />
+                <Route
+                  path="/finances/bulk-due-assignment"
+                  element={<BulkDueAssignment />}
+                />
+                <Route
+                  path="/finances/payment-history"
+                  element={<PaymentHistory />}
+                />
+                <Route
+                  path="/finances/financial-analytics"
+                  element={<FinancialAnalytics />}
+                />
+                <Route
+                  path="/finances/generate-clearance-certificate"
+                  element={<ClearanceCertificateGeneration />}
+                />
+                <Route
+                  path="/finances/payment-reports"
+                  element={<PaymentReports />}
+                />
+                <Route
+                  path="/finances/collection-reports"
+                  element={<CollectionReports />}
+                />
+                <Route
+                  path="/finances/outstanding-dues"
+                  element={<OutstandingDues />}
                 />
               </Route>
 
@@ -241,14 +334,6 @@ function App() {
               <Route path="/my-pharmacy/edit" element={<PharmacyForm />} />
               <Route path="/payments" element={<PharmacyDues />} />
               <Route path="/my-documents" element={<DocumentsList />} />
-              <Route
-                path="/my-documents"
-                element={<div>My Documents (Coming Soon)</div>}
-              />
-              <Route
-                path="/payments"
-                element={<div>Dues & Payments (Coming Soon)</div>}
-              />
               <Route
                 path="/messages"
                 element={<div>Messages (Coming Soon)</div>}

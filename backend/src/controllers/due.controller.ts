@@ -298,8 +298,7 @@ export const payDue = asyncHandler(
     }
 
     due.paymentStatus = PaymentStatus.PAID;
-    due.paymentDate = new Date();
-    due.paymentReference = req.body.paymentReference || `Manual-${Date.now()}`;
+    due.amountPaid = due.totalAmount; // Mark as fully paid
 
     await due.save();
 
@@ -413,7 +412,7 @@ export const assignDues = asyncHandler(
       const pharmacies = await Pharmacy.find({
         registrationStatus: 'active',
       }).select('_id');
-      targetPharmacies = pharmacies.map((p) => p._id.toString());
+      targetPharmacies = pharmacies.map((p: any) => p._id.toString());
     } else if (assignmentType === 'individual') {
       if (
         !pharmacyIds ||
@@ -491,75 +490,160 @@ export const assignDues = asyncHandler(
   }
 );
 
-// @desc    Add penalty to a due
-// @route   POST /api/dues/:id/penalty
-// @access  Private/Admin/Financial Secretary/Treasurer
-export const addPenalty = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { amount, reason } = req.body;
+// @desc    Bulk assign dues to multiple pharmacies
+// @route   POST /api/dues/bulk-assign
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const bulkAssignDues = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { dueTypeId, amount, dueDate, description, pharmacyIds } = req.body;
 
-    if (!amount || !reason) {
-      return next(
-        new ErrorResponse('Penalty amount and reason are required', 400)
-      );
+    if (
+      !dueTypeId ||
+      !amount ||
+      !dueDate ||
+      !pharmacyIds ||
+      pharmacyIds.length === 0
+    ) {
+      throw new ErrorResponse('Please provide all required fields', 400);
     }
 
+    const dues = [];
+    const currentYear = new Date().getFullYear();
+
+    for (const pharmacyId of pharmacyIds) {
+      const due = await Due.create({
+        pharmacyId,
+        dueTypeId,
+        title: `Bulk Assigned Due - ${currentYear}`,
+        description,
+        amount,
+        dueDate: new Date(dueDate),
+        assignmentType: 'bulk',
+        assignedBy: req.user._id,
+        year: currentYear,
+      });
+      dues.push(due);
+    }
+
+    res.status(201).json({
+      success: true,
+      count: dues.length,
+      data: dues,
+    });
+  }
+);
+
+// @desc    Assign due to specific pharmacy
+// @route   POST /api/dues/assign/:pharmacyId
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const assignDueToPharmacy = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const {
+      dueTypeId,
+      amount,
+      dueDate,
+      description,
+      title,
+      isRecurring,
+      recurringFrequency,
+    } = req.body;
+    const { pharmacyId } = req.params;
+
+    const pharmacy = await Pharmacy.findById(pharmacyId);
+    if (!pharmacy) {
+      throw new ErrorResponse('Pharmacy not found', 404);
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    // Create the initial due
+    const due = await Due.create({
+      pharmacyId,
+      dueTypeId,
+      title: title || `Individual Due - ${currentYear}`,
+      description,
+      amount,
+      dueDate: new Date(dueDate),
+      assignmentType: 'individual',
+      assignedBy: req.user._id,
+      year: currentYear,
+      isRecurring: isRecurring || false,
+      recurringFrequency: recurringFrequency || null,
+    });
+
+    await due.populate('dueTypeId pharmacyId');
+
+    // If it's recurring, create future instances
+    if (isRecurring && recurringFrequency) {
+      const futureDues = [];
+      const currentDate = new Date(dueDate);
+
+      // Create up to 12 future instances
+      for (let i = 1; i <= 12; i++) {
+        let nextDueDate = new Date(currentDate);
+
+        switch (recurringFrequency) {
+          case 'monthly':
+            nextDueDate.setMonth(currentDate.getMonth() + i);
+            break;
+          case 'quarterly':
+            nextDueDate.setMonth(currentDate.getMonth() + i * 3);
+            break;
+          case 'annually':
+            nextDueDate.setFullYear(currentDate.getFullYear() + i);
+            break;
+        }
+
+        futureDues.push({
+          pharmacyId,
+          dueTypeId,
+          title: `${title || 'Recurring Due'} - ${nextDueDate.getFullYear()}`,
+          description,
+          amount,
+          dueDate: nextDueDate,
+          assignmentType: 'individual',
+          assignedBy: req.user._id,
+          year: nextDueDate.getFullYear(),
+          isRecurring: true,
+          recurringFrequency,
+        });
+      }
+
+      if (futureDues.length > 0) {
+        await Due.insertMany(futureDues);
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: due,
+      message: isRecurring
+        ? `Due assigned successfully with ${recurringFrequency} recurring schedule`
+        : 'Due assigned successfully',
+    });
+  }
+);
+
+// @desc    Add penalty to a due
+// @route   POST /api/dues/:id/penalty
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const addPenaltyToDue = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { amount, reason } = req.body;
     const due = await Due.findById(req.params.id);
 
     if (!due) {
-      return next(
-        new ErrorResponse(`Due not found with id of ${req.params.id}`, 404)
-      );
+      throw new ErrorResponse('Due not found', 404);
     }
 
-    // Add penalty
     due.penalties.push({
-      amount: parseFloat(amount),
+      amount,
       reason,
       addedBy: req.user._id,
       addedAt: new Date(),
     });
 
-    await due.save(); // Pre-save middleware will recalculate totals
-
-    const populatedDue = await Due.findById(due._id)
-      .populate('pharmacyId', 'name registrationNumber')
-      .populate('dueTypeId', 'name')
-      .populate('penalties.addedBy', 'firstName lastName email');
-
-    res.status(200).json({
-      success: true,
-      data: populatedDue,
-    });
-  }
-);
-
-// @desc    Remove penalty from a due
-// @route   DELETE /api/dues/:id/penalty/:penaltyId
-// @access  Private/Admin/Superadmin
-export const removePenalty = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { id, penaltyId } = req.params;
-
-    const due = await Due.findById(id);
-
-    if (!due) {
-      return next(new ErrorResponse(`Due not found with id of ${id}`, 404));
-    }
-
-    // Find and remove penalty
-    const penaltyIndex = due.penalties.findIndex(
-      (p) => p._id?.toString() === penaltyId
-    );
-
-    if (penaltyIndex === -1) {
-      return next(
-        new ErrorResponse(`Penalty not found with id of ${penaltyId}`, 404)
-      );
-    }
-
-    due.penalties.splice(penaltyIndex, 1);
-    await due.save(); // Pre-save middleware will recalculate totals
+    await due.save();
 
     res.status(200).json({
       success: true,
@@ -568,291 +652,257 @@ export const removePenalty = asyncHandler(
   }
 );
 
-// @desc    Get dues analytics for admin dashboard
-// @route   GET /api/dues/analytics
-// @access  Private/Admin/Financial Secretary/Treasurer
-export const getDuesAnalytics = asyncHandler(
+// @desc    Get comprehensive dues analytics
+// @route   GET /api/dues/analytics/all
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const getDueAnalytics = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const { year, startDate, endDate } = req.query;
-    const currentYear = year
-      ? parseInt(year as string)
-      : new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    const year = parseInt(req.query.year as string) || currentYear;
 
-    // Build date filter
-    let dateFilter: any = {};
-    if (startDate && endDate) {
-      dateFilter.dueDate = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string),
-      };
-    } else {
-      dateFilter.year = currentYear;
-    }
-
-    // Overview statistics
-    const [
-      totalDues,
-      paidDues,
-      partiallyPaidDues,
-      overdueDues,
-      totalAmount,
-      totalPaid,
-      totalPenalties,
-    ] = await Promise.all([
-      Due.countDocuments(dateFilter),
-      Due.countDocuments({ ...dateFilter, paymentStatus: 'paid' }),
-      Due.countDocuments({ ...dateFilter, paymentStatus: 'partially_paid' }),
-      Due.countDocuments({ ...dateFilter, paymentStatus: 'overdue' }),
-      Due.aggregate([
-        { $match: dateFilter },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
-      ]),
-      Due.aggregate([
-        { $match: dateFilter },
-        { $group: { _id: null, total: { $sum: '$amountPaid' } } },
-      ]),
-      Due.aggregate([
-        { $match: dateFilter },
-        { $unwind: { path: '$penalties', preserveNullAndEmptyArrays: true } },
-        { $group: { _id: null, total: { $sum: '$penalties.amount' } } },
-      ]),
-    ]);
-
-    // Due type breakdown
-    const dueTypeBreakdown = await Due.aggregate([
-      { $match: dateFilter },
-      {
-        $lookup: {
-          from: 'duetypes',
-          localField: 'dueTypeId',
-          foreignField: '_id',
-          as: 'dueType',
-        },
-      },
-      { $unwind: '$dueType' },
-      {
-        $group: {
-          _id: '$dueType.name',
-          count: { $sum: 1 },
-          totalAmount: { $sum: '$totalAmount' },
-          amountPaid: { $sum: '$amountPaid' },
-          outstanding: { $sum: '$balance' },
-        },
-      },
-      { $sort: { totalAmount: -1 } },
-    ]);
-
-    // Monthly trends (for current year)
-    const monthlyTrends = await Due.aggregate([
-      { $match: { year: currentYear } },
-      {
-        $group: {
-          _id: { $month: '$dueDate' },
-          count: { $sum: 1 },
-          totalAmount: { $sum: '$totalAmount' },
-          amountPaid: { $sum: '$amountPaid' },
-          paidCount: {
-            $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, 1, 0] },
-          },
-        },
-      },
-      { $sort: { _id: 1 } },
-    ]);
-
-    // Top defaulting pharmacies
-    const topDefaulters = await Due.aggregate([
-      {
-        $match: {
-          ...dateFilter,
-          paymentStatus: { $in: ['pending', 'overdue', 'partially_paid'] },
-        },
-      },
-      {
-        $group: {
-          _id: '$pharmacyId',
-          totalOutstanding: { $sum: '$balance' },
-          duesCount: { $sum: 1 },
-        },
-      },
-      {
-        $lookup: {
-          from: 'pharmacies',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'pharmacy',
-        },
-      },
-      { $unwind: '$pharmacy' },
-      {
-        $project: {
-          pharmacyName: '$pharmacy.name',
-          registrationNumber: '$pharmacy.registrationNumber',
-          totalOutstanding: 1,
-          duesCount: 1,
-        },
-      },
-      { $sort: { totalOutstanding: -1 } },
-      { $limit: 10 },
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        overview: {
-          totalDues,
-          paidDues,
-          partiallyPaidDues,
-          overdueDues,
-          pendingDues: totalDues - paidDues - partiallyPaidDues - overdueDues,
-          totalAmount: totalAmount[0]?.total || 0,
-          totalPaid: totalPaid[0]?.total || 0,
-          totalOutstanding:
-            (totalAmount[0]?.total || 0) - (totalPaid[0]?.total || 0),
-          totalPenalties: totalPenalties[0]?.total || 0,
-          collectionRate: totalAmount[0]?.total
-            ? ((totalPaid[0]?.total || 0) / totalAmount[0].total) * 100
-            : 0,
-        },
-        dueTypeBreakdown,
-        monthlyTrends,
-        topDefaulters,
-      },
-    });
-  }
-);
-
-// @desc    Get pharmacy-specific dues analytics
-// @route   GET /api/pharmacies/:pharmacyId/dues/analytics
-// @access  Private/Pharmacy Owner/Admin
-export const getPharmacyDuesAnalytics = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { pharmacyId } = req.params;
-    const { year } = req.query;
-    const currentYear = year
-      ? parseInt(year as string)
-      : new Date().getFullYear();
-
-    // Check authorization
-    const pharmacy = await Pharmacy.findById(pharmacyId);
-    if (!pharmacy) {
-      return next(
-        new ErrorResponse(`Pharmacy not found with id of ${pharmacyId}`, 404)
-      );
-    }
-
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'treasurer' &&
-      req.user.role !== 'financial_secretary' &&
-      pharmacy.userId.toString() !== req.user._id.toString()
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to view analytics for this pharmacy`,
-          403
-        )
-      );
-    }
-
-    // Get dues summary
-    const duesSummary = await Due.aggregate([
-      { $match: { pharmacyId: pharmacy._id, year: currentYear } },
+    const analytics = await Due.aggregate([
+      { $match: { year } },
       {
         $group: {
           _id: null,
           totalDues: { $sum: 1 },
           totalAmount: { $sum: '$totalAmount' },
-          amountPaid: { $sum: '$amountPaid' },
-          totalOutstanding: { $sum: '$balance' },
-          totalPenalties: {
-            $sum: {
-              $reduce: {
-                input: '$penalties',
-                initialValue: 0,
-                in: { $add: ['$$value', '$$this.amount'] },
-              },
-            },
-          },
-          paidDues: {
+          totalPaid: { $sum: '$amountPaid' },
+          outstanding: { $sum: '$balance' },
+          paidCount: {
             $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, 1, 0] },
           },
-          overdueDues: {
+          overdueCount: {
             $sum: { $cond: [{ $eq: ['$paymentStatus', 'overdue'] }, 1, 0] },
           },
         },
       },
     ]);
 
-    // Get dues by type
     const duesByType = await Due.aggregate([
-      { $match: { pharmacyId: pharmacy._id, year: currentYear } },
+      { $match: { year } },
+      {
+        $group: {
+          _id: '$dueTypeId',
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$totalAmount' },
+          amountPaid: { $sum: '$amountPaid' },
+        },
+      },
       {
         $lookup: {
           from: 'duetypes',
-          localField: 'dueTypeId',
+          localField: '_id',
           foreignField: '_id',
           as: 'dueType',
         },
       },
-      { $unwind: '$dueType' },
-      {
-        $group: {
-          _id: '$dueType.name',
-          amount: { $sum: '$totalAmount' },
-          paid: { $sum: '$amountPaid' },
-          outstanding: { $sum: '$balance' },
-          status: { $first: '$paymentStatus' },
-        },
-      },
-    ]);
-
-    // Payment history
-    const paymentHistory = await Due.aggregate([
-      { $match: { pharmacyId: pharmacy._id } },
-      {
-        $lookup: {
-          from: 'payments',
-          localField: '_id',
-          foreignField: 'dueId',
-          as: 'payments',
-        },
-      },
-      { $unwind: { path: '$payments', preserveNullAndEmptyArrays: true } },
-      {
-        $match: {
-          'payments.approvalStatus': 'approved',
-        },
-      },
-      {
-        $group: {
-          _id: { $year: '$payments.approvedAt' },
-          totalPaid: { $sum: '$payments.amount' },
-          paymentsCount: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: -1 } },
-      { $limit: 5 },
     ]);
 
     res.status(200).json({
       success: true,
       data: {
-        summary: duesSummary[0] || {
-          totalDues: 0,
-          totalAmount: 0,
-          amountPaid: 0,
-          totalOutstanding: 0,
-          totalPenalties: 0,
-          paidDues: 0,
-          overdueDues: 0,
-        },
+        summary: analytics[0] || {},
         duesByType,
-        paymentHistory,
-        complianceRate: duesSummary[0]
-          ? (duesSummary[0].paidDues / duesSummary[0].totalDues) * 100
-          : 0,
+        year,
       },
+    });
+  }
+);
+
+// @desc    Get pharmacy-specific analytics
+// @route   GET /api/dues/analytics/pharmacy/:pharmacyId
+// @access  Private
+export const getPharmacyDueAnalytics = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { pharmacyId } = req.params;
+    const currentYear = new Date().getFullYear();
+
+    // Check authorization
+    const pharmacy = await Pharmacy.findById(pharmacyId);
+    if (!pharmacy) {
+      throw new ErrorResponse('Pharmacy not found', 404);
+    }
+
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.role !== 'treasurer' &&
+      pharmacy.userId.toString() !== req.user._id.toString()
+    ) {
+      throw new ErrorResponse('Not authorized to view this data', 403);
+    }
+
+    const analytics = await Due.aggregate([
+      { $match: { pharmacyId: pharmacy._id } },
+      {
+        $group: {
+          _id: null,
+          totalDues: { $sum: 1 },
+          totalAmount: { $sum: '$totalAmount' },
+          totalPaid: { $sum: '$amountPaid' },
+          outstanding: { $sum: '$balance' },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: analytics[0] || {},
+    });
+  }
+);
+
+// @desc    Generate clearance certificate
+// @route   GET /api/dues/:id/certificate
+// @access  Private
+export const generateClearanceCertificate = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const due = await Due.findById(req.params.id)
+      .populate('pharmacyId')
+      .populate('dueTypeId');
+
+    if (!due) {
+      throw new ErrorResponse('Due not found', 404);
+    }
+
+    if (due.paymentStatus !== PaymentStatus.PAID) {
+      throw new ErrorResponse(
+        'Due must be fully paid to generate certificate',
+        400
+      );
+    }
+
+    // For now, return certificate data - PDF generation can be added later
+    const certificateData = {
+      pharmacyName: (due.pharmacyId as any).name,
+      dueType: (due.dueTypeId as any).name,
+      amount: due.totalAmount,
+      paidDate: due.updatedAt,
+      validUntil: new Date(new Date().getFullYear(), 11, 31), // Dec 31st of current year
+      certificateNumber: `CERT-${due._id}-${Date.now()}`,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: certificateData,
+    });
+  }
+);
+
+// @desc    Mark due as paid manually
+// @route   PUT /api/dues/:id/mark-paid
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const markDueAsPaid = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const due = await Due.findById(req.params.id);
+
+    if (!due) {
+      throw new ErrorResponse('Due not found', 404);
+    }
+
+    due.amountPaid = due.totalAmount;
+    due.paymentStatus = PaymentStatus.PAID;
+    await due.save();
+
+    res.status(200).json({
+      success: true,
+      data: due,
+    });
+  }
+);
+
+// @desc    Get dues by type
+// @route   GET /api/dues/type/:typeId
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const getDuesByType = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { typeId } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    const dues = await Due.find({ dueTypeId: typeId })
+      .populate('pharmacyId', 'name registrationNumber')
+      .populate('dueTypeId', 'name description')
+      .skip(startIndex)
+      .limit(limit)
+      .sort({ dueDate: -1 });
+
+    const total = await Due.countDocuments({ dueTypeId: typeId });
+
+    res.status(200).json({
+      success: true,
+      count: dues.length,
+      pagination: { page, limit, total },
+      data: dues,
+    });
+  }
+);
+
+// @desc    Get overdue dues
+// @route   GET /api/dues/overdue
+// @access  Private/Admin/Treasurer/Financial Secretary
+export const getOverdueDues = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const currentDate = new Date();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    const query = {
+      dueDate: { $lt: currentDate },
+      paymentStatus: { $ne: PaymentStatus.PAID },
+    };
+
+    const dues = await Due.find(query)
+      .populate('pharmacyId', 'name registrationNumber')
+      .populate('dueTypeId', 'name description')
+      .skip(startIndex)
+      .limit(limit)
+      .sort({ dueDate: 1 }); // Oldest first
+
+    const total = await Due.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: dues.length,
+      pagination: { page, limit, total },
+      data: dues,
+    });
+  }
+);
+
+// @desc    Get pharmacy payment history
+// @route   GET /api/dues/pharmacy/:pharmacyId/history
+// @access  Private
+export const getPharmacyPaymentHistory = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { pharmacyId } = req.params;
+    const pharmacy = await Pharmacy.findById(pharmacyId);
+
+    if (!pharmacy) {
+      throw new ErrorResponse('Pharmacy not found', 404);
+    }
+
+    // Check authorization
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.role !== 'treasurer' &&
+      pharmacy.userId.toString() !== req.user._id.toString()
+    ) {
+      throw new ErrorResponse('Not authorized to view this data', 403);
+    }
+
+    const history = await Due.find({ pharmacyId })
+      .populate('dueTypeId', 'name description')
+      .sort({ dueDate: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: history.length,
+      data: history,
     });
   }
 );

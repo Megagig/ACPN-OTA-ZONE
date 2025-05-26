@@ -1,32 +1,33 @@
 import express from 'express';
-import { authenticateToken, requireRole } from '../middleware/auth';
+import {
+  protect as authenticateToken,
+  authorize as requireRole,
+} from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
 import {
   createDueType,
-  getAllDueTypes,
-  getDueTypeById,
+  getDueTypes,
+  getDueType,
   updateDueType,
   deleteDueType,
-  getActiveDueTypes,
 } from '../controllers/dueType.controller';
 
 const router = express.Router();
 
 // Middleware to require admin roles for due type management
-const requireFinancialRole = requireRole([
+const requireFinancialRole = requireRole(
   UserRole.ADMIN,
   UserRole.SUPERADMIN,
   UserRole.FINANCIAL_SECRETARY,
-  UserRole.TREASURER,
-]);
+  UserRole.TREASURER
+);
 
 // Public routes (authenticated users can view active due types)
-router.get('/active', authenticateToken, getActiveDueTypes);
-router.get('/:id', authenticateToken, getDueTypeById);
+router.get('/:id', authenticateToken, getDueType);
 
 // Admin routes for due type management
 router.post('/', authenticateToken, requireFinancialRole, createDueType);
-router.get('/', authenticateToken, requireFinancialRole, getAllDueTypes);
+router.get('/', authenticateToken, requireFinancialRole, getDueTypes);
 router.put('/:id', authenticateToken, requireFinancialRole, updateDueType);
 router.delete('/:id', authenticateToken, requireFinancialRole, deleteDueType);
 

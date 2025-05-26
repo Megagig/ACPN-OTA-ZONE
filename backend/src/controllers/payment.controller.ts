@@ -4,7 +4,7 @@ import Due from '../models/due.model';
 import Pharmacy from '../models/pharmacy.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
-import cloudinary from '../config/cloudinary/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary';
 
 // @desc    Submit payment for a due
 // @route   POST /api/pharmacies/:pharmacyId/dues/:dueId/payments
@@ -92,8 +92,8 @@ export const submitPayment = asyncHandler(
 
     try {
       // Upload receipt to cloudinary
-      const result = await cloudinary.uploadToCloudinary(
-        receiptFile,
+      const result = await uploadToCloudinary(
+        receiptFile.tempFilePath,
         'payment-receipts'
       );
 
@@ -167,6 +167,53 @@ export const getDuePayments = asyncHandler(
       success: true,
       count: payments.length,
       data: payments,
+    });
+  }
+);
+
+// @desc    Get all payments with filters for admin
+// @route   GET /api/payments/admin/all
+// @access  Private/Admin/Financial Secretary/Treasurer
+export const getAllPayments = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+    const status = req.query.status as string;
+
+    let filter: any = {};
+    if (status && status !== 'all') {
+      filter.approvalStatus = status;
+    }
+
+    const payments = await Payment.find(filter)
+      .populate({
+        path: 'dueId',
+        select: 'title amount totalAmount dueDate',
+        populate: {
+          path: 'dueTypeId',
+          select: 'name',
+        },
+      })
+      .populate('pharmacyId', 'name registrationNumber')
+      .populate('submittedBy', 'firstName lastName email')
+      .populate('approvedBy', 'firstName lastName email')
+      .sort({ submittedAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    const total = await Payment.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      count: payments.length,
+      data: payments,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
   }
 );
@@ -314,6 +361,74 @@ export const rejectPayment = asyncHandler(
   }
 );
 
+// @desc    Review payment (approve or reject)
+// @route   POST /api/payments/:id/review
+// @access  Private/Admin/Financial Secretary/Treasurer
+export const reviewPayment = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { status, rejectionReason } = req.body;
+    const paymentId = req.params.id;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return next(
+        new ErrorResponse('Status must be either approved or rejected', 400)
+      );
+    }
+
+    if (status === 'rejected' && !rejectionReason) {
+      return next(
+        new ErrorResponse(
+          'Rejection reason is required when rejecting payment',
+          400
+        )
+      );
+    }
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return next(
+        new ErrorResponse(`Payment not found with id of ${paymentId}`, 404)
+      );
+    }
+
+    if (payment.approvalStatus !== PaymentApprovalStatus.PENDING) {
+      return next(new ErrorResponse('Payment has already been reviewed', 400));
+    }
+
+    // Update payment status
+    if (status === 'approved') {
+      payment.approvalStatus = PaymentApprovalStatus.APPROVED;
+      payment.approvedBy = req.user._id;
+      payment.approvedAt = new Date();
+
+      // Update the due with the payment
+      const due = await Due.findById(payment.dueId);
+      if (due) {
+        due.amountPaid += payment.amount;
+        await due.save();
+      }
+    } else {
+      payment.approvalStatus = PaymentApprovalStatus.REJECTED;
+      payment.rejectionReason = rejectionReason;
+      payment.approvedBy = req.user._id;
+      payment.approvedAt = new Date();
+    }
+
+    await payment.save();
+
+    const populatedPayment = await Payment.findById(payment._id)
+      .populate('dueId', 'title amount totalAmount')
+      .populate('pharmacyId', 'name registrationNumber')
+      .populate('submittedBy', 'firstName lastName email')
+      .populate('approvedBy', 'firstName lastName email');
+
+    res.status(200).json({
+      success: true,
+      data: populatedPayment,
+    });
+  }
+);
+
 // @desc    Delete payment
 // @route   DELETE /api/payments/:id
 // @access  Private/Admin/Superadmin
@@ -338,7 +453,7 @@ export const deletePayment = asyncHandler(
 
     // Delete receipt from cloudinary
     try {
-      await cloudinary.deleteFromCloudinary(payment.receiptPublicId);
+      await deleteFromCloudinary(payment.receiptPublicId);
     } catch (error) {
       console.error('Error deleting receipt from cloudinary:', error);
     }

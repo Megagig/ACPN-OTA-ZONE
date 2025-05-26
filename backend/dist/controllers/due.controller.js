@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDuesStats = exports.payDue = exports.deleteDue = exports.updateDue = exports.createDue = exports.getDue = exports.getPharmacyDues = exports.getAllDues = void 0;
+exports.getPharmacyPaymentHistory = exports.getOverdueDues = exports.getDuesByType = exports.markDueAsPaid = exports.generateClearanceCertificate = exports.getPharmacyDueAnalytics = exports.getDueAnalytics = exports.addPenaltyToDue = exports.assignDueToPharmacy = exports.bulkAssignDues = exports.assignDues = exports.getDuesStats = exports.payDue = exports.deleteDue = exports.updateDue = exports.createDue = exports.getDue = exports.getPharmacyDues = exports.getAllDues = void 0;
 const due_model_1 = __importStar(require("../models/due.model"));
 const pharmacy_model_1 = __importDefault(require("../models/pharmacy.model"));
 const async_middleware_1 = __importDefault(require("../middleware/async.middleware"));
@@ -231,8 +231,7 @@ exports.payDue = (0, async_middleware_1.default)((req, res, next) => __awaiter(v
         return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to pay this due`, 403));
     }
     due.paymentStatus = due_model_1.PaymentStatus.PAID;
-    due.paymentDate = new Date();
-    due.paymentReference = req.body.paymentReference || `Manual-${Date.now()}`;
+    due.amountPaid = due.totalAmount; // Mark as fully paid
     yield due.save();
     res.status(200).json({
         success: true,
@@ -301,5 +300,375 @@ exports.getDuesStats = (0, async_middleware_1.default)((req, res) => __awaiter(v
                 ? (totalDuesThisYear[0].paidCount / totalDuesThisYear[0].count) * 100
                 : 0,
         },
+    });
+}));
+// @desc    Assign dues to pharmacies (bulk or individual)
+// @route   POST /api/dues/assign
+// @access  Private/Admin/Financial Secretary/Treasurer
+exports.assignDues = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { dueTypeId, title, description, amount, dueDate, assignmentType, pharmacyIds, // For individual assignment
+    isRecurring, nextDueDate, } = req.body;
+    // Validate required fields
+    if (!dueTypeId || !title || !amount || !dueDate || !assignmentType) {
+        return next(new errorResponse_1.default('Please provide all required fields', 400));
+    }
+    const year = new Date(dueDate).getFullYear();
+    const assignedBy = req.user._id;
+    const assignedAt = new Date();
+    let targetPharmacies = [];
+    if (assignmentType === 'bulk') {
+        // Get all active pharmacies
+        const pharmacies = yield pharmacy_model_1.default.find({
+            registrationStatus: 'active',
+        }).select('_id');
+        targetPharmacies = pharmacies.map((p) => p._id.toString());
+    }
+    else if (assignmentType === 'individual') {
+        if (!pharmacyIds ||
+            !Array.isArray(pharmacyIds) ||
+            pharmacyIds.length === 0) {
+            return next(new errorResponse_1.default('Pharmacy IDs are required for individual assignment', 400));
+        }
+        targetPharmacies = pharmacyIds;
+    }
+    else {
+        return next(new errorResponse_1.default('Invalid assignment type', 400));
+    }
+    const createdDues = [];
+    const errors = [];
+    // Create dues for each pharmacy
+    for (const pharmacyId of targetPharmacies) {
+        try {
+            // Check if due already exists for this pharmacy, due type, and year
+            const existingDue = yield due_model_1.default.findOne({
+                pharmacyId,
+                dueTypeId,
+                year,
+            });
+            if (existingDue) {
+                errors.push({
+                    pharmacyId,
+                    error: `Due already exists for this pharmacy and due type in ${year}`,
+                });
+                continue;
+            }
+            const dueData = {
+                pharmacyId,
+                dueTypeId,
+                title,
+                description,
+                amount: parseFloat(amount),
+                dueDate: new Date(dueDate),
+                assignmentType,
+                assignedBy,
+                assignedAt,
+                year,
+                isRecurring: isRecurring || false,
+                nextDueDate: nextDueDate ? new Date(nextDueDate) : undefined,
+            };
+            const due = yield due_model_1.default.create(dueData);
+            createdDues.push(due);
+        }
+        catch (error) {
+            console.error(`Error creating due for pharmacy ${pharmacyId}:`, error);
+            errors.push({
+                pharmacyId,
+                error: 'Failed to create due',
+            });
+        }
+    }
+    res.status(201).json({
+        success: true,
+        data: {
+            created: createdDues.length,
+            errors: errors.length,
+            dues: createdDues,
+            errorDetails: errors,
+        },
+    });
+}));
+// @desc    Bulk assign dues to multiple pharmacies
+// @route   POST /api/dues/bulk-assign
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.bulkAssignDues = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { dueTypeId, amount, dueDate, description, pharmacyIds } = req.body;
+    if (!dueTypeId ||
+        !amount ||
+        !dueDate ||
+        !pharmacyIds ||
+        pharmacyIds.length === 0) {
+        throw new errorResponse_1.default('Please provide all required fields', 400);
+    }
+    const dues = [];
+    const currentYear = new Date().getFullYear();
+    for (const pharmacyId of pharmacyIds) {
+        const due = yield due_model_1.default.create({
+            pharmacyId,
+            dueTypeId,
+            title: `Bulk Assigned Due - ${currentYear}`,
+            description,
+            amount,
+            dueDate: new Date(dueDate),
+            assignmentType: 'bulk',
+            assignedBy: req.user._id,
+            year: currentYear,
+        });
+        dues.push(due);
+    }
+    res.status(201).json({
+        success: true,
+        count: dues.length,
+        data: dues,
+    });
+}));
+// @desc    Assign due to specific pharmacy
+// @route   POST /api/dues/assign/:pharmacyId
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.assignDueToPharmacy = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { dueTypeId, amount, dueDate, description, title } = req.body;
+    const { pharmacyId } = req.params;
+    const pharmacy = yield pharmacy_model_1.default.findById(pharmacyId);
+    if (!pharmacy) {
+        throw new errorResponse_1.default('Pharmacy not found', 404);
+    }
+    const currentYear = new Date().getFullYear();
+    const due = yield due_model_1.default.create({
+        pharmacyId,
+        dueTypeId,
+        title: title || `Individual Due - ${currentYear}`,
+        description,
+        amount,
+        dueDate: new Date(dueDate),
+        assignmentType: 'individual',
+        assignedBy: req.user._id,
+        year: currentYear,
+    });
+    yield due.populate('dueTypeId pharmacyId');
+    res.status(201).json({
+        success: true,
+        data: due,
+    });
+}));
+// @desc    Add penalty to a due
+// @route   POST /api/dues/:id/penalty
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.addPenaltyToDue = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { amount, reason } = req.body;
+    const due = yield due_model_1.default.findById(req.params.id);
+    if (!due) {
+        throw new errorResponse_1.default('Due not found', 404);
+    }
+    due.penalties.push({
+        amount,
+        reason,
+        addedBy: req.user._id,
+        addedAt: new Date(),
+    });
+    yield due.save();
+    res.status(200).json({
+        success: true,
+        data: due,
+    });
+}));
+// @desc    Get comprehensive dues analytics
+// @route   GET /api/dues/analytics/all
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.getDueAnalytics = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentYear = new Date().getFullYear();
+    const year = parseInt(req.query.year) || currentYear;
+    const analytics = yield due_model_1.default.aggregate([
+        { $match: { year } },
+        {
+            $group: {
+                _id: null,
+                totalDues: { $sum: 1 },
+                totalAmount: { $sum: '$totalAmount' },
+                totalPaid: { $sum: '$amountPaid' },
+                outstanding: { $sum: '$balance' },
+                paidCount: {
+                    $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, 1, 0] },
+                },
+                overdueCount: {
+                    $sum: { $cond: [{ $eq: ['$paymentStatus', 'overdue'] }, 1, 0] },
+                },
+            },
+        },
+    ]);
+    const duesByType = yield due_model_1.default.aggregate([
+        { $match: { year } },
+        {
+            $group: {
+                _id: '$dueTypeId',
+                count: { $sum: 1 },
+                totalAmount: { $sum: '$totalAmount' },
+                amountPaid: { $sum: '$amountPaid' },
+            },
+        },
+        {
+            $lookup: {
+                from: 'duetypes',
+                localField: '_id',
+                foreignField: '_id',
+                as: 'dueType',
+            },
+        },
+    ]);
+    res.status(200).json({
+        success: true,
+        data: {
+            summary: analytics[0] || {},
+            duesByType,
+            year,
+        },
+    });
+}));
+// @desc    Get pharmacy-specific analytics
+// @route   GET /api/dues/analytics/pharmacy/:pharmacyId
+// @access  Private
+exports.getPharmacyDueAnalytics = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { pharmacyId } = req.params;
+    const currentYear = new Date().getFullYear();
+    // Check authorization
+    const pharmacy = yield pharmacy_model_1.default.findById(pharmacyId);
+    if (!pharmacy) {
+        throw new errorResponse_1.default('Pharmacy not found', 404);
+    }
+    if (req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin' &&
+        req.user.role !== 'treasurer' &&
+        pharmacy.userId.toString() !== req.user._id.toString()) {
+        throw new errorResponse_1.default('Not authorized to view this data', 403);
+    }
+    const analytics = yield due_model_1.default.aggregate([
+        { $match: { pharmacyId: pharmacy._id } },
+        {
+            $group: {
+                _id: null,
+                totalDues: { $sum: 1 },
+                totalAmount: { $sum: '$totalAmount' },
+                totalPaid: { $sum: '$amountPaid' },
+                outstanding: { $sum: '$balance' },
+            },
+        },
+    ]);
+    res.status(200).json({
+        success: true,
+        data: analytics[0] || {},
+    });
+}));
+// @desc    Generate clearance certificate
+// @route   GET /api/dues/:id/certificate
+// @access  Private
+exports.generateClearanceCertificate = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const due = yield due_model_1.default.findById(req.params.id)
+        .populate('pharmacyId')
+        .populate('dueTypeId');
+    if (!due) {
+        throw new errorResponse_1.default('Due not found', 404);
+    }
+    if (due.paymentStatus !== due_model_1.PaymentStatus.PAID) {
+        throw new errorResponse_1.default('Due must be fully paid to generate certificate', 400);
+    }
+    // For now, return certificate data - PDF generation can be added later
+    const certificateData = {
+        pharmacyName: due.pharmacyId.name,
+        dueType: due.dueTypeId.name,
+        amount: due.totalAmount,
+        paidDate: due.updatedAt,
+        validUntil: new Date(new Date().getFullYear(), 11, 31), // Dec 31st of current year
+        certificateNumber: `CERT-${due._id}-${Date.now()}`,
+    };
+    res.status(200).json({
+        success: true,
+        data: certificateData,
+    });
+}));
+// @desc    Mark due as paid manually
+// @route   PUT /api/dues/:id/mark-paid
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.markDueAsPaid = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const due = yield due_model_1.default.findById(req.params.id);
+    if (!due) {
+        throw new errorResponse_1.default('Due not found', 404);
+    }
+    due.amountPaid = due.totalAmount;
+    due.paymentStatus = due_model_1.PaymentStatus.PAID;
+    yield due.save();
+    res.status(200).json({
+        success: true,
+        data: due,
+    });
+}));
+// @desc    Get dues by type
+// @route   GET /api/dues/type/:typeId
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.getDuesByType = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { typeId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const dues = yield due_model_1.default.find({ dueTypeId: typeId })
+        .populate('pharmacyId', 'name registrationNumber')
+        .populate('dueTypeId', 'name description')
+        .skip(startIndex)
+        .limit(limit)
+        .sort({ dueDate: -1 });
+    const total = yield due_model_1.default.countDocuments({ dueTypeId: typeId });
+    res.status(200).json({
+        success: true,
+        count: dues.length,
+        pagination: { page, limit, total },
+        data: dues,
+    });
+}));
+// @desc    Get overdue dues
+// @route   GET /api/dues/overdue
+// @access  Private/Admin/Treasurer/Financial Secretary
+exports.getOverdueDues = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentDate = new Date();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const query = {
+        dueDate: { $lt: currentDate },
+        paymentStatus: { $ne: due_model_1.PaymentStatus.PAID },
+    };
+    const dues = yield due_model_1.default.find(query)
+        .populate('pharmacyId', 'name registrationNumber')
+        .populate('dueTypeId', 'name description')
+        .skip(startIndex)
+        .limit(limit)
+        .sort({ dueDate: 1 }); // Oldest first
+    const total = yield due_model_1.default.countDocuments(query);
+    res.status(200).json({
+        success: true,
+        count: dues.length,
+        pagination: { page, limit, total },
+        data: dues,
+    });
+}));
+// @desc    Get pharmacy payment history
+// @route   GET /api/dues/pharmacy/:pharmacyId/history
+// @access  Private
+exports.getPharmacyPaymentHistory = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { pharmacyId } = req.params;
+    const pharmacy = yield pharmacy_model_1.default.findById(pharmacyId);
+    if (!pharmacy) {
+        throw new errorResponse_1.default('Pharmacy not found', 404);
+    }
+    // Check authorization
+    if (req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin' &&
+        req.user.role !== 'treasurer' &&
+        pharmacy.userId.toString() !== req.user._id.toString()) {
+        throw new errorResponse_1.default('Not authorized to view this data', 403);
+    }
+    const history = yield due_model_1.default.find({ pharmacyId })
+        .populate('dueTypeId', 'name description')
+        .sort({ dueDate: -1 });
+    res.status(200).json({
+        success: true,
+        count: history.length,
+        data: history,
     });
 }));

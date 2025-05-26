@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import DueType from '../models/dueType.model';
-import { connectDB } from '../config/db';
+import DueType from '../src/models/dueType.model';
+import connectDB from '../src/config/db';
 
 const predefinedDueTypes = [
   {

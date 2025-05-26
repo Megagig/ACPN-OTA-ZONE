@@ -4,6 +4,17 @@ export interface SocialMediaLinks {
   instagramUrl?: string;
 }
 
+export interface DueType {
+  _id: string;
+  name: string;
+  description?: string;
+  defaultAmount: number;
+  isRecurring?: boolean;
+  isActive?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type PharmacyRegistrationStatus =
   | 'active'
   | 'pending'
@@ -51,15 +62,59 @@ export interface Pharmacy extends PharmacyFormData {
 export interface PharmacyDue {
   _id: string;
   pharmacyId: string;
-  dueId: string;
-  dueType: string;
+  dueTypeId: {
+    _id: string;
+    name: string;
+    description?: string;
+    isRecurring: boolean;
+  };
+  title: string;
+  description?: string;
   amount: number;
   dueDate: string;
-  isPaid: boolean;
-  paidAmount?: number;
-  paidDate?: string;
-  balance?: number;
-  description?: string;
+  paymentStatus: 'pending' | 'paid' | 'overdue' | 'partially_paid';
+  amountPaid: number;
+  balance: number;
+  penalties: Array<{
+    amount: number;
+    reason: string;
+    addedBy: string;
+    addedAt: string;
+  }>;
+  totalAmount: number;
+  assignmentType: 'individual' | 'bulk';
+  assignedBy: string;
+  assignedAt: string;
+  year: number;
+  isRecurring: boolean;
+  nextDueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentSubmission {
+  _id: string;
+  dueId:
+    | string
+    | {
+        _id: string;
+        title: string;
+        dueTypeId: {
+          _id: string;
+          name: string;
+        };
+      };
+  pharmacyId: string;
+  amount: number;
+  paymentMethod: 'bank_transfer' | 'cash' | 'cheque' | 'mobile_payment';
+  paymentReference?: string;
+  receiptUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectionReason?: string;
+  submittedBy: string;
+  submittedAt: string;
   createdAt: string;
   updatedAt: string;
 }

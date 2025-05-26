@@ -5,282 +5,626 @@ import type {
   Due,
   DuePayment,
   Donation,
+  FinancialAnalytics,
+  FinancialReport,
+  Payment,
+  DueAssignmentData,
+  BulkAssignmentData,
+  PenaltyData,
+  ClearanceEligibility,
+  CertificateData,
 } from '../types/financial.types';
+import type { DueType, Pharmacy } from '../types/pharmacy.types';
 import mockFinancialService from './mockData.service';
 
 const BASE_URL = '/api';
 
-// For demonstration, using mock data instead of actual API calls
-// In production, replace these with actual API calls
+// ============== ORIGINAL FINANCIAL RECORDS API ==============
 
-// Financial Records API
-export const getFinancialRecords = async (
-  params?: Record<string, unknown>
-): Promise<FinancialRecord[]> => {
-  // Comment this in production and uncomment the real API call
+export const getFinancialRecords = async (): Promise<FinancialRecord[]> => {
   return mockFinancialService.getFinancialRecords();
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/financial-records`, { params });
-  // return response.data.data;
 };
 
 export const getFinancialRecordById = async (
   id: string
 ): Promise<FinancialRecord> => {
-  // Comment this in production and uncomment the real API call
   return mockFinancialService.getFinancialRecordById(id);
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/financial-records/${id}`);
-  // return response.data.data;
 };
 
 export const createFinancialRecord = async (
   data: Partial<FinancialRecord>
 ): Promise<FinancialRecord> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: 'new-' + Date.now(),
     ...data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as FinancialRecord;
-
-  // Real API call
-  // const response = await api.post(`${BASE_URL}/financial-records`, data);
-  // return response.data.data;
 };
 
 export const updateFinancialRecord = async (
   id: string,
   data: Partial<FinancialRecord>
 ): Promise<FinancialRecord> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: id,
     ...data,
     updatedAt: new Date().toISOString(),
   } as FinancialRecord;
-
-  // Real API call
-  // const response = await api.put(`${BASE_URL}/financial-records/${id}`, data);
-  // return response.data.data;
 };
 
 export const deleteFinancialRecord = async (id: string): Promise<void> => {
-  // For demo purposes, just add a delay
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
-
-  // Real API call
-  // await api.delete(`${BASE_URL}/financial-records/${id}`);
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  console.log('Deleting financial record:', id);
 };
 
-export const getFinancialSummary = async (
-  period?: string
-): Promise<FinancialSummary> => {
-  // Comment this in production and uncomment the real API call
+export const getFinancialSummary = async (): Promise<FinancialSummary> => {
   return mockFinancialService.getFinancialSummary();
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/financial-records/summary`, { params: { period } });
-  // return response.data.data;
 };
 
-// Dues API
-export const getDues = async (
-  _params?: Record<string, unknown>
-): Promise<Due[]> => {
-  // Comment this in production and uncomment the real API call
-  return mockFinancialService.getDues();
+// ============== ORIGINAL DUES API ==============
 
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/dues`, { params });
-  // return response.data.data;
+export const getDues = async (): Promise<Due[]> => {
+  return mockFinancialService.getDues();
 };
 
 export const getDueById = async (id: string): Promise<Due> => {
-  // Comment this in production and uncomment the real API call
   return mockFinancialService.getDueById(id);
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/dues/${id}`);
-  // return response.data.data;
 };
 
 export const createDue = async (data: Partial<Due>): Promise<Due> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: 'new-' + Date.now(),
     ...data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as Due;
-
-  // Real API call
-  // const response = await api.post(`${BASE_URL}/dues`, data);
-  // return response.data.data;
 };
 
 export const updateDue = async (
   id: string,
   data: Partial<Due>
 ): Promise<Due> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: id,
     ...data,
     updatedAt: new Date().toISOString(),
   } as Due;
-
-  // Real API call
-  // const response = await api.put(`${BASE_URL}/dues/${id}`, data);
-  // return response.data.data;
 };
 
-export const deleteDue = async (_id: string): Promise<void> => {
-  // For demo purposes, just add a delay
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
-
-  // Real API call
-  // await api.delete(`${BASE_URL}/dues/${id}`);
+export const deleteDue = async (id: string): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  console.log('Deleting due:', id);
 };
 
-// Due Payments API
-export const getDuePayments = async (
-  _params?: Record<string, unknown>
-): Promise<DuePayment[]> => {
-  // Comment this in production and uncomment the real API call
+// ============== ORIGINAL DUE PAYMENTS API ==============
+
+export const getDuePayments = async (): Promise<DuePayment[]> => {
   return mockFinancialService.getDuePayments();
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/dues/payments`, { params });
-  // return response.data.data;
 };
 
 export const getDuePaymentById = async (id: string): Promise<DuePayment> => {
-  // For demo purposes, return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   const payment = (await mockFinancialService.getDuePayments()).find(
     (p) => p._id === id
   );
   if (!payment) throw new Error('Payment not found');
   return payment;
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/dues/payments/${id}`);
-  // return response.data.data;
 };
 
 export const createDuePayment = async (
   data: Partial<DuePayment>
 ): Promise<DuePayment> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: 'new-' + Date.now(),
     ...data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as DuePayment;
-
-  // Real API call
-  // const response = await api.post(`${BASE_URL}/dues/payments`, data);
-  // return response.data.data;
 };
 
 export const updateDuePayment = async (
   id: string,
   data: Partial<DuePayment>
 ): Promise<DuePayment> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: id,
     ...data,
     updatedAt: new Date().toISOString(),
   } as DuePayment;
-
-  // Real API call
-  // const response = await api.put(`${BASE_URL}/dues/payments/${id}`, data);
-  // return response.data.data;
 };
 
-export const deleteDuePayment = async (_id: string): Promise<void> => {
-  // For demo purposes, just add a delay
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
-
-  // Real API call
-  // await api.delete(`${BASE_URL}/dues/payments/${id}`);
+export const deleteDuePayment = async (id: string): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  console.log('Deleting due payment:', id);
 };
 
-// Donations API
-export const getDonations = async (
-  _params?: Record<string, unknown>
-): Promise<Donation[]> => {
-  // For demo purposes, return mock data
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+// ============== ORIGINAL DONATIONS API ==============
+
+export const getDonations = async (): Promise<Donation[]> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return [];
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/donations`, { params });
-  // return response.data.data;
 };
 
-export const getDonationById = async (_id: string): Promise<Donation> => {
-  // For demo purposes, throw an error
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+export const getDonationById = async (id: string): Promise<Donation> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  console.log('Getting donation by id:', id);
   throw new Error('Donation not found');
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/donations/${id}`);
-  // return response.data.data;
 };
 
 export const createDonation = async (
   data: Partial<Donation>
 ): Promise<Donation> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: 'new-' + Date.now(),
     ...data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as Donation;
-
-  // Real API call
-  // const response = await api.post(`${BASE_URL}/donations`, data);
-  // return response.data.data;
 };
 
 export const updateDonation = async (
   id: string,
   data: Partial<Donation>
 ): Promise<Donation> => {
-  // For demo purposes, just return a mock result
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+  await new Promise((resolve) => setTimeout(resolve, 800));
   return {
     _id: id,
     ...data,
     updatedAt: new Date().toISOString(),
   } as Donation;
-
-  // Real API call
-  // const response = await api.put(`${BASE_URL}/donations/${id}`, data);
-  // return response.data.data;
 };
 
-export const deleteDonation = async (_id: string): Promise<void> => {
-  // For demo purposes, just add a delay
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Fake delay
+export const deleteDonation = async (id: string): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  console.log('Deleting donation:', id);
+};
 
-  // Real API call
-  // await api.delete(`${BASE_URL}/donations/${id}`);
+// ============== NEW COMPREHENSIVE DUES & PAYMENTS API ==============
+
+// Due Types API
+export const getDueTypes = async (): Promise<DueType[]> => {
+  const response = await api.get(`${BASE_URL}/due-types`);
+  return response.data.data;
+};
+
+export const createDueType = async (data: {
+  name: string;
+  description?: string;
+  defaultAmount: number;
+  isRecurring?: boolean;
+  recurringPeriod?: 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
+}): Promise<DueType> => {
+  const response = await api.post(`${BASE_URL}/due-types`, data);
+  return response.data.data;
+};
+
+export const updateDueType = async (
+  id: string,
+  data: Partial<DueType>
+): Promise<DueType> => {
+  const response = await api.put(`${BASE_URL}/due-types/${id}`, data);
+  return response.data.data;
+};
+
+export const deleteDueType = async (id: string): Promise<void> => {
+  await api.delete(`${BASE_URL}/due-types/${id}`);
+};
+
+// Bulk Due Assignment API
+export const bulkAssignDues = async (
+  data: BulkAssignmentData
+): Promise<{ message: string; assignedCount: number }> => {
+  const response = await api.post(`${BASE_URL}/dues/bulk-assign`, data);
+  return response.data.data;
+};
+
+export const assignDue = async (
+  pharmacyId: string,
+  data: DueAssignmentData
+): Promise<Due> => {
+  const response = await api.post(
+    `${BASE_URL}/dues/assign/${pharmacyId}`,
+    data
+  );
+  return response.data.data;
+};
+
+// Penalty Management API
+export const addPenaltyToDue = async (
+  dueId: string,
+  data: PenaltyData
+): Promise<Due> => {
+  const response = await api.post(`${BASE_URL}/dues/${dueId}/penalty`, data);
+  return response.data.data;
+};
+
+export const markDueAsPaid = async (dueId: string): Promise<Due> => {
+  const response = await api.put(`${BASE_URL}/dues/${dueId}/mark-paid`);
+  return response.data.data;
+};
+
+// Analytics API
+export const getDueAnalytics = async (
+  year?: number
+): Promise<{
+  totalDues: number;
+  paidDues: number;
+  unpaidDues: number;
+  totalAmount: number;
+  collectedAmount: number;
+  outstandingAmount: number;
+  monthlyData: Array<{ month: string; amount: number; count: number }>;
+}> => {
+  const response = await api.get(`${BASE_URL}/dues/analytics/all`, {
+    params: { year },
+  });
+  return response.data.data;
+};
+
+export const getPharmacyDueAnalytics = async (
+  pharmacyId: string
+): Promise<{
+  totalDues: number;
+  paidDues: number;
+  unpaidDues: number;
+  totalAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+}> => {
+  const response = await api.get(
+    `${BASE_URL}/dues/analytics/pharmacy/${pharmacyId}`
+  );
+  return response.data.data;
+};
+
+// Filtered Views API
+export const getDuesByType = async (
+  typeId: string,
+  page = 1,
+  limit = 10
+): Promise<{
+  dues: Due[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}> => {
+  const response = await api.get(`${BASE_URL}/dues/type/${typeId}`, {
+    params: { page, limit },
+  });
+  return response.data;
+};
+
+export const getOverdueDues = async (
+  page = 1,
+  limit = 10
+): Promise<{
+  dues: Due[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}> => {
+  const response = await api.get(`${BASE_URL}/dues/overdue`, {
+    params: { page, limit },
+  });
+  return response.data;
+};
+
+export const getPharmacyPaymentHistory = async (
+  pharmacyId: string
+): Promise<Payment[]> => {
+  const response = await api.get(
+    `${BASE_URL}/dues/pharmacy/${pharmacyId}/history`
+  );
+  return response.data.data;
+};
+
+// Payment Management API
+export const submitPayment = async (data: FormData): Promise<Payment> => {
+  const response = await api.post(`${BASE_URL}/payments/submit`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data.data;
+};
+
+export const getPaymentsByDue = async (dueId: string): Promise<Payment[]> => {
+  const response = await api.get(`${BASE_URL}/payments/due/${dueId}`);
+  return response.data.data;
+};
+
+export const getPendingPayments = async (): Promise<Payment[]> => {
+  const response = await api.get(`${BASE_URL}/payments/admin/pending`);
+  return response.data.data;
+};
+
+export const approvePayment = async (
+  paymentId: string,
+  data?: { notes?: string }
+): Promise<Payment> => {
+  const response = await api.post(
+    `${BASE_URL}/payments/${paymentId}/approve`,
+    data
+  );
+  return response.data.data;
+};
+
+export const rejectPayment = async (
+  paymentId: string,
+  data: {
+    rejectionReason: string;
+  }
+): Promise<Payment> => {
+  const response = await api.post(
+    `${BASE_URL}/payments/${paymentId}/reject`,
+    data
+  );
+  return response.data.data;
+};
+
+export const deletePayment = async (paymentId: string): Promise<void> => {
+  await api.delete(`${BASE_URL}/payments/${paymentId}`);
+};
+
+export const getAllPayments = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+}): Promise<{
+  payments: Payment[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}> => {
+  const response = await api.get(`${BASE_URL}/payments/admin/all`, { params });
+  return response.data;
+};
+
+export const reviewPayment = async (
+  paymentId: string,
+  data: {
+    status: 'approved' | 'rejected';
+    rejectionReason?: string;
+  }
+): Promise<Payment> => {
+  const response = await api.post(
+    `${BASE_URL}/payments/${paymentId}/review`,
+    data
+  );
+  return response.data.data;
+};
+
+// Clearance Certificate API
+export const generateClearanceCertificate = async (
+  dueId: string
+): Promise<{ certificateUrl: string; certificateNumber: string }> => {
+  const response = await api.get(`${BASE_URL}/dues/${dueId}/certificate`);
+  return response.data.data;
+};
+
+export const checkClearanceEligibility = async (
+  pharmacyId: string
+): Promise<ClearanceEligibility> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  const mockEligibility: ClearanceEligibility = {
+    isEligible: Math.random() > 0.3,
+    reason:
+      Math.random() > 0.3 ? undefined : 'Outstanding dues exceed allowed limit',
+    details: {
+      totalDuesPaid: Math.floor(Math.random() * 500000) + 100000,
+      outstandingAmount: Math.floor(Math.random() * 50000),
+      lastPaymentDate: new Date(
+        Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000
+      ).toISOString(),
+      complianceStatus: Math.random() > 0.2 ? 'compliant' : 'non-compliant',
+    },
+  };
+
+  if (!mockEligibility.isEligible && !mockEligibility.reason) {
+    mockEligibility.reason = 'Outstanding amount exceeds threshold';
+  }
+
+  console.log('Checking clearance eligibility for pharmacy:', pharmacyId);
+  return mockEligibility;
+};
+
+export const recordCertificateGeneration = async (
+  certificateData: CertificateData
+): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  console.log('Recording certificate generation:', certificateData);
+};
+
+export const getAllPharmacies = async (): Promise<Pharmacy[]> => {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  const mockPharmacies: Pharmacy[] = [
+    {
+      _id: '1',
+      name: 'HealthCare Plus Pharmacy',
+      email: 'info@healthcareplus.com',
+      phone: '+234-801-234-5678',
+      yearEstablished: 2020,
+      address: '123 Lagos Street',
+      landmark: 'Near City Mall',
+      townArea: 'Ikeja',
+      pcnLicense: 'PCN-2023-001',
+      licenseExpiryDate: '2025-12-31',
+      numberOfStaff: 15,
+      superintendentName: 'Dr. John Doe',
+      superintendentLicenseNumber: 'RPH-001',
+      superintendentPhone: '+234-801-111-1111',
+      directorName: 'Jane Smith',
+      directorPhone: '+234-801-222-2222',
+      operatingHours: '8:00 AM - 9:00 PM',
+      websiteUrl: 'https://healthcareplus.com',
+      servicesOffered: ['Prescription', 'Consultation', 'Health Screening'],
+      registrationNumber: 'ACPN-2023-001',
+      registrationStatus: 'active',
+      registrationDate: '2023-01-15',
+      superintendentPhoto: 'https://example.com/photo1.jpg',
+      directorPhoto: 'https://example.com/photo2.jpg',
+      createdAt: '2023-01-15T00:00:00.000Z',
+      updatedAt: '2023-01-15T00:00:00.000Z',
+    },
+    {
+      _id: '2',
+      name: 'MediCare Pharmacy',
+      email: 'info@medicare.com',
+      phone: '+234-801-987-6543',
+      yearEstablished: 2018,
+      address: '456 Abuja Road',
+      landmark: 'Opposite Central Market',
+      townArea: 'Wuse',
+      pcnLicense: 'PCN-2023-002',
+      licenseExpiryDate: '2025-12-31',
+      numberOfStaff: 12,
+      superintendentName: 'Dr. Mary Johnson',
+      superintendentLicenseNumber: 'RPH-002',
+      superintendentPhone: '+234-801-333-3333',
+      directorName: 'Peter Williams',
+      directorPhone: '+234-801-444-4444',
+      operatingHours: '8:00 AM - 8:00 PM',
+      websiteUrl: 'https://medicare.com',
+      servicesOffered: ['Prescription', 'Lab Tests'],
+      registrationNumber: 'ACPN-2023-002',
+      registrationStatus: 'active',
+      registrationDate: '2023-02-20',
+      superintendentPhoto: 'https://example.com/photo3.jpg',
+      directorPhoto: 'https://example.com/photo4.jpg',
+      createdAt: '2023-02-20T00:00:00.000Z',
+      updatedAt: '2023-02-20T00:00:00.000Z',
+    },
+    {
+      _id: '3',
+      name: 'LifeCare Pharmacy',
+      email: 'info@lifecare.com',
+      phone: '+234-801-555-5555',
+      yearEstablished: 2021,
+      address: '789 Port Harcourt Street',
+      landmark: 'Near University Campus',
+      townArea: 'Choba',
+      pcnLicense: 'PCN-2023-003',
+      licenseExpiryDate: '2025-12-31',
+      numberOfStaff: 8,
+      superintendentName: 'Dr. Emmanuel Okafor',
+      superintendentLicenseNumber: 'RPH-003',
+      superintendentPhone: '+234-801-666-6666',
+      directorName: 'Grace Okoli',
+      directorPhone: '+234-801-777-7777',
+      operatingHours: '8:00 AM - 10:00 PM',
+      websiteUrl: 'https://lifecare.com',
+      servicesOffered: ['Prescription', 'Consultation', 'Home Delivery'],
+      registrationNumber: 'ACPN-2023-003',
+      registrationStatus: 'pending',
+      registrationDate: '2023-03-10',
+      superintendentPhoto: 'https://example.com/photo5.jpg',
+      directorPhoto: 'https://example.com/photo6.jpg',
+      createdAt: '2023-03-10T00:00:00.000Z',
+      updatedAt: '2023-03-10T00:00:00.000Z',
+    },
+  ];
+
+  return mockPharmacies;
+};
+
+// Real API calls for existing dues
+export const getRealDues = async (params?: {
+  pharmacyId?: string;
+  page?: number;
+  limit?: number;
+  paymentStatus?: string;
+  year?: number;
+}): Promise<{
+  dues: Due[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}> => {
+  const response = await api.get(`${BASE_URL}/dues`, { params });
+  return response.data;
+};
+
+export const getRealDueById = async (id: string): Promise<Due> => {
+  const response = await api.get(`${BASE_URL}/dues/${id}`);
+  return response.data.data;
+};
+
+export const createRealDue = async (data: Partial<Due>): Promise<Due> => {
+  const response = await api.post(`${BASE_URL}/dues`, data);
+  return response.data.data;
+};
+
+export const updateRealDue = async (
+  id: string,
+  data: Partial<Due>
+): Promise<Due> => {
+  const response = await api.put(`${BASE_URL}/dues/${id}`, data);
+  return response.data.data;
+};
+
+export const deleteRealDue = async (id: string): Promise<void> => {
+  await api.delete(`${BASE_URL}/dues/${id}`);
+};
+
+// Financial Analytics
+export const getFinancialAnalytics = async (): Promise<FinancialAnalytics> => {
+  return {
+    totalRevenue: 5000000,
+    pendingPayments: 1500000,
+    completedPayments: 3500000,
+    monthlyData: [
+      { month: 'Jan', amount: 400000 },
+      { month: 'Feb', amount: 500000 },
+      { month: 'Mar', amount: 450000 },
+      { month: 'Apr', amount: 600000 },
+      { month: 'May', amount: 550000 },
+      { month: 'Jun', amount: 700000 },
+    ],
+    topCategories: [
+      { name: 'Annual Dues', amount: 2000000 },
+      { name: 'Registration Fee', amount: 1500000 },
+      { name: 'Event Fee', amount: 1000000 },
+    ],
+    stateWiseData: [
+      { state: 'Lagos', amount: 2000000 },
+      { state: 'Abuja', amount: 1500000 },
+      { state: 'Kano', amount: 1000000 },
+    ],
+  };
+};
+
+export const getFinancialReports = async (): Promise<FinancialReport[]> => {
+  return [
+    {
+      id: '1',
+      type: 'Monthly',
+      period: 'June 2024',
+      totalAmount: 500000,
+      generatedAt: new Date(),
+    },
+  ];
 };
 
 // All exported functions
@@ -313,6 +657,56 @@ const financialService = {
   createDonation,
   updateDonation,
   deleteDonation,
+
+  // Due Types
+  getDueTypes,
+  createDueType,
+  updateDueType,
+  deleteDueType,
+
+  // Bulk Due Assignment
+  bulkAssignDues,
+  assignDue,
+
+  // Penalty Management
+  addPenaltyToDue,
+  markDueAsPaid,
+
+  // Analytics
+  getDueAnalytics,
+  getPharmacyDueAnalytics,
+
+  // Filtered Views
+  getDuesByType,
+  getOverdueDues,
+  getPharmacyPaymentHistory,
+
+  // Payments
+  submitPayment,
+  getPaymentsByDue,
+  getPendingPayments,
+  approvePayment,
+  rejectPayment,
+  deletePayment,
+  getAllPayments,
+  reviewPayment,
+
+  // Clearance Certificate
+  generateClearanceCertificate,
+  checkClearanceEligibility,
+  recordCertificateGeneration,
+  getAllPharmacies,
+
+  // Real Dues API
+  getRealDues,
+  getRealDueById,
+  createRealDue,
+  updateRealDue,
+  deleteRealDue,
+
+  // Financial Analytics
+  getFinancialAnalytics,
+  getFinancialReports,
 };
 
 export default financialService;
