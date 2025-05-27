@@ -52,6 +52,10 @@ exports.getDueType = (0, async_middleware_1.default)((req, res, next) => __await
 // @access  Private/Admin/Financial Secretary/Treasurer
 exports.createDueType = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     req.body.createdBy = req.user._id;
+    // Ensure defaultAmount is a number
+    if (req.body.defaultAmount) {
+        req.body.defaultAmount = Number(req.body.defaultAmount);
+    }
     const dueType = yield dueType_model_1.default.create(req.body);
     res.status(201).json({
         success: true,
@@ -65,6 +69,10 @@ exports.updateDueType = (0, async_middleware_1.default)((req, res, next) => __aw
     let dueType = yield dueType_model_1.default.findById(req.params.id);
     if (!dueType) {
         return next(new errorResponse_1.default(`Due type not found with id of ${req.params.id}`, 404));
+    }
+    // Ensure defaultAmount is a number
+    if (req.body.defaultAmount) {
+        req.body.defaultAmount = Number(req.body.defaultAmount);
     }
     dueType = yield dueType_model_1.default.findByIdAndUpdate(req.params.id, req.body, {
         new: true,

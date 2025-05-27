@@ -45,6 +45,11 @@ const dueTypeSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
     },
+    defaultAmount: {
+        type: Number,
+        required: [true, 'Default amount is required'],
+        default: 0,
+    },
     isRecurring: {
         type: Boolean,
         default: false,

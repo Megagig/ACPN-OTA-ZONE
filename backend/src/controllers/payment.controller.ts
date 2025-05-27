@@ -7,12 +7,18 @@ import ErrorResponse from '../utils/errorResponse';
 import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary';
 
 // @desc    Submit payment for a due
-// @route   POST /api/pharmacies/:pharmacyId/dues/:dueId/payments
-// @access  Private/Pharmacy Owner
+// @route   POST /api/payments/submit
+// @access  Private
 export const submitPayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { pharmacyId, dueId } = req.params;
-    const { amount, paymentMethod, paymentReference } = req.body;
+    const { dueId, pharmacyId, amount, paymentMethod, paymentReference } =
+      req.body;
+
+    if (!dueId || !pharmacyId || !amount) {
+      return next(
+        new ErrorResponse('Missing required fields for payment submission', 400)
+      );
+    }
 
     // Check if pharmacy exists and user owns it
     const pharmacy = await Pharmacy.findById(pharmacyId);
@@ -50,29 +56,26 @@ export const submitPayment = asyncHandler(
     }
 
     // Validate payment amount
-    if (amount <= 0) {
+    const parsedAmount = parseFloat(amount as string);
+    if (parsedAmount <= 0) {
       return next(
         new ErrorResponse('Payment amount must be greater than 0', 400)
       );
     }
 
-    if (amount > due.balance) {
+    if (parsedAmount > due.balance) {
       return next(
         new ErrorResponse(
-          `Payment amount (${amount}) exceeds outstanding balance (${due.balance})`,
+          `Payment amount (${parsedAmount}) exceeds outstanding balance (${due.balance})`,
           400
         )
       );
     }
 
-    // Handle receipt upload
-    if (!req.files || !req.files.receipt) {
+    // Handle receipt upload with multer (req.file instead of req.files)
+    if (!req.file) {
       return next(new ErrorResponse('Receipt upload is required', 400));
     }
-
-    const receiptFile = Array.isArray(req.files.receipt)
-      ? req.files.receipt[0]
-      : req.files.receipt;
 
     // Validate file type
     const allowedTypes = [
@@ -81,7 +84,7 @@ export const submitPayment = asyncHandler(
       'image/png',
       'application/pdf',
     ];
-    if (!allowedTypes.includes(receiptFile.mimetype)) {
+    if (!allowedTypes.includes(req.file.mimetype)) {
       return next(
         new ErrorResponse(
           'Please upload a valid receipt file (JPEG, JPG, PNG, or PDF)',
@@ -91,24 +94,86 @@ export const submitPayment = asyncHandler(
     }
 
     try {
-      // Upload receipt to cloudinary
-      const result = await uploadToCloudinary(
-        receiptFile.tempFilePath,
-        'payment-receipts'
-      );
+      console.log('Processing payment submission:', {
+        dueId,
+        pharmacyId,
+        amount,
+        paymentMethod,
+      });
+      console.log('File information:', req.file);
+
+      // For multer uploads, use req.file.path
+      let receiptUrl, receiptPublicId;
+
+      try {
+        if (!req.file) {
+          console.error('Missing file in request');
+          return next(
+            new ErrorResponse('Receipt file is missing or invalid', 400)
+          );
+        }
+
+        console.log('Complete file object:', JSON.stringify(req.file, null, 2));
+
+        // Make sure we have a valid path - Multer may use different properties
+        const filePath =
+          req.file.path ||
+          (req.file as any).destination + '/' + (req.file as any).filename;
+
+        // Upload to Cloudinary if available
+        if (typeof uploadToCloudinary === 'function') {
+          console.log('Uploading to Cloudinary:', filePath);
+          const result = await uploadToCloudinary(filePath, 'payment-receipts');
+          receiptUrl = result.secure_url;
+          receiptPublicId = result.public_id;
+          console.log('Cloudinary upload successful:', {
+            receiptUrl,
+            receiptPublicId,
+          });
+        } else {
+          // Fallback if Cloudinary is not available
+          // Use static route path for receipts
+          receiptUrl = `/static/receipts/${req.file.filename}`;
+          receiptPublicId = req.file.filename;
+          console.log('Using local file path:', receiptUrl);
+        }
+      } catch (uploadError) {
+        console.error('Error uploading to Cloudinary:', uploadError);
+        // Fallback to local path
+        if (req.file && req.file.filename) {
+          receiptUrl = `/static/receipts/${req.file.filename}`;
+          receiptPublicId = req.file.filename;
+          console.log('Fallback to local path after error:', receiptUrl);
+        } else {
+          return next(
+            new ErrorResponse('Failed to process receipt upload', 500)
+          );
+        }
+      }
 
       // Create payment record
+      console.log('Creating payment record with:', {
+        dueId,
+        pharmacyId,
+        amount: parseFloat(amount as string),
+        receiptUrl,
+        userId: req.user._id,
+      });
+
       const payment = await Payment.create({
         dueId,
         pharmacyId,
-        amount: parseFloat(amount),
+        amount: parseFloat(amount as string),
         paymentMethod,
         paymentReference,
-        receiptUrl: result.secure_url,
-        receiptPublicId: result.public_id,
+        receiptUrl,
+        receiptPublicId,
         submittedBy: req.user._id,
         approvalStatus: PaymentApprovalStatus.PENDING,
+        paymentDate: new Date(),
       });
+
+      console.log('Payment created successfully:', payment._id);
 
       const populatedPayment = await Payment.findById(payment._id)
         .populate('dueId', 'title amount totalAmount')
@@ -121,8 +186,19 @@ export const submitPayment = asyncHandler(
       });
     } catch (error) {
       console.error('Error submitting payment:', error);
+      // Provide more detailed error information
+      const errorMessage =
+        error instanceof Error
+          ? `${error.name}: ${error.message}`
+          : 'Unknown error processing payment';
+
+      console.error(errorMessage);
+
       return next(
-        new ErrorResponse('Error processing payment submission', 500)
+        new ErrorResponse(
+          `Error processing payment submission: ${errorMessage}`,
+          500
+        )
       );
     }
   }

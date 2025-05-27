@@ -5,6 +5,11 @@ import financialService from '../../services/financial.service';
 import type { Payment } from '../../types/financial.types';
 import type { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
 
+// Enhanced payment interface that extends Payment with a dueInfo property
+interface EnhancedPayment extends Omit<Payment, 'dueInfo'> {
+  dueInfo?: PharmacyDue;
+}
+
 const PharmacyDues: React.FC = () => {
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [dues, setDues] = useState<PharmacyDue[]>([]);
@@ -13,7 +18,7 @@ const PharmacyDues: React.FC = () => {
   const [selectedDue, setSelectedDue] = useState<PharmacyDue | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [paymentData, setPaymentData] = useState({
-    amount: 0,
+    amount: 0.01, // Initialize with a valid minimum amount
     paymentMethod: '',
     paymentReference: '',
     receipt: null as File | null,
@@ -23,7 +28,7 @@ const PharmacyDues: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<EnhancedPayment[]>([]);
   const [showPaymentHistory, setShowPaymentHistory] = useState<boolean>(false);
 
   const fetchPharmacyAndDues = useCallback(async () => {
@@ -64,10 +69,80 @@ const PharmacyDues: React.FC = () => {
 
   const fetchPaymentHistory = async (pharmacyId: string) => {
     try {
-      const history = await financialService.getPharmacyPaymentHistory(
+      const response = await financialService.getPharmacyPaymentHistory(
         pharmacyId
       );
-      setPayments(history || []);
+
+      // Check if we have both payments and dues in the response
+      const payments = response.data || [];
+      const duesFromPaymentHistory = response.dues || [];
+
+      // Set both dues and payments
+      if (duesFromPaymentHistory.length > 0) {
+        // Update the dues state with the data from payment history
+        // This ensures we have the most current dues information with payment status
+        setDues(duesFromPaymentHistory);
+      }
+
+      // Enhance payments with due information if needed
+      const enhancedPayments = await Promise.all(
+        payments.map(async (payment) => {
+          try {
+            // For each payment, get the associated due to show detailed info
+            if (payment.dueId && typeof payment.dueId === 'string') {
+              // Try to find the due in our duesFromPaymentHistory array first
+              const existingDue = duesFromPaymentHistory.find(
+                (due) => due._id === payment.dueId
+              );
+
+              if (existingDue) {
+                return {
+                  ...payment,
+                  dueInfo: existingDue,
+                } as EnhancedPayment;
+              }
+
+              // If not found, fetch it directly
+              const dueInfo = await financialService.getRealDueById(
+                payment.dueId
+              );
+
+              // Convert Due to PharmacyDue - first cast to unknown, then to PharmacyDue
+              // We need to handle the type differences safely
+              const convertedDueInfo = dueInfo
+                ? ({
+                    ...dueInfo,
+                    pharmacyId: payment.pharmacyId, // Use payment's pharmacyId
+                    paymentStatus: 'pending' as const, // Default status
+                    amountPaid: 0,
+                    balance: dueInfo.amount,
+                    penalties: [],
+                    totalAmount: dueInfo.amount,
+                    assignmentType: 'individual' as const,
+                    assignedBy: '',
+                    assignedAt: dueInfo.createdAt || new Date().toISOString(),
+                    year: new Date(dueInfo.dueDate).getFullYear(),
+                    isRecurring: dueInfo.frequency !== 'one-time',
+                  } as unknown as PharmacyDue)
+                : undefined;
+
+              return {
+                ...payment,
+                dueInfo: convertedDueInfo,
+              } as EnhancedPayment;
+            }
+            return payment as EnhancedPayment;
+          } catch (err) {
+            console.error(
+              `Error fetching due info for payment ${payment._id}:`,
+              err
+            );
+            return payment as EnhancedPayment;
+          }
+        })
+      );
+
+      setPayments(enhancedPayments);
     } catch (err) {
       console.error('Failed to load payment history:', err);
     }
@@ -77,6 +152,7 @@ const PharmacyDues: React.FC = () => {
     fetchPharmacyAndDues();
   }, [fetchPharmacyAndDues]);
 
+  // Separate useEffect to handle payment history loading
   useEffect(() => {
     if (pharmacy && showPaymentHistory) {
       fetchPaymentHistory(pharmacy._id);
@@ -84,9 +160,16 @@ const PharmacyDues: React.FC = () => {
   }, [pharmacy, showPaymentHistory]);
 
   const handleDueSelection = (due: PharmacyDue) => {
+    // Don't allow selection of dues with zero balance
+    if (due.balance <= 0) {
+      setError('This due has already been fully paid');
+      return;
+    }
+
     setSelectedDue(due);
     setPaymentData({
-      amount: due.balance,
+      // Ensure the amount is at least 0.01 to avoid validation errors
+      amount: due.balance > 0 ? due.balance : 0.01,
       paymentMethod: '',
       paymentReference: '',
       receipt: null,
@@ -100,11 +183,17 @@ const PharmacyDues: React.FC = () => {
     if (
       !selectedDue ||
       !pharmacy ||
-      !paymentData.amount ||
+      !paymentData.amount || // Always require an amount
       !paymentData.paymentMethod ||
       !paymentData.receipt
     ) {
       setError('Please fill all required payment fields and upload a receipt');
+      return;
+    }
+
+    // Validate payment amount
+    if (paymentData.amount <= 0) {
+      setError('Payment amount must be greater than zero');
       return;
     }
 
@@ -113,8 +202,32 @@ const PharmacyDues: React.FC = () => {
       return;
     }
 
+    // Don't allow submission if balance is 0
+    if (selectedDue.balance === 0) {
+      setError('This due has already been fully paid');
+      return;
+    }
+
     try {
       setSubmittingPayment(true);
+
+      // Verify we have the receipt file
+      if (!paymentData.receipt) {
+        setError('Receipt file is required');
+        setSubmittingPayment(false);
+        return;
+      }
+
+      console.log('Preparing payment submission with data:', {
+        dueId: selectedDue._id,
+        pharmacyId: pharmacy._id,
+        amount: paymentData.amount,
+        paymentMethod: paymentData.paymentMethod,
+        hasReceipt: !!paymentData.receipt,
+        receiptName: paymentData.receipt?.name,
+        receiptType: paymentData.receipt?.type,
+        receiptSize: paymentData.receipt?.size,
+      });
 
       const formData = new FormData();
       formData.append('dueId', selectedDue._id);
@@ -124,9 +237,29 @@ const PharmacyDues: React.FC = () => {
       if (paymentData.paymentReference) {
         formData.append('paymentReference', paymentData.paymentReference);
       }
-      formData.append('receipt', paymentData.receipt);
 
-      await financialService.submitPayment(formData);
+      // Ensure receipt is properly added to FormData
+      if (paymentData.receipt instanceof File) {
+        formData.append(
+          'receipt',
+          paymentData.receipt,
+          paymentData.receipt.name
+        );
+        console.log(
+          'Added receipt file to form data:',
+          paymentData.receipt.name,
+          'Type:',
+          paymentData.receipt.type,
+          'Size:',
+          paymentData.receipt.size
+        );
+      } else {
+        throw new Error('Receipt is not a valid File object');
+      }
+
+      console.log('Submitting payment...');
+      const response = await financialService.submitPayment(formData);
+      console.log('Payment submission successful:', response);
 
       // Refresh dues list
       fetchPharmacyAndDues();
@@ -134,7 +267,7 @@ const PharmacyDues: React.FC = () => {
       // Reset form and close modal
       setSelectedDue(null);
       setPaymentData({
-        amount: 0,
+        amount: 0.01, // Reset to valid minimum amount
         paymentMethod: '',
         paymentReference: '',
         receipt: null,
@@ -147,13 +280,36 @@ const PharmacyDues: React.FC = () => {
         'Payment submitted successfully! It will be reviewed by an administrator.'
       );
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error && 'response' in err && err.response
-          ? (err.response as { data?: { message?: string } })?.data?.message ||
-            'Failed to submit payment'
-          : 'Failed to submit payment';
+      console.error('Payment submission error:', err);
+
+      // Extract the most helpful error message
+      let errorMessage = 'Failed to submit payment';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+
+        // Check for Axios error with response data
+        if ('response' in err && err.response) {
+          const axiosErr = err as any;
+          if (axiosErr.response.data) {
+            if (axiosErr.response.data.error) {
+              errorMessage = axiosErr.response.data.error;
+            } else if (axiosErr.response.data.message) {
+              errorMessage = axiosErr.response.data.message;
+            } else if (typeof axiosErr.response.data === 'string') {
+              errorMessage = axiosErr.response.data;
+            }
+          }
+
+          // Add status code for more context
+          if (axiosErr.response.status) {
+            errorMessage = `${errorMessage} (Status ${axiosErr.response.status})`;
+          }
+        }
+      }
+
       setError(errorMessage);
-      console.error(err);
+      console.error('Payment submission failed:', errorMessage);
     } finally {
       setSubmittingPayment(false);
     }
@@ -197,6 +353,7 @@ const PharmacyDues: React.FC = () => {
             Overdue
           </span>
         );
+      case 'pending':
       default:
         return (
           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
@@ -206,9 +363,24 @@ const PharmacyDues: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      // Format the date as DD/MM/YYYY
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -491,12 +663,19 @@ const PharmacyDues: React.FC = () => {
                     <input
                       type="number"
                       value={paymentData.amount}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        // Ensure value is at least 0.01 and at most the due balance
+                        const value = Number(e.target.value);
+                        const validValue = Math.min(
+                          Math.max(value, 0.01),
+                          selectedDue.balance
+                        );
+
                         setPaymentData((prev) => ({
                           ...prev,
-                          amount: Number(e.target.value),
-                        }))
-                      }
+                          amount: validValue,
+                        }));
+                      }}
                       max={selectedDue.balance}
                       min="0.01"
                       step="0.01"
@@ -504,9 +683,22 @@ const PharmacyDues: React.FC = () => {
                       className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="0.00"
                     />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Maximum: {formatCurrency(selectedDue.balance)}
-                    </p>
+                    <div className="mt-1 flex flex-col">
+                      <p className="text-xs text-gray-500">
+                        Minimum: ₦0.01 | Maximum:{' '}
+                        {formatCurrency(selectedDue.balance)}
+                      </p>
+                      {paymentData.amount <= 0 && (
+                        <p className="text-xs text-red-500">
+                          Payment amount must be greater than zero
+                        </p>
+                      )}
+                      {paymentData.amount > selectedDue.balance && (
+                        <p className="text-xs text-red-500">
+                          Payment cannot exceed the outstanding balance
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -618,7 +810,9 @@ const PharmacyDues: React.FC = () => {
             </h2>
           </div>
 
-          {payments.length === 0 ? (
+          {/* Combine dues with no payment and actual payments */}
+          {payments.length === 0 &&
+          dues.filter((d) => d.paymentStatus !== 'paid').length === 0 ? (
             <div className="p-6 text-center">
               <i className="fas fa-history text-gray-400 text-5xl mb-4"></i>
               <h3 className="text-lg font-medium text-gray-900 mb-1">
@@ -654,51 +848,131 @@ const PharmacyDues: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {payments.map((payment) => (
-                    <tr key={payment._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(payment.paymentDate)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {/* Use Due ID instead of title since Payment type doesn't have a title property */}
-                        {payment.dueId}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatCurrency(payment.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
-                        {/* Payment from financial.types doesn't have paymentMethod property */}
-                        Unknown
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {payment.status === 'approved' ? (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Approved
-                          </span>
-                        ) : payment.status === 'rejected' ? (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            Rejected
-                          </span>
-                        ) : (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {payment.receiptUrl && (
-                          <a
-                            href={`${process.env.REACT_APP_API_URL}${payment.receiptUrl}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-900"
+                  {/* Show all dues as pending if no payment exists for them */}
+                  {(dues || [])
+                    .filter((due) => {
+                      // Only show dues that are not fully paid and have no payment record in payments
+                      const hasPayment = payments.some((p) =>
+                        typeof p.dueId === 'string'
+                          ? p.dueId === due._id
+                          : (p.dueId as { _id: string })?._id === due._id
+                      );
+                      return !hasPayment && due.paymentStatus !== 'paid';
+                    })
+                    .map((due) => (
+                      <tr
+                        key={due._id + '-pending'}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDate(due.dueDate)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {due.title ||
+                            (due.dueTypeId &&
+                              typeof due.dueTypeId === 'object' &&
+                              (due.dueTypeId as { name?: string })?.name) ||
+                            'Unknown Due'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {formatCurrency(due.totalAmount)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                          -
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(due.paymentStatus)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => handleDueSelection(due)}
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
                           >
-                            View Receipt
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                            Make Payment
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  {/* Show actual payment records */}
+                  {payments.map((payment) => {
+                    // Extract due info from either enhanced payment or direct dueId
+                    const dueInfo =
+                      payment.dueInfo ||
+                      (typeof payment.dueId === 'object'
+                        ? (payment.dueId as PharmacyDue)
+                        : null);
+                    return (
+                      <tr key={payment._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {payment.paymentDate
+                            ? formatDate(payment.paymentDate)
+                            : formatDate(payment.createdAt) || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {dueInfo?.title ||
+                            (dueInfo?.dueTypeId &&
+                              typeof dueInfo.dueTypeId === 'object' &&
+                              (dueInfo.dueTypeId as { name?: string })?.name) ||
+                            'Unknown Due'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {formatCurrency(payment.amount)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                          {payment.paymentMethod ||
+                            payment.paymentReference ||
+                            'Bank Transfer'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {payment.status === 'approved' ? (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              Approved
+                            </span>
+                          ) : payment.status === 'rejected' ? (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                              Rejected
+                            </span>
+                          ) : (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {payment.receiptUrl && (
+                            <a
+                              href={
+                                payment.receiptUrl.startsWith('http')
+                                  ? payment.receiptUrl
+                                  : `${process.env.REACT_APP_API_URL || ''}${
+                                      payment.receiptUrl
+                                    }`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-600 hover:text-indigo-900 mr-3"
+                            >
+                              View Receipt
+                            </a>
+                          )}
+                          {payment.status === 'approved' && dueInfo && (
+                            <button
+                              onClick={() =>
+                                downloadClearanceCertificate(
+                                  typeof payment.dueId === 'string'
+                                    ? payment.dueId
+                                    : (payment.dueId as { _id: string })?._id
+                                )
+                              }
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Certificate
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

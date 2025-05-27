@@ -106,7 +106,10 @@ const dueSchema = new Schema<IDue>(
     balance: {
       type: Number,
       default: function (this: IDue) {
-        return this.totalAmount - this.amountPaid;
+        // Ensure totalAmount and amountPaid are numbers before subtraction
+        const totalAmount = Number(this.totalAmount) || 0;
+        const amountPaid = Number(this.amountPaid) || 0;
+        return totalAmount - amountPaid;
       },
     },
     penalties: [penaltySchema],
@@ -116,7 +119,9 @@ const dueSchema = new Schema<IDue>(
         const penaltyAmount =
           this.penalties?.reduce((sum, penalty) => sum + penalty.amount, 0) ||
           0;
-        return this.amount + penaltyAmount;
+        // Ensure this.amount is a number
+        const amount = Number(this.amount) || 0;
+        return amount + penaltyAmount;
       },
     },
     assignmentType: {
@@ -152,10 +157,13 @@ const dueSchema = new Schema<IDue>(
 
 // Pre-save middleware to calculate totalAmount and balance
 dueSchema.pre('save', function (this: IDue) {
+  const currentAmount = Number(this.amount) || 0; // Ensure amount is a number
   const penaltyAmount =
     this.penalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0;
-  this.totalAmount = this.amount + penaltyAmount;
-  this.balance = this.totalAmount - this.amountPaid;
+  this.totalAmount = currentAmount + penaltyAmount;
+
+  const currentAmountPaid = Number(this.amountPaid) || 0; // Ensure amountPaid is a number
+  this.balance = this.totalAmount - currentAmountPaid;
 
   // Update payment status based on payment
   if (this.amountPaid === 0) {
@@ -168,7 +176,8 @@ dueSchema.pre('save', function (this: IDue) {
 });
 
 // Index for faster queries
-dueSchema.index({ pharmacyId: 1, year: 1 });
+dueSchema.index({ pharmacyId: 1, dueTypeId: 1, year: 1 }, { unique: true }); // Updated to include dueTypeId in the unique index
+dueSchema.index({ pharmacyId: 1, year: 1 }); // Keep this as a non-unique index for queries
 dueSchema.index({ dueTypeId: 1 });
 dueSchema.index({ paymentStatus: 1 });
 dueSchema.index({ dueDate: 1 });

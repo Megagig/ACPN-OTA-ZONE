@@ -57,6 +57,11 @@ export const createDueType = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     req.body.createdBy = req.user._id;
 
+    // Ensure defaultAmount is a number
+    if (req.body.defaultAmount) {
+      req.body.defaultAmount = Number(req.body.defaultAmount);
+    }
+
     const dueType = await DueType.create(req.body);
 
     res.status(201).json({
@@ -77,6 +82,11 @@ export const updateDueType = asyncHandler(
       return next(
         new ErrorResponse(`Due type not found with id of ${req.params.id}`, 404)
       );
+    }
+
+    // Ensure defaultAmount is a number
+    if (req.body.defaultAmount) {
+      req.body.defaultAmount = Number(req.body.defaultAmount);
     }
 
     dueType = await DueType.findByIdAndUpdate(req.params.id, req.body, {

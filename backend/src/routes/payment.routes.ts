@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import {
   protect as authenticateToken,
   authorize as requireRole,
@@ -22,7 +23,13 @@ const router = express.Router();
 // Configure multer for receipt uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/receipts/');
+    // Use absolute path for better reliability
+    const uploadPath = path.join(__dirname, '../../uploads/receipts');
+    // Ensure directory exists
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -62,12 +69,57 @@ const requireAdminRole = requireRole(
 );
 
 // Payment submission routes (for pharmacy owners and admins)
-router.post(
-  '/submit',
-  authenticateToken,
-  upload.single('receipt'),
-  submitPayment
-);
+// Create a middleware to handle upload errors
+const handleUploadErrors = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  upload.single('receipt')(req, res, (err) => {
+    if (err) {
+      console.error('File upload error:', err);
+
+      // Provide more detailed error information
+      let errorMessage = 'Error uploading file';
+      let errorDetails = {};
+
+      if (err instanceof multer.MulterError) {
+        // A Multer error occurred
+        errorMessage = `Multer error: ${err.code}`;
+        errorDetails = { code: err.code, field: err.field };
+      } else if (err instanceof Error) {
+        // A general error occurred
+        errorMessage = err.message;
+        errorDetails = {
+          name: err.name,
+          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        };
+      }
+
+      return res.status(400).json({
+        success: false,
+        error: errorMessage,
+        details: errorDetails,
+      });
+    }
+
+    // Log successful upload
+    if (req.file) {
+      console.log('File uploaded successfully:', {
+        filename: req.file.filename,
+        path: req.file.path,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      });
+    } else {
+      console.warn('No file uploaded but no error reported');
+    }
+
+    next();
+  });
+};
+
+router.post('/submit', authenticateToken, handleUploadErrors, submitPayment);
 
 // Payment viewing routes
 router.get('/due/:dueId', authenticateToken, getDuePayments);

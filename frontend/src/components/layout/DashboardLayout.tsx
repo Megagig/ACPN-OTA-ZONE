@@ -127,6 +127,39 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 ))}
               </nav>
             </div>
+
+            {/* Utilities Section */}
+            {['admin', 'superadmin'].includes(user?.role) && (
+              <div className="py-4">
+                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  UTILITIES
+                </p>
+                <nav className="mt-2 space-y-1">
+                  <Link
+                    to="/test-api"
+                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      location.pathname === '/test-api'
+                        ? 'bg-indigo-50 text-indigo-600'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <i className="fas fa-network-wired mr-3 text-gray-400"></i>
+                    API Connection Test
+                  </Link>
+                  <Link
+                    to="/component-preview"
+                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      location.pathname === '/component-preview'
+                        ? 'bg-indigo-50 text-indigo-600'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <i className="fas fa-palette mr-3 text-gray-400"></i>
+                    Component Preview
+                  </Link>
+                </nav>
+              </div>
+            )}
           </div>
 
           {/* User Profile Section */}

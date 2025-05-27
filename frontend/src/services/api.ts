@@ -1,12 +1,15 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Using relative URL for the API to work with Vite's proxy
+const API_URL = '/api';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Adding timeout and better error handling
+  timeout: 15000,
 });
 
 // Request interceptor for adding auth token
@@ -31,7 +34,18 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 Unauthorized and we have a refresh token
+    // Network or connection error handling
+    if (!error.response) {
+      console.error('Network Error: Could not connect to the server');
+      // You can add custom handling for network errors here
+      return Promise.reject({
+        ...error,
+        message:
+          'Network Error: Could not connect to the server. Please check your connection and try again.',
+      });
+    }
+
+    // Handle 401 Unauthorized errors with token refresh
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 

@@ -89,7 +89,11 @@ const DueAssignment: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       [name]:
-        type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+        type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : name === 'amount' // Specifically check for the amount field
+          ? parseFloat(value) || 0 // Parse to float, fallback to 0 if NaN
+          : value,
     }));
   };
 
@@ -139,6 +143,50 @@ const DueAssignment: React.FC = () => {
   );
 
   const selectedDueType = dueTypes.find((dt) => dt._id === formData.dueTypeId);
+
+  // Effect to update amount when dueType changes
+  useEffect(() => {
+    if (selectedDueType) {
+      const newDefaultAmountFromSelectedType =
+        Number(selectedDueType.defaultAmount) || 0;
+      setFormData((prev) => {
+        const isPrevAmountZero = prev.amount === 0;
+        const doesPrevAmountMatchAnyDefault = dueTypes.some(
+          // Compare prev.amount (number) with dt.defaultAmount (number | undefined)
+          // A dueType's defaultAmount might be undefined, in which case it won't match a numeric prev.amount unless prev.amount is also NaN (which it shouldn't be).
+          // If dt.defaultAmount is a number, it's a direct comparison.
+          (dt) => dt.defaultAmount === prev.amount
+        );
+
+        // If current amount is 0, or it matches any known default amount (meaning it was likely auto-set),
+        // then update it to the default of the newly selected type.
+        if (isPrevAmountZero || doesPrevAmountMatchAnyDefault) {
+          // Only update if the amount actually needs to change, to prevent unnecessary re-renders.
+          if (prev.amount !== newDefaultAmountFromSelectedType) {
+            return { ...prev, amount: newDefaultAmountFromSelectedType };
+          }
+        }
+        // If the amount was manually entered by the user (i.e., it's not 0 and not a known default),
+        // do not change it.
+        return prev;
+      });
+    } else {
+      // This block executes if no due type is selected (e.g., user clears the selection).
+      setFormData((prev) => {
+        // Check if the current amount was a default from a previously selected type.
+        const isPrevAmountADefault =
+          prev.amount !== 0 && // Ensure it's not already zero
+          dueTypes.some((dt) => dt.defaultAmount === prev.amount); // And it matches a known default
+
+        if (isPrevAmountADefault) {
+          // If so, reset the amount to 0, as there's no longer a selected due type to define it.
+          return { ...prev, amount: 0 };
+        }
+        // Otherwise (e.g., it was 0 already, or a custom user-entered amount), leave it as is.
+        return prev;
+      });
+    }
+  }, [selectedDueType, dueTypes]); // Dependencies: effect runs if selectedDueType or dueTypes change.
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -236,9 +284,7 @@ const DueAssignment: React.FC = () => {
                 <input
                   type="number"
                   name="amount"
-                  value={
-                    formData.amount || selectedDueType?.defaultAmount || ''
-                  }
+                  value={formData.amount} // formData.amount is now managed as a number
                   onChange={handleInputChange}
                   min="0"
                   step="0.01"

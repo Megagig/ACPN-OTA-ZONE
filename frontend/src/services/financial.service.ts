@@ -14,6 +14,7 @@ import type {
   ClearanceEligibility,
   CertificateData,
 } from '../types/financial.types';
+import type { PharmacyDue } from '../types/pharmacy.types';
 import type { DueType, Pharmacy } from '../types/pharmacy.types';
 import mockFinancialService from './mockData.service';
 
@@ -324,13 +325,20 @@ export const getOverdueDues = async (
   return response.data;
 };
 
+export interface PaymentHistoryResponse {
+  success: boolean;
+  count: number;
+  data: Payment[];
+  dues: PharmacyDue[];
+}
+
 export const getPharmacyPaymentHistory = async (
   pharmacyId: string
-): Promise<Payment[]> => {
+): Promise<PaymentHistoryResponse> => {
   const response = await api.get(
     `${BASE_URL}/dues/pharmacy/${pharmacyId}/history`
   );
-  return response.data.data;
+  return response.data;
 };
 
 // Payment Management API
@@ -455,96 +463,20 @@ export const recordCertificateGeneration = async (
 };
 
 export const getAllPharmacies = async (): Promise<Pharmacy[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  const mockPharmacies: Pharmacy[] = [
-    {
-      _id: '1',
-      name: 'HealthCare Plus Pharmacy',
-      email: 'info@healthcareplus.com',
-      phone: '+234-801-234-5678',
-      yearEstablished: 2020,
-      address: '123 Lagos Street',
-      landmark: 'Near City Mall',
-      townArea: 'Ikeja',
-      pcnLicense: 'PCN-2023-001',
-      licenseExpiryDate: '2025-12-31',
-      numberOfStaff: 15,
-      superintendentName: 'Dr. John Doe',
-      superintendentLicenseNumber: 'RPH-001',
-      superintendentPhone: '+234-801-111-1111',
-      directorName: 'Jane Smith',
-      directorPhone: '+234-801-222-2222',
-      operatingHours: '8:00 AM - 9:00 PM',
-      websiteUrl: 'https://healthcareplus.com',
-      servicesOffered: ['Prescription', 'Consultation', 'Health Screening'],
-      registrationNumber: 'ACPN-2023-001',
-      registrationStatus: 'active',
-      registrationDate: '2023-01-15',
-      superintendentPhoto: 'https://example.com/photo1.jpg',
-      directorPhoto: 'https://example.com/photo2.jpg',
-      createdAt: '2023-01-15T00:00:00.000Z',
-      updatedAt: '2023-01-15T00:00:00.000Z',
-    },
-    {
-      _id: '2',
-      name: 'MediCare Pharmacy',
-      email: 'info@medicare.com',
-      phone: '+234-801-987-6543',
-      yearEstablished: 2018,
-      address: '456 Abuja Road',
-      landmark: 'Opposite Central Market',
-      townArea: 'Wuse',
-      pcnLicense: 'PCN-2023-002',
-      licenseExpiryDate: '2025-12-31',
-      numberOfStaff: 12,
-      superintendentName: 'Dr. Mary Johnson',
-      superintendentLicenseNumber: 'RPH-002',
-      superintendentPhone: '+234-801-333-3333',
-      directorName: 'Peter Williams',
-      directorPhone: '+234-801-444-4444',
-      operatingHours: '8:00 AM - 8:00 PM',
-      websiteUrl: 'https://medicare.com',
-      servicesOffered: ['Prescription', 'Lab Tests'],
-      registrationNumber: 'ACPN-2023-002',
-      registrationStatus: 'active',
-      registrationDate: '2023-02-20',
-      superintendentPhoto: 'https://example.com/photo3.jpg',
-      directorPhoto: 'https://example.com/photo4.jpg',
-      createdAt: '2023-02-20T00:00:00.000Z',
-      updatedAt: '2023-02-20T00:00:00.000Z',
-    },
-    {
-      _id: '3',
-      name: 'LifeCare Pharmacy',
-      email: 'info@lifecare.com',
-      phone: '+234-801-555-5555',
-      yearEstablished: 2021,
-      address: '789 Port Harcourt Street',
-      landmark: 'Near University Campus',
-      townArea: 'Choba',
-      pcnLicense: 'PCN-2023-003',
-      licenseExpiryDate: '2025-12-31',
-      numberOfStaff: 8,
-      superintendentName: 'Dr. Emmanuel Okafor',
-      superintendentLicenseNumber: 'RPH-003',
-      superintendentPhone: '+234-801-666-6666',
-      directorName: 'Grace Okoli',
-      directorPhone: '+234-801-777-7777',
-      operatingHours: '8:00 AM - 10:00 PM',
-      websiteUrl: 'https://lifecare.com',
-      servicesOffered: ['Prescription', 'Consultation', 'Home Delivery'],
-      registrationNumber: 'ACPN-2023-003',
-      registrationStatus: 'pending',
-      registrationDate: '2023-03-10',
-      superintendentPhoto: 'https://example.com/photo5.jpg',
-      directorPhoto: 'https://example.com/photo6.jpg',
-      createdAt: '2023-03-10T00:00:00.000Z',
-      updatedAt: '2023-03-10T00:00:00.000Z',
-    },
-  ];
-
-  return mockPharmacies;
+  try {
+    const response = await api.get(`${BASE_URL}/pharmacies`, {
+      params: {
+        registrationStatus: 'active',
+        limit: 1000, // Fetch a large number of pharmacies, assuming no more than 1000 active
+      },
+    });
+    // The backend returns pharmacies under response.data.data.pharmacies
+    return response.data.data.pharmacies;
+  } catch (error) {
+    console.error('Error fetching pharmacies:', error);
+    // It's good practice to throw the error so the calling component can handle it
+    throw error;
+  }
 };
 
 // Real API calls for existing dues
@@ -563,7 +495,16 @@ export const getRealDues = async (params?: {
     pages: number;
   };
 }> => {
-  const response = await api.get(`${BASE_URL}/dues`, { params });
+  // Add populate parameter to ensure due type information is included
+  const enhancedParams = {
+    ...params,
+    // Request the backend to populate dueTypeId field
+    populate: 'dueTypeId',
+  };
+
+  const response = await api.get(`${BASE_URL}/dues`, {
+    params: enhancedParams,
+  });
   return response.data;
 };
 

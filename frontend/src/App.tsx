@@ -90,6 +90,9 @@ import PharmacyProfile from './pages/dashboard/PharmacyProfile';
 import PharmacyForm from './pages/dashboard/PharmacyForm';
 import PharmacyDues from './pages/dashboard/PharmacyDues';
 
+// Test Components
+// import TestApiConnection from './components/TestApiConnection';
+
 import ComponentPreview from './pages/dashboard/ComponentPreview';
 
 // Public Pages
@@ -377,6 +380,9 @@ function App() {
 
               {/* Component Preview */}
               <Route path="/component-preview" element={<ComponentPreview />} />
+
+              {/* API Connection Test */}
+              {/* <Route path="/test-api" element={<TestApiConnection />} /> */}
             </Route>
           </Route>
 

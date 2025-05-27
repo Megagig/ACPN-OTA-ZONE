@@ -84,10 +84,21 @@ const DueTypesManagement: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
+
+    // Special handling for different types of inputs
+    let processedValue;
+    if (type === 'checkbox') {
+      processedValue = (e.target as HTMLInputElement).checked;
+    } else if (type === 'number') {
+      // Convert number input values to actual numbers
+      processedValue = value === '' ? '' : Number(value);
+    } else {
+      processedValue = value;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      [name]: processedValue,
     }));
   };
 
@@ -140,7 +151,15 @@ const DueTypesManagement: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number): string => {
+  const formatCurrency = (amount: number | undefined): string => {
+    // Check if amount is undefined, null, NaN, or non-numeric
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+      }).format(0);
+    }
+
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
@@ -250,7 +269,11 @@ const DueTypesManagement: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500">Default Amount:</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {formatCurrency(dueType.defaultAmount)}
+                    {formatCurrency(
+                      typeof dueType.defaultAmount === 'number'
+                        ? dueType.defaultAmount
+                        : 0
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">

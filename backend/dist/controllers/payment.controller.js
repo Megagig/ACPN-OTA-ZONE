@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getDuePayments = exports.submitPayment = void 0;
+exports.deletePayment = exports.reviewPayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getAllPayments = exports.getDuePayments = exports.submitPayment = void 0;
 const payment_model_1 = __importStar(require("../models/payment.model"));
 const due_model_1 = __importDefault(require("../models/due.model"));
 const pharmacy_model_1 = __importDefault(require("../models/pharmacy.model"));
@@ -53,11 +53,13 @@ const async_middleware_1 = __importDefault(require("../middleware/async.middlewa
 const errorResponse_1 = __importDefault(require("../utils/errorResponse"));
 const cloudinary_1 = require("../config/cloudinary");
 // @desc    Submit payment for a due
-// @route   POST /api/pharmacies/:pharmacyId/dues/:dueId/payments
-// @access  Private/Pharmacy Owner
+// @route   POST /api/payments/submit
+// @access  Private
 exports.submitPayment = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { pharmacyId, dueId } = req.params;
-    const { amount, paymentMethod, paymentReference } = req.body;
+    const { dueId, pharmacyId, amount, paymentMethod, paymentReference } = req.body;
+    if (!dueId || !pharmacyId || !amount) {
+        return next(new errorResponse_1.default('Missing required fields for payment submission', 400));
+    }
     // Check if pharmacy exists and user owns it
     const pharmacy = yield pharmacy_model_1.default.findById(pharmacyId);
     if (!pharmacy) {
@@ -79,19 +81,17 @@ exports.submitPayment = (0, async_middleware_1.default)((req, res, next) => __aw
         return next(new errorResponse_1.default('Due does not belong to this pharmacy', 400));
     }
     // Validate payment amount
-    if (amount <= 0) {
+    const parsedAmount = parseFloat(amount);
+    if (parsedAmount <= 0) {
         return next(new errorResponse_1.default('Payment amount must be greater than 0', 400));
     }
-    if (amount > due.balance) {
-        return next(new errorResponse_1.default(`Payment amount (${amount}) exceeds outstanding balance (${due.balance})`, 400));
+    if (parsedAmount > due.balance) {
+        return next(new errorResponse_1.default(`Payment amount (${parsedAmount}) exceeds outstanding balance (${due.balance})`, 400));
     }
-    // Handle receipt upload
-    if (!req.files || !req.files.receipt) {
+    // Handle receipt upload with multer (req.file instead of req.files)
+    if (!req.file) {
         return next(new errorResponse_1.default('Receipt upload is required', 400));
     }
-    const receiptFile = Array.isArray(req.files.receipt)
-        ? req.files.receipt[0]
-        : req.files.receipt;
     // Validate file type
     const allowedTypes = [
         'image/jpeg',
@@ -99,24 +99,80 @@ exports.submitPayment = (0, async_middleware_1.default)((req, res, next) => __aw
         'image/png',
         'application/pdf',
     ];
-    if (!allowedTypes.includes(receiptFile.mimetype)) {
+    if (!allowedTypes.includes(req.file.mimetype)) {
         return next(new errorResponse_1.default('Please upload a valid receipt file (JPEG, JPG, PNG, or PDF)', 400));
     }
     try {
-        // Upload receipt to cloudinary
-        const result = yield (0, cloudinary_1.uploadToCloudinary)(receiptFile.tempFilePath, 'payment-receipts');
+        console.log('Processing payment submission:', {
+            dueId,
+            pharmacyId,
+            amount,
+            paymentMethod,
+        });
+        console.log('File information:', req.file);
+        // For multer uploads, use req.file.path
+        let receiptUrl, receiptPublicId;
+        try {
+            if (!req.file) {
+                console.error('Missing file in request');
+                return next(new errorResponse_1.default('Receipt file is missing or invalid', 400));
+            }
+            console.log('Complete file object:', JSON.stringify(req.file, null, 2));
+            // Make sure we have a valid path - Multer may use different properties
+            const filePath = req.file.path ||
+                req.file.destination + '/' + req.file.filename;
+            // Upload to Cloudinary if available
+            if (typeof cloudinary_1.uploadToCloudinary === 'function') {
+                console.log('Uploading to Cloudinary:', filePath);
+                const result = yield (0, cloudinary_1.uploadToCloudinary)(filePath, 'payment-receipts');
+                receiptUrl = result.secure_url;
+                receiptPublicId = result.public_id;
+                console.log('Cloudinary upload successful:', {
+                    receiptUrl,
+                    receiptPublicId,
+                });
+            }
+            else {
+                // Fallback if Cloudinary is not available
+                // Use static route path for receipts
+                receiptUrl = `/static/receipts/${req.file.filename}`;
+                receiptPublicId = req.file.filename;
+                console.log('Using local file path:', receiptUrl);
+            }
+        }
+        catch (uploadError) {
+            console.error('Error uploading to Cloudinary:', uploadError);
+            // Fallback to local path
+            if (req.file && req.file.filename) {
+                receiptUrl = `/static/receipts/${req.file.filename}`;
+                receiptPublicId = req.file.filename;
+                console.log('Fallback to local path after error:', receiptUrl);
+            }
+            else {
+                return next(new errorResponse_1.default('Failed to process receipt upload', 500));
+            }
+        }
         // Create payment record
+        console.log('Creating payment record with:', {
+            dueId,
+            pharmacyId,
+            amount: parseFloat(amount),
+            receiptUrl,
+            userId: req.user._id,
+        });
         const payment = yield payment_model_1.default.create({
             dueId,
             pharmacyId,
             amount: parseFloat(amount),
             paymentMethod,
             paymentReference,
-            receiptUrl: result.secure_url,
-            receiptPublicId: result.public_id,
+            receiptUrl,
+            receiptPublicId,
             submittedBy: req.user._id,
             approvalStatus: payment_model_1.PaymentApprovalStatus.PENDING,
+            paymentDate: new Date(),
         });
+        console.log('Payment created successfully:', payment._id);
         const populatedPayment = yield payment_model_1.default.findById(payment._id)
             .populate('dueId', 'title amount totalAmount')
             .populate('pharmacyId', 'name registrationNumber')
@@ -128,7 +184,12 @@ exports.submitPayment = (0, async_middleware_1.default)((req, res, next) => __aw
     }
     catch (error) {
         console.error('Error submitting payment:', error);
-        return next(new errorResponse_1.default('Error processing payment submission', 500));
+        // Provide more detailed error information
+        const errorMessage = error instanceof Error
+            ? `${error.name}: ${error.message}`
+            : 'Unknown error processing payment';
+        console.error(errorMessage);
+        return next(new errorResponse_1.default(`Error processing payment submission: ${errorMessage}`, 500));
     }
 }));
 // @desc    Get payments for a due
@@ -156,6 +217,46 @@ exports.getDuePayments = (0, async_middleware_1.default)((req, res, next) => __a
         success: true,
         count: payments.length,
         data: payments,
+    });
+}));
+// @desc    Get all payments with filters for admin
+// @route   GET /api/payments/admin/all
+// @access  Private/Admin/Financial Secretary/Treasurer
+exports.getAllPayments = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const status = req.query.status;
+    let filter = {};
+    if (status && status !== 'all') {
+        filter.approvalStatus = status;
+    }
+    const payments = yield payment_model_1.default.find(filter)
+        .populate({
+        path: 'dueId',
+        select: 'title amount totalAmount dueDate',
+        populate: {
+            path: 'dueTypeId',
+            select: 'name',
+        },
+    })
+        .populate('pharmacyId', 'name registrationNumber')
+        .populate('submittedBy', 'firstName lastName email')
+        .populate('approvedBy', 'firstName lastName email')
+        .sort({ submittedAt: -1 })
+        .skip(startIndex)
+        .limit(limit);
+    const total = yield payment_model_1.default.countDocuments(filter);
+    res.status(200).json({
+        success: true,
+        count: payments.length,
+        data: payments,
+        pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+        },
     });
 }));
 // @desc    Get all pending payments for admin review
@@ -248,6 +349,54 @@ exports.rejectPayment = (0, async_middleware_1.default)((req, res, next) => __aw
     payment.approvedBy = req.user._id;
     payment.approvedAt = new Date();
     payment.rejectionReason = rejectionReason;
+    yield payment.save();
+    const populatedPayment = yield payment_model_1.default.findById(payment._id)
+        .populate('dueId', 'title amount totalAmount')
+        .populate('pharmacyId', 'name registrationNumber')
+        .populate('submittedBy', 'firstName lastName email')
+        .populate('approvedBy', 'firstName lastName email');
+    res.status(200).json({
+        success: true,
+        data: populatedPayment,
+    });
+}));
+// @desc    Review payment (approve or reject)
+// @route   POST /api/payments/:id/review
+// @access  Private/Admin/Financial Secretary/Treasurer
+exports.reviewPayment = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { status, rejectionReason } = req.body;
+    const paymentId = req.params.id;
+    if (!['approved', 'rejected'].includes(status)) {
+        return next(new errorResponse_1.default('Status must be either approved or rejected', 400));
+    }
+    if (status === 'rejected' && !rejectionReason) {
+        return next(new errorResponse_1.default('Rejection reason is required when rejecting payment', 400));
+    }
+    const payment = yield payment_model_1.default.findById(paymentId);
+    if (!payment) {
+        return next(new errorResponse_1.default(`Payment not found with id of ${paymentId}`, 404));
+    }
+    if (payment.approvalStatus !== payment_model_1.PaymentApprovalStatus.PENDING) {
+        return next(new errorResponse_1.default('Payment has already been reviewed', 400));
+    }
+    // Update payment status
+    if (status === 'approved') {
+        payment.approvalStatus = payment_model_1.PaymentApprovalStatus.APPROVED;
+        payment.approvedBy = req.user._id;
+        payment.approvedAt = new Date();
+        // Update the due with the payment
+        const due = yield due_model_1.default.findById(payment.dueId);
+        if (due) {
+            due.amountPaid += payment.amount;
+            yield due.save();
+        }
+    }
+    else {
+        payment.approvalStatus = payment_model_1.PaymentApprovalStatus.REJECTED;
+        payment.rejectionReason = rejectionReason;
+        payment.approvedBy = req.user._id;
+        payment.approvedAt = new Date();
+    }
     yield payment.save();
     const populatedPayment = yield payment_model_1.default.findById(payment._id)
         .populate('dueId', 'title amount totalAmount')

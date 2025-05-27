@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Due, { PaymentStatus } from '../models/due.model';
 import Pharmacy from '../models/pharmacy.model';
+import Payment from '../models/payment.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
 
@@ -27,15 +28,28 @@ export const getAllDues = asyncHandler(
       query.year = parseInt(req.query.year as string);
     }
 
-    const dues = await Due.find(query)
-      .populate({
-        path: 'pharmacyId',
-        select: 'name registrationNumber location',
-        populate: {
-          path: 'userId',
-          select: 'firstName lastName email phone',
-        },
-      })
+    // Check if populate query param is present
+    const populateFields = req.query.populate
+      ? String(req.query.populate).split(',')
+      : [];
+
+    // Build the base query
+    let dueQuery = Due.find(query).populate({
+      path: 'pharmacyId',
+      select: 'name registrationNumber location',
+      populate: {
+        path: 'userId',
+        select: 'firstName lastName email phone',
+      },
+    });
+
+    // Add dueTypeId population if requested
+    if (populateFields.includes('dueTypeId') || req.query.populate === 'true') {
+      dueQuery = dueQuery.populate('dueTypeId');
+    }
+
+    // Apply pagination and sorting
+    const dues = await dueQuery
       .skip(startIndex)
       .limit(limit)
       .sort({ dueDate: -1 });
@@ -88,9 +102,23 @@ export const getPharmacyDues = asyncHandler(
       );
     }
 
-    const dues = await Due.find({ pharmacyId: req.params.pharmacyId }).sort({
-      year: -1,
-    });
+    // Check if populate query param is present
+    const populateFields = req.query.populate
+      ? String(req.query.populate).split(',')
+      : [];
+
+    // Build query
+    let query = Due.find({ pharmacyId: req.params.pharmacyId });
+
+    // Apply population if requested
+    if (populateFields.includes('dueTypeId') || req.query.populate === 'true') {
+      query = query.populate('dueTypeId');
+    }
+
+    // Sort by year in descending order
+    query = query.sort({ year: -1 });
+
+    const dues = await query;
 
     res.status(200).json({
       success: true,
@@ -105,10 +133,12 @@ export const getPharmacyDues = asyncHandler(
 // @access  Private
 export const getDue = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const due = await Due.findById(req.params.id).populate({
-      path: 'pharmacyId',
-      select: 'name registrationNumber userId',
-    });
+    const due = await Due.findById(req.params.id)
+      .populate({
+        path: 'pharmacyId',
+        select: 'name registrationNumber userId',
+      })
+      .populate('dueTypeId');
 
     if (!due) {
       return next(
@@ -508,27 +538,86 @@ export const bulkAssignDues = asyncHandler(
     }
 
     const dues = [];
-    const currentYear = new Date().getFullYear();
+    const dueYear = new Date(dueDate).getFullYear();
+    const failedAssignments = [];
 
     for (const pharmacyId of pharmacyIds) {
-      const due = await Due.create({
-        pharmacyId,
-        dueTypeId,
-        title: `Bulk Assigned Due - ${currentYear}`,
-        description,
-        amount,
-        dueDate: new Date(dueDate),
-        assignmentType: 'bulk',
-        assignedBy: req.user._id,
-        year: currentYear,
-      });
-      dues.push(due);
+      try {
+        // Check if pharmacy exists
+        const pharmacy = await Pharmacy.findById(pharmacyId);
+        if (!pharmacy) {
+          failedAssignments.push({
+            pharmacyId,
+            error: 'Pharmacy not found',
+          });
+          continue;
+        }
+
+        try {
+          // FIX FOR E11000 DUPLICATE KEY ERROR:
+          // Like in the assignDueToPharmacy method, we're using findOneAndUpdate with upsert
+          // to avoid race conditions that could lead to duplicate key errors when multiple
+          // dues are being assigned at the same time. This is particularly important in
+          // bulk operations where concurrent requests are more likely.
+          //
+          // The atomic operation ensures we either update an existing due or create a new one
+          // without the possibility of trying to create duplicates.
+          const updateData = {
+            title: `Bulk Assigned Due - ${dueYear}`,
+            description: description || '',
+            amount: amount,
+            dueDate: new Date(dueDate),
+            assignmentType: 'bulk',
+            assignedBy: req.user._id,
+            year: dueYear,
+          };
+
+          const due = await Due.findOneAndUpdate(
+            {
+              pharmacyId,
+              dueTypeId,
+              year: dueYear,
+            },
+            updateData,
+            {
+              new: true,
+              upsert: true,
+              runValidators: true,
+              setDefaultsOnInsert: true,
+            }
+          );
+
+          dues.push(due);
+        } catch (error: any) {
+          // Track pharmacies that failed to be assigned due to database errors
+          if (error.code === 11000) {
+            failedAssignments.push({
+              pharmacyId,
+              error: `A due with the same due type already exists for this pharmacy for ${dueYear}`,
+            });
+            continue;
+          }
+
+          failedAssignments.push({
+            pharmacyId,
+            error: error.message || 'Failed to assign due',
+          });
+        }
+      } catch (error: any) {
+        // Track pharmacies that failed to be assigned
+        failedAssignments.push({
+          pharmacyId,
+          error: error.message || 'Failed to assign due',
+        });
+      }
     }
 
     res.status(201).json({
       success: true,
       count: dues.length,
       data: dues,
+      failedAssignments:
+        failedAssignments.length > 0 ? failedAssignments : undefined,
     });
   }
 );
@@ -555,23 +644,69 @@ export const assignDueToPharmacy = asyncHandler(
     }
 
     const currentYear = new Date().getFullYear();
+    const dueYear = new Date(dueDate).getFullYear();
 
-    // Create the initial due
-    const due = await Due.create({
+    // FIX FOR E11000 DUPLICATE KEY ERROR:
+    // Previously, this function was using a pattern of checking if a due exists first,
+    // and then either creating or updating it. This approach is prone to race conditions
+    // that can lead to duplicate key errors (E11000) in high concurrency situations.
+    //
+    // The fix uses findOneAndUpdate with upsert:true which is an atomic operation that either:
+    // 1. Updates an existing record if one is found matching the query criteria, or
+    // 2. Creates a new record if no matching record exists
+    //
+    // This is a safer approach as it eliminates the race condition window between
+    // checking for existence and creating a new record.
+    try {
+      const updateData = {
+        title: title || `Individual Due - ${dueYear}`,
+        description: description || '',
+        amount: amount,
+        dueDate: new Date(dueDate),
+        assignmentType: 'individual',
+        assignedBy: req.user._id,
+        year: dueYear,
+        isRecurring: isRecurring || false,
+        recurringFrequency: recurringFrequency || null,
+      };
+
+      const due = await Due.findOneAndUpdate(
+        {
+          pharmacyId,
+          dueTypeId,
+          year: dueYear,
+        },
+        updateData,
+        {
+          new: true, // Return the updated document
+          upsert: true, // Create if it doesn't exist
+          runValidators: true, // Run validators for update
+          setDefaultsOnInsert: true, // Apply defaults on insert
+        }
+      );
+
+      // Populate references
+      const populatedDue = await Due.findOne({
+        pharmacyId,
+        dueTypeId,
+        year: dueYear,
+      }).populate('dueTypeId pharmacyId');
+    } catch (error: any) {
+      // If there's a duplicate key error (11000), provide a more specific message
+      if (error.code === 11000) {
+        throw new ErrorResponse(
+          `A due for this pharmacy of the same type already exists for ${dueYear}. Please try again.`,
+          400
+        );
+      }
+      throw error; // Re-throw any other errors
+    }
+
+    const populatedDue = await Due.findOne({
       pharmacyId,
       dueTypeId,
-      title: title || `Individual Due - ${currentYear}`,
-      description,
-      amount,
-      dueDate: new Date(dueDate),
-      assignmentType: 'individual',
-      assignedBy: req.user._id,
-      year: currentYear,
-      isRecurring: isRecurring || false,
-      recurringFrequency: recurringFrequency || null,
-    });
-
-    await due.populate('dueTypeId pharmacyId');
+      year: dueYear,
+    }).populate('dueTypeId pharmacyId');
 
     // If it's recurring, create future instances
     if (isRecurring && recurringFrequency) {
@@ -592,31 +727,51 @@ export const assignDueToPharmacy = asyncHandler(
           case 'annually':
             nextDueDate.setFullYear(currentDate.getFullYear() + i);
             break;
+          default:
+            continue; // Skip if invalid frequency
         }
 
-        futureDues.push({
-          pharmacyId,
-          dueTypeId,
-          title: `${title || 'Recurring Due'} - ${nextDueDate.getFullYear()}`,
-          description,
-          amount,
-          dueDate: nextDueDate,
-          assignmentType: 'individual',
-          assignedBy: req.user._id,
-          year: nextDueDate.getFullYear(),
-          isRecurring: true,
-          recurringFrequency,
-        });
-      }
-
-      if (futureDues.length > 0) {
-        await Due.insertMany(futureDues);
+        // Use the same upsert pattern for recurring dues to prevent duplicates
+        try {
+          await Due.findOneAndUpdate(
+            {
+              pharmacyId,
+              dueTypeId,
+              year: nextDueDate.getFullYear(),
+            },
+            {
+              pharmacyId,
+              dueTypeId,
+              title: `${title || 'Recurring Due'} - ${nextDueDate.getFullYear()}`,
+              description,
+              amount,
+              dueDate: nextDueDate,
+              assignmentType: 'individual',
+              assignedBy: req.user._id,
+              year: nextDueDate.getFullYear(),
+              isRecurring: true,
+              recurringFrequency,
+            },
+            {
+              new: true,
+              upsert: true,
+              runValidators: true,
+              setDefaultsOnInsert: true,
+            }
+          );
+        } catch (error: any) {
+          console.error(
+            `Error creating recurring due for year ${nextDueDate.getFullYear()}:`,
+            error
+          );
+          // Continue with other recurring dues even if one fails
+        }
       }
     }
 
     res.status(201).json({
       success: true,
-      data: due,
+      data: populatedDue,
       message: isRecurring
         ? `Due assigned successfully with ${recurringFrequency} recurring schedule`
         : 'Due assigned successfully',
@@ -895,14 +1050,23 @@ export const getPharmacyPaymentHistory = asyncHandler(
       throw new ErrorResponse('Not authorized to view this data', 403);
     }
 
-    const history = await Due.find({ pharmacyId })
-      .populate('dueTypeId', 'name description')
+    // First, get all payments for this pharmacy from Payment model
+    const payments = await Payment.find({ pharmacyId })
+      .populate('dueId')
+      .sort({ createdAt: -1 });
+
+    // Also get all dues to include those without payments
+    const dues = await Due.find({ pharmacyId })
+      .populate('dueTypeId', 'name description defaultAmount isRecurring')
       .sort({ dueDate: -1 });
 
+    // Combine both for complete history
     res.status(200).json({
       success: true,
-      count: history.length,
-      data: history,
+      count: payments.length,
+      data: payments,
+      // Include dues separately so frontend can show both
+      dues: dues,
     });
   }
 );

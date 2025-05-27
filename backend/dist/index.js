@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const db_1 = __importDefault(require("./config/db"));
-const express_fileupload_1 = __importDefault(require("express-fileupload")); // Import express-fileupload
+const path_1 = __importDefault(require("path"));
 // Load environment variables
 dotenv_1.default.config();
 // Connect to MongoDB
@@ -29,7 +29,19 @@ const corsOptions = {
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-app.use((0, express_fileupload_1.default)({ useTempFiles: true, tempFileDir: '/tmp/' })); // Add express-fileupload middleware
+// Create uploads directory if it doesn't exist
+const fs_1 = __importDefault(require("fs"));
+const uploadDir = path_1.default.join(__dirname, '../uploads/receipts');
+if (!fs_1.default.existsSync(uploadDir)) {
+    fs_1.default.mkdirSync(uploadDir, { recursive: true });
+    console.log('Created uploads directory:', uploadDir);
+}
+// Static file serving - must come before fileUpload middleware
+const static_routes_1 = __importDefault(require("./routes/static.routes"));
+app.use('/static', static_routes_1.default);
+// File upload middleware - only use one of these (multer is configured in the routes)
+// Comment out express-fileupload to avoid conflicts with multer
+// app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
 // Routes
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
@@ -46,6 +58,15 @@ const communication_routes_1 = __importDefault(require("./routes/communication.r
 const financialRecord_routes_1 = __importDefault(require("./routes/financialRecord.routes"));
 app.get('/', (req, res) => {
     res.send('ACPN OTA Zone API is running...');
+});
+// Health check endpoint
+app.get('/api/health-check', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'API is running and healthy',
+        timestamp: new Date(),
+        environment: process.env.NODE_ENV || 'development',
+    });
 });
 // Define Routes
 app.use('/api/auth', auth_routes_1.default);

@@ -134,17 +134,36 @@ export interface FinancialReport {
 
 export interface Payment {
   _id: string;
-  dueId: string;
+  dueId: string | object;
   pharmacyId: string;
   amount: number;
   paymentDate: string;
   status: 'pending' | 'approved' | 'rejected';
   receiptUrl?: string;
+  paymentMethod?: string;
+  paymentReference?: string;
   submittedBy: string;
   reviewedBy?: string;
   rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
+  dueInfo?: {
+    _id: string;
+    title: string;
+    description?: string;
+    amount: number;
+    dueDate: string;
+    paymentStatus: string;
+    totalAmount: number;
+    balance: number;
+    dueTypeId?: {
+      _id: string;
+      name: string;
+      description?: string;
+      defaultAmount: number;
+      isRecurring?: boolean;
+    };
+  };
 }
 
 export interface DueAssignmentData {

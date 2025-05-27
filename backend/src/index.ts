@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import fileUpload from 'express-fileupload'; // Import express-fileupload
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -29,7 +30,22 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' })); // Add express-fileupload middleware
+
+// Create uploads directory if it doesn't exist
+import fs from 'fs';
+const uploadDir = path.join(__dirname, '../uploads/receipts');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created uploads directory:', uploadDir);
+}
+
+// Static file serving - must come before fileUpload middleware
+import staticFilesRouter from './routes/static.routes';
+app.use('/static', staticFilesRouter);
+
+// File upload middleware - only use one of these (multer is configured in the routes)
+// Comment out express-fileupload to avoid conflicts with multer
+// app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
 
 // Routes
 import userRoutes from './routes/user.routes';
@@ -48,6 +64,16 @@ import financialRecordRoutes from './routes/financialRecord.routes';
 
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
+});
+
+// Health check endpoint
+app.get('/api/health-check', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'API is running and healthy',
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 // Define Routes

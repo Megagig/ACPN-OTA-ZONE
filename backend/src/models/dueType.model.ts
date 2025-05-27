@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IDueType extends Document {
   name: string;
   description?: string;
+  defaultAmount: number;
   isRecurring: boolean;
   recurringPeriod?: 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
   isActive: boolean;
@@ -22,6 +23,11 @@ const dueTypeSchema = new Schema<IDueType>(
     description: {
       type: String,
       trim: true,
+    },
+    defaultAmount: {
+      type: Number,
+      required: [true, 'Default amount is required'],
+      default: 0,
     },
     isRecurring: {
       type: Boolean,
