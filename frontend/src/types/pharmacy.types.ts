@@ -110,6 +110,8 @@ export interface PaymentSubmission {
   paymentReference?: string;
   receiptUrl: string;
   status: 'pending' | 'approved' | 'rejected';
+  // Backend may use approvalStatus instead of status
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
   approvedBy?: string;
   approvedAt?: string;
   rejectionReason?: string;

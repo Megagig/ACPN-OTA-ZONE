@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import financialService from '../../services/financial.service';
 import type { PaymentSubmission } from '../../types/pharmacy.types';
+import type { Payment } from '../../types/financial.types';
 
 interface PaymentWithDetails
   extends Omit<PaymentSubmission, 'dueId' | 'pharmacyId'> {
@@ -20,6 +21,22 @@ interface PaymentWithDetails
   };
 }
 
+// Define response types
+interface PaginatedResponse {
+  payments: Payment[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+type PaymentsResponse = Payment[] | PaginatedResponse;
+
+import NotificationModal from '../../components/common/NotificationModal';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+
 const AdminPaymentReview: React.FC = () => {
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -27,22 +44,62 @@ const AdminPaymentReview: React.FC = () => {
   const [selectedPayment, setSelectedPayment] =
     useState<PaymentWithDetails | null>(null);
   const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+  const [showRejectModal, setShowRejectModal] = useState<boolean>(false);
+  const [rejectionReason, setRejectionReason] = useState<string>('');
   const [reviewData, setReviewData] = useState({
     status: 'approved' as 'approved' | 'rejected',
     rejectionReason: '',
   });
   const [processingReview, setProcessingReview] = useState<boolean>(false);
+  const [processingAction, setProcessingAction] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
   const [filterStatus, setFilterStatus] = useState<string>('pending');
+  const [debugMode, setDebugMode] = useState<boolean>(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
+
+  // Notification state
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: '',
+  });
+
+  // Add function to show notifications
+  const showNotification = (
+    type: 'success' | 'error' | 'warning' | 'info',
+    title: string,
+    message: string
+  ) => {
+    setNotification({
+      isOpen: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+  // Function to close notification
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isOpen: false }));
+  };
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      let response;
+      console.log('Fetching payments with filter:', filterStatus);
+
+      let response: PaymentsResponse;
       if (filterStatus === 'pending') {
         response = await financialService.getPendingPayments();
       } else {
@@ -53,13 +110,71 @@ const AdminPaymentReview: React.FC = () => {
         });
       }
 
-      setPayments(response.data || response || []);
-      if (response.pagination) {
-        setTotalPages(Math.ceil(response.pagination.total / itemsPerPage));
+      console.log('API Response:', response);
+
+      // Handle both array response and paginated response formats
+      if (Array.isArray(response)) {
+        console.log('Response is an array with length:', response.length);
+
+        // Normalize status field to handle both 'status' and 'approvalStatus'
+        const normalizedPayments = response.map((payment) => {
+          // Create a normalized copy that ensures status field exists
+          const normalizedPayment = { ...payment } as any;
+
+          // If approvalStatus exists but status doesn't, copy it to status
+          if (normalizedPayment.approvalStatus && !normalizedPayment.status) {
+            normalizedPayment.status = normalizedPayment.approvalStatus;
+          }
+
+          if (debugMode) {
+            console.log('Payment data:', {
+              id: normalizedPayment._id,
+              status: normalizedPayment.status,
+              approvalStatus: normalizedPayment.approvalStatus,
+            });
+          }
+
+          return normalizedPayment;
+        });
+
+        setPayments(normalizedPayments as unknown as PaymentWithDetails[]);
+        setTotalPages(1); // No pagination info available
+      } else {
+        console.log(
+          'Response is paginated with payments:',
+          response.payments?.length
+        );
+
+        // Normalize status field in paginated response
+        const normalizedPayments = response.payments?.map((payment) => {
+          // Create a normalized copy that ensures status field exists
+          const normalizedPayment = { ...payment } as any;
+
+          // If approvalStatus exists but status doesn't, copy it to status
+          if (normalizedPayment.approvalStatus && !normalizedPayment.status) {
+            normalizedPayment.status = normalizedPayment.approvalStatus;
+          }
+
+          if (debugMode) {
+            console.log('Payment data:', {
+              id: normalizedPayment._id,
+              status: normalizedPayment.status,
+              approvalStatus: normalizedPayment.approvalStatus,
+            });
+          }
+
+          return normalizedPayment;
+        });
+
+        setPayments(normalizedPayments as unknown as PaymentWithDetails[]);
+        if (response.pagination) {
+          setTotalPages(Math.ceil(response.pagination.total / itemsPerPage));
+        }
       }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load payments';
+      console.error('Error details:', err);
       setError(errorMessage);
       setPayments([]);
     } finally {
@@ -69,15 +184,89 @@ const AdminPaymentReview: React.FC = () => {
 
   useEffect(() => {
     fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterStatus]);
 
-  const handleReviewPayment = (payment: PaymentWithDetails) => {
+  // We're using direct action buttons instead
+  // const handleReviewPayment = (payment: PaymentWithDetails) => {
+  //   setSelectedPayment(payment);
+  //   setReviewData({
+  //     status: 'approved',
+  //     rejectionReason: '',
+  //   });
+  //   setShowReviewModal(true);
+  // };
+
+  // Handle approving a payment directly
+  const handleApprovePayment = async (payment: PaymentWithDetails) => {
+    if (processingAction) return;
+
+    try {
+      setProcessingAction(true);
+      setError(null);
+
+      await financialService.approvePayment(payment._id);
+
+      // Show success notification
+      showNotification('success', 'Success', 'Payment approved successfully!');
+
+      // Refresh payments list
+      fetchPayments();
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to approve payment';
+      setError(errorMessage);
+      showNotification('error', 'Error', errorMessage);
+      console.error('Error approving payment:', err);
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  // Handle rejecting a payment
+  const handleRejectPayment = (payment: PaymentWithDetails) => {
     setSelectedPayment(payment);
-    setReviewData({
-      status: 'approved',
-      rejectionReason: '',
-    });
-    setShowReviewModal(true);
+    setRejectionReason('');
+    setShowRejectModal(true);
+  };
+
+  // Handle deleting a payment
+  const handleDeletePayment = (paymentId: string) => {
+    setConfirmDeleteId(paymentId);
+    setShowConfirmDelete(true);
+  };
+
+  // Submit rejection with reason
+  const submitRejection = async () => {
+    if (!selectedPayment || !rejectionReason.trim() || processingAction) return;
+
+    try {
+      setProcessingAction(true);
+      setError(null);
+
+      await financialService.rejectPayment(selectedPayment._id, {
+        rejectionReason: rejectionReason.trim(),
+      });
+
+      // Show success notification
+      showNotification('success', 'Success', 'Payment rejected successfully!');
+
+      // Reset state and close modal
+      setRejectionReason('');
+      setSelectedPayment(null);
+      setShowRejectModal(false);
+
+      // Refresh payments list
+      fetchPayments();
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to reject payment';
+      setError(errorMessage);
+      showNotification('error', 'Error', errorMessage);
+      console.error('Error rejecting payment:', err);
+    } finally {
+      setProcessingAction(false);
+    }
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -86,12 +275,16 @@ const AdminPaymentReview: React.FC = () => {
     if (!selectedPayment) {
       return;
     }
-
     if (
       reviewData.status === 'rejected' &&
       !reviewData.rejectionReason.trim()
     ) {
       setError('Please provide a reason for rejection');
+      showNotification(
+        'error',
+        'Error',
+        'Please provide a reason for rejection'
+      );
       return;
     }
 
@@ -114,8 +307,12 @@ const AdminPaymentReview: React.FC = () => {
       setShowReviewModal(false);
       setError(null);
 
-      // Show success message
-      alert(`Payment ${reviewData.status} successfully!`);
+      // Show success notification
+      showNotification(
+        'success',
+        'Success',
+        `Payment ${reviewData.status} successfully!`
+      );
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to review payment';
@@ -130,7 +327,10 @@ const AdminPaymentReview: React.FC = () => {
   };
 
   const getStatusBadgeClass = (status: string): string => {
-    switch (status) {
+    // Handle potential undefined or empty status
+    const paymentStatus = status?.toLowerCase() || 'pending';
+
+    switch (paymentStatus) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'approved':
@@ -157,6 +357,42 @@ const AdminPaymentReview: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // These methods have been properly consolidated
+
+  // Define a method to get payment status that checks both status and approvalStatus fields
+  const getPaymentStatus = (payment: PaymentWithDetails): string => {
+    return payment?.status || (payment as any)?.approvalStatus || 'pending';
+  };
+
+  // Confirm and execute payment deletion
+  const confirmDelete = async () => {
+    if (!confirmDeleteId || processingAction) return;
+
+    try {
+      setProcessingAction(true);
+      setError(null);
+
+      await financialService.deletePayment(confirmDeleteId);
+
+      // Show success notification
+      showNotification('success', 'Success', 'Payment deleted successfully!');
+
+      // Reset state and close modal
+      setConfirmDeleteId(null);
+      setShowConfirmDelete(false);
+
+      // Refresh payments list
+      fetchPayments();
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to delete payment';
+      setError(errorMessage);
+      console.error('Error deleting payment:', err);
+    } finally {
+      setProcessingAction(false);
+    }
   };
 
   if (loading) {
@@ -246,9 +482,84 @@ const AdminPaymentReview: React.FC = () => {
                   <option value="all">All Payments</option>
                 </select>
               </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDebugMode(!debugMode);
+                    // Force a refresh of the data with debug mode
+                    fetchPayments();
+                  }}
+                  className={`text-xs font-medium rounded px-3 py-1 mt-6 ${
+                    debugMode
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {debugMode ? 'Debug Mode: ON' : 'Debug Mode: OFF'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Debug Panel */}
+        {debugMode && (
+          <div className="mb-6 bg-gray-800 text-white p-4 rounded-lg overflow-auto max-h-64">
+            <h3 className="text-lg font-semibold mb-2">Debug Information</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-300">
+                  Payment Count
+                </h4>
+                <p className="text-xs">Total: {payments?.length || 0}</p>
+                <p className="text-xs">
+                  Pending:{' '}
+                  {payments?.filter((p) => getPaymentStatus(p) === 'pending')
+                    ?.length || 0}
+                </p>
+                <p className="text-xs">
+                  Approved:{' '}
+                  {payments?.filter((p) => getPaymentStatus(p) === 'approved')
+                    ?.length || 0}
+                </p>
+                <p className="text-xs">
+                  Rejected:{' '}
+                  {payments?.filter((p) => getPaymentStatus(p) === 'rejected')
+                    ?.length || 0}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-300">Filter</h4>
+                <p className="text-xs">Current filter: {filterStatus}</p>
+                <p className="text-xs">Current page: {currentPage}</p>
+                <p className="text-xs">Total pages: {totalPages}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-300">
+                First 3 Payments
+              </h4>
+              <pre className="text-xs mt-2 overflow-auto max-h-32">
+                {JSON.stringify(
+                  payments?.slice(0, 3).map((p) => ({
+                    id: p._id,
+                    status: p.status,
+                    approvalStatus: (p as any).approvalStatus,
+                    calculatedStatus: getPaymentStatus(p),
+                    pharmacy:
+                      typeof p.pharmacyId === 'object'
+                        ? p.pharmacyId.name
+                        : 'unknown',
+                    amount: p.amount,
+                  })),
+                  null,
+                  2
+                )}
+              </pre>
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -277,7 +588,8 @@ const AdminPaymentReview: React.FC = () => {
                     Pending Review
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {payments.filter((p) => p.status === 'pending').length}
+                    {payments?.filter((p) => getPaymentStatus(p) === 'pending')
+                      ?.length || 0}
                   </dd>
                 </dl>
               </div>
@@ -309,7 +621,8 @@ const AdminPaymentReview: React.FC = () => {
                     Approved
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {payments.filter((p) => p.status === 'approved').length}
+                    {payments?.filter((p) => getPaymentStatus(p) === 'approved')
+                      ?.length || 0}
                   </dd>
                 </dl>
               </div>
@@ -341,7 +654,8 @@ const AdminPaymentReview: React.FC = () => {
                     Rejected
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {payments.filter((p) => p.status === 'rejected').length}
+                    {payments?.filter((p) => getPaymentStatus(p) === 'rejected')
+                      ?.length || 0}
                   </dd>
                 </dl>
               </div>
@@ -374,7 +688,7 @@ const AdminPaymentReview: React.FC = () => {
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
                     {formatCurrency(
-                      payments.reduce((sum, p) => sum + p.amount, 0)
+                      payments?.reduce((sum, p) => sum + p.amount, 0) || 0
                     )}
                   </dd>
                 </dl>
@@ -386,9 +700,54 @@ const AdminPaymentReview: React.FC = () => {
         {/* Payments Table */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
-              Payment Submissions
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">
+                Payment Submissions
+              </h3>
+              <button
+                onClick={() => fetchPayments()}
+                disabled={loading}
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {loading ? (
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="mr-1.5 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                )}
+                Refresh
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -418,7 +777,7 @@ const AdminPaymentReview: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {payments.length === 0 ? (
+                {!payments || payments.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}
@@ -474,33 +833,102 @@ const AdminPaymentReview: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(
-                            payment.status
+                            getPaymentStatus(payment)
                           )}`}
                         >
-                          {payment.status}
+                          {getPaymentStatus(payment)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(payment.submittedAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col space-y-2">
                           <button
                             onClick={() =>
                               openReceiptViewer(payment.receiptUrl)
                             }
-                            className="text-blue-600 hover:text-blue-900"
+                            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-medium flex items-center justify-center"
                           >
+                            <svg
+                              className="w-3.5 h-3.5 mr-1.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
                             View Receipt
                           </button>
-                          {payment.status === 'pending' && (
-                            <button
-                              onClick={() => handleReviewPayment(payment)}
-                              className="text-green-600 hover:text-green-900"
+                          {/* Always show action buttons regardless of status */}
+                          <button
+                            onClick={() => handleApprovePayment(payment)}
+                            className="px-3 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 text-xs font-medium flex items-center justify-center"
+                          >
+                            <svg
+                              className="w-3.5 h-3.5 mr-1.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
-                              Review
-                            </button>
-                          )}
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectPayment(payment)}
+                            className="px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-medium flex items-center justify-center"
+                          >
+                            <svg
+                              className="w-3.5 h-3.5 mr-1.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            Reject
+                          </button>
+                          <button
+                            onClick={() => handleDeletePayment(payment._id)}
+                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-xs font-medium flex items-center justify-center"
+                          >
+                            <svg
+                              className="w-3.5 h-3.5 mr-1.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -647,6 +1075,88 @@ const AdminPaymentReview: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Reject Modal */}
+        {showRejectModal && selectedPayment && (
+          <ConfirmationModal
+            isOpen={showRejectModal}
+            onClose={() => {
+              setShowRejectModal(false);
+              setSelectedPayment(null);
+            }}
+            onConfirm={submitRejection}
+            title="Reject Payment"
+            message={`Please provide a reason for rejecting the payment of ${formatCurrency(
+              selectedPayment.amount
+            )} from ${
+              typeof selectedPayment.pharmacyId === 'object'
+                ? selectedPayment.pharmacyId.name
+                : 'Unknown Pharmacy'
+            }`}
+            confirmText={processingAction ? 'Processing...' : 'Reject Payment'}
+            cancelText="Cancel"
+          >
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm">
+                <strong>Pharmacy:</strong>{' '}
+                {typeof selectedPayment.pharmacyId === 'object'
+                  ? selectedPayment.pharmacyId.name
+                  : 'N/A'}
+              </p>
+              <p className="text-sm">
+                <strong>Due:</strong>{' '}
+                {typeof selectedPayment.dueId === 'object'
+                  ? selectedPayment.dueId.title
+                  : 'N/A'}
+              </p>
+              <p className="text-sm">
+                <strong>Amount:</strong>{' '}
+                {formatCurrency(selectedPayment.amount)}
+              </p>
+              <p className="text-sm">
+                <strong>Method:</strong>{' '}
+                {selectedPayment.paymentMethod.replace('_', ' ')}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rejection Reason *
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                placeholder="Please provide a reason for rejection..."
+                required
+              />
+            </div>
+          </ConfirmationModal>
+        )}
+
+        {/* Confirm Delete Modal */}
+        {showConfirmDelete && (
+          <ConfirmationModal
+            isOpen={showConfirmDelete}
+            onClose={() => setShowConfirmDelete(false)}
+            onConfirm={confirmDelete}
+            title="Confirm Deletion"
+            message="Are you sure you want to delete this payment? This action cannot be undone."
+            confirmText={processingAction ? 'Processing...' : 'Delete Payment'}
+            cancelText="Cancel"
+          />
+        )}
+
+        {/* Notification Modal */}
+        {notification.isOpen && (
+          <NotificationModal
+            type={notification.type}
+            title={notification.title}
+            message={notification.message}
+            onClose={closeNotification}
+          />
         )}
       </div>
     </div>

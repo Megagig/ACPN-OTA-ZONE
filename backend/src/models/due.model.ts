@@ -106,20 +106,35 @@ const dueSchema = new Schema<IDue>(
     balance: {
       type: Number,
       default: function (this: IDue) {
-        // Ensure totalAmount and amountPaid are numbers before subtraction
-        const totalAmount = Number(this.totalAmount) || 0;
+        // Safe calculation with null/undefined checks
+        if (this === null || this === undefined) return 0;
+
+        // Calculate directly without relying on totalAmount
+        const amount = Number(this.amount) || 0;
+        const penaltyAmount =
+          this.penalties?.reduce(
+            (sum, penalty) => sum + Number(penalty.amount || 0),
+            0
+          ) || 0;
         const amountPaid = Number(this.amountPaid) || 0;
-        return totalAmount - amountPaid;
+
+        return amount + penaltyAmount - amountPaid;
       },
     },
     penalties: [penaltySchema],
     totalAmount: {
       type: Number,
       default: function (this: IDue) {
+        // Safe calculation with null/undefined checks
+        if (this === null || this === undefined) return 0;
+
         const penaltyAmount =
-          this.penalties?.reduce((sum, penalty) => sum + penalty.amount, 0) ||
-          0;
-        // Ensure this.amount is a number
+          this.penalties?.reduce(
+            (sum, penalty) => sum + Number(penalty.amount || 0),
+            0
+          ) || 0;
+
+        // Ensure this.amount is a number with null/undefined check
         const amount = Number(this.amount) || 0;
         return amount + penaltyAmount;
       },

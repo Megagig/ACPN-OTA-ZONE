@@ -139,6 +139,8 @@ export interface Payment {
   amount: number;
   paymentDate: string;
   status: 'pending' | 'approved' | 'rejected';
+  // Backend may use approvalStatus instead of status
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
   receiptUrl?: string;
   paymentMethod?: string;
   paymentReference?: string;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Button } from '../shadcn/button'; // Assuming you have a Button component
 
 interface ConfirmationModalProps {
@@ -6,9 +6,10 @@ interface ConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message?: string;
   confirmText?: string;
   cancelText?: string;
+  children?: ReactNode;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -19,6 +20,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  children,
 }) => {
   if (!isOpen) {
     return null;
@@ -30,8 +32,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
           {title}
         </h3>
-        <p className="text-sm text-gray-600 mb-6">{message}</p>
-        <div className="flex justify-end space-x-3">
+        {message && <p className="text-sm text-gray-600 mb-6">{message}</p>}
+        {children}
+        <div className="flex justify-end space-x-3 mt-6">
           <Button variant="outline" onClick={onClose}>
             {cancelText}
           </Button>

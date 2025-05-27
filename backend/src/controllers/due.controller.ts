@@ -554,6 +554,13 @@ export const bulkAssignDues = asyncHandler(
         }
 
         try {
+          // Check if a due already exists
+          const existingDue = await Due.findOne({
+            pharmacyId,
+            dueTypeId,
+            year: dueYear,
+          });
+
           // FIX FOR E11000 DUPLICATE KEY ERROR:
           // Like in the assignDueToPharmacy method, we're using findOneAndUpdate with upsert
           // to avoid race conditions that could lead to duplicate key errors when multiple
@@ -587,7 +594,16 @@ export const bulkAssignDues = asyncHandler(
             }
           );
 
-          dues.push(due);
+          // If we're updating an existing due, add a note to the response
+          if (existingDue) {
+            // Use type-safe approach with interface extension
+            const dueObject = due.toObject();
+            // Use type assertion to add the custom property
+            (dueObject as any).updated = true;
+            dues.push(dueObject);
+          } else {
+            dues.push(due);
+          }
         } catch (error: any) {
           // Track pharmacies that failed to be assigned due to database errors
           if (error.code === 11000) {
@@ -657,6 +673,15 @@ export const assignDueToPharmacy = asyncHandler(
     //
     // This is a safer approach as it eliminates the race condition window between
     // checking for existence and creating a new record.
+    // Check if a due already exists
+    const existingDue = await Due.findOne({
+      pharmacyId,
+      dueTypeId,
+      year: dueYear,
+    });
+
+    let due;
+
     try {
       const updateData = {
         title: title || `Individual Due - ${dueYear}`,
@@ -670,7 +695,8 @@ export const assignDueToPharmacy = asyncHandler(
         recurringFrequency: recurringFrequency || null,
       };
 
-      const due = await Due.findOneAndUpdate(
+      // If a due exists, just update it without throwing an error
+      due = await Due.findOneAndUpdate(
         {
           pharmacyId,
           dueTypeId,
@@ -684,24 +710,16 @@ export const assignDueToPharmacy = asyncHandler(
           setDefaultsOnInsert: true, // Apply defaults on insert
         }
       );
-
-      // Populate references
-      const populatedDue = await Due.findOne({
-        pharmacyId,
-        dueTypeId,
-        year: dueYear,
-      }).populate('dueTypeId pharmacyId');
     } catch (error: any) {
-      // If there's a duplicate key error (11000), provide a more specific message
-      if (error.code === 11000) {
-        throw new ErrorResponse(
-          `A due for this pharmacy of the same type already exists for ${dueYear}. Please try again.`,
-          400
-        );
+      // Only throw an error if it's not a duplicate key error
+      if (error.code !== 11000) {
+        throw error;
       }
-      throw error; // Re-throw any other errors
+      // For duplicate key errors, we'll just use the existing due
+      console.log('Duplicate key error handled - due already exists');
     }
 
+    // Populate references
     const populatedDue = await Due.findOne({
       pharmacyId,
       dueTypeId,
@@ -733,7 +751,7 @@ export const assignDueToPharmacy = asyncHandler(
 
         // Use the same upsert pattern for recurring dues to prevent duplicates
         try {
-          await Due.findOneAndUpdate(
+          const recurringDue = await Due.findOneAndUpdate(
             {
               pharmacyId,
               dueTypeId,
@@ -760,10 +778,17 @@ export const assignDueToPharmacy = asyncHandler(
             }
           );
         } catch (error: any) {
-          console.error(
-            `Error creating recurring due for year ${nextDueDate.getFullYear()}:`,
-            error
-          );
+          // Log but don't throw error for duplicate recurring dues
+          if (error.code === 11000) {
+            console.log(
+              `Recurring due for year ${nextDueDate.getFullYear()} already exists - skipping.`
+            );
+          } else {
+            console.error(
+              `Error creating recurring due for year ${nextDueDate.getFullYear()}:`,
+              error
+            );
+          }
           // Continue with other recurring dues even if one fails
         }
       }
