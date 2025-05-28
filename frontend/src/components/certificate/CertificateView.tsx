@@ -69,7 +69,7 @@ const CertificateView: React.FC<CertificateViewProps> = ({
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `clearance_certificate_${certificateData.certificateNumber}.pdf`;
+      a.download = `ACPN_Certificate_${certificateData.certificateNumber}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -243,7 +243,7 @@ const CertificateView: React.FC<CertificateViewProps> = ({
                       <span className="font-semibold text-green-700">
                         Certificate Number:
                       </span>{' '}
-                      <span className="text-gray-800">
+                      <span className="text-gray-800 font-mono">
                         {certificateData.certificateNumber}
                       </span>
                     </p>

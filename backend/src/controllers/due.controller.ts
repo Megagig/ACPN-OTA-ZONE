@@ -5,6 +5,7 @@ import Payment from '../models/payment.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
 import path from 'path';
+import { getNextCertificateNumber } from '../utils/counter';
 
 // @desc    Get all dues
 // @route   GET /api/dues
@@ -965,6 +966,9 @@ export const generateClearanceCertificate = asyncHandler(
       );
     }
 
+    // Generate a 4-digit incremental certificate number
+    const certificateNumber = await getNextCertificateNumber();
+
     // For now, return certificate data - PDF generation can be added later
     const certificateData = {
       pharmacyName: (due.pharmacyId as any).name,
@@ -972,7 +976,7 @@ export const generateClearanceCertificate = asyncHandler(
       amount: due.totalAmount,
       paidDate: due.updatedAt,
       validUntil: new Date(new Date().getFullYear(), 11, 31), // Dec 31st of current year
-      certificateNumber: `CERT-${due._id}-${Date.now()}`,
+      certificateNumber,
     };
 
     console.log(
@@ -1159,7 +1163,7 @@ export const generatePDFCertificate = asyncHandler(
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="clearance_certificate_${Date.now()}.pdf"`
+        `attachment; filename="ACPN_Certificate_${certificateData.certificateNumber}.pdf"`
       );
 
       // Pipe the PDF directly to the response
