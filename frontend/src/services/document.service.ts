@@ -11,93 +11,41 @@ import type {
   DocumentSummary,
 } from '../types/document.types';
 
-const BASE_URL = '/api';
+const BASE_URL = '/api/organization-documents';
 
-// For demonstration, using mock data instead of actual API calls
-// In production, replace these with actual API calls
-
-// Mock documents data
-const mockDocuments: Document[] = [
-  {
-    _id: 'doc001',
-    title: 'ACPN Ota Zone Constitution',
-    description:
-      'The official constitution document outlining the rules and regulations of ACPN Ota Zone.',
-    fileUrl: 'https://example.com/files/constitution.pdf',
-    fileName: 'ACPN_Ota_Zone_Constitution_2023.pdf',
-    fileSize: 2458621, // In bytes
-    fileType: 'application/pdf',
-    category: 'policy',
-    tags: [
-      { _id: 'tag001', name: 'constitution' },
-      { _id: 'tag002', name: 'governance' },
-    ],
-    accessLevel: 'members',
-    status: 'active',
-    uploadedBy: 'user123',
-    uploadedAt: '2023-03-15T10:00:00',
-    modifiedAt: '2023-05-10T14:30:00',
-    modifiedBy: 'user456',
-    version: 2,
-    downloadCount: 45,
-    viewCount: 120,
-  },
-  {
-    _id: 'doc002',
-    title: 'Membership Registration Form',
-    description: 'Form for new members to register with ACPN Ota Zone.',
-    fileUrl: 'https://example.com/files/registration.pdf',
-    fileName: 'ACPN_Membership_Form_2023.pdf',
-    fileSize: 524288, // In bytes
-    fileType: 'application/pdf',
-    category: 'form',
-    tags: [
-      { _id: 'tag003', name: 'registration' },
-      { _id: 'tag004', name: 'membership' },
-    ],
-    accessLevel: 'public',
-    status: 'active',
-    uploadedBy: 'user456',
-    uploadedAt: '2023-04-01T09:15:00',
-    version: 1,
-    downloadCount: 78,
-    viewCount: 210,
-  },
-  {
-    _id: 'doc003',
-    title: 'Annual General Meeting Minutes - 2023',
-    description: 'Minutes from the Annual General Meeting held on May 5, 2023.',
-    fileUrl: 'https://example.com/files/agm-minutes.pdf',
-    fileName: 'AGM_Minutes_2023.pdf',
-    fileSize: 1572864, // In bytes
-    fileType: 'application/pdf',
-    category: 'minutes',
-    tags: [
-      { _id: 'tag005', name: 'agm' },
-      { _id: 'tag006', name: 'minutes' },
-    ],
-    accessLevel: 'members',
-    status: 'active',
-    uploadedBy: 'user789',
-    uploadedAt: '2023-05-10T16:45:00',
-    version: 1,
-    downloadCount: 32,
-    viewCount: 67,
-  },
-  {
-    _id: 'doc004',
-    title: 'Pharmacy Practice Guidelines 2023',
-    description:
-      'Updated guidelines for pharmacy practice in accordance with national regulations.',
-    fileUrl: 'https://example.com/files/practice-guidelines.pdf',
-    fileName: 'Pharmacy_Practice_Guidelines_2023.pdf',
-    fileSize: 3145728, // In bytes
-    fileType: 'application/pdf',
-    category: 'guideline',
-    tags: [
-      { _id: 'tag007', name: 'guidelines' },
-      { _id: 'tag008', name: 'practice' },
-      { _id: 'tag009', name: 'regulations' },
+// Documents API
+export const getDocuments = async (
+  params?: DocumentSearchParams
+): Promise<Document[]> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params) {
+      if (params.category) queryParams.append('category', params.category);
+      if (params.accessLevel) queryParams.append('accessLevel', params.accessLevel);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.uploadedBy) queryParams.append('uploadedBy', params.uploadedBy);
+      if (params.tags && params.tags.length > 0) {
+        params.tags.forEach(tag => queryParams.append('tags', tag));
+      }
+      if (params.dateRange) {
+        queryParams.append('dateStart', params.dateRange.start);
+        queryParams.append('dateEnd', params.dateRange.end);
+      }
+    }
+    
+    const url = queryParams.toString() 
+      ? `${BASE_URL}?${queryParams.toString()}`
+      : BASE_URL;
+      
+    const response = await api.get(url);
+    return response.data.data;
+  } catch (error: any) {
+    console.error('Error fetching documents:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch documents');
+  }
+};
     ],
     accessLevel: 'members',
     status: 'active',

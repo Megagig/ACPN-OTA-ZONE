@@ -47,15 +47,22 @@ if (!fs.existsSync(uploadDir)) {
 import staticFilesRouter from './routes/static.routes';
 app.use('/api/static', staticFilesRouter); // Map to /api/static to match frontend URL
 
-// File upload middleware - only use one of these (multer is configured in the routes)
-// Comment out express-fileupload to avoid conflicts with multer
-// app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
+// File upload middleware for organization documents
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: '/tmp/',
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    abortOnLimit: true,
+  })
+);
 
 // Routes
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
 import pharmacyRoutes from './routes/pharmacy.routes';
 import documentRoutes from './routes/document.routes';
+import organizationDocumentRoutes from './routes/organizationDocument.routes';
 import dueRoutes from './routes/due.routes';
 import dueTypeRoutes from './routes/dueType.routes';
 import paymentRoutes from './routes/payment.routes';
@@ -85,6 +92,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pharmacies', pharmacyRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/organization-documents', organizationDocumentRoutes);
 app.use('/api/dues', dueRoutes);
 app.use('/api/due-types', dueTypeRoutes);
 app.use('/api/payments', paymentRoutes);
