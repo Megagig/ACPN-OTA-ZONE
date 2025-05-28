@@ -198,9 +198,10 @@ const ClearanceCertificateGeneration: React.FC = () => {
       pdf.text('FINANCIAL SUMMARY', 20, 130);
 
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Total Amount Paid: ₦${totalPaid.toLocaleString()}`, 20, 140);
+      // Use the Naira symbol with a space after it for better readability
+      pdf.text(`Total Amount Paid: ₦ ${totalPaid.toLocaleString()}`, 20, 140);
       pdf.text(`Number of Payments: ${pharmacyDues.length}`, 20, 145);
-      pdf.text('Outstanding Balance: ₦0.00', 20, 150);
+      pdf.text('Outstanding Balance: ₦ 0.00', 20, 150);
 
       // Dues breakdown if any
       if (pharmacyDues.length > 0) {
@@ -213,7 +214,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
           pdf.text(
             `${index + 1}. ${
               due.description || 'Due Payment'
-            }: ₦${due.amount.toLocaleString()}`,
+            }: ₦ ${due.amount.toLocaleString()}`,
             25,
             yPos
           );

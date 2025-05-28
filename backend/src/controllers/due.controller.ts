@@ -1299,7 +1299,7 @@ export const generatePDFCertificate = asyncHandler(
 
       doc.font('Helvetica').text('Amount Paid:', leftColumn, 350);
       doc.font('Helvetica-Bold').text(
-        `₦${certificateData.amount.toLocaleString('en-NG', {
+        `₦ ${certificateData.amount.toLocaleString('en-NG', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}`,

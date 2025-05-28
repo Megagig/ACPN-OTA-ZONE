@@ -48,3 +48,12 @@
     --ring: 224.3 76.5% 48%;
   }
 }
+
+/* Custom styles */
+@layer components {
+  .naira-symbol {
+    font-family: Arial, sans-serif; /* A font that properly displays the Naira symbol */
+    margin-right: 1px; /* Add a little spacing after the symbol */
+    display: inline-block;
+  }
+}

@@ -262,7 +262,7 @@ const CertificateView: React.FC<CertificateViewProps> = ({
                         Amount Paid:
                       </span>{' '}
                       <span className="text-gray-800 font-medium">
-                        <span className="font-bold">₦</span>
+                        <span className="font-bold naira-symbol">₦</span>{' '}
                         {certificateData.amount.toLocaleString('en-NG', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
