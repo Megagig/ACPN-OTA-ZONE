@@ -4,12 +4,16 @@ import dotenv from 'dotenv';
 import connectDB from './config/db';
 import fileUpload from 'express-fileupload'; // Import express-fileupload
 import path from 'path';
+import ensureAssets from './utils/ensureAssets';
 
 // Load environment variables
 dotenv.config();
 
 // Connect to MongoDB
 connectDB();
+
+// Ensure assets (logo, etc.) are available
+ensureAssets();
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
@@ -41,7 +45,7 @@ if (!fs.existsSync(uploadDir)) {
 
 // Static file serving - must come before fileUpload middleware
 import staticFilesRouter from './routes/static.routes';
-app.use('/static', staticFilesRouter);
+app.use('/api/static', staticFilesRouter); // Map to /api/static to match frontend URL
 
 // File upload middleware - only use one of these (multer is configured in the routes)
 // Comment out express-fileupload to avoid conflicts with multer

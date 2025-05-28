@@ -10,10 +10,17 @@ staticFilesRouter.use(
   express.static(path.join(__dirname, '../../uploads/receipts'))
 );
 
-// Log directory path for debugging
+// Serve assets from the assets directory
+staticFilesRouter.use(
+  '/assets',
+  express.static(path.join(__dirname, '../assets'))
+);
+
+// Log directory paths for debugging
 console.log(
-  'Serving static files from:',
+  'Serving receipts from:',
   path.join(__dirname, '../../uploads/receipts')
 );
+console.log('Serving assets from:', path.join(__dirname, '../assets'));
 
 export default staticFilesRouter;

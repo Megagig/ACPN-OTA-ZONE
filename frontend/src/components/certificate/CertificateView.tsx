@@ -185,9 +185,23 @@ const CertificateView: React.FC<CertificateViewProps> = ({
                 {/* Header */}
                 <div className="text-center mb-8">
                   <div className="flex justify-center mb-4">
-                    <div className="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                      <span className="text-xs">ACPN LOGO</span>
-                    </div>
+                    <img
+                      src="/api/static/assets/acpn-logo.png"
+                      alt="ACPN Logo"
+                      className="h-24 w-auto object-contain"
+                      onError={(e) => {
+                        // If logo fails to load, replace with a text placeholder
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null; // Prevent infinite error loop
+                        target.style.display = 'none';
+                        const placeholder = document.createElement('div');
+                        placeholder.className =
+                          'h-24 w-24 bg-green-50 border-2 border-green-200 rounded-full flex items-center justify-center';
+                        placeholder.innerHTML =
+                          '<span class="text-green-700 font-bold text-sm text-center">ACPN<br/>OTA ZONE</span>';
+                        target.parentNode?.appendChild(placeholder);
+                      }}
+                    />
                   </div>
                   <h1 className="text-3xl font-bold text-green-700 mb-2 uppercase tracking-wider">
                     Clearance Certificate
@@ -248,7 +262,11 @@ const CertificateView: React.FC<CertificateViewProps> = ({
                         Amount Paid:
                       </span>{' '}
                       <span className="text-gray-800 font-medium">
-                        ₦{certificateData.amount.toLocaleString('en-NG')}
+                        <span className="font-bold">₦</span>
+                        {certificateData.amount.toLocaleString('en-NG', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </p>
                     <p className="mb-2">

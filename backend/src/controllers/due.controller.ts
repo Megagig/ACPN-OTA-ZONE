@@ -4,6 +4,7 @@ import Pharmacy from '../models/pharmacy.model';
 import Payment from '../models/payment.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
+import path from 'path';
 
 // @desc    Get all dues
 // @route   GET /api/dues
@@ -1165,57 +1166,84 @@ export const generatePDFCertificate = asyncHandler(
       doc.pipe(res);
 
       // Add content to the PDF
-      const logoPath = './src/assets/acpn-logo.png'; // Path to the logo file
+      const logoPath = path.resolve(__dirname, '../assets/acpn-logo.png'); // Absolute path to the logo file
       try {
         if (fs.existsSync(logoPath)) {
-          doc.image(logoPath, 50, 45, { width: 100 });
+          // Add the logo with better sizing and positioning
+          doc.image(logoPath, 50, 45, { width: 100, align: 'center' });
+          console.log('Logo successfully added from:', logoPath);
         } else {
           console.warn('Logo file not found:', logoPath);
-          // Add a placeholder for the logo
+          // Add a placeholder for the logo with ACPN text
           doc
-            .rect(50, 45, 100, 100)
-            .stroke()
-            .fontSize(10)
-            .text('ACPN Logo', 75, 85);
+            .circle(100, 80, 40)
+            .lineWidth(2)
+            .stroke('#006400')
+            .fillOpacity(0.1)
+            .fill('#006400')
+            .fillOpacity(1)
+            .fontSize(16)
+            .fill('#006400')
+            .text('ACPN', 75, 70, { align: 'center' })
+            .fontSize(12)
+            .text('OTA ZONE', 75, 90, { align: 'center' });
         }
       } catch (err) {
         console.error('Error adding logo to PDF:', err);
-        // Continue without the logo
+        // Continue without the logo but add a text placeholder
+        doc
+          .circle(100, 80, 40)
+          .lineWidth(2)
+          .stroke('#006400')
+          .fillOpacity(0.1)
+          .fill('#006400')
+          .fillOpacity(1)
+          .fontSize(16)
+          .fill('#006400')
+          .text('ACPN', 75, 70, { align: 'center' })
+          .fontSize(12)
+          .text('OTA ZONE', 75, 90, { align: 'center' });
       }
 
-      // Title
+      // Title with decorative elements
       doc
         .font('Helvetica-Bold')
-        .fontSize(24)
+        .fontSize(28)
+        .fillColor('#006400')
         .text('CLEARANCE CERTIFICATE', { align: 'center' })
         .moveDown(0.2);
 
       // Decorative line
       doc
-        .moveTo(doc.page.width / 2 - 80, doc.y)
-        .lineTo(doc.page.width / 2 + 80, doc.y)
+        .moveTo(doc.page.width / 2 - 100, doc.y)
+        .lineTo(doc.page.width / 2 + 100, doc.y)
         .lineWidth(3)
         .stroke('#006400')
         .moveDown(0.5);
 
+      // Organization name with professional styling
       doc
+        .fillColor('#000000')
         .fontSize(16)
         .text('Pharmaceutical Society of Nigeria', { align: 'center' })
         .fontSize(18)
+        .fillColor('#006400')
         .text('ACPN Ota Zone', { align: 'center' })
         .moveDown(1);
 
-      // Certificate content
+      // Certificate content - make it stand out more
       doc
         .font('Helvetica')
-        .fontSize(12)
+        .fontSize(14)
+        .fillColor('#333333')
         .text('This is to certify that:', { align: 'center' })
         .moveDown(0.5);
 
-      // Pharmacy name
+      // Pharmacy name - make it bold and prominent
       doc
         .font('Helvetica-Bold')
-        .fontSize(18)
+        .fontSize(20)
+        .fillColor('#000000')
         .text(certificateData.pharmacyName, { align: 'center' })
         .moveDown(0.2);
 
@@ -1231,8 +1259,19 @@ export const generatePDFCertificate = asyncHandler(
       doc
         .font('Helvetica')
         .fontSize(12)
+        .text('This is to certify that the above-named pharmacy', {
+          align: 'center',
+        })
+        .moveDown(0.2)
+        .font('Helvetica-Bold')
         .text(
-          `has fulfilled all financial obligations to the ACPN Ota Zone pertaining to the ${certificateData.dueType} for ${new Date(certificateData.paidDate).getFullYear()}.`,
+          `has fulfilled all financial obligations to the Association of Community Pharmacists of Nigeria, Ota Zone,`,
+          { align: 'center' }
+        )
+        .moveDown(0.2)
+        .font('Helvetica')
+        .text(
+          `pertaining to the ${certificateData.dueType} for ${new Date(certificateData.paidDate).getFullYear()}.`,
           { align: 'center' }
         )
         .moveDown(1);
@@ -1255,60 +1294,117 @@ export const generatePDFCertificate = asyncHandler(
         .text(certificateData.dueType, rightColumn, 325);
 
       doc.font('Helvetica').text('Amount Paid:', leftColumn, 350);
-      doc
-        .font('Helvetica-Bold')
-        .text(
-          `₦${certificateData.amount.toLocaleString('en-NG')}`,
-          rightColumn,
-          350
-        );
+      doc.font('Helvetica-Bold').text(
+        `₦${certificateData.amount.toLocaleString('en-NG', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        rightColumn,
+        350
+      );
 
       doc.font('Helvetica').text('Payment Date:', leftColumn, 375);
-      doc
-        .font('Helvetica-Bold')
-        .text(
-          new Date(certificateData.paidDate).toLocaleDateString('en-NG'),
-          rightColumn,
-          375
-        );
+      doc.font('Helvetica-Bold').text(
+        new Date(certificateData.paidDate).toLocaleDateString('en-NG', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }),
+        rightColumn,
+        375
+      );
 
       doc.font('Helvetica').text('Valid Until:', leftColumn, 400);
-      doc
-        .font('Helvetica-Bold')
-        .text(
-          new Date(certificateData.validUntil).toLocaleDateString('en-NG'),
-          rightColumn,
-          400
-        );
+      doc.font('Helvetica-Bold').text(
+        new Date(certificateData.validUntil).toLocaleDateString('en-NG', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }),
+        rightColumn,
+        400
+      );
 
       // Signature placeholders
+      const signatureY = 500;
+
+      // Chairman signature
       doc
         .font('Helvetica')
         .fontSize(11)
-        .text('_____________________', 150, 480)
-        .text('Chairman', 170, 500)
-        .text('ACPN Ota Zone', 170, 515, { fontSize: 8 })
-        .text('_____________________', 400, 480)
-        .text('Secretary', 420, 500)
-        .text('ACPN Ota Zone', 420, 515, { fontSize: 8 });
+        .moveTo(120, signatureY)
+        .lineTo(220, signatureY)
+        .lineWidth(1)
+        .stroke()
+        .text('Chairman', 150, signatureY + 15)
+        .font('Helvetica-Oblique')
+        .fontSize(8)
+        .text('ACPN Ota Zone', 150, signatureY + 30);
 
-      // Stamp placeholder
-      doc.circle(300, 500, 40).dash(3, { space: 3 }).stroke('#888888');
-      doc.fontSize(8).text('OFFICIAL STAMP', 270, 498);
+      // Secretary signature
+      doc
+        .font('Helvetica')
+        .fontSize(11)
+        .moveTo(400, signatureY)
+        .lineTo(500, signatureY)
+        .lineWidth(1)
+        .stroke()
+        .text('Secretary', 430, signatureY + 15)
+        .font('Helvetica-Oblique')
+        .fontSize(8)
+        .text('ACPN Ota Zone', 430, signatureY + 30);
+
+      // Stamp placeholder - make it more prominent
+      doc
+        .circle(300, signatureY, 40)
+        .dash(3, { space: 2 })
+        .lineWidth(1.5)
+        .stroke('#006400');
+
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(8)
+        .fillColor('#006400')
+        .text('OFFICIAL STAMP', 270, signatureY - 5, { align: 'center' });
 
       // Footer
+      const footerY = 580;
+
+      // Add decorative line above footer
       doc
+        .moveTo(100, footerY - 20)
+        .lineTo(doc.page.width - 100, footerY - 20)
+        .lineWidth(0.5)
+        .stroke('#006400');
+
+      doc
+        .font('Helvetica')
         .fontSize(8)
+        .fillColor('#333333')
         .text(
-          'This certificate is issued in accordance with the regulations of the Association of Community Pharmacists of Nigeria (ACPN) Ota Zone.',
+          'This certificate is issued in accordance with the regulations of the',
           50,
-          530,
+          footerY,
           { align: 'center' }
         )
         .text(
+          'Association of Community Pharmacists of Nigeria (ACPN) Ota Zone.',
+          50,
+          footerY + 12,
+          { align: 'center' }
+        )
+        .font('Helvetica-Bold')
+        .text(
           `Issue Date: ${new Date().toLocaleDateString('en-NG', { day: '2-digit', month: 'long', year: 'numeric' })}`,
           50,
-          545,
+          footerY + 30,
+          { align: 'center' }
+        )
+        .font('Helvetica-Oblique')
+        .text(
+          'Verify this certificate by contacting the ACPN Ota Zone Secretariat',
+          50,
+          footerY + 45,
           { align: 'center' }
         );
 
