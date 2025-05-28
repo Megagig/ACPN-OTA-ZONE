@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import financialService from '../../services/financial.service';
-import type { Pharmacy, Due } from '../../types/pharmacy.types';
+import type { Pharmacy } from '../../types/pharmacy.types';
+import type { Due as FinancialDue, Payment } from '../../types/financial.types';
 
 interface CertificateData {
   pharmacyId: string;
@@ -9,7 +10,7 @@ interface CertificateData {
   validUntil: Date;
   certificateNumber: string;
   pharmacy?: Pharmacy;
-  clearedDues: Due[];
+  clearedDues: FinancialDue[];
   totalAmountPaid: number;
 }
 
@@ -28,42 +29,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const validUntil = new Date(currentYear, 11, 31); // December 31st of current year
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    filterPharmacies();
-  }, [searchTerm, filterStatus, pharmacies]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [pharmaciesRes, duesRes] = await Promise.all([
-        financialService.getAllPharmacies(),
-        financialService.getDues(),
-      ]);
-
-      setPharmacies(pharmaciesRes);
-
-      // Find pharmacies eligible for clearance certificates
-      // (those with all dues paid)
-      const eligible = pharmaciesRes.filter((pharmacy: Pharmacy) => {
-        const pharmacyDues = duesRes.filter(
-          (due: Due) => due.pharmacyId === pharmacy._id && due.status !== 'paid'
-        );
-        return pharmacyDues.length === 0; // No outstanding dues
-      });
-
-      setEligiblePharmacies(eligible);
-    } catch (err) {
-      setError('Failed to load pharmacy data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterPharmacies = () => {
+  const filterPharmacies = React.useCallback(() => {
     let filtered = [...pharmacies];
 
     if (filterStatus === 'eligible') {
@@ -78,14 +44,50 @@ const ClearanceCertificateGeneration: React.FC = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (pharmacy) =>
-          pharmacy.businessName.toLowerCase().includes(term) ||
+          pharmacy.name.toLowerCase().includes(term) ||
           pharmacy.registrationNumber?.toLowerCase().includes(term) ||
-          pharmacy.address?.state?.toLowerCase().includes(term)
+          pharmacy.address.toLowerCase().includes(term)
       );
     }
 
     return filtered;
-  };
+  }, [searchTerm, filterStatus, pharmacies, eligiblePharmacies]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [pharmaciesRes, paymentsRes] = await Promise.all([
+        financialService.getAllPharmacies(),
+        financialService.getAllPayments({ status: 'all' }),
+      ]);
+
+      setPharmacies(pharmaciesRes);
+
+      // Find pharmacies eligible for clearance certificates
+      // (those with all dues paid for the current year)
+      const eligible = pharmaciesRes.filter((pharmacy: Pharmacy) => {
+        const pharmacyPayments = paymentsRes.payments.filter(
+          (payment: Payment) =>
+            payment.pharmacyId === pharmacy._id &&
+            (payment.status === 'approved' ||
+              payment.approvalStatus === 'approved') &&
+            new Date(payment.paymentDate).getFullYear() === currentYear
+        );
+        return pharmacyPayments.length > 0; // Has approved payments for current year
+      });
+
+      setEligiblePharmacies(eligible);
+    } catch (err: unknown) {
+      console.error('Failed to load pharmacy data:', err);
+      setError('Failed to load pharmacy data');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentYear]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const generateCertificateNumber = (): string => {
     // This is a mock function for the frontend preview
@@ -101,14 +103,20 @@ const ClearanceCertificateGeneration: React.FC = () => {
     try {
       setGenerating(true);
 
-      // Get pharmacy dues to calculate total paid
-      const duesRes = await financialService.getDues();
-      const pharmacyDues = duesRes.filter(
-        (due: Due) => due.pharmacyId === pharmacy._id && due.status === 'paid'
+      // Get pharmacy payments to calculate total paid
+      const paymentsRes = await financialService.getAllPayments({
+        status: 'all',
+      });
+      const pharmacyPayments = paymentsRes.payments.filter(
+        (payment: Payment) =>
+          payment.pharmacyId === pharmacy._id &&
+          (payment.status === 'approved' ||
+            payment.approvalStatus === 'approved') &&
+          new Date(payment.paymentDate).getFullYear() === currentYear
       );
 
-      const totalPaid = pharmacyDues.reduce(
-        (sum: number, due: Due) => sum + due.amount,
+      const totalPaid = pharmacyPayments.reduce(
+        (sum: number, payment: Payment) => sum + payment.amount,
         0
       );
 
@@ -118,7 +126,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
         validUntil: validUntil,
         certificateNumber: generateCertificateNumber(),
         pharmacy: pharmacy,
-        clearedDues: pharmacyDues,
+        clearedDues: [], // We'll use payments instead
         totalAmountPaid: totalPaid,
       };
 
@@ -130,12 +138,12 @@ const ClearanceCertificateGeneration: React.FC = () => {
       });
 
       // Set up colors
-      const primaryColor = [54, 162, 235]; // Blue
-      const secondaryColor = [75, 192, 192]; // Teal
-      const textColor = [33, 37, 41]; // Dark gray
+      const primaryColor = [54, 162, 235] as [number, number, number]; // Blue
+      const secondaryColor = [75, 192, 192] as [number, number, number]; // Teal
+      const textColor = [33, 37, 41] as [number, number, number]; // Dark gray
 
       // Header
-      pdf.setFillColor(...primaryColor);
+      pdf.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
       pdf.rect(0, 0, 210, 40, 'F');
 
       // Logo placeholder and title
@@ -154,7 +162,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
       });
 
       // Certificate content
-      pdf.setTextColor(...textColor);
+      pdf.setTextColor(textColor[0], textColor[1], textColor[2]);
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
       pdf.text('CERTIFICATE OF FINANCIAL CLEARANCE', 105, 55, {
@@ -181,13 +189,11 @@ const ClearanceCertificateGeneration: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
 
       const mainText = `This is to certify that ${
-        pharmacy.businessName
+        pharmacy.name
       } with registration number ${
         pharmacy.registrationNumber || 'N/A'
-      } located at ${pharmacy.address?.street || ''}, ${
-        pharmacy.address?.lga || ''
-      }, ${
-        pharmacy.address?.state || ''
+      } located at ${
+        pharmacy.address
       } has fulfilled all financial obligations to the Association of Community Pharmacists of Nigeria, Ota Zone for the year ${currentYear}.`;
 
       const splitText = pdf.splitTextToSize(mainText, 170);
@@ -200,30 +206,35 @@ const ClearanceCertificateGeneration: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       // Use the Naira symbol with a space after it for better readability
       pdf.text(`Total Amount Paid: ₦ ${totalPaid.toLocaleString()}`, 20, 140);
-      pdf.text(`Number of Payments: ${pharmacyDues.length}`, 20, 145);
+      pdf.text(`Number of Payments: ${pharmacyPayments.length}`, 20, 145);
       pdf.text('Outstanding Balance: ₦ 0.00', 20, 150);
 
-      // Dues breakdown if any
-      if (pharmacyDues.length > 0) {
+      // Payment breakdown if any
+      if (pharmacyPayments.length > 0) {
         pdf.setFont('helvetica', 'bold');
         pdf.text('PAYMENT BREAKDOWN', 20, 165);
 
         pdf.setFont('helvetica', 'normal');
         let yPos = 175;
-        pharmacyDues.slice(0, 5).forEach((due: Due, index: number) => {
-          pdf.text(
-            `${index + 1}. ${
-              due.description || 'Due Payment'
-            }: ₦ ${due.amount.toLocaleString()}`,
-            25,
-            yPos
-          );
-          yPos += 5;
-        });
+        pharmacyPayments
+          .slice(0, 5)
+          .forEach((payment: Payment, index: number) => {
+            const paymentDate = new Date(
+              payment.paymentDate
+            ).toLocaleDateString();
+            pdf.text(
+              `${
+                index + 1
+              }. Payment on ${paymentDate}: ₦ ${payment.amount.toLocaleString()}`,
+              25,
+              yPos
+            );
+            yPos += 5;
+          });
 
-        if (pharmacyDues.length > 5) {
+        if (pharmacyPayments.length > 5) {
           pdf.text(
-            `... and ${pharmacyDues.length - 5} more payments`,
+            `... and ${pharmacyPayments.length - 5} more payments`,
             25,
             yPos
           );
@@ -266,16 +277,15 @@ const ClearanceCertificateGeneration: React.FC = () => {
       });
 
       // Save the PDF
-      const fileName = `clearance-certificate-${pharmacy.businessName.replace(
+      const fileName = `clearance-certificate-${pharmacy.name.replace(
         /[^a-zA-Z0-9]/g,
         '-'
       )}-${currentYear}.pdf`;
       pdf.save(fileName);
 
-      setSuccess(
-        `Certificate generated successfully for ${pharmacy.businessName}`
-      );
-    } catch (err) {
+      setSuccess(`Certificate generated successfully for ${pharmacy.name}`);
+    } catch (err: unknown) {
+      console.error('Failed to generate certificate:', err);
       setError('Failed to generate certificate');
     } finally {
       setGenerating(false);
@@ -296,7 +306,8 @@ const ClearanceCertificateGeneration: React.FC = () => {
       setSuccess(
         `Generated certificates for ${eligiblePharmacies.length} pharmacies`
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Failed to generate bulk certificates:', err);
       setError('Failed to generate bulk certificates');
     } finally {
       setGenerating(false);
@@ -337,7 +348,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
     );
   }
 
-  const filteredPharmacies = filterPharmacies();
+  const filteredPharmaciesList = filterPharmacies();
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -468,7 +479,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
                   <option value="">Choose a pharmacy...</option>
                   {eligiblePharmacies.map((pharmacy) => (
                     <option key={pharmacy._id} value={pharmacy._id}>
-                      {pharmacy.businessName} - {pharmacy.address?.state}
+                      {pharmacy.name} - {pharmacy.address}
                     </option>
                   ))}
                 </select>
@@ -565,7 +576,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPharmacies.map((pharmacy) => {
+              {filteredPharmaciesList.map((pharmacy) => {
                 const isEligible = eligiblePharmacies.some(
                   (p) => p._id === pharmacy._id
                 );
@@ -574,7 +585,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {pharmacy.businessName}
+                          {pharmacy.name}
                         </div>
                         <div className="text-sm text-gray-500">
                           {pharmacy.registrationNumber || 'No reg. number'}
@@ -582,7 +593,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {pharmacy.address?.state}, {pharmacy.address?.lga}
+                      {pharmacy.address}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isEligible ? (

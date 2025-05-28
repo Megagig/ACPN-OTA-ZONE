@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   generateCertificatePDF,
   getClearanceCertificate,
@@ -9,6 +9,16 @@ interface CertificateViewProps {
   dueId: string;
   isVisible: boolean;
   onClose: () => void;
+}
+
+interface ApiError {
+  response?: {
+    status: number;
+    data?: {
+      error: string;
+    };
+  };
+  message?: string;
 }
 
 const CertificateView: React.FC<CertificateViewProps> = ({
@@ -22,39 +32,40 @@ const CertificateView: React.FC<CertificateViewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Fetch certificate data
-  const fetchCertificateData = async () => {
+  const fetchCertificateData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getClearanceCertificate(dueId);
       setCertificateData(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading certificate:', err);
 
       // Handle different error scenarios with user-friendly messages
-      if (err.response) {
-        if (err.response.status === 404) {
+      const error = err as ApiError;
+      if (error.response) {
+        if (error.response.status === 404) {
           setError('Certificate not found. The due might not exist.');
-        } else if (err.response.status === 400) {
+        } else if (error.response.status === 400) {
           setError(
             'Certificate not available. The due might not be marked as fully paid in the system.'
           );
-        } else if (err.response.data && err.response.data.error) {
-          setError(err.response.data.error);
+        } else if (error.response.data && error.response.data.error) {
+          setError(error.response.data.error);
         } else {
           setError(
             'Certificate not available. Please contact an administrator.'
           );
         }
-      } else if (err.message) {
-        setError(err.message);
+      } else if (error.message) {
+        setError(error.message);
       } else {
         setError('Failed to load certificate data. Please try again later.');
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [dueId]);
 
   // Download certificate as PDF
   const handleDownloadCertificate = async () => {
@@ -74,8 +85,9 @@ const CertificateView: React.FC<CertificateViewProps> = ({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err: any) {
-      setError(err.message || 'Failed to download certificate');
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      setError(error.message || 'Failed to download certificate');
       console.error('Error downloading certificate:', err);
     } finally {
       setLoading(false);
@@ -87,7 +99,7 @@ const CertificateView: React.FC<CertificateViewProps> = ({
     if (isVisible && dueId) {
       fetchCertificateData();
     }
-  }, [isVisible, dueId]);
+  }, [isVisible, dueId, fetchCertificateData]);
 
   if (!isVisible) return null;
 
