@@ -13,11 +13,13 @@ import {
   getDueAnalytics,
   getPharmacyDueAnalytics,
   generateClearanceCertificate,
+  generatePDFCertificate,
   markDueAsPaid,
   getDuesByType,
   getOverdueDues,
   getPharmacyPaymentHistory,
 } from '../controllers/due.controller';
+import { fixDuePaymentStatus } from '../controllers/fixPaymentStatus.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
 
@@ -76,7 +78,13 @@ router.post('/:id/penalty', adminAuthorize, addPenaltyToDue);
 router.put('/:id/mark-paid', adminAuthorize, markDueAsPaid);
 router.get('/:id/certificate', generateClearanceCertificate);
 
+// Certificate generation
+router.post('/generate-certificate-pdf', generatePDFCertificate);
+
 // Legacy payment route (kept for backward compatibility)
 router.put('/:id/pay', adminAuthorize, payDue);
+
+// Fix payment status route
+router.post('/fix-payment-status', adminAuthorize, fixDuePaymentStatus);
 
 export default router;

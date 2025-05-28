@@ -4,6 +4,7 @@ import pharmacyService from '../../services/pharmacy.service';
 import financialService from '../../services/financial.service';
 import type { Payment } from '../../types/financial.types';
 import type { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
+import CertificateView from '../../components/certificate/CertificateView';
 
 // Enhanced payment interface that extends Payment with a dueInfo property
 interface EnhancedPayment extends Omit<Payment, 'dueInfo'> {
@@ -30,6 +31,11 @@ const PharmacyDues: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [payments, setPayments] = useState<EnhancedPayment[]>([]);
   const [showPaymentHistory, setShowPaymentHistory] = useState<boolean>(false);
+  const [showCertificateModal, setShowCertificateModal] =
+    useState<boolean>(false);
+  const [selectedCertificateDueId, setSelectedCertificateDueId] = useState<
+    string | null
+  >(null);
 
   const fetchPharmacyAndDues = useCallback(async () => {
     try {
@@ -290,12 +296,24 @@ const PharmacyDues: React.FC = () => {
 
         // Check for Axios error with response data
         if ('response' in err && err.response) {
-          const axiosErr = err as any;
+          const axiosErr = err as {
+            response: {
+              data?:
+                | {
+                    error?: string;
+                    message?: string;
+                  }
+                | string;
+              status?: number;
+            };
+          };
           if (axiosErr.response.data) {
-            if (axiosErr.response.data.error) {
-              errorMessage = axiosErr.response.data.error;
-            } else if (axiosErr.response.data.message) {
-              errorMessage = axiosErr.response.data.message;
+            if (typeof axiosErr.response.data === 'object') {
+              if (axiosErr.response.data.error) {
+                errorMessage = axiosErr.response.data.error;
+              } else if (axiosErr.response.data.message) {
+                errorMessage = axiosErr.response.data.message;
+              }
             } else if (typeof axiosErr.response.data === 'string') {
               errorMessage = axiosErr.response.data;
             }
@@ -315,22 +333,9 @@ const PharmacyDues: React.FC = () => {
     }
   };
 
-  const downloadClearanceCertificate = async (dueId: string) => {
-    try {
-      const response = await financialService.generateClearanceCertificate(
-        dueId
-      );
-
-      // Open certificate URL in a new window/tab
-      if (response.certificateUrl) {
-        window.open(response.certificateUrl, '_blank');
-      } else {
-        setError('Certificate not available. Please contact an administrator.');
-      }
-    } catch (err) {
-      setError('Failed to download clearance certificate');
-      console.error(err);
-    }
+  const downloadClearanceCertificate = (dueId: string) => {
+    setSelectedCertificateDueId(dueId);
+    setShowCertificateModal(true);
   };
 
   const getStatusBadge = (paymentStatus: string) => {
@@ -1185,6 +1190,18 @@ const PharmacyDues: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Certificate Modal */}
+      {showCertificateModal && selectedCertificateDueId && (
+        <CertificateView
+          dueId={selectedCertificateDueId}
+          isVisible={showCertificateModal}
+          onClose={() => {
+            setShowCertificateModal(false);
+            setSelectedCertificateDueId(null);
+          }}
+        />
+      )}
     </div>
   );
 };

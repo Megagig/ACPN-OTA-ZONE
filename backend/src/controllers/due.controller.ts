@@ -938,15 +938,26 @@ export const getPharmacyDueAnalytics = asyncHandler(
 // @access  Private
 export const generateClearanceCertificate = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
+    // Add debugging logs
+    console.log(`Certificate requested for due ID: ${req.params.id}`);
+
     const due = await Due.findById(req.params.id)
       .populate('pharmacyId')
       .populate('dueTypeId');
 
     if (!due) {
+      console.log(`Due not found with ID: ${req.params.id}`);
       throw new ErrorResponse('Due not found', 404);
     }
 
+    console.log(
+      `Due payment status: ${due.paymentStatus}, Required status: ${PaymentStatus.PAID}`
+    );
+
     if (due.paymentStatus !== PaymentStatus.PAID) {
+      console.log(
+        `Certificate generation denied - due not fully paid. Current status: ${due.paymentStatus}`
+      );
       throw new ErrorResponse(
         'Due must be fully paid to generate certificate',
         400
@@ -962,6 +973,10 @@ export const generateClearanceCertificate = asyncHandler(
       validUntil: new Date(new Date().getFullYear(), 11, 31), // Dec 31st of current year
       certificateNumber: `CERT-${due._id}-${Date.now()}`,
     };
+
+    console.log(
+      `Certificate successfully generated for due ID: ${req.params.id}`
+    );
 
     res.status(200).json({
       success: true,
@@ -1093,5 +1108,215 @@ export const getPharmacyPaymentHistory = asyncHandler(
       // Include dues separately so frontend can show both
       dues: dues,
     });
+  }
+);
+
+// @desc    Generate a PDF clearance certificate
+// @route   POST /api/dues/generate-certificate-pdf
+// @access  Private
+export const generatePDFCertificate = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const certificateData = req.body;
+
+    if (!certificateData || !certificateData.pharmacyName) {
+      throw new ErrorResponse('Certificate data is required', 400);
+    }
+
+    try {
+      // Import the PDF generation libraries only when needed
+      const PDFDocument = require('pdfkit');
+      const fs = require('fs');
+
+      // Create a PDF document
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50,
+        layout: 'portrait', // Changed to portrait for a more formal certificate
+        info: {
+          Title: 'ACPN Ota Zone Clearance Certificate',
+          Author: 'ACPN Ota Zone',
+          Subject: 'Clearance Certificate',
+          Keywords: 'clearance, certificate, pharmacy, ACPN',
+          CreationDate: new Date(),
+        },
+      });
+
+      // Add decorative border to the page
+      doc
+        .rect(20, 20, doc.page.width - 40, doc.page.height - 40)
+        .lineWidth(3)
+        .stroke('#006400'); // Dark green border
+
+      // Add inner border
+      doc
+        .rect(30, 30, doc.page.width - 60, doc.page.height - 60)
+        .lineWidth(1)
+        .dash(5, { space: 5 })
+        .stroke('#006400'); // Dashed inner border
+
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="clearance_certificate_${Date.now()}.pdf"`
+      );
+
+      // Pipe the PDF directly to the response
+      doc.pipe(res);
+
+      // Add content to the PDF
+      const logoPath = './src/assets/acpn-logo.png'; // Path to the logo file
+      try {
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, 50, 45, { width: 100 });
+        } else {
+          console.warn('Logo file not found:', logoPath);
+          // Add a placeholder for the logo
+          doc
+            .rect(50, 45, 100, 100)
+            .stroke()
+            .fontSize(10)
+            .text('ACPN Logo', 75, 85);
+        }
+      } catch (err) {
+        console.error('Error adding logo to PDF:', err);
+        // Continue without the logo
+      }
+
+      // Title
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(24)
+        .text('CLEARANCE CERTIFICATE', { align: 'center' })
+        .moveDown(0.2);
+
+      // Decorative line
+      doc
+        .moveTo(doc.page.width / 2 - 80, doc.y)
+        .lineTo(doc.page.width / 2 + 80, doc.y)
+        .lineWidth(3)
+        .stroke('#006400')
+        .moveDown(0.5);
+
+      doc
+        .fontSize(16)
+        .text('Pharmaceutical Society of Nigeria', { align: 'center' })
+        .fontSize(18)
+        .text('ACPN Ota Zone', { align: 'center' })
+        .moveDown(1);
+
+      // Certificate content
+      doc
+        .font('Helvetica')
+        .fontSize(12)
+        .text('This is to certify that:', { align: 'center' })
+        .moveDown(0.5);
+
+      // Pharmacy name
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(18)
+        .text(certificateData.pharmacyName, { align: 'center' })
+        .moveDown(0.2);
+
+      // Decorative underline for pharmacy name
+      doc
+        .moveTo(doc.page.width / 2 - 100, doc.y)
+        .lineTo(doc.page.width / 2 + 100, doc.y)
+        .lineWidth(1)
+        .stroke('#006400')
+        .moveDown(0.8);
+
+      // Certificate details
+      doc
+        .font('Helvetica')
+        .fontSize(12)
+        .text(
+          `has fulfilled all financial obligations to the ACPN Ota Zone pertaining to the ${certificateData.dueType} for ${new Date(certificateData.paidDate).getFullYear()}.`,
+          { align: 'center' }
+        )
+        .moveDown(1);
+
+      // Certificate details
+      doc.fontSize(11);
+
+      // Two columns
+      const leftColumn = 150;
+      const rightColumn = 450;
+
+      doc.text('Certificate Number:', leftColumn, 300);
+      doc
+        .font('Helvetica-Bold')
+        .text(certificateData.certificateNumber, rightColumn, 300);
+
+      doc.font('Helvetica').text('Due Type:', leftColumn, 325);
+      doc
+        .font('Helvetica-Bold')
+        .text(certificateData.dueType, rightColumn, 325);
+
+      doc.font('Helvetica').text('Amount Paid:', leftColumn, 350);
+      doc
+        .font('Helvetica-Bold')
+        .text(
+          `₦${certificateData.amount.toLocaleString('en-NG')}`,
+          rightColumn,
+          350
+        );
+
+      doc.font('Helvetica').text('Payment Date:', leftColumn, 375);
+      doc
+        .font('Helvetica-Bold')
+        .text(
+          new Date(certificateData.paidDate).toLocaleDateString('en-NG'),
+          rightColumn,
+          375
+        );
+
+      doc.font('Helvetica').text('Valid Until:', leftColumn, 400);
+      doc
+        .font('Helvetica-Bold')
+        .text(
+          new Date(certificateData.validUntil).toLocaleDateString('en-NG'),
+          rightColumn,
+          400
+        );
+
+      // Signature placeholders
+      doc
+        .font('Helvetica')
+        .fontSize(11)
+        .text('_____________________', 150, 480)
+        .text('Chairman', 170, 500)
+        .text('ACPN Ota Zone', 170, 515, { fontSize: 8 })
+        .text('_____________________', 400, 480)
+        .text('Secretary', 420, 500)
+        .text('ACPN Ota Zone', 420, 515, { fontSize: 8 });
+
+      // Stamp placeholder
+      doc.circle(300, 500, 40).dash(3, { space: 3 }).stroke('#888888');
+      doc.fontSize(8).text('OFFICIAL STAMP', 270, 498);
+
+      // Footer
+      doc
+        .fontSize(8)
+        .text(
+          'This certificate is issued in accordance with the regulations of the Association of Community Pharmacists of Nigeria (ACPN) Ota Zone.',
+          50,
+          530,
+          { align: 'center' }
+        )
+        .text(
+          `Issue Date: ${new Date().toLocaleDateString('en-NG', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+          50,
+          545,
+          { align: 'center' }
+        );
+
+      // Finalize the PDF
+      doc.end();
+    } catch (error) {
+      console.error('Error generating PDF certificate:', error);
+      throw new ErrorResponse('Failed to generate certificate PDF', 500);
+    }
   }
 );

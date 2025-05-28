@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Payment, { PaymentApprovalStatus } from '../models/payment.model';
-import Due from '../models/due.model';
+import Due, { PaymentStatus } from '../models/due.model';
 import Pharmacy from '../models/pharmacy.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
@@ -370,7 +370,16 @@ export const approvePayment = asyncHandler(
     const due = await Due.findById(payment.dueId);
     if (due) {
       due.amountPaid += payment.amount;
-      await due.save(); // Pre-save middleware will calculate balance and status
+      due.balance = due.totalAmount - due.amountPaid;
+
+      // Update payment status based on balance
+      if (due.balance <= 0) {
+        due.paymentStatus = PaymentStatus.PAID;
+      } else if (due.amountPaid > 0) {
+        due.paymentStatus = PaymentStatus.PARTIALLY_PAID;
+      }
+
+      await due.save();
     }
 
     const populatedPayment = await Payment.findById(payment._id)
@@ -481,6 +490,15 @@ export const reviewPayment = asyncHandler(
       const due = await Due.findById(payment.dueId);
       if (due) {
         due.amountPaid += payment.amount;
+        due.balance = due.totalAmount - due.amountPaid;
+
+        // Update payment status based on balance
+        if (due.balance <= 0) {
+          due.paymentStatus = PaymentStatus.PAID;
+        } else if (due.amountPaid > 0) {
+          due.paymentStatus = PaymentStatus.PARTIALLY_PAID;
+        }
+
         await due.save();
       }
     } else {
@@ -523,6 +541,17 @@ export const deletePayment = asyncHandler(
       const due = await Due.findById(payment.dueId);
       if (due) {
         due.amountPaid -= payment.amount;
+        due.balance = due.totalAmount - due.amountPaid;
+
+        // Update payment status based on new balance
+        if (due.amountPaid <= 0) {
+          due.paymentStatus = PaymentStatus.PENDING;
+        } else if (due.balance <= 0) {
+          due.paymentStatus = PaymentStatus.PAID;
+        } else {
+          due.paymentStatus = PaymentStatus.PARTIALLY_PAID;
+        }
+
         await due.save();
       }
     }

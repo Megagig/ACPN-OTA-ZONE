@@ -27,13 +27,16 @@ export const protect = asyncHandler(
     ) {
       // Extract token from Bearer header
       token = req.headers.authorization.split(' ')[1];
+      console.log('Token found in authorization header');
     } else if (req.cookies.token) {
       // Get token from cookie
       token = req.cookies.token;
+      console.log('Token found in cookies');
     }
 
     // Check if token exists
     if (!token) {
+      console.log('No authentication token found in request');
       return next(
         new ErrorResponse('Not authorized to access this route', 401)
       );
@@ -41,21 +44,27 @@ export const protect = asyncHandler(
 
     try {
       // Verify token
+      console.log('Verifying token...');
       const decoded = verifyToken(token);
 
       if (!decoded) {
+        console.error('Token verification failed');
         return next(new ErrorResponse('Token is invalid or expired', 401));
       }
+
+      console.log(`Token verified for user ID: ${decoded.id}`);
 
       // Find user by id
       const user = await User.findById(decoded.id);
 
       if (!user) {
+        console.error(`User not found with ID: ${decoded.id}`);
         return next(new ErrorResponse('User not found', 404));
       }
 
       // Check if user is active
       if (user.status !== 'active') {
+        console.log(`User ${user._id} has inactive status: ${user.status}`);
         return next(
           new ErrorResponse(
             'Your account is not active. Please contact an administrator.',
@@ -66,8 +75,10 @@ export const protect = asyncHandler(
 
       // Add user to request object
       req.user = user;
+      console.log(`User ${user._id} authenticated successfully`);
       next();
     } catch (err) {
+      console.error('Authentication error:', err);
       return next(
         new ErrorResponse('Not authorized to access this route', 401)
       );

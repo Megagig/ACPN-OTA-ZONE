@@ -94,6 +94,7 @@ export const verifyToken = (token: string): TokenData | null => {
     const secret = process.env.JWT_SECRET || 'fallbacksecret';
     return jwt.verify(token, secret) as TokenData;
   } catch (err) {
+    console.error('JWT verification error:', err);
     return null;
   }
 };

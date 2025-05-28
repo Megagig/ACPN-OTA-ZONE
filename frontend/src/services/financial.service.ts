@@ -569,6 +569,36 @@ export const getFinancialReports = async (): Promise<FinancialReport[]> => {
   ];
 };
 
+// Get clearance certificate for a paid due
+export const getClearanceCertificate = async (dueId: string): Promise<any> => {
+  try {
+    const response = await api.get(`/dues/${dueId}/certificate`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error getting clearance certificate:', error);
+    throw error;
+  }
+};
+
+// Generate PDF certificate from certificate data
+export const generateCertificatePDF = async (
+  certificateData: any
+): Promise<Blob> => {
+  try {
+    const response = await api.post(
+      '/dues/generate-certificate-pdf',
+      certificateData,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error generating PDF certificate:', error);
+    throw error;
+  }
+};
+
 // All exported functions
 const financialService = {
   // Financial Records
@@ -649,6 +679,10 @@ const financialService = {
   // Financial Analytics
   getFinancialAnalytics,
   getFinancialReports,
+
+  // Clearance Certificate PDF
+  getClearanceCertificate,
+  generateCertificatePDF,
 };
 
 export default financialService;

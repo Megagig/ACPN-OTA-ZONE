@@ -19,8 +19,17 @@ export const errorHandler = (
   let error = { ...err };
   error.message = err.message;
 
-  // Log error for dev
-  console.error(err);
+  // Log error details for debugging
+  console.error('Error encountered:');
+  console.error(`Request URL: ${req.originalUrl}`);
+  console.error(`Method: ${req.method}`);
+  console.error(`Error name: ${err.name}`);
+  console.error(`Error message: ${err.message}`);
+  console.error(`Error stack: ${err.stack}`);
+
+  if (err.response) {
+    console.error(`Response data: ${JSON.stringify(err.response.data)}`);
+  }
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {

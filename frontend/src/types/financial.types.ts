@@ -203,9 +203,13 @@ export interface ClearanceEligibility {
 }
 
 export interface CertificateData {
-  pharmacyId: string;
-  certificateNumber: string;
-  issueDate: string;
+  pharmacyId?: string;
+  pharmacyName: string;
+  dueType: string;
+  amount: number;
+  paidDate: string;
   validUntil: string;
-  issuedBy: string;
+  certificateNumber: string;
+  issueDate?: string;
+  issuedBy?: string;
 }

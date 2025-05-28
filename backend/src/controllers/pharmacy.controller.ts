@@ -157,21 +157,35 @@ export const getPharmacy = asyncHandler(
 // @access  Private
 export const getMyPharmacy = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const pharmacy = await Pharmacy.findOne({ userId: req.user._id }).populate(
-      'userId',
-      'firstName lastName email phone'
-    );
+    try {
+      console.log('Getting pharmacy for user:', req.user?._id);
 
-    if (!pharmacy) {
-      return next(
-        new ErrorResponse('Pharmacy not found for the current user', 404)
-      );
+      // Check if req.user exists
+      if (!req.user || !req.user._id) {
+        console.error('User not found in request or missing _id');
+        return next(new ErrorResponse('User not authenticated properly', 401));
+      }
+
+      const pharmacy = await Pharmacy.findOne({
+        userId: req.user._id,
+      }).populate('userId', 'firstName lastName email phone');
+
+      if (!pharmacy) {
+        console.log(`No pharmacy found for user ${req.user._id}`);
+        return next(
+          new ErrorResponse('Pharmacy not found for the current user', 404)
+        );
+      }
+
+      console.log(`Successfully found pharmacy for user ${req.user._id}`);
+      res.status(200).json({
+        success: true,
+        data: pharmacy,
+      });
+    } catch (error) {
+      console.error('Error in getMyPharmacy:', error);
+      return next(new ErrorResponse('Server error getting pharmacy data', 500));
     }
-
-    res.status(200).json({
-      success: true,
-      data: pharmacy,
-    });
   }
 );
 

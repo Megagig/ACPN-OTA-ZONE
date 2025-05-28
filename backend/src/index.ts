@@ -93,6 +93,23 @@ app.use('/api/financial-records', financialRecordRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';
+
+// Global unhandled promise rejection handler
+process.on('unhandledRejection', (err: any) => {
+  console.error('UNHANDLED REJECTION! 💥 Shutting down...');
+  console.error(err.name, err.message);
+  console.error('Stack:', err.stack);
+  process.exit(1);
+});
+
+// Global uncaught exception handler
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+  console.error(err.name, err.message);
+  console.error('Stack:', err.stack);
+  process.exit(1);
+});
+
 app.use(notFound);
 app.use(errorHandler);
 
