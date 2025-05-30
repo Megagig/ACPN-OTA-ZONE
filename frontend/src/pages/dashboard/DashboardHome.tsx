@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 
 interface DashboardStats {
@@ -12,6 +13,7 @@ interface DashboardStats {
 
 const DashboardHome: React.FC = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [stats, setStats] = useState<DashboardStats>({
     totalPharmacies: 0,
     totalMembers: 0,
@@ -98,12 +100,12 @@ const DashboardHome: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {/* Total Pharmacies Card */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+              <div className="flex-shrink-0 bg-primary rounded-md p-3">
                 <svg
-                  className="h-6 w-6 text-white"
+                  className="h-6 w-6 text-primary-foreground"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -119,11 +121,11 @@ const DashboardHome: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Total Pharmacies
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">
+                    <div className="text-lg font-medium text-foreground">
                       {stats.totalPharmacies}
                     </div>
                   </dd>
@@ -131,11 +133,11 @@ const DashboardHome: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
+          <div className="bg-accent px-5 py-3">
             <div className="text-sm">
               <a
                 href="/pharmacies"
-                className="font-medium text-indigo-600 hover:text-indigo-900"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 View all
               </a>
