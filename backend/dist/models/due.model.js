@@ -110,10 +110,15 @@ const dueSchema = new mongoose_1.Schema({
     balance: {
         type: Number,
         default: function () {
-            // Ensure totalAmount and amountPaid are numbers before subtraction
-            const totalAmount = Number(this.totalAmount) || 0;
+            var _a;
+            // Safe calculation with null/undefined checks
+            if (this === null || this === undefined)
+                return 0;
+            // Calculate directly without relying on totalAmount
+            const amount = Number(this.amount) || 0;
+            const penaltyAmount = ((_a = this.penalties) === null || _a === void 0 ? void 0 : _a.reduce((sum, penalty) => sum + Number(penalty.amount || 0), 0)) || 0;
             const amountPaid = Number(this.amountPaid) || 0;
-            return totalAmount - amountPaid;
+            return amount + penaltyAmount - amountPaid;
         },
     },
     penalties: [penaltySchema],
@@ -121,9 +126,11 @@ const dueSchema = new mongoose_1.Schema({
         type: Number,
         default: function () {
             var _a;
-            const penaltyAmount = ((_a = this.penalties) === null || _a === void 0 ? void 0 : _a.reduce((sum, penalty) => sum + penalty.amount, 0)) ||
-                0;
-            // Ensure this.amount is a number
+            // Safe calculation with null/undefined checks
+            if (this === null || this === undefined)
+                return 0;
+            const penaltyAmount = ((_a = this.penalties) === null || _a === void 0 ? void 0 : _a.reduce((sum, penalty) => sum + Number(penalty.amount || 0), 0)) || 0;
+            // Ensure this.amount is a number with null/undefined check
             const amount = Number(this.amount) || 0;
             return amount + penaltyAmount;
         },

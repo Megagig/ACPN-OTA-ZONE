@@ -9,16 +9,20 @@ import {
   Divider,
   Radio,
   RadioGroup,
-  Stack,
   Badge,
   Flex,
   Progress,
   SimpleGrid,
+  Alert,
+  CardBody,
+  Stack,
+} from '@chakra-ui/react';
+import {
+  AlertIcon,
+  Avatar,
+  Card,
   Image,
-} from '../../components/ui/TailwindComponentsFixed';
-import { Alert, AlertIcon } from '../../components/common/AlertComponent';
-import { Avatar } from '../../components/ui/TailwindComponentsFixed';
-import { Card, CardBody } from '../../components/common/CardComponent';
+} from '../../components/ui/chakra-components';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
@@ -31,7 +35,7 @@ interface SelectedCandidates {
 const VotingInterface: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { toast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -48,11 +52,13 @@ const VotingInterface: React.FC = () => {
           const data = await electionService.getElectionById(id);
 
           if (data.status !== 'ongoing') {
-            showToast(
-              'Voting unavailable',
-              'This election is not currently active for voting',
-              'warning'
-            );
+            toast({
+              title: 'Voting unavailable',
+              description: 'This election is not currently active for voting',
+              status: 'warning',
+              duration: 3000,
+              isClosable: true,
+            });
             navigate(`/elections/${id}`);
             return;
           }
@@ -65,18 +71,20 @@ const VotingInterface: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading election:', error);
-        showToast(
-          'Error loading election',
-          'Unable to load election details',
-          'error'
-        );
+        toast({
+          title: 'Error loading election',
+          description: 'Unable to load election details',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElection();
-  }, [id, navigate, showToast]);
+  }, [id, navigate, toast]);
 
   const handleSelectCandidate = (positionId: string, candidateId: string) => {
     setSelectedCandidates({
@@ -113,20 +121,24 @@ const VotingInterface: React.FC = () => {
 
       await electionService.submitVotes(id, votes);
 
-      showToast(
-        'Votes submitted successfully',
-        'Your votes have been recorded',
-        'success'
-      );
+      toast({
+        title: 'Votes submitted successfully',
+        description: 'Your votes have been recorded',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
       navigate(`/elections/${id}`);
     } catch (error) {
       console.error('Error submitting votes:', error);
-      showToast(
-        'Error submitting votes',
-        'There was a problem recording your votes',
-        'error'
-      );
+      toast({
+        title: 'Error submitting votes',
+        description: 'There was a problem recording your votes',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setSubmitting(false);
     }

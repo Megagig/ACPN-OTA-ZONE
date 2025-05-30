@@ -68,6 +68,10 @@ const documentSchema = new mongoose_1.Schema({
         type: String,
         required: [true, 'File URL is required'],
     },
+    publicId: {
+        type: String,
+        required: false, // Optional for backward compatibility
+    },
     uploadDate: {
         type: Date,
         default: Date.now,

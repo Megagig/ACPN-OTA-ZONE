@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  FaChartBar,
-  FaMedal,
-  FaPercentage,
-  FaUserFriends,
-} from 'react-icons/fa';
+import { FaChartBar, FaMedal } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Alert, AlertIcon } from '../../components/common/AlertComponent';
-import { useToast } from '../../hooks/useToast';
 import {
   Box,
   Heading,
@@ -29,8 +22,16 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-} from '../../components/ui/TailwindComponents';
-import { Card, CardBody } from '../../components/common/CardComponent';
+  Alert,
+  CardBody,
+} from '@chakra-ui/react';
+import {
+  AlertIcon,
+  Avatar,
+  Card,
+  Image,
+} from '../../components/ui/chakra-components';
+import { useToast } from '../../hooks/useToast';
 import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
 import ChartComponent from '../../components/common/ChartComponent';
@@ -66,7 +67,7 @@ const ElectionResults: React.FC = () => {
           setElection(data);
 
           // If election is completed, fetch voting statistics
-          if (data.status === 'completed') {
+          if (data.status === 'ended') {
             const stats = await electionService.getElectionStatistics(id);
             setStatistics(stats);
           } else {
@@ -82,6 +83,7 @@ const ElectionResults: React.FC = () => {
           }
         }
       } catch (error) {
+        console.error('Error fetching election results:', error);
         toast({
           title: 'Error fetching election results',
           description: 'Unable to load election results',
@@ -98,31 +100,31 @@ const ElectionResults: React.FC = () => {
   }, [id, navigate, toast]);
 
   const renderPositionResults = (position: Position) => {
-    if (!position.candidates || position.candidates.length === 0) {
+    // Get candidates for this position from the election
+    const positionCandidates =
+      election?.candidates.filter((c) => c.position === position._id) || [];
+
+    if (positionCandidates.length === 0) {
       return <Text color="gray.500">No candidates for this position</Text>;
     }
 
     // Calculate total votes for this position
-    const totalPositionVotes = position.candidates.reduce(
-      (sum, candidate) => sum + (candidate.voteCount || 0),
+    const totalPositionVotes = positionCandidates.reduce(
+      (sum: number, candidate: Candidate) => sum + (candidate.votes || 0),
       0
     );
 
     // Sort candidates by vote count in descending order
-    const sortedCandidates = [...position.candidates].sort(
-      (a, b) => (b.voteCount || 0) - (a.voteCount || 0)
+    const sortedCandidates = [...positionCandidates].sort(
+      (a, b) => (b.votes || 0) - (a.votes || 0)
     );
-
-    // Find the winner
-    const winner = sortedCandidates[0];
-    const winnerVotes = winner?.voteCount || 0;
 
     return (
       <Box>
         {sortedCandidates.map((candidate, index) => {
           const votePercentage =
             totalPositionVotes > 0
-              ? ((candidate.voteCount || 0) / totalPositionVotes) * 100
+              ? ((candidate.votes || 0) / totalPositionVotes) * 100
               : 0;
 
           return (
@@ -140,21 +142,22 @@ const ElectionResults: React.FC = () => {
                   {candidate.photoUrl ? (
                     <Image
                       src={candidate.photoUrl}
-                      alt={candidate.name}
+                      alt={candidate.fullName}
                       boxSize="40px"
                       objectFit="cover"
                       borderRadius="full"
                     />
                   ) : (
-                    <Avatar size="sm" name={candidate.name} />
+                    <Avatar size="sm" name={candidate.fullName} />
                   )}
                   <Text fontWeight={index === 0 ? 'bold' : 'medium'}>
-                    {candidate.name} {index === 0 && <FaMedal color="gold" />}
+                    {candidate.fullName}{' '}
+                    {index === 0 && <FaMedal color="gold" />}
                   </Text>
                 </HStack>
                 <HStack>
                   <Badge colorScheme={index === 0 ? 'green' : 'blue'}>
-                    {candidate.voteCount || 0} votes
+                    {candidate.votes || 0} votes
                   </Badge>
                   <Badge
                     colorScheme={index === 0 ? 'green' : 'blue'}
@@ -312,7 +315,7 @@ const ElectionResults: React.FC = () => {
     );
   }
 
-  if (election.status !== 'completed') {
+  if (election.status !== 'ended') {
     return (
       <DashboardLayout>
         <Box p={5}>
@@ -369,7 +372,7 @@ const ElectionResults: React.FC = () => {
                   <Card key={position._id} variant="outline">
                     <CardBody>
                       <Heading size="md" mb={4}>
-                        {position.title}
+                        {position.name}
                       </Heading>
                       {renderPositionResults(position)}
                     </CardBody>

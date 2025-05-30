@@ -19,6 +19,8 @@ router
     .get(document_controller_1.getDocument)
     .put(document_controller_1.updateDocument)
     .delete(document_controller_1.deleteDocument);
+// Download route
+router.route('/:id/download').get(document_controller_1.downloadDocument);
 // Routes that apply to /api/pharmacies/:pharmacyId/documents
 router.route('/').get(document_controller_1.getPharmacyDocuments).post(document_controller_1.uploadDocument);
 exports.default = router;

@@ -31,13 +31,33 @@ cloudinary_1.v2.config({
  */
 const uploadToCloudinary = (filePath, folder) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Log configuration for debugging
+        console.log('Cloudinary config check:', {
+            cloud_name: !!process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: !!process.env.CLOUDINARY_API_KEY,
+            api_secret: !!process.env.CLOUDINARY_API_SECRET,
+            folder: `acpn-ota/${folder}`,
+            filePath,
+        });
         const result = yield cloudinary_1.v2.uploader.upload(filePath, {
             folder: `acpn-ota/${folder}`,
+            resource_type: 'auto', // Allow any file type
+        });
+        console.log('Cloudinary upload successful:', {
+            public_id: result.public_id,
+            secure_url: result.secure_url,
         });
         return result;
     }
     catch (error) {
-        throw new Error(`Cloudinary upload failed: ${error}`);
+        console.error('Cloudinary upload error details:', {
+            message: error === null || error === void 0 ? void 0 : error.message,
+            name: error === null || error === void 0 ? void 0 : error.name,
+            stack: error === null || error === void 0 ? void 0 : error.stack,
+            filePath,
+            folder,
+        });
+        throw new Error(`Cloudinary upload failed: ${JSON.stringify((error === null || error === void 0 ? void 0 : error.message) || error)}`);
     }
 });
 exports.uploadToCloudinary = uploadToCloudinary;
@@ -49,10 +69,16 @@ exports.uploadToCloudinary = uploadToCloudinary;
 const deleteFromCloudinary = (publicId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield cloudinary_1.v2.uploader.destroy(publicId);
+        console.log('Cloudinary deletion successful:', result);
         return result;
     }
     catch (error) {
-        throw new Error(`Cloudinary deletion failed: ${error}`);
+        console.error('Cloudinary deletion error details:', {
+            message: error === null || error === void 0 ? void 0 : error.message,
+            name: error === null || error === void 0 ? void 0 : error.name,
+            publicId,
+        });
+        throw new Error(`Cloudinary deletion failed: ${JSON.stringify((error === null || error === void 0 ? void 0 : error.message) || error)}`);
     }
 });
 exports.deleteFromCloudinary = deleteFromCloudinary;

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const due_controller_1 = require("../controllers/due.controller");
+const fixPaymentStatus_controller_1 = require("../controllers/fixPaymentStatus.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const user_model_1 = require("../models/user.model");
 const router = express_1.default.Router({ mergeParams: true });
@@ -49,6 +50,10 @@ router
 router.post('/:id/penalty', adminAuthorize, due_controller_1.addPenaltyToDue);
 router.put('/:id/mark-paid', adminAuthorize, due_controller_1.markDueAsPaid);
 router.get('/:id/certificate', due_controller_1.generateClearanceCertificate);
+// Certificate generation
+router.post('/generate-certificate-pdf', due_controller_1.generatePDFCertificate);
 // Legacy payment route (kept for backward compatibility)
 router.put('/:id/pay', adminAuthorize, due_controller_1.payDue);
+// Fix payment status route
+router.post('/fix-payment-status', adminAuthorize, fixPaymentStatus_controller_1.fixDuePaymentStatus);
 exports.default = router;

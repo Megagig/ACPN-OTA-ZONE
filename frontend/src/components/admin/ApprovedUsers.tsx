@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import userService from '../../services/user.service';
 import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@chakra-ui/react';
 import ConfirmationModal from '../common/ConfirmationModal'; // Import the modal
 
 interface ApprovedUserType extends User {

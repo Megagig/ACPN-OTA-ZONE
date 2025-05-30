@@ -22,12 +22,37 @@ export const uploadToCloudinary = async (
   folder: string
 ): Promise<any> => {
   try {
+    // Log configuration for debugging
+    console.log('Cloudinary config check:', {
+      cloud_name: !!process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: !!process.env.CLOUDINARY_API_KEY,
+      api_secret: !!process.env.CLOUDINARY_API_SECRET,
+      folder: `acpn-ota/${folder}`,
+      filePath,
+    });
+
     const result = await cloudinary.uploader.upload(filePath, {
       folder: `acpn-ota/${folder}`,
+      resource_type: 'auto', // Allow any file type
     });
+
+    console.log('Cloudinary upload successful:', {
+      public_id: result.public_id,
+      secure_url: result.secure_url,
+    });
+
     return result;
-  } catch (error) {
-    throw new Error(`Cloudinary upload failed: ${error}`);
+  } catch (error: any) {
+    console.error('Cloudinary upload error details:', {
+      message: error?.message,
+      name: error?.name,
+      stack: error?.stack,
+      filePath,
+      folder,
+    });
+    throw new Error(
+      `Cloudinary upload failed: ${JSON.stringify(error?.message || error)}`
+    );
   }
 };
 
@@ -39,9 +64,17 @@ export const uploadToCloudinary = async (
 export const deleteFromCloudinary = async (publicId: string): Promise<any> => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
+    console.log('Cloudinary deletion successful:', result);
     return result;
-  } catch (error) {
-    throw new Error(`Cloudinary deletion failed: ${error}`);
+  } catch (error: any) {
+    console.error('Cloudinary deletion error details:', {
+      message: error?.message,
+      name: error?.name,
+      publicId,
+    });
+    throw new Error(
+      `Cloudinary deletion failed: ${JSON.stringify(error?.message || error)}`
+    );
   }
 };
 

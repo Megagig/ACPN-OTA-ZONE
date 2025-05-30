@@ -45,12 +45,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPharmacyPaymentHistory = exports.getOverdueDues = exports.getDuesByType = exports.markDueAsPaid = exports.generateClearanceCertificate = exports.getPharmacyDueAnalytics = exports.getDueAnalytics = exports.addPenaltyToDue = exports.assignDueToPharmacy = exports.bulkAssignDues = exports.assignDues = exports.getDuesStats = exports.payDue = exports.deleteDue = exports.updateDue = exports.createDue = exports.getDue = exports.getPharmacyDues = exports.getAllDues = void 0;
+exports.generatePDFCertificate = exports.getPharmacyPaymentHistory = exports.getOverdueDues = exports.getDuesByType = exports.markDueAsPaid = exports.generateClearanceCertificate = exports.getPharmacyDueAnalytics = exports.getDueAnalytics = exports.addPenaltyToDue = exports.assignDueToPharmacy = exports.bulkAssignDues = exports.assignDues = exports.getDuesStats = exports.payDue = exports.deleteDue = exports.updateDue = exports.createDue = exports.getDue = exports.getPharmacyDues = exports.getAllDues = void 0;
 const due_model_1 = __importStar(require("../models/due.model"));
 const pharmacy_model_1 = __importDefault(require("../models/pharmacy.model"));
 const payment_model_1 = __importDefault(require("../models/payment.model"));
 const async_middleware_1 = __importDefault(require("../middleware/async.middleware"));
 const errorResponse_1 = __importDefault(require("../utils/errorResponse"));
+const path_1 = __importDefault(require("path"));
+const counter_1 = require("../utils/counter");
 // @desc    Get all dues
 // @route   GET /api/dues
 // @access  Private/Admin
@@ -437,6 +439,12 @@ exports.bulkAssignDues = (0, async_middleware_1.default)((req, res) => __awaiter
                 continue;
             }
             try {
+                // Check if a due already exists
+                const existingDue = yield due_model_1.default.findOne({
+                    pharmacyId,
+                    dueTypeId,
+                    year: dueYear,
+                });
                 // FIX FOR E11000 DUPLICATE KEY ERROR:
                 // Like in the assignDueToPharmacy method, we're using findOneAndUpdate with upsert
                 // to avoid race conditions that could lead to duplicate key errors when multiple
@@ -464,7 +472,17 @@ exports.bulkAssignDues = (0, async_middleware_1.default)((req, res) => __awaiter
                     runValidators: true,
                     setDefaultsOnInsert: true,
                 });
-                dues.push(due);
+                // If we're updating an existing due, add a note to the response
+                if (existingDue) {
+                    // Use type-safe approach with interface extension
+                    const dueObject = due.toObject();
+                    // Use type assertion to add the custom property
+                    dueObject.updated = true;
+                    dues.push(dueObject);
+                }
+                else {
+                    dues.push(due);
+                }
             }
             catch (error) {
                 // Track pharmacies that failed to be assigned due to database errors
@@ -519,6 +537,13 @@ exports.assignDueToPharmacy = (0, async_middleware_1.default)((req, res) => __aw
     //
     // This is a safer approach as it eliminates the race condition window between
     // checking for existence and creating a new record.
+    // Check if a due already exists
+    const existingDue = yield due_model_1.default.findOne({
+        pharmacyId,
+        dueTypeId,
+        year: dueYear,
+    });
+    let due;
     try {
         const updateData = {
             title: title || `Individual Due - ${dueYear}`,
@@ -531,7 +556,8 @@ exports.assignDueToPharmacy = (0, async_middleware_1.default)((req, res) => __aw
             isRecurring: isRecurring || false,
             recurringFrequency: recurringFrequency || null,
         };
-        const due = yield due_model_1.default.findOneAndUpdate({
+        // If a due exists, just update it without throwing an error
+        due = yield due_model_1.default.findOneAndUpdate({
             pharmacyId,
             dueTypeId,
             year: dueYear,
@@ -541,20 +567,16 @@ exports.assignDueToPharmacy = (0, async_middleware_1.default)((req, res) => __aw
             runValidators: true, // Run validators for update
             setDefaultsOnInsert: true, // Apply defaults on insert
         });
-        // Populate references
-        const populatedDue = yield due_model_1.default.findOne({
-            pharmacyId,
-            dueTypeId,
-            year: dueYear,
-        }).populate('dueTypeId pharmacyId');
     }
     catch (error) {
-        // If there's a duplicate key error (11000), provide a more specific message
-        if (error.code === 11000) {
-            throw new errorResponse_1.default(`A due for this pharmacy of the same type already exists for ${dueYear}. Please try again.`, 400);
+        // Only throw an error if it's not a duplicate key error
+        if (error.code !== 11000) {
+            throw error;
         }
-        throw error; // Re-throw any other errors
+        // For duplicate key errors, we'll just use the existing due
+        console.log('Duplicate key error handled - due already exists');
     }
+    // Populate references
     const populatedDue = yield due_model_1.default.findOne({
         pharmacyId,
         dueTypeId,
@@ -582,7 +604,7 @@ exports.assignDueToPharmacy = (0, async_middleware_1.default)((req, res) => __aw
             }
             // Use the same upsert pattern for recurring dues to prevent duplicates
             try {
-                yield due_model_1.default.findOneAndUpdate({
+                const recurringDue = yield due_model_1.default.findOneAndUpdate({
                     pharmacyId,
                     dueTypeId,
                     year: nextDueDate.getFullYear(),
@@ -606,7 +628,13 @@ exports.assignDueToPharmacy = (0, async_middleware_1.default)((req, res) => __aw
                 });
             }
             catch (error) {
-                console.error(`Error creating recurring due for year ${nextDueDate.getFullYear()}:`, error);
+                // Log but don't throw error for duplicate recurring dues
+                if (error.code === 11000) {
+                    console.log(`Recurring due for year ${nextDueDate.getFullYear()} already exists - skipping.`);
+                }
+                else {
+                    console.error(`Error creating recurring due for year ${nextDueDate.getFullYear()}:`, error);
+                }
                 // Continue with other recurring dues even if one fails
             }
         }
@@ -730,15 +758,22 @@ exports.getPharmacyDueAnalytics = (0, async_middleware_1.default)((req, res) => 
 // @route   GET /api/dues/:id/certificate
 // @access  Private
 exports.generateClearanceCertificate = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Add debugging logs
+    console.log(`Certificate requested for due ID: ${req.params.id}`);
     const due = yield due_model_1.default.findById(req.params.id)
         .populate('pharmacyId')
         .populate('dueTypeId');
     if (!due) {
+        console.log(`Due not found with ID: ${req.params.id}`);
         throw new errorResponse_1.default('Due not found', 404);
     }
+    console.log(`Due payment status: ${due.paymentStatus}, Required status: ${due_model_1.PaymentStatus.PAID}`);
     if (due.paymentStatus !== due_model_1.PaymentStatus.PAID) {
+        console.log(`Certificate generation denied - due not fully paid. Current status: ${due.paymentStatus}`);
         throw new errorResponse_1.default('Due must be fully paid to generate certificate', 400);
     }
+    // Generate a 4-digit incremental certificate number
+    const certificateNumber = yield (0, counter_1.getNextCertificateNumber)();
     // For now, return certificate data - PDF generation can be added later
     const certificateData = {
         pharmacyName: due.pharmacyId.name,
@@ -746,8 +781,9 @@ exports.generateClearanceCertificate = (0, async_middleware_1.default)((req, res
         amount: due.totalAmount,
         paidDate: due.updatedAt,
         validUntil: new Date(new Date().getFullYear(), 11, 31), // Dec 31st of current year
-        certificateNumber: `CERT-${due._id}-${Date.now()}`,
+        certificateNumber,
     };
+    console.log(`Certificate successfully generated for due ID: ${req.params.id}`);
     res.status(200).json({
         success: true,
         data: certificateData,
@@ -849,4 +885,237 @@ exports.getPharmacyPaymentHistory = (0, async_middleware_1.default)((req, res) =
         // Include dues separately so frontend can show both
         dues: dues,
     });
+}));
+// @desc    Generate a PDF clearance certificate
+// @route   POST /api/dues/generate-certificate-pdf
+// @access  Private
+exports.generatePDFCertificate = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const certificateData = req.body;
+    if (!certificateData || !certificateData.pharmacyName) {
+        throw new errorResponse_1.default('Certificate data is required', 400);
+    }
+    try {
+        // Import the PDF generation libraries only when needed
+        const PDFDocument = require('pdfkit');
+        const fs = require('fs');
+        // Create a PDF document
+        const doc = new PDFDocument({
+            size: 'A4',
+            margin: 50,
+            layout: 'portrait', // Changed to portrait for a more formal certificate
+            info: {
+                Title: 'ACPN Ota Zone Clearance Certificate',
+                Author: 'ACPN Ota Zone',
+                Subject: 'Clearance Certificate',
+                Keywords: 'clearance, certificate, pharmacy, ACPN',
+                CreationDate: new Date(),
+            },
+        });
+        // Add decorative border to the page
+        doc
+            .rect(20, 20, doc.page.width - 40, doc.page.height - 40)
+            .lineWidth(3)
+            .stroke('#006400'); // Dark green border
+        // Add inner border
+        doc
+            .rect(30, 30, doc.page.width - 60, doc.page.height - 60)
+            .lineWidth(1)
+            .dash(5, { space: 5 })
+            .stroke('#006400'); // Dashed inner border
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="ACPN_Certificate_${certificateData.certificateNumber}.pdf"`);
+        // Pipe the PDF directly to the response
+        doc.pipe(res);
+        // Add content to the PDF
+        const logoPath = path_1.default.resolve(__dirname, '../assets/acpn-logo.png'); // Absolute path to the logo file
+        try {
+            if (fs.existsSync(logoPath)) {
+                // Add the logo with better sizing and positioning
+                doc.image(logoPath, 50, 45, { width: 100, align: 'center' });
+                console.log('Logo successfully added from:', logoPath);
+            }
+            else {
+                console.warn('Logo file not found:', logoPath);
+                // Add a placeholder for the logo with ACPN text
+                doc
+                    .circle(100, 80, 40)
+                    .lineWidth(2)
+                    .stroke('#006400')
+                    .fillOpacity(0.1)
+                    .fill('#006400')
+                    .fillOpacity(1)
+                    .fontSize(16)
+                    .fill('#006400')
+                    .text('ACPN', 75, 70, { align: 'center' })
+                    .fontSize(12)
+                    .text('OTA ZONE', 75, 90, { align: 'center' });
+            }
+        }
+        catch (err) {
+            console.error('Error adding logo to PDF:', err);
+            // Continue without the logo but add a text placeholder
+            doc
+                .circle(100, 80, 40)
+                .lineWidth(2)
+                .stroke('#006400')
+                .fillOpacity(0.1)
+                .fill('#006400')
+                .fillOpacity(1)
+                .fontSize(16)
+                .fill('#006400')
+                .text('ACPN', 75, 70, { align: 'center' })
+                .fontSize(12)
+                .text('OTA ZONE', 75, 90, { align: 'center' });
+        }
+        // Title with decorative elements
+        doc
+            .font('Helvetica-Bold')
+            .fontSize(28)
+            .fillColor('#006400')
+            .text('CLEARANCE CERTIFICATE', { align: 'center' })
+            .moveDown(0.2);
+        // Decorative line
+        doc
+            .moveTo(doc.page.width / 2 - 100, doc.y)
+            .lineTo(doc.page.width / 2 + 100, doc.y)
+            .lineWidth(3)
+            .stroke('#006400')
+            .moveDown(0.5);
+        // Organization name with professional styling
+        doc
+            .fillColor('#000000')
+            .fontSize(16)
+            .text('Pharmaceutical Society of Nigeria', { align: 'center' })
+            .fontSize(18)
+            .fillColor('#006400')
+            .text('ACPN Ota Zone', { align: 'center' })
+            .moveDown(1);
+        // Certificate content - make it stand out more
+        doc
+            .font('Helvetica')
+            .fontSize(14)
+            .fillColor('#333333')
+            .text('This is to certify that:', { align: 'center' })
+            .moveDown(0.5);
+        // Pharmacy name - make it bold and prominent
+        doc
+            .font('Helvetica-Bold')
+            .fontSize(20)
+            .fillColor('#000000')
+            .text(certificateData.pharmacyName, { align: 'center' })
+            .moveDown(0.2);
+        // Decorative underline for pharmacy name
+        doc
+            .moveTo(doc.page.width / 2 - 100, doc.y)
+            .lineTo(doc.page.width / 2 + 100, doc.y)
+            .lineWidth(1)
+            .stroke('#006400')
+            .moveDown(0.8);
+        // Certificate details
+        doc
+            .font('Helvetica')
+            .fontSize(12)
+            .text('This is to certify that the above-named pharmacy', {
+            align: 'center',
+        })
+            .moveDown(0.2)
+            .font('Helvetica-Bold')
+            .text(`has fulfilled all financial obligations to the Association of Community Pharmacists of Nigeria, Ota Zone,`, { align: 'center' })
+            .moveDown(0.2)
+            .font('Helvetica')
+            .text(`pertaining to the ${certificateData.dueType} for ${new Date(certificateData.paidDate).getFullYear()}.`, { align: 'center' })
+            .moveDown(1);
+        // Certificate details
+        doc.fontSize(11);
+        // Two columns
+        const leftColumn = 150;
+        const rightColumn = 450;
+        doc.text('Certificate Number:', leftColumn, 300);
+        doc
+            .font('Helvetica-Bold')
+            .text(certificateData.certificateNumber, rightColumn, 300);
+        doc.font('Helvetica').text('Due Type:', leftColumn, 325);
+        doc
+            .font('Helvetica-Bold')
+            .text(certificateData.dueType, rightColumn, 325);
+        doc.font('Helvetica').text('Amount Paid:', leftColumn, 350);
+        doc.font('Helvetica-Bold').text(`₦ ${certificateData.amount.toLocaleString('en-NG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`, rightColumn, 350);
+        doc.font('Helvetica').text('Payment Date:', leftColumn, 375);
+        doc.font('Helvetica-Bold').text(new Date(certificateData.paidDate).toLocaleDateString('en-NG', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        }), rightColumn, 375);
+        doc.font('Helvetica').text('Valid Until:', leftColumn, 400);
+        doc.font('Helvetica-Bold').text(new Date(certificateData.validUntil).toLocaleDateString('en-NG', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        }), rightColumn, 400);
+        // Signature placeholders
+        const signatureY = 500;
+        // Chairman signature
+        doc
+            .font('Helvetica')
+            .fontSize(11)
+            .moveTo(120, signatureY)
+            .lineTo(220, signatureY)
+            .lineWidth(1)
+            .stroke()
+            .text('Chairman', 150, signatureY + 15)
+            .font('Helvetica-Oblique')
+            .fontSize(8)
+            .text('ACPN Ota Zone', 150, signatureY + 30);
+        // Secretary signature
+        doc
+            .font('Helvetica')
+            .fontSize(11)
+            .moveTo(400, signatureY)
+            .lineTo(500, signatureY)
+            .lineWidth(1)
+            .stroke()
+            .text('Secretary', 430, signatureY + 15)
+            .font('Helvetica-Oblique')
+            .fontSize(8)
+            .text('ACPN Ota Zone', 430, signatureY + 30);
+        // Stamp placeholder - make it more prominent
+        doc
+            .circle(300, signatureY, 40)
+            .dash(3, { space: 2 })
+            .lineWidth(1.5)
+            .stroke('#006400');
+        doc
+            .font('Helvetica-Bold')
+            .fontSize(8)
+            .fillColor('#006400')
+            .text('OFFICIAL STAMP', 270, signatureY - 5, { align: 'center' });
+        // Footer
+        const footerY = 580;
+        // Add decorative line above footer
+        doc
+            .moveTo(100, footerY - 20)
+            .lineTo(doc.page.width - 100, footerY - 20)
+            .lineWidth(0.5)
+            .stroke('#006400');
+        doc
+            .font('Helvetica')
+            .fontSize(8)
+            .fillColor('#333333')
+            .text('This certificate is issued in accordance with the regulations of the', 50, footerY, { align: 'center' })
+            .text('Association of Community Pharmacists of Nigeria (ACPN) Ota Zone.', 50, footerY + 12, { align: 'center' })
+            .font('Helvetica-Bold')
+            .text(`Issue Date: ${new Date().toLocaleDateString('en-NG', { day: '2-digit', month: 'long', year: 'numeric' })}`, 50, footerY + 30, { align: 'center' })
+            .font('Helvetica-Oblique')
+            .text('Verify this certificate by contacting the ACPN Ota Zone Secretariat', 50, footerY + 45, { align: 'center' });
+        // Finalize the PDF
+        doc.end();
+    }
+    catch (error) {
+        console.error('Error generating PDF certificate:', error);
+        throw new errorResponse_1.default('Failed to generate certificate PDF', 500);
+    }
 }));

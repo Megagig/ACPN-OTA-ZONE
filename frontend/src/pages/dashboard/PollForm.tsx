@@ -29,11 +29,11 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-} from '../../components/ui/TailwindComponentsFixed';
-import { Card } from '../../components/common/CardComponent';
-import { CardBody } from '../../components/ui/TailwindComponentsFixed';
-import { useToast } from '../../hooks/useToast';
-import { useDisclosure } from '../../hooks/useDisclosure';
+  Card,
+  CardBody,
+  useToast,
+  useDisclosure,
+} from '@chakra-ui/react';
 import {
   FaPlus,
   FaTrash,
@@ -68,7 +68,7 @@ interface PollFormValues {
 const PollForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const toast = useToast();
   const [loading, setLoading] = useState<boolean>(true);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [currentEditQuestion, setCurrentEditQuestion] = useState<number | null>(
@@ -356,9 +356,9 @@ const PollForm: React.FC = () => {
       question.type === 'single_choice' || question.type === 'multiple_choice';
 
     return (
-      <Card key={question._id} className="border border-gray-200 mb-4">
+      <Card key={question._id} borderWidth="1px" borderColor="gray.200" mb={4}>
         <CardBody>
-          <Flex justify="between" align="center" className="mb-3">
+          <Flex justify="space-between" align="center" mb={3}>
             <HStack>
               <Badge colorScheme="blue">Q{index + 1}</Badge>
               <Heading size="sm">
@@ -490,7 +490,7 @@ const PollForm: React.FC = () => {
 
                 {hasOptions && (
                   <Box>
-                    <Flex justify="between" align="center" className="mb-2">
+                    <Flex justify="space-between" align="center" mb={2}>
                       <FormLabel mb="0">Options</FormLabel>
                       <Button
                         size="xs"
@@ -562,7 +562,7 @@ const PollForm: React.FC = () => {
 
   return (
     <Box p={5}>
-      <Flex justify="between" align="center" className="mb-6">
+      <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{isEdit ? 'Edit Poll' : 'Create New Poll'}</Heading>
         <HStack>
           <Button
@@ -588,7 +588,7 @@ const PollForm: React.FC = () => {
         </HStack>
       </Flex>
 
-      <Card className="mb-6">
+      <Card mb={6}>
         <CardBody>
           <VStack spacing={6} align="stretch">
             <FormControl
@@ -689,7 +689,7 @@ const PollForm: React.FC = () => {
         </CardBody>
       </Card>
 
-      <Flex justify="between" align="center" className="mb-4">
+      <Flex justify="space-between" align="center" mb={4}>
         <Heading size="md">Poll Questions</Heading>
         <Button leftIcon={<FaPlus />} colorScheme="teal" onClick={addQuestion}>
           Add Question
@@ -697,7 +697,7 @@ const PollForm: React.FC = () => {
       </Flex>
 
       {formik.values.questions.length === 0 ? (
-        <Card className="border border-gray-200">
+        <Card borderWidth="1px" borderColor="gray.200">
           <CardBody textAlign="center" py={8}>
             <Text mb={4}>No questions added yet</Text>
             <Button

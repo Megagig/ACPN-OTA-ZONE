@@ -7,15 +7,16 @@ import {
   FaListAlt,
   FaUserPlus,
 } from 'react-icons/fa';
-import { Card, CardBody } from '../../components/common/CardComponent';
 import {
+  Card,
+  CardBody,
   Badge,
   Button,
   Text,
   Heading,
   Divider,
-} from '../../components/ui/TailwindComponents';
-import { useToast } from '../../hooks/useToast';
+  useToast,
+} from '@chakra-ui/react';
 import type {
   Election,
   ElectionStatus,

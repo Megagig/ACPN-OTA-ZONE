@@ -162,14 +162,31 @@ exports.getPharmacy = (0, async_middleware_1.default)((req, res, next) => __awai
 // @route   GET /api/pharmacies/me
 // @access  Private
 exports.getMyPharmacy = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const pharmacy = yield pharmacy_model_1.default.findOne({ userId: req.user._id }).populate('userId', 'firstName lastName email phone');
-    if (!pharmacy) {
-        return next(new errorResponse_1.default('Pharmacy not found for the current user', 404));
+    var _a;
+    try {
+        console.log('Getting pharmacy for user:', (_a = req.user) === null || _a === void 0 ? void 0 : _a._id);
+        // Check if req.user exists
+        if (!req.user || !req.user._id) {
+            console.error('User not found in request or missing _id');
+            return next(new errorResponse_1.default('User not authenticated properly', 401));
+        }
+        const pharmacy = yield pharmacy_model_1.default.findOne({
+            userId: req.user._id,
+        }).populate('userId', 'firstName lastName email phone');
+        if (!pharmacy) {
+            console.log(`No pharmacy found for user ${req.user._id}`);
+            return next(new errorResponse_1.default('Pharmacy not found for the current user', 404));
+        }
+        console.log(`Successfully found pharmacy for user ${req.user._id}`);
+        res.status(200).json({
+            success: true,
+            data: pharmacy,
+        });
     }
-    res.status(200).json({
-        success: true,
-        data: pharmacy,
-    });
+    catch (error) {
+        console.error('Error in getMyPharmacy:', error);
+        return next(new errorResponse_1.default('Server error getting pharmacy data', 500));
+    }
 }));
 // @desc    Create new pharmacy
 // @route   POST /api/pharmacies

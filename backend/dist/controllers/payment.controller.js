@@ -47,7 +47,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePayment = exports.reviewPayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getAllPayments = exports.getDuePayments = exports.submitPayment = void 0;
 const payment_model_1 = __importStar(require("../models/payment.model"));
-const due_model_1 = __importDefault(require("../models/due.model"));
+const due_model_1 = __importStar(require("../models/due.model"));
 const pharmacy_model_1 = __importDefault(require("../models/pharmacy.model"));
 const async_middleware_1 = __importDefault(require("../middleware/async.middleware"));
 const errorResponse_1 = __importDefault(require("../utils/errorResponse"));
@@ -317,7 +317,15 @@ exports.approvePayment = (0, async_middleware_1.default)((req, res, next) => __a
     const due = yield due_model_1.default.findById(payment.dueId);
     if (due) {
         due.amountPaid += payment.amount;
-        yield due.save(); // Pre-save middleware will calculate balance and status
+        due.balance = due.totalAmount - due.amountPaid;
+        // Update payment status based on balance
+        if (due.balance <= 0) {
+            due.paymentStatus = due_model_1.PaymentStatus.PAID;
+        }
+        else if (due.amountPaid > 0) {
+            due.paymentStatus = due_model_1.PaymentStatus.PARTIALLY_PAID;
+        }
+        yield due.save();
     }
     const populatedPayment = yield payment_model_1.default.findById(payment._id)
         .populate('dueId', 'title amount totalAmount amountPaid balance paymentStatus')
@@ -388,6 +396,14 @@ exports.reviewPayment = (0, async_middleware_1.default)((req, res, next) => __aw
         const due = yield due_model_1.default.findById(payment.dueId);
         if (due) {
             due.amountPaid += payment.amount;
+            due.balance = due.totalAmount - due.amountPaid;
+            // Update payment status based on balance
+            if (due.balance <= 0) {
+                due.paymentStatus = due_model_1.PaymentStatus.PAID;
+            }
+            else if (due.amountPaid > 0) {
+                due.paymentStatus = due_model_1.PaymentStatus.PARTIALLY_PAID;
+            }
             yield due.save();
         }
     }
@@ -421,6 +437,17 @@ exports.deletePayment = (0, async_middleware_1.default)((req, res, next) => __aw
         const due = yield due_model_1.default.findById(payment.dueId);
         if (due) {
             due.amountPaid -= payment.amount;
+            due.balance = due.totalAmount - due.amountPaid;
+            // Update payment status based on new balance
+            if (due.amountPaid <= 0) {
+                due.paymentStatus = due_model_1.PaymentStatus.PENDING;
+            }
+            else if (due.balance <= 0) {
+                due.paymentStatus = due_model_1.PaymentStatus.PAID;
+            }
+            else {
+                due.paymentStatus = due_model_1.PaymentStatus.PARTIALLY_PAID;
+            }
             yield due.save();
         }
     }

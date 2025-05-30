@@ -10,11 +10,9 @@ import {
   Badge,
   Flex,
   Avatar,
-} from '../../components/ui/TailwindComponentsFixed';
+  useToast,
+} from '@chakra-ui/react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import type { Candidate, ElectionStatus } from '../../types/election.types';
-import electionService from '../../services/election.service';
-import { useToast } from '../../hooks/useToast';
 
 interface CandidatesListProps {
   candidates: Candidate[];

@@ -5,6 +5,7 @@ import {
   uploadDocument,
   updateDocument,
   deleteDocument,
+  downloadDocument,
   getExpiringDocuments,
 } from '../controllers/document.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
@@ -28,6 +29,9 @@ router
   .get(getDocument)
   .put(updateDocument)
   .delete(deleteDocument);
+
+// Download route
+router.route('/:id/download').get(downloadDocument);
 
 // Routes that apply to /api/pharmacies/:pharmacyId/documents
 router.route('/').get(getPharmacyDocuments).post(uploadDocument);

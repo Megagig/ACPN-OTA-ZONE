@@ -19,12 +19,10 @@ import {
   Flex,
   Avatar,
   Stack,
-} from '../../components/ui/TailwindComponentsFixed';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import electionService from '../../services/election.service';
-import type { Election, Position } from '../../types/election.types';
-import { Card, CardBody } from '../../components/common/CardComponent';
-import { useToast } from '../../hooks/useToast';
+  Card,
+  CardBody,
+  useToast,
+} from '@chakra-ui/react';
 
 interface CandidateFormFields {
   name: string;

@@ -1,28 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Heading,
-  Text,
-  Button,
-  VStack,
-  HStack,
-  Flex,
-  Badge,
-  Radio,
-  RadioGroup,
-  Checkbox,
-  //   CheckboxGroup,
-  Textarea,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  Progress,
-} from '../../components/ui/TailwindComponentsFixed';
 import type { Poll, PollQuestion } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
-import { Card, CardBody } from '../../components/common/CardComponent';
-import { Alert, AlertIcon } from '../../components/common/AlertComponent';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import { Card, CardBody, Alert } from '@chakra-ui/react';
+import { AlertIcon } from '../../components/ui/chakra-components';
 import { useToast } from '../../hooks/useToast';
 
 interface FormValues {
@@ -32,7 +14,7 @@ interface FormValues {
 const PollResponse: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { toast } = useToast();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -50,19 +32,24 @@ const PollResponse: React.FC = () => {
           setPoll(data);
 
           // Check if user has already responded
-          const hasUserResponded = await pollService.hasUserResponded(id);
+          const hasUserResponded = await pollService.checkUserResponded(id);
           setHasResponded(hasUserResponded);
         }
-      } catch (error) {
-        showToast('Error loading poll', 'Unable to load poll data', 'error');
-        navigate('/polls/list');
+      } catch {
+        toast({
+          title: 'Error loading poll',
+          description: 'Unable to load poll data',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchPoll();
-  }, [id, navigate, showToast]);
+  }, [id, toast]);
 
   const handleInputChange = (
     questionId: string,
@@ -89,7 +76,7 @@ const PollResponse: React.FC = () => {
     const value = formValues[question._id];
     const newErrors: { [key: string]: string } = {};
 
-    if (question.isRequired) {
+    if (question.required) {
       if (!value || (Array.isArray(value) && value.length === 0)) {
         newErrors[question._id] = 'This question is required';
       }
@@ -119,179 +106,330 @@ const PollResponse: React.FC = () => {
     try {
       setSubmitting(true);
 
-      // Transform form values to the format expected by the API
-      const responses = Object.keys(formValues).map((questionId) => ({
-        question: questionId,
-        answer: formValues[questionId],
+      const responses = poll.questions.map((question) => ({
+        questionId: question._id,
+        answer: Array.isArray(formValues[question._id])
+          ? (formValues[question._id] as string[])
+          : String(formValues[question._id]),
       }));
 
-      await pollService.submitPollResponse(id!, {
-        responses,
+      await pollService.submitPollResponse({
+        pollId: poll._id,
+        answers: responses,
       });
 
-      showToast(
-        'Response submitted',
-        'Thank you for completing this poll',
-        'success'
-      );
+      toast({
+        title: 'Response submitted',
+        description: 'Your poll response has been submitted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
-      navigate(`/polls/${id}`);
-    } catch (error) {
-      showToast(
-        'Error submitting response',
-        'There was a problem recording your response',
-        'error'
-      );
+      navigate('/dashboard/polls');
+    } catch {
+      toast({
+        title: 'Submission failed',
+        description: 'Unable to submit your response. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const renderQuestionByType = (question: PollQuestion) => {
+  const renderQuestion = (question: PollQuestion) => {
+    const value = formValues[question._id];
+    // const error = errors[question._id]; // Currently not used in UI
+
     switch (question.type) {
-      case 'multipleChoice':
+      case 'single_choice':
         return (
-          <RadioGroup
-            value={formValues[question._id] as string}
-            onChange={(value) => handleInputChange(question._id, value)}
-          >
-            <VStack align="start" spacing={3}>
-              {question.options.map((option) => (
-                <Radio key={option} value={option}>
-                  {option}
-                </Radio>
-              ))}
-            </VStack>
-          </RadioGroup>
+          <div className="space-y-3">
+            {question.options?.map((option) => (
+              <label
+                key={option._id}
+                className="flex items-center space-x-3 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name={question._id}
+                  value={option._id}
+                  checked={value === option._id}
+                  onChange={(e) =>
+                    handleInputChange(question._id, e.target.value)
+                  }
+                  className="form-radio h-4 w-4 text-blue-600"
+                />
+                <span className="text-gray-700">{option.text}</span>
+              </label>
+            ))}
+          </div>
         );
 
-      case 'checkbox':
+      case 'multiple_choice':
         return (
-          <CheckboxGroup
-            value={formValues[question._id] as string[]}
-            onChange={(value) => handleInputChange(question._id, value)}
-          >
-            <VStack align="start" spacing={3}>
-              {question.options.map((option) => (
-                <Checkbox key={option} value={option}>
-                  {option}
-                </Checkbox>
-              ))}
-            </VStack>
-          </CheckboxGroup>
+          <div className="space-y-3">
+            {question.options?.map((option) => (
+              <label
+                key={option._id}
+                className="flex items-center space-x-3 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  value={option._id}
+                  checked={Array.isArray(value) && value.includes(option._id)}
+                  onChange={(e) => {
+                    const currentValues = Array.isArray(value) ? value : [];
+                    const newValues = e.target.checked
+                      ? [...currentValues, option._id]
+                      : currentValues.filter((v) => v !== option._id);
+                    handleInputChange(question._id, newValues);
+                  }}
+                  className="form-checkbox h-4 w-4 text-blue-600"
+                />
+                <span className="text-gray-700">{option.text}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'rating':
+        return (
+          <div className="flex space-x-4">
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <label
+                key={rating}
+                className="flex flex-col items-center cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name={question._id}
+                  value={rating}
+                  checked={value === rating}
+                  onChange={(e) =>
+                    handleInputChange(question._id, parseInt(e.target.value))
+                  }
+                  className="form-radio h-4 w-4 text-blue-600 mb-1"
+                />
+                <span className="text-sm text-gray-600">{rating}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'boolean':
+        return (
+          <div className="flex space-x-6">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name={question._id}
+                value="true"
+                checked={value === true}
+                onChange={() => handleInputChange(question._id, true)}
+                className="form-radio h-4 w-4 text-blue-600"
+              />
+              <span className="text-gray-700">Yes</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name={question._id}
+                value="false"
+                checked={value === false}
+                onChange={() => handleInputChange(question._id, false)}
+                className="form-radio h-4 w-4 text-blue-600"
+              />
+              <span className="text-gray-700">No</span>
+            </label>
+          </div>
         );
 
       case 'text':
         return (
-          <Textarea
-            value={formValues[question._id] as string}
+          <textarea
+            value={typeof value === 'string' ? value : ''}
             onChange={(e) => handleInputChange(question._id, e.target.value)}
-            placeholder="Enter your answer here"
-            className="w-full"
+            placeholder="Enter your response..."
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         );
 
       default:
-        return <Text className="text-red-500">Unsupported question type</Text>;
+        return <div className="text-gray-500">Unsupported question type</div>;
     }
   };
 
   if (loading) {
     return (
-      <Box className="p-5">
-        <Text>Loading poll...</Text>
-      </Box>
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!poll) {
     return (
-      <Box className="p-5">
-        <Alert status="error" className="mb-4">
-          <AlertIcon />
-          Poll not found
+      <DashboardLayout>
+        <Alert status="error">
+          <AlertIcon status="error" />
+          <div>
+            <div className="font-bold">Poll not found</div>
+            <div>
+              The requested poll could not be found or you don't have access to
+              it.
+            </div>
+          </div>
         </Alert>
-        <Button onClick={() => navigate('/polls/list')}>Back to Polls</Button>
-      </Box>
+      </DashboardLayout>
+    );
+  }
+
+  if (poll.status !== 'active') {
+    return (
+      <DashboardLayout>
+        <Alert status="warning">
+          <AlertIcon status="warning" />
+          <div>
+            <div className="font-bold">Poll not available</div>
+            <div>This poll is not currently available for responses.</div>
+          </div>
+        </Alert>
+      </DashboardLayout>
     );
   }
 
   if (hasResponded) {
     return (
-      <Box className="p-5">
-        <Alert status="info" className="mb-4">
-          <AlertIcon />
-          You have already submitted a response to this poll.
+      <DashboardLayout>
+        <Alert status="info">
+          <AlertIcon status="info" />
+          <div>
+            <div className="font-bold">Already responded</div>
+            <div>
+              You have already responded to this poll. Thank you for your
+              participation!
+            </div>
+          </div>
         </Alert>
-        <Button onClick={() => navigate(`/polls/${id}`)}>
-          View Poll Details
-        </Button>
-      </Box>
+      </DashboardLayout>
     );
   }
 
   const currentQuestion = poll.questions[currentStep];
+  const isLastStep = currentStep === poll.questions.length - 1;
+  const progress = ((currentStep + 1) / poll.questions.length) * 100;
 
   return (
-    <Box className="p-5">
-      <Heading size="lg" className="mb-2">
-        {poll.title}
-      </Heading>
-      <Text className="mb-4">{poll.description}</Text>
+    <DashboardLayout>
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {poll.title}
+          </h1>
+          <p className="text-gray-600">{poll.description}</p>
+        </div>
 
-      <Progress
-        value={(currentStep / poll.questions.length) * 100}
-        size="sm"
-        colorScheme="blue"
-        className="mb-5 rounded-md"
-      />
+        {/* Progress Bar */}
+        <Card>
+          <CardBody>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">
+                Progress
+              </span>
+              <span className="text-sm text-gray-500">
+                {currentStep + 1} of {poll.questions.length}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </CardBody>
+        </Card>
 
-      <Card className="mb-5">
-        <CardBody>
-          <Heading size="md" className="mb-3">
-            Question {currentStep + 1} of {poll.questions.length}
-          </Heading>
-          <Text className="font-medium mb-3">
-            {currentQuestion.text}
-            {currentQuestion.isRequired && (
-              <Badge colorScheme="red" className="ml-2">
-                Required
-              </Badge>
-            )}
-          </Text>
+        {/* Question Card */}
+        <Card>
+          <CardBody>
+            <div className="mb-6">
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {currentStep + 1}. {currentQuestion.text}
+                </h2>
+                {currentQuestion.required && (
+                  <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                    Required
+                  </span>
+                )}
+              </div>
 
-          <FormControl
-            isInvalid={!!errors[currentQuestion._id]}
-            className="mt-4"
+              <div className="mb-4">{renderQuestion(currentQuestion)}</div>
+
+              {errors[currentQuestion._id] && (
+                <div className="text-red-600 text-sm mt-2">
+                  {errors[currentQuestion._id]}
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between">
+              <button
+                onClick={handlePrevious}
+                disabled={currentStep === 0}
+                className={`px-4 py-2 rounded-md ${
+                  currentStep === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                } transition-colors`}
+              >
+                Previous
+              </button>
+
+              {isLastStep ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className={`px-6 py-2 rounded-md ${
+                    submitting
+                      ? 'bg-blue-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  } text-white transition-colors`}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Response'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Back to Polls */}
+        <div className="text-center">
+          <button
+            onClick={() => navigate('/dashboard/polls')}
+            className="text-gray-600 hover:text-gray-800 underline"
           >
-            {renderQuestionByType(currentQuestion)}
-            {errors[currentQuestion._id] && (
-              <FormErrorMessage>{errors[currentQuestion._id]}</FormErrorMessage>
-            )}
-          </FormControl>
-        </CardBody>
-      </Card>
-
-      <Flex justify="between" className="mt-4">
-        <Button onClick={handlePrevious} isDisabled={currentStep === 0}>
-          Previous
-        </Button>
-
-        {currentStep < poll.questions.length - 1 ? (
-          <Button colorScheme="blue" onClick={handleNext}>
-            Next
-          </Button>
-        ) : (
-          <Button
-            colorScheme="green"
-            onClick={handleSubmit}
-            isLoading={submitting}
-          >
-            Submit
-          </Button>
-        )}
-      </Flex>
-    </Box>
+            Back to Polls
+          </button>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

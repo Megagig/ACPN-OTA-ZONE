@@ -12,8 +12,6 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { useToast } from '../../hooks/useToast';
-import { useDisclosure } from '../../hooks/useDisclosure';
 import {
   Box,
   Heading,
@@ -42,8 +40,11 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-} from '../../components/ui/TailwindComponents';
-import { Card, CardBody } from '../../components/common/CardComponent';
+  useDisclosure,
+  useToast,
+  Card,
+  CardBody,
+} from '@chakra-ui/react';
 import type { Poll, PollStatus } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
 

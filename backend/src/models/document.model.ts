@@ -19,6 +19,7 @@ export interface IDocument extends mongoose.Document {
   documentType: DocumentType;
   fileName: string;
   fileUrl: string;
+  publicId?: string;
   uploadDate: Date;
   expiryDate?: Date;
   verificationStatus: VerificationStatus;
@@ -45,6 +46,10 @@ const documentSchema = new Schema<IDocument>(
     fileUrl: {
       type: String,
       required: [true, 'File URL is required'],
+    },
+    publicId: {
+      type: String,
+      required: false, // Optional for backward compatibility
     },
     uploadDate: {
       type: Date,

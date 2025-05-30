@@ -8,6 +8,7 @@ import Pharmacy from '../models/pharmacy.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
 import cloudinary from '../config/cloudinary';
+import { validateUploadedFile } from '../utils/fileUpload';
 
 // @desc    Get all documents for a pharmacy
 // @route   GET /api/pharmacies/:pharmacyId/documents
@@ -124,28 +125,61 @@ export const uploadDocument = asyncHandler(
       );
     }
 
-    if (!req.files || !req.files.file) {
-      return next(new ErrorResponse(`Please upload a file`, 400));
+    // Validate uploaded file
+    const file = validateUploadedFile(req, next);
+    if (!file) return; // Validation failed, error already handled
+
+    // Upload to Cloudinary
+    let fileUrl;
+    let publicId;
+    try {
+      console.log('Starting Cloudinary upload for pharmacy document:', {
+        name: file.name,
+        size: file.size,
+        mimetype: file.mimetype,
+        tempFilePath: file.tempFilePath,
+      });
+
+      if (!file.tempFilePath) {
+        throw new Error('Missing temporary file path for upload');
+      }
+
+      const result = await cloudinary.uploadToCloudinary(
+        file.tempFilePath,
+        'pharmacy-documents'
+      );
+      fileUrl = result.secure_url;
+      publicId = result.public_id;
+
+      console.log('Pharmacy document uploaded successfully to Cloudinary:', {
+        fileUrl,
+        publicId,
+      });
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Cloudinary upload error for pharmacy document:', {
+        message: err?.message,
+        stack: err?.stack,
+        fileName: file.name,
+        fileSize: file.size,
+      });
+      return next(
+        new ErrorResponse(
+          `Failed to upload file to storage: ${err?.message || 'Unknown error'}`,
+          500
+        )
+      );
     }
-
-    const file = req.files.file as any;
-
-    // Check file size
-    if (file.size > 5000000) {
-      return next(new ErrorResponse(`File size should be less than 5MB`, 400));
-    }
-
-    // TODO: Upload to Cloudinary
-    // const result = await cloudinary.uploadToCloudinary(file.tempFilePath, 'documents');
 
     // Create document in database
     const document = await Document.create({
       pharmacyId: req.params.pharmacyId,
       documentType: req.body.documentType,
       fileName: file.name,
-      fileUrl: 'placeholder-url.com', // Replace with result.secure_url when Cloudinary is set up
+      fileUrl: fileUrl,
       expiryDate: req.body.expiryDate,
       verificationStatus: VerificationStatus.PENDING,
+      publicId: publicId, // Store Cloudinary public_id for future deletion
     });
 
     res.status(201).json({
@@ -226,9 +260,15 @@ export const deleteDocument = asyncHandler(
       );
     }
 
-    // TODO: Delete from Cloudinary if needed
-    // const publicId = extractPublicIdFromUrl(document.fileUrl);
-    // await cloudinary.deleteFromCloudinary(publicId);
+    // Delete from Cloudinary if the file is stored there
+    if (document.fileUrl.includes('cloudinary.com') && document.publicId) {
+      try {
+        await cloudinary.deleteFromCloudinary(document.publicId);
+      } catch (error) {
+        console.error('Failed to delete file from Cloudinary:', error);
+        // Continue with database deletion even if Cloudinary deletion fails
+      }
+    }
 
     await document.deleteOne();
 
@@ -260,5 +300,68 @@ export const getExpiringDocuments = asyncHandler(
       count: expiringDocuments.length,
       data: expiringDocuments,
     });
+  }
+);
+
+// @desc    Download document
+// @route   GET /api/documents/:id/download
+// @access  Private
+export const downloadDocument = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const document = await Document.findById(req.params.id).populate({
+      path: 'pharmacyId',
+      select: 'name userId',
+    });
+
+    if (!document) {
+      return next(
+        new ErrorResponse(`Document not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    const pharmacy = document.pharmacyId as unknown as { userId: any };
+
+    // Check if user is admin or the pharmacy owner
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.role !== 'secretary' &&
+      pharmacy.userId.toString() !== req.user._id.toString()
+    ) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to download this document`,
+          403
+        )
+      );
+    }
+
+    // Implement actual file download from Cloudinary
+    try {
+      console.log('Document fileUrl:', document.fileUrl);
+      console.log('Document publicId:', document.publicId);
+
+      if (document.fileUrl.includes('cloudinary.com')) {
+        // For Cloudinary URLs, redirect directly to the secure URL
+        console.log('Redirecting to Cloudinary URL:', document.fileUrl);
+        res.redirect(document.fileUrl);
+      } else if (document.fileUrl.startsWith('http')) {
+        // For other valid URLs, redirect directly
+        console.log('Redirecting to external URL:', document.fileUrl);
+        res.redirect(document.fileUrl);
+      } else {
+        // For placeholder URLs or invalid URLs
+        console.log('Invalid or placeholder URL detected:', document.fileUrl);
+        return next(
+          new ErrorResponse(
+            'File not available for download. Please contact admin to re-upload the document.',
+            404
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      return next(new ErrorResponse('Failed to download file', 500));
+    }
   }
 );

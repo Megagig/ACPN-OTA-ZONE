@@ -78,6 +78,7 @@ const verifyToken = (token) => {
         return jsonwebtoken_1.default.verify(token, secret);
     }
     catch (err) {
+        console.error('JWT verification error:', err);
         return null;
     }
 };

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaChartBar, FaMedal } from 'react-icons/fa';
-import { Alert, AlertIcon } from '../../components/common/AlertComponent';
-import { useToast } from '../../hooks/useToast';
 import {
   Box,
   Heading,
@@ -23,8 +21,12 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-} from '../../components/ui/TailwindComponentsFixed';
-import { Card, CardBody } from '../../components/common/CardComponent';
+  Alert,
+  AlertIcon,
+  Card,
+  CardBody,
+  useToast,
+} from '@chakra-ui/react';
 import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
 import ChartComponent from '../../components/common/ChartComponent';

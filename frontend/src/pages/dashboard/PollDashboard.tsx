@@ -121,44 +121,28 @@ const PollDashboard: React.FC = () => {
               title="Total Polls"
               value={summary?.total || 0}
               icon={<FaPoll className="h-5 w-5" />}
-              trend={{
-                value: '+12%',
-                direction: 'up',
-                label: 'since last month',
-              }}
+              trend="up"
             />
             <StatCard
               title="Active Polls"
               value={summary?.active || 0}
               icon={<FaCheckCircle className="h-5 w-5" />}
               variant="success"
-              trend={{
-                value: '+5%',
-                direction: 'up',
-                label: 'since last month',
-              }}
+              trend="up"
             />
             <StatCard
               title="Completed Polls"
               value={summary?.closed || 0}
               icon={<FaChartBar className="h-5 w-5" />}
               variant="info"
-              trend={{
-                value: '18',
-                direction: 'same',
-                label: 'total this month',
-              }}
+              trend="neutral"
             />
             <StatCard
               title="Draft Polls"
               value={summary?.draft || 0}
               icon={<FaEdit className="h-5 w-5" />}
-              variant="secondary"
-              trend={{
-                value: '3',
-                direction: 'down',
-                label: 'fewer than last month',
-              }}
+              variant="primary"
+              trend="down"
             />
           </div>
 

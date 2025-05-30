@@ -1,0 +1,8 @@
+
+ACPN Logo Missing
+----------------
+To add the ACPN logo:
+1. Save the ACPN logo as 'acpn-logo.png' in this directory
+2. Ensure it's a PNG file with transparency
+3. Recommended size: at least 400x400 pixels
+    
