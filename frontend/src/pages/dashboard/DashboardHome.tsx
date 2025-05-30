@@ -54,18 +54,18 @@ const DashboardHome: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 p-4 rounded-md">
+      <div className="bg-destructive/15 border border-destructive/20 p-4 rounded-md">
         <div className="flex">
           <div className="flex-shrink-0">
             <svg
-              className="h-5 w-5 text-red-400"
+              className="h-5 w-5 text-destructive"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -78,8 +78,8 @@ const DashboardHome: React.FC = () => {
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
-            <div className="mt-2 text-sm text-red-700">
+            <h3 className="text-sm font-medium text-destructive">Error</h3>
+            <div className="mt-2 text-sm text-destructive">
               <p>{error}</p>
             </div>
           </div>
@@ -91,8 +91,8 @@ const DashboardHome: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Welcome back, {user?.firstName}!
         </p>
       </div>
@@ -146,10 +146,10 @@ const DashboardHome: React.FC = () => {
         </div>
 
         {/* Total Members Card */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
+              <div className="flex-shrink-0 bg-green-500 dark:bg-green-600 rounded-md p-3">
                 <svg
                   className="h-6 w-6 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -167,11 +167,11 @@ const DashboardHome: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Total Members
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">
+                    <div className="text-lg font-medium text-foreground">
                       {stats.totalMembers}
                     </div>
                   </dd>
@@ -179,11 +179,11 @@ const DashboardHome: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
+          <div className="bg-accent px-5 py-3">
             <div className="text-sm">
               <a
                 href="/users"
-                className="font-medium text-indigo-600 hover:text-indigo-900"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 View all
               </a>
@@ -192,10 +192,10 @@ const DashboardHome: React.FC = () => {
         </div>
 
         {/* Upcoming Events Card */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+              <div className="flex-shrink-0 bg-yellow-500 dark:bg-yellow-600 rounded-md p-3">
                 <svg
                   className="h-6 w-6 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -213,11 +213,11 @@ const DashboardHome: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Upcoming Events
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">
+                    <div className="text-lg font-medium text-foreground">
                       {stats.upcomingEvents}
                     </div>
                   </dd>
@@ -225,11 +225,11 @@ const DashboardHome: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
+          <div className="bg-accent px-5 py-3">
             <div className="text-sm">
               <a
                 href="/events"
-                className="font-medium text-indigo-600 hover:text-indigo-900"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 View all
               </a>
@@ -238,10 +238,10 @@ const DashboardHome: React.FC = () => {
         </div>
 
         {/* Active Elections Card */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-purple-500 rounded-md p-3">
+              <div className="flex-shrink-0 bg-purple-500 dark:bg-purple-600 rounded-md p-3">
                 <svg
                   className="h-6 w-6 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -259,11 +259,11 @@ const DashboardHome: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Active Elections
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">
+                    <div className="text-lg font-medium text-foreground">
                       {stats.activeElections}
                     </div>
                   </dd>
@@ -271,11 +271,11 @@ const DashboardHome: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
+          <div className="bg-accent px-5 py-3">
             <div className="text-sm">
               <a
                 href="/elections"
-                className="font-medium text-indigo-600 hover:text-indigo-900"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 View all
               </a>
@@ -284,10 +284,10 @@ const DashboardHome: React.FC = () => {
         </div>
 
         {/* Total Dues Paid Card */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-red-500 rounded-md p-3">
+              <div className="flex-shrink-0 bg-red-500 dark:bg-red-600 rounded-md p-3">
                 <svg
                   className="h-6 w-6 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -305,11 +305,11 @@ const DashboardHome: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Total Dues Paid
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">
+                    <div className="text-lg font-medium text-foreground">
                       ₦{stats.totalDuesPaid.toLocaleString()}
                     </div>
                   </dd>
@@ -317,11 +317,11 @@ const DashboardHome: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 px-5 py-3">
+          <div className="bg-accent px-5 py-3">
             <div className="text-sm">
               <a
                 href="/finances"
-                className="font-medium text-indigo-600 hover:text-indigo-900"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 View details
               </a>
@@ -331,37 +331,37 @@ const DashboardHome: React.FC = () => {
       </div>
 
       {/* Recent Activity Section */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-card shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <h3 className="text-lg leading-6 font-medium text-foreground">
             Recent Activity
           </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Latest updates and activities.
           </p>
         </div>
-        <ul className="divide-y divide-gray-200">
+        <ul className="divide-y divide-border">
           <li>
             <div className="px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-indigo-600 truncate">
+                <p className="text-sm font-medium text-primary truncate">
                   New member registration
                 </p>
                 <div className="ml-2 flex-shrink-0 flex">
-                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                     New
                   </p>
                 </div>
               </div>
               <div className="mt-2 sm:flex sm:justify-between">
                 <div className="sm:flex">
-                  <p className="flex items-center text-sm text-gray-500">
+                  <p className="flex items-center text-sm text-muted-foreground">
                     John Doe registered as a new member
                   </p>
                 </div>
-                <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                <div className="mt-2 flex items-center text-sm text-muted-foreground sm:mt-0">
                   <svg
-                    className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                    className="flex-shrink-0 mr-1.5 h-5 w-5 text-muted-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -380,24 +380,24 @@ const DashboardHome: React.FC = () => {
           <li>
             <div className="px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-indigo-600 truncate">
+                <p className="text-sm font-medium text-primary truncate">
                   Dues payment received
                 </p>
                 <div className="ml-2 flex-shrink-0 flex">
-                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                     Payment
                   </p>
                 </div>
               </div>
               <div className="mt-2 sm:flex sm:justify-between">
                 <div className="sm:flex">
-                  <p className="flex items-center text-sm text-gray-500">
+                  <p className="flex items-center text-sm text-muted-foreground">
                     Mary Johnson paid ₦15,000 for annual dues
                   </p>
                 </div>
-                <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                <div className="mt-2 flex items-center text-sm text-muted-foreground sm:mt-0">
                   <svg
-                    className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                    className="flex-shrink-0 mr-1.5 h-5 w-5 text-muted-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -416,24 +416,24 @@ const DashboardHome: React.FC = () => {
           <li>
             <div className="px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-indigo-600 truncate">
+                <p className="text-sm font-medium text-primary truncate">
                   Upcoming event: Quarterly Meeting
                 </p>
                 <div className="ml-2 flex-shrink-0 flex">
-                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                  <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
                     Event
                   </p>
                 </div>
               </div>
               <div className="mt-2 sm:flex sm:justify-between">
                 <div className="sm:flex">
-                  <p className="flex items-center text-sm text-gray-500">
+                  <p className="flex items-center text-sm text-muted-foreground">
                     Quarterly general meeting scheduled at ACPN Hall
                   </p>
                 </div>
-                <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                <div className="mt-2 flex items-center text-sm text-muted-foreground sm:mt-0">
                   <svg
-                    className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                    className="flex-shrink-0 mr-1.5 h-5 w-5 text-muted-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"

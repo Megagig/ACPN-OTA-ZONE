@@ -6,11 +6,13 @@ import type {
   Pharmacy,
   SocialMediaLinks,
 } from '../../types/pharmacy.types';
+import { useTheme } from '../../context/ThemeContext';
 
 const PharmacyForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isEditMode = !!id;
+  const { theme } = useTheme();
 
   const initialFormData: PharmacyFormData = {
     name: '',
@@ -214,7 +216,7 @@ const PharmacyForm: React.FC = () => {
   if (loading && isEditMode) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -223,10 +225,10 @@ const PharmacyForm: React.FC = () => {
     <div>
       <div className="md:flex md:items-center md:justify-between">
         <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+          <h2 className="text-2xl font-bold leading-7 text-foreground sm:truncate sm:text-3xl sm:tracking-tight">
             {isEditMode ? 'Edit Pharmacy' : 'Add New Pharmacy'}
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             {isEditMode
               ? 'Update the pharmacy information below.'
               : 'Fill out the form below to register a new pharmacy.'}
@@ -236,7 +238,7 @@ const PharmacyForm: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/admin/pharmacies-management')}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-input rounded-md shadow-sm text-sm font-medium text-foreground bg-background hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
           >
             Back to List
           </button>
@@ -249,11 +251,11 @@ const PharmacyForm: React.FC = () => {
       </p>
 
       {error && (
-        <div className="mt-6 rounded-md bg-red-50 p-4">
+        <div className="mt-6 rounded-md bg-destructive/15 border border-destructive/20 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-red-400"
+                className="h-5 w-5 text-destructive"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
@@ -267,14 +269,14 @@ const PharmacyForm: React.FC = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{error}</h3>
+              <h3 className="text-sm font-medium text-destructive">{error}</h3>
             </div>
           </div>
         </div>
       )}
 
       {success && (
-        <div className="mt-6 rounded-md bg-green-50 p-4">
+        <div className="mt-6 rounded-md bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
@@ -292,7 +294,9 @@ const PharmacyForm: React.FC = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">{success}</h3>
+              <h3 className="text-sm font-medium text-green-800 dark:text-green-300">
+                {success}
+              </h3>
             </div>
           </div>
         </div>
@@ -300,12 +304,12 @@ const PharmacyForm: React.FC = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="mt-6 space-y-8 bg-white shadow-sm rounded-lg p-6 divide-y divide-gray-200"
+        className="mt-6 space-y-8 bg-card shadow-sm rounded-lg p-6 divide-y divide-border"
       >
         {/* Section 1: Basic Information */}
         <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+            <h3 className="text-lg font-medium leading-6 text-foreground">
               Basic Information
             </h3>
           </div>
@@ -314,9 +318,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Pharmacy Name<span className="text-red-500">*</span>
+                Pharmacy Name<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -326,7 +330,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -334,9 +338,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Email Address<span className="text-red-500">*</span>
+                Email Address<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -346,7 +350,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -354,9 +358,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Phone Number<span className="text-red-500">*</span>
+                Phone Number<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -366,7 +370,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -374,7 +378,7 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="yearEstablished"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Year Established
               </label>
@@ -385,7 +389,7 @@ const PharmacyForm: React.FC = () => {
                   id="yearEstablished"
                   value={formData.yearEstablished || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-xs rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -394,7 +398,7 @@ const PharmacyForm: React.FC = () => {
         {/* Section 2: Address Information */}
         <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+            <h3 className="text-lg font-medium leading-6 text-foreground">
               Address Information
             </h3>
           </div>
@@ -403,9 +407,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="address"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Street Address<span className="text-red-500">*</span>
+                Street Address<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -415,7 +419,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.address}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -423,9 +427,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="landmark"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Landmark<span className="text-red-500">*</span>
+                Landmark<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -435,7 +439,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.landmark}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -443,9 +447,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="townArea"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Town/Area<span className="text-red-500">*</span>
+                Town/Area<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -455,7 +459,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.townArea}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -464,7 +468,7 @@ const PharmacyForm: React.FC = () => {
         {/* Section 3: Registration Information */}
         <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+            <h3 className="text-lg font-medium leading-6 text-foreground">
               Registration & Personnel
             </h3>
           </div>
@@ -473,10 +477,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="pcnLicense"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Previous Pharmacy License Number
-                <span className="text-red-500">*</span>
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -486,7 +490,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.pcnLicense}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -494,9 +498,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="licenseExpiryDate"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                License Expiry Date<span className="text-red-500">*</span>
+                License Expiry Date<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -506,7 +510,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.licenseExpiryDate}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -514,7 +518,7 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="numberOfStaff"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Number of Staff
               </label>
@@ -525,7 +529,7 @@ const PharmacyForm: React.FC = () => {
                   id="numberOfStaff"
                   value={formData.numberOfStaff || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-xs rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -533,10 +537,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="superintendentName"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Superintendent Pharmacist Name
-                <span className="text-red-500">*</span>
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -546,7 +550,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.superintendentName}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -554,10 +558,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="superintendentLicenseNumber"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Superintendent License Number
-                <span className="text-red-500">*</span>
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -567,7 +571,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.superintendentLicenseNumber}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -575,9 +579,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="superintendentPhoto"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Superintendent Picture<span className="text-red-500">*</span>
+                Superintendent Picture
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -593,18 +598,18 @@ const PharmacyForm: React.FC = () => {
                       formData.superintendentPhoto
                     )
                   }
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
                 {isEditMode &&
                   typeof formData.superintendentPhoto === 'string' &&
                   formData.superintendentPhoto && (
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Current photo:{' '}
                       <a
                         href={formData.superintendentPhoto}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-500"
+                        className="text-primary hover:text-primary/80"
                       >
                         View
                       </a>{' '}
@@ -617,9 +622,9 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="superintendentPhone"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Superintendent Phone<span className="text-red-500">*</span>
+                Superintendent Phone<span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -629,7 +634,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.superintendentPhone}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -637,9 +642,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="directorName"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Pharmacy Director Name<span className="text-red-500">*</span>
+                Pharmacy Director Name
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -649,7 +655,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.directorName}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -657,9 +663,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="directorPhoto"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Pharmacy Director Picture<span className="text-red-500">*</span>
+                Pharmacy Director Picture
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -675,18 +682,18 @@ const PharmacyForm: React.FC = () => {
                       formData.directorPhoto
                     )
                   }
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
                 {isEditMode &&
                   typeof formData.directorPhoto === 'string' &&
                   formData.directorPhoto && (
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Current photo:{' '}
                       <a
                         href={formData.directorPhoto}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-500"
+                        className="text-primary hover:text-primary/80"
                       >
                         View
                       </a>{' '}
@@ -699,9 +706,10 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="directorPhone"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
-                Pharmacy Director Phone<span className="text-red-500">*</span>
+                Pharmacy Director Phone
+                <span className="text-destructive">*</span>
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
                 <input
@@ -711,7 +719,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.directorPhone}
                   onChange={handleChange}
                   required
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -720,7 +728,7 @@ const PharmacyForm: React.FC = () => {
         {/* Section 4: Additional Information (Optional) */}
         <div className="space-y-6 pt-8 sm:space-y-5 sm:pt-10">
           <div>
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+            <h3 className="text-lg font-medium leading-6 text-foreground">
               Additional Information (Optional)
             </h3>
           </div>
@@ -729,7 +737,7 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="operatingHours"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Operating Hours
               </label>
@@ -740,7 +748,7 @@ const PharmacyForm: React.FC = () => {
                   id="operatingHours"
                   value={formData.operatingHours || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
@@ -748,7 +756,7 @@ const PharmacyForm: React.FC = () => {
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
               <label
                 htmlFor="websiteUrl"
-                className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2"
+                className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2"
               >
                 Website URL
               </label>
@@ -759,13 +767,13 @@ const PharmacyForm: React.FC = () => {
                   id="websiteUrl"
                   value={formData.websiteUrl || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
             {/* Social Media Links */}
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
-              <label className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+              <label className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2">
                 Social Media
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0 space-y-2">
@@ -775,7 +783,7 @@ const PharmacyForm: React.FC = () => {
                   placeholder="Facebook URL"
                   value={formData.socialMedia?.facebookUrl || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground placeholder:text-muted-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
                 <input
                   type="url"
@@ -783,7 +791,7 @@ const PharmacyForm: React.FC = () => {
                   placeholder="Twitter URL"
                   value={formData.socialMedia?.twitterUrl || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground placeholder:text-muted-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
                 <input
                   type="url"
@@ -791,13 +799,13 @@ const PharmacyForm: React.FC = () => {
                   placeholder="Instagram URL"
                   value={formData.socialMedia?.instagramUrl || ''}
                   onChange={handleChange}
-                  className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full max-w-lg rounded-md border-input bg-background text-foreground placeholder:text-muted-foreground shadow-sm focus:border-ring focus:ring-ring sm:text-sm"
                 />
               </div>
             </div>
             {/* Services Offered */}
             <div className="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:pt-5">
-              <label className="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+              <label className="block text-sm font-medium text-foreground sm:mt-px sm:pt-2">
                 Services Offered
               </label>
               <div className="mt-1 sm:col-span-2 sm:mt-0">
@@ -806,13 +814,13 @@ const PharmacyForm: React.FC = () => {
                     type="text"
                     value={currentService}
                     onChange={(e) => setCurrentService(e.target.value)}
-                    className="block w-full max-w-lg rounded-l-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full max-w-lg rounded-l-md border-input bg-background text-foreground shadow-sm focus:border-ring focus:ring-ring placeholder:text-muted-foreground sm:text-sm"
                     placeholder="Add a service (e.g., Prescription Dispensing, Consultations)"
                   />
                   <button
                     type="button"
                     onClick={handleAddService}
-                    className="rounded-r-md border border-l-0 border-gray-300 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                    className="rounded-r-md border border-l-0 border-input px-4 bg-primary/10 text-primary hover:bg-primary/20"
                   >
                     Add
                   </button>
@@ -821,13 +829,13 @@ const PharmacyForm: React.FC = () => {
                   {formData.servicesOffered?.map((service, index) => (
                     <div
                       key={index}
-                      className="flex items-center bg-gray-100 rounded-full px-3 py-1"
+                      className="flex items-center bg-muted/50 rounded-full px-3 py-1"
                     >
-                      <span className="text-sm">{service}</span>
+                      <span className="text-sm text-foreground">{service}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveService(service)}
-                        className="ml-2 text-gray-500 hover:text-gray-700"
+                        className="ml-2 text-muted-foreground hover:text-foreground"
                       >
                         <svg
                           className="h-4 w-4"
@@ -855,19 +863,19 @@ const PharmacyForm: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/admin/pharmacies-management')}
-              className="mr-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              className="mr-2 rounded-md bg-card border border-border px-3 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted/50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitLoading || (isEditMode && loading)}
-              className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+              className="inline-flex justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
             >
               {submitLoading ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-primary-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

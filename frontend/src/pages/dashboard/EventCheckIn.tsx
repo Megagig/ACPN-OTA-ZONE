@@ -118,19 +118,19 @@ const EventCheckIn: React.FC = () => {
   const getAttendeeStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'registered':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'waitlisted':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
       case 'canceled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       case 'attended':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
       case 'no-show':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
     }
   };
 
@@ -138,12 +138,12 @@ const EventCheckIn: React.FC = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-12 bg-gray-200 rounded w-full"></div>
+          <div className="h-10 bg-muted rounded w-3/4"></div>
+          <div className="h-6 bg-muted rounded w-1/2"></div>
+          <div className="h-12 bg-muted rounded w-full"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[...Array(4)].map((_, index) => (
-              <div key={index} className="h-20 bg-gray-200 rounded"></div>
+              <div key={index} className="h-20 bg-muted rounded"></div>
             ))}
           </div>
         </div>
@@ -154,15 +154,15 @@ const EventCheckIn: React.FC = () => {
   if (!event) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <h2 className="text-xl font-medium text-gray-900 mb-2">
+        <div className="bg-card rounded-lg shadow-md border border-border p-6 text-center">
+          <h2 className="text-xl font-medium text-foreground mb-2">
             Event Not Found
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             The event you are looking for does not exist or has been removed.
           </p>
           <button
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate('/events')}
           >
             Back to Events
@@ -176,17 +176,17 @@ const EventCheckIn: React.FC = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-foreground">
             Check-In Attendees
           </h1>
-          <h2 className="text-lg text-gray-600">{event.title}</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-lg text-foreground">{event.title}</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             {formatDate(event.startDate)} at {formatTime(event.startDate)}
           </p>
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm shadow hover:bg-gray-50"
+            className="bg-card border border-border text-foreground px-4 py-2 rounded-md text-sm shadow hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate(`/events/${id}`)}
           >
             <i className="fas fa-arrow-left mr-2"></i>
@@ -195,28 +195,28 @@ const EventCheckIn: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-card rounded-lg shadow-md border border-border p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <div className="text-sm text-gray-500 mb-1">Status</div>
+            <div className="text-sm text-muted-foreground mb-1">Status</div>
             <div className="flex items-center">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 mr-2">
                 {attendees.length} Registered
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                 {attendees.filter((a) => a.checkedIn).length} Checked In
               </span>
             </div>
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             <div>
               Location:{' '}
-              <span className="text-gray-700">{event.location.name}</span>
+              <span className="text-foreground">{event.location.name}</span>
             </div>
             {event.maxAttendees && (
               <div>
                 Capacity:{' '}
-                <span className="text-gray-700">
+                <span className="text-foreground">
                   {attendees.filter((a) => a.checkedIn).length} /{' '}
                   {event.maxAttendees}
                 </span>
@@ -227,14 +227,14 @@ const EventCheckIn: React.FC = () => {
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div className="bg-card rounded-lg shadow-md border border-border p-4 mb-6">
         <div className="relative rounded-md shadow-sm">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <i className="fas fa-search text-gray-400"></i>
+            <i className="fas fa-search text-muted-foreground"></i>
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring sm:text-sm placeholder:text-muted-foreground"
             placeholder="Search by name or pharmacy..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -245,33 +245,33 @@ const EventCheckIn: React.FC = () => {
       {/* Attendees Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredAttendees.length === 0 ? (
-          <div className="col-span-2 bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-            <i className="fas fa-users text-gray-300 text-3xl mb-2"></i>
+          <div className="col-span-2 bg-card rounded-lg shadow-md border border-border p-6 text-center text-muted-foreground">
+            <i className="fas fa-users text-muted-foreground/50 text-3xl mb-2"></i>
             <p>No attendees found</p>
           </div>
         ) : (
           filteredAttendees.map((attendee) => (
             <div
               key={attendee._id}
-              className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${
+              className={`bg-card rounded-lg shadow-md border border-border p-4 border-l-4 ${
                 attendee.checkedIn
-                  ? 'border-green-500'
+                  ? 'border-l-green-500'
                   : attendee.paid
-                  ? 'border-blue-500'
-                  : 'border-yellow-500'
+                  ? 'border-l-blue-500'
+                  : 'border-l-yellow-500'
               }`}
             >
               <div className="flex justify-between">
                 <div className="flex items-start">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <i className="fas fa-user text-gray-500"></i>
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                    <i className="fas fa-user text-muted-foreground"></i>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">
+                    <h3 className="text-lg font-medium text-foreground">
                       {attendee.userName}
                     </h3>
                     {attendee.pharmacyName && (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {attendee.pharmacyName}
                       </p>
                     )}
@@ -287,24 +287,24 @@ const EventCheckIn: React.FC = () => {
                       attendee.status.slice(1)}
                   </span>
                   {attendee.paid ? (
-                    <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                       Paid
                     </span>
                   ) : (
-                    <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                       Unpaid
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-border">
                 <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-muted-foreground">
                     Registered on {formatDate(attendee.registeredAt)}
                   </div>
                   {attendee.checkedIn ? (
-                    <div className="inline-flex items-center text-sm text-green-600">
+                    <div className="inline-flex items-center text-sm text-green-600 dark:text-green-400">
                       <i className="fas fa-check-circle mr-1"></i>
                       Checked in at{' '}
                       {attendee.checkedInAt
@@ -313,7 +313,7 @@ const EventCheckIn: React.FC = () => {
                     </div>
                   ) : (
                     <button
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring dark:focus:ring-offset-background"
                       onClick={() => handleCheckIn(attendee)}
                       disabled={
                         isChecking && selectedAttendee?._id === attendee._id
@@ -322,7 +322,7 @@ const EventCheckIn: React.FC = () => {
                       {isChecking && selectedAttendee?._id === attendee._id ? (
                         <>
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-primary-foreground"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -359,14 +359,14 @@ const EventCheckIn: React.FC = () => {
       </div>
 
       {/* Pagination and statistics (for a more complete implementation) */}
-      <div className="bg-white rounded-lg shadow-md p-4 mt-6">
+      <div className="bg-card rounded-lg shadow-md border border-border p-4 mt-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="text-sm text-gray-500 mb-4 md:mb-0">
+          <div className="text-sm text-muted-foreground mb-4 md:mb-0">
             Showing {filteredAttendees.length} of {attendees.length} attendees
           </div>
           <div className="flex items-center space-x-2">
             <button
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring dark:focus:ring-offset-background"
               onClick={() => window.print()}
             >
               <i className="fas fa-print mr-2"></i>

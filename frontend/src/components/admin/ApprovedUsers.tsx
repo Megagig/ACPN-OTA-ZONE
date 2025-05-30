@@ -4,6 +4,7 @@ import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
 import { useToast } from '@chakra-ui/react';
 import ConfirmationModal from '../common/ConfirmationModal'; // Import the modal
+import { useTheme } from '../../context/ThemeContext';
 
 interface ApprovedUserType extends User {
   createdAt?: string;
@@ -20,6 +21,7 @@ const ApprovedUsers: React.FC = () => {
     total: 0,
   });
   const { toast } = useToast();
+  const { theme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState<string | null>(null);
 
@@ -93,7 +95,7 @@ const ApprovedUsers: React.FC = () => {
   if (loading && approvedUsers.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -101,7 +103,7 @@ const ApprovedUsers: React.FC = () => {
   if (error && !loading) {
     return (
       <div
-        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-4"
+        className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded relative my-4"
         role="alert"
       >
         <strong className="font-bold">Error!</strong>
@@ -118,78 +120,80 @@ const ApprovedUsers: React.FC = () => {
 
   if (!loading && approvedUsers.length === 0 && !error) {
     return (
-      <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
+      <div className="px-4 py-5 sm:p-6 text-center text-muted-foreground">
         No approved users found.
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
+    <div className="bg-card shadow overflow-hidden sm:rounded-lg mt-8">
       <div className="px-4 py-5 sm:px-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
+        <h3 className="text-lg leading-6 font-medium text-foreground">
           Approved Users
         </h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           List of users whose accounts have been activated. (Total:{' '}
           {pagination.total})
         </p>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Phone
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 PCN License
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Registered
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-border">
             {approvedUsers
               .filter((user): user is ApprovedUserType => !!user)
               .map((user) => (
                 <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       {user.firstName} {user.lastName}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {user.email}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.phone || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.pcnLicense || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(
                       user.createdAt || Date.now()
                     ).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200`}
                     >
                       {user.status}
                     </span>
@@ -208,7 +212,7 @@ const ApprovedUsers: React.FC = () => {
           </tbody>
         </table>
         {pagination.total > 0 && pagination.totalPages > 1 && (
-          <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <Button
                 onClick={() =>
@@ -229,7 +233,7 @@ const ApprovedUsers: React.FC = () => {
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-muted-foreground">
                   Showing{' '}
                   <span className="font-medium">
                     {(pagination.page - 1) * pagination.limit + 1}
@@ -256,7 +260,7 @@ const ApprovedUsers: React.FC = () => {
                     }
                     disabled={pagination.page <= 1}
                     variant="outline"
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
                   >
                     Previous
                   </Button>
@@ -266,7 +270,7 @@ const ApprovedUsers: React.FC = () => {
                     }
                     disabled={pagination.page >= pagination.totalPages}
                     variant="outline"
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
                   >
                     Next
                   </Button>

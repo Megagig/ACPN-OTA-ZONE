@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +18,7 @@ const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { theme } = useTheme();
 
   const navigate = useNavigate();
 
@@ -67,8 +70,11 @@ const Register: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
+          <div className="flex justify-end">
+            <ThemeToggle />
+          </div>
           <div className="text-center">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
@@ -84,23 +90,23 @@ const Register: React.FC = () => {
                 d="M5 13l4 4L19 7"
               ></path>
             </svg>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
               Registration Successful!
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-center text-sm text-muted-foreground">
               Please check your email for a verification link and 6-digit code.
               You will be redirected to the verification page shortly.
             </p>
             <div className="mt-5 space-y-3">
               <Link
                 to="/verify-email"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90"
               >
                 Verify Email Now
               </Link>
               <Link
                 to="/login"
-                className="text-indigo-600 hover:text-indigo-500 text-sm"
+                className="text-primary hover:text-primary/80 text-sm"
               >
                 Back to Login
               </Link>
@@ -112,23 +118,26 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
+        <div className="flex justify-end">
+          <ThemeToggle />
+        </div>
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create a new account
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
+            Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Association of Community Pharmacists of Nigeria - Ota Zone
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            Join the Association of Community Pharmacists of Nigeria - Ota Zone
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="bg-destructive/15 border-l-4 border-destructive p-4 mb-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-500"
+                  className="h-5 w-5 text-destructive"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -141,7 +150,7 @@ const Register: React.FC = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             </div>
           </div>
@@ -159,7 +168,7 @@ const Register: React.FC = () => {
                   name="firstName"
                   type="text"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
@@ -174,7 +183,7 @@ const Register: React.FC = () => {
                   name="lastName"
                   type="text"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground sm:rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
@@ -191,7 +200,7 @@ const Register: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -206,7 +215,7 @@ const Register: React.FC = () => {
                 name="phone"
                 type="tel"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Phone Number"
                 value={formData.phone}
                 onChange={handleChange}
@@ -221,7 +230,7 @@ const Register: React.FC = () => {
                 name="pcnLicense"
                 type="text"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="PCN License Number"
                 value={formData.pcnLicense}
                 onChange={handleChange}
@@ -236,7 +245,7 @@ const Register: React.FC = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
@@ -251,7 +260,7 @@ const Register: React.FC = () => {
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -263,12 +272,12 @@ const Register: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                   <svg
-                    className="animate-spin h-5 w-5 text-indigo-300"
+                    className="animate-spin h-5 w-5 text-primary-foreground/70"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -291,7 +300,7 @@ const Register: React.FC = () => {
               ) : (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                   <svg
-                    className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400"
+                    className="h-5 w-5 text-primary-foreground group-hover:text-primary-foreground/90"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -308,10 +317,10 @@ const Register: React.FC = () => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
+              <span className="px-2 bg-card text-muted-foreground">
                 Already have an account?
               </span>
             </div>
@@ -319,7 +328,7 @@ const Register: React.FC = () => {
           <div className="mt-6">
             <Link
               to="/login"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-gray-50 border-indigo-600"
+              className="w-full flex justify-center py-2 px-4 border border-primary rounded-md shadow-sm text-sm font-medium text-primary bg-card hover:bg-accent"
             >
               Sign in
             </Link>

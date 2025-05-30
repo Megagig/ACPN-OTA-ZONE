@@ -220,8 +220,8 @@ const SidebarItem = React.forwardRef<HTMLLIElement, SidebarItemProps>(
         className={cn(
           'relative flex items-center px-3 py-2 mx-2 rounded-md text-sm cursor-pointer transition-colors',
           active
-            ? 'bg-primary-50 text-primary-700 font-medium'
-            : 'text-gray-700 hover:bg-gray-100',
+            ? 'bg-primary/10 text-primary font-medium'
+            : 'text-foreground/70 hover:bg-accent hover:text-foreground',
           className
         )}
         {...props}

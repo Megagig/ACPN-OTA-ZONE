@@ -13,7 +13,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
           ref={ref}
           className={cn(
             'w-full caption-bottom text-sm',
-            variant === 'bordered' && 'border border-gray-200',
+            variant === 'bordered' && 'border border-border',
             className
           )}
           {...props}
@@ -28,7 +28,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn('bg-gray-50', className)} {...props} />
+  <thead ref={ref} className={cn('bg-muted', className)} {...props} />
 ));
 TableHeader.displayName = 'TableHeader';
 
@@ -40,7 +40,7 @@ const TableBody = React.forwardRef<
     ref={ref}
     className={cn(
       '[&_tr:last-child]:border-0',
-      striped && '[&_tr:nth-child(even)]:bg-gray-50',
+      striped && '[&_tr:nth-child(even)]:bg-muted/50',
       className
     )}
     {...props}
@@ -54,7 +54,7 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn('bg-gray-50 font-medium', className)}
+    className={cn('bg-muted font-medium', className)}
     {...props}
   />
 ));
@@ -70,9 +70,9 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      'border-b border-gray-200 transition-colors',
-      isSelected && 'bg-blue-50',
-      isClickable && 'cursor-pointer hover:bg-gray-50',
+      'border-b border-border transition-colors',
+      isSelected && 'bg-muted',
+      isClickable && 'cursor-pointer hover:bg-muted/50',
       className
     )}
     {...props}
@@ -87,7 +87,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-12 px-4 text-left align-middle font-medium text-gray-500',
+      'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
       'first:rounded-tl-md last:rounded-tr-md',
       className
     )}
@@ -110,7 +110,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn('mt-4 text-sm text-gray-500', className)}
+    className={cn('mt-4 text-sm text-muted-foreground', className)}
     {...props}
   />
 ));

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import financialService from '../../services/financial.service';
 import type { PaymentSubmission, Pharmacy } from '../../types/pharmacy.types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PaymentFilters {
   status: string;
@@ -13,9 +14,12 @@ interface PaymentFilters {
 }
 
 const PaymentHistory: React.FC = () => {
+  const { theme } = useTheme();
   const [payments, setPayments] = useState<PaymentSubmission[]>([]);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<PaymentSubmission[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<PaymentSubmission[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,50 +67,54 @@ const PaymentHistory: React.FC = () => {
 
     // Status filter
     if (filters.status) {
-      filtered = filtered.filter(payment => payment.status === filters.status);
+      filtered = filtered.filter(
+        (payment) => payment.status === filters.status
+      );
     }
 
     // Pharmacy filter
     if (filters.pharmacyId) {
-      filtered = filtered.filter(payment => payment.pharmacyId === filters.pharmacyId);
+      filtered = filtered.filter(
+        (payment) => payment.pharmacyId === filters.pharmacyId
+      );
     }
 
     // Date range filter
     if (filters.dateFrom) {
-      filtered = filtered.filter(payment => 
-        new Date(payment.submittedAt) >= new Date(filters.dateFrom)
+      filtered = filtered.filter(
+        (payment) => new Date(payment.submittedAt) >= new Date(filters.dateFrom)
       );
     }
     if (filters.dateTo) {
-      filtered = filtered.filter(payment => 
-        new Date(payment.submittedAt) <= new Date(filters.dateTo)
+      filtered = filtered.filter(
+        (payment) => new Date(payment.submittedAt) <= new Date(filters.dateTo)
       );
     }
 
     // Amount range filter
     if (filters.amountMin) {
-      filtered = filtered.filter(payment => 
-        payment.amount >= parseFloat(filters.amountMin)
+      filtered = filtered.filter(
+        (payment) => payment.amount >= parseFloat(filters.amountMin)
       );
     }
     if (filters.amountMax) {
-      filtered = filtered.filter(payment => 
-        payment.amount <= parseFloat(filters.amountMax)
+      filtered = filtered.filter(
+        (payment) => payment.amount <= parseFloat(filters.amountMax)
       );
     }
 
     // Payment method filter
     if (filters.paymentMethod) {
-      filtered = filtered.filter(payment => 
-        payment.paymentMethod === filters.paymentMethod
+      filtered = filtered.filter(
+        (payment) => payment.paymentMethod === filters.paymentMethod
       );
     }
 
     // Search term filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(payment => {
-        const pharmacy = pharmacies.find(p => p._id === payment.pharmacyId);
+      filtered = filtered.filter((payment) => {
+        const pharmacy = pharmacies.find((p) => p._id === payment.pharmacyId);
         return (
           pharmacy?.businessName.toLowerCase().includes(term) ||
           payment.transactionReference?.toLowerCase().includes(term) ||
@@ -120,7 +128,7 @@ const PaymentHistory: React.FC = () => {
   };
 
   const handleFilterChange = (field: keyof PaymentFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const clearFilters = () => {
@@ -147,8 +155,8 @@ const PaymentHistory: React.FC = () => {
       'Description',
     ];
 
-    const csvData = filteredPayments.map(payment => {
-      const pharmacy = pharmacies.find(p => p._id === payment.pharmacyId);
+    const csvData = filteredPayments.map((payment) => {
+      const pharmacy = pharmacies.find((p) => p._id === payment.pharmacyId);
       return [
         new Date(payment.submittedAt).toLocaleDateString(),
         pharmacy?.businessName || 'Unknown',
@@ -161,14 +169,17 @@ const PaymentHistory: React.FC = () => {
     });
 
     const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
+      .map((row) => row.map((field) => `"${field}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `payment-history-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+      'download',
+      `payment-history-${new Date().toISOString().split('T')[0]}.csv`
+    );
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -184,15 +195,30 @@ const PaymentHistory: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
+      pending: {
+        bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+        text: 'text-yellow-800 dark:text-yellow-300',
+        label: 'Pending',
+      },
+      approved: {
+        bg: 'bg-green-100 dark:bg-green-900/30',
+        text: 'text-green-800 dark:text-green-300',
+        label: 'Approved',
+      },
+      rejected: {
+        bg: 'bg-red-100 dark:bg-red-900/30',
+        text: 'text-red-800 dark:text-red-300',
+        label: 'Rejected',
+      },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+      <span
+        className={`px-2 py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}
+      >
         {config.label}
       </span>
     );
@@ -204,9 +230,12 @@ const PaymentHistory: React.FC = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentPayments = filteredPayments.slice(startIndex, endIndex);
 
-  const totalAmount = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const totalAmount = filteredPayments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
   const approvedAmount = filteredPayments
-    .filter(p => p.status === 'approved')
+    .filter((p) => p.status === 'approved')
     .reduce((sum, payment) => sum + payment.amount, 0);
 
   if (loading) {
@@ -220,93 +249,139 @@ const PaymentHistory: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Payment History</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold text-foreground">Payment History</h1>
+        <p className="text-muted-foreground mt-2">
           View and manage all payment submissions from pharmacies
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{error}</p>
+        <div className="mb-6 p-4 bg-destructive/15 border border-destructive/20 rounded-lg">
+          <p className="text-destructive">{error}</p>
         </div>
       )}
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <svg
+                className="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">{filteredPayments.length}</p>
-              <p className="text-gray-600">Total Payments</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAmount)}</p>
-              <p className="text-gray-600">Total Amount</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(approvedAmount)}</p>
-              <p className="text-gray-600">Approved Amount</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {filteredPayments.filter(p => p.status === 'pending').length}
+              <p className="text-2xl font-bold text-foreground">
+                {filteredPayments.length}
               </p>
-              <p className="text-gray-600">Pending Review</p>
+              <p className="text-muted-foreground">Total Payments</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-500/10 rounded-lg">
+              <svg
+                className="w-6 h-6 text-green-600 dark:text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-2xl font-bold text-foreground">
+                {formatCurrency(totalAmount)}
+              </p>
+              <p className="text-muted-foreground">Total Amount</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-500/10 rounded-lg">
+              <svg
+                className="w-6 h-6 text-green-600 dark:text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-2xl font-bold text-foreground">
+                {formatCurrency(approvedAmount)}
+              </p>
+              <p className="text-muted-foreground">Approved Amount</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
+          <div className="flex items-center">
+            <div className="p-2 bg-yellow-500/10 rounded-lg">
+              <svg
+                className="w-6 h-6 text-yellow-600 dark:text-yellow-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-2xl font-bold text-foreground">
+                {filteredPayments.filter((p) => p.status === 'pending').length}
+              </p>
+              <p className="text-muted-foreground">Pending Review</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-card rounded-lg shadow border border-border p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Filters</h2>
+          <h2 className="text-lg font-semibold text-foreground">Filters</h2>
           <div className="flex space-x-3">
             <button
               onClick={clearFilters}
-              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm text-foreground border border-border rounded-md hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring"
             >
               Clear Filters
             </button>
             <button
               onClick={exportToCSV}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
             >
               Export CSV
             </button>
@@ -315,11 +390,13 @@ const PaymentHistory: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Status
+            </label>
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm"
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
@@ -329,11 +406,13 @@ const PaymentHistory: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Pharmacy
+            </label>
             <select
               value={filters.pharmacyId}
               onChange={(e) => handleFilterChange('pharmacyId', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm"
             >
               <option value="">All Pharmacies</option>
               {pharmacies.map((pharmacy) => (
@@ -345,57 +424,67 @@ const PaymentHistory: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              From Date
+            </label>
             <input
               type="date"
               value={filters.dateFrom}
               onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              To Date
+            </label>
             <input
               type="date"
               value={filters.dateTo}
               onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Search
+            </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by pharmacy name, reference..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm placeholder:text-muted-foreground"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Min Amount (₦)</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Min Amount (₦)
+            </label>
             <input
               type="number"
               value={filters.amountMin}
               onChange={(e) => handleFilterChange('amountMin', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm placeholder:text-muted-foreground"
               min="0"
               step="0.01"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Max Amount (₦)</label>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Max Amount (₦)
+            </label>
             <input
               type="number"
               value={filters.amountMax}
               onChange={(e) => handleFilterChange('amountMax', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-ring focus:border-ring text-sm placeholder:text-muted-foreground"
               min="0"
               step="0.01"
             />
@@ -404,103 +493,134 @@ const PaymentHistory: React.FC = () => {
       </div>
 
       {/* Payment Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-card rounded-lg shadow border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Pharmacy
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Reference
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentPayments.map((payment) => {
-                const pharmacy = pharmacies.find(p => p._id === payment.pharmacyId);
-                return (
-                  <tr key={payment._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(payment.submittedAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {pharmacy?.businessName || 'Unknown'}
+            <tbody className="bg-card divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex justify-center items-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                      <span className="ml-2 text-muted-foreground">
+                        Loading payments...
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : currentPayments.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-12 text-center text-muted-foreground"
+                  >
+                    No payments found matching your criteria
+                  </td>
+                </tr>
+              ) : (
+                currentPayments.map((payment) => {
+                  const pharmacy = pharmacies.find(
+                    (p) => p._id === payment.pharmacyId
+                  );
+                  return (
+                    <tr key={payment._id} className="hover:bg-muted/50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {new Date(payment.submittedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-foreground">
+                            {pharmacy?.businessName || 'Unknown'}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {pharmacy?.address?.state}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {pharmacy?.address?.state}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatCurrency(payment.amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(payment.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payment.transactionReference || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-800">
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
+                        {formatCurrency(payment.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(payment.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {payment.transactionReference || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button className="text-primary hover:text-primary/80">
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+          <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
             <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredPayments.length)} of{' '}
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to{' '}
+                {Math.min(endIndex, filteredPayments.length)} of{' '}
                 {filteredPayments.length} results
               </div>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border bg-card text-foreground rounded-md hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 text-sm rounded-md ${
-                      currentPage === page
-                        ? 'bg-blue-600 text-white'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 text-sm rounded-md ${
+                        currentPage === page
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-border bg-card text-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border bg-card text-foreground rounded-md hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

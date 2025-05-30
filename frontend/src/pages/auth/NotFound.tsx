@@ -1,16 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const NotFound: React.FC = () => {
+  const { theme } = useTheme();
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md text-center">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md text-center">
+        <div className="flex justify-end">
+          <ThemeToggle />
+        </div>
         <div>
-          <h1 className="text-9xl font-bold text-indigo-600">404</h1>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h1 className="text-9xl font-bold text-primary">404</h1>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
             Page Not Found
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             The page you're looking for doesn't exist or has been moved.
           </p>
         </div>
@@ -19,7 +26,7 @@ const NotFound: React.FC = () => {
           <div className="mt-6">
             <Link
               to="/dashboard"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               Return to Dashboard
             </Link>
@@ -28,7 +35,7 @@ const NotFound: React.FC = () => {
           <div className="mt-4">
             <Link
               to="/"
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full flex justify-center py-2 px-4 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               Go to Home
             </Link>

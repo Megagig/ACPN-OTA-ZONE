@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import eventService from '../../services/event.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import type { Event, EventAttendee } from '../../types/event.types';
 
 const EventReports: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [attendees, setAttendees] = useState<EventAttendee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -319,17 +321,17 @@ const EventReports: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Event Reports</h1>
+        <h1 className="text-2xl font-bold text-foreground">Event Reports</h1>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
             onClick={() => window.print()}
           >
             <i className="fas fa-print mr-2"></i>
             Print Report
           </button>
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-4 py-2 rounded-md text-sm shadow"
             onClick={() => navigate('/events')}
           >
             <i className="fas fa-arrow-left mr-2"></i>
@@ -339,18 +341,18 @@ const EventReports: React.FC = () => {
       </div>
 
       {/* Report Controls */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div className="bg-card rounded-lg shadow-md p-4 mb-6 border border-border">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               htmlFor="report-type"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Report Type
             </label>
             <select
               id="report-type"
-              className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground sm:text-sm"
               value={reportType}
               onChange={(e) => setReportType(e.target.value as any)}
             >
@@ -362,13 +364,13 @@ const EventReports: React.FC = () => {
           <div>
             <label
               htmlFor="date-range"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Date Range
             </label>
             <select
               id="date-range"
-              className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground sm:text-sm"
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as any)}
             >
@@ -382,25 +384,25 @@ const EventReports: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-card rounded-lg shadow-md p-6 border border-border">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 w-1/4 rounded"></div>
+            <div className="h-8 bg-muted w-1/4 rounded"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="h-64 bg-muted rounded"></div>
+              <div className="h-64 bg-muted rounded"></div>
             </div>
           </div>
         </div>
       ) : (
         <>
           {/* Report Header */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          <div className="bg-card rounded-lg shadow-md p-6 mb-6 border border-border">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
               {reportType === 'overview' && 'Events Overview'}
               {reportType === 'attendance' && 'Attendance Analysis'}
               {reportType === 'financial' && 'Financial Analysis'}
             </h2>
-            <div className="flex flex-wrap items-center text-sm text-gray-600 mb-4">
+            <div className="flex flex-wrap items-center text-sm text-muted-foreground mb-4">
               <div className="mr-6 mb-2">
                 <span className="font-medium">Date Range:</span>{' '}
                 {getDateRangeDisplay()}
@@ -424,12 +426,12 @@ const EventReports: React.FC = () => {
           {reportType === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Event Types Distribution */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Event Types Distribution
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
@@ -442,12 +444,12 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Top Events by Attendance */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Top Events by Attendance
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
@@ -468,10 +470,10 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Payment Status */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">Payment Status</h3>
                 {getFilteredAttendees().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No attendance data available for the selected period
                   </div>
                 ) : (
@@ -484,12 +486,12 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Registration Status */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Registration Status
                 </h3>
                 {getFilteredAttendees().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No attendance data available for the selected period
                   </div>
                 ) : (
@@ -506,44 +508,48 @@ const EventReports: React.FC = () => {
           {reportType === 'attendance' && (
             <div className="space-y-6">
               {/* Attendance Overview */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Attendance Overview
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4 text-center">
-                    <div className="text-3xl font-bold text-blue-600">
+                  <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 text-center border border-border">
+                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                       {getFilteredAttendees().length}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground">
                       Total Registrations
                     </div>
                   </div>
-                  <div className="bg-green-50 rounded-lg p-4 text-center">
-                    <div className="text-3xl font-bold text-green-600">
+                  <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4 text-center border border-border">
+                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                       {getFilteredAttendees().filter((a) => a.checkedIn).length}
                     </div>
-                    <div className="text-sm text-gray-600">Checked In</div>
+                    <div className="text-sm text-muted-foreground">
+                      Checked In
+                    </div>
                   </div>
-                  <div className="bg-red-50 rounded-lg p-4 text-center">
-                    <div className="text-3xl font-bold text-red-600">
+                  <div className="bg-red-50 dark:bg-red-950 rounded-lg p-4 text-center border border-border">
+                    <div className="text-3xl font-bold text-red-600 dark:text-red-400">
                       {
                         getFilteredAttendees().filter((a) => !a.checkedIn)
                           .length
                       }
                     </div>
-                    <div className="text-sm text-gray-600">No-Shows</div>
+                    <div className="text-sm text-muted-foreground">
+                      No-Shows
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Top Events by Attendance */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Top Events by Attendance
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
@@ -564,12 +570,12 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Registration Status */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Registration Status
                 </h3>
                 {getFilteredAttendees().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No attendance data available for the selected period
                   </div>
                 ) : (
@@ -582,52 +588,52 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Detailed Attendance Table */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Detailed Attendance
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-border">
+                      <thead className="bg-muted">
                         <tr>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Event
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Date
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Registrations
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Checked In
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Attendance Rate
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-card divide-y divide-border">
                         {getFilteredEvents().map((event) => {
                           const eventAttendees = attendees.filter((attendee) =>
                             typeof attendee.event === 'string'
@@ -648,40 +654,40 @@ const EventReports: React.FC = () => {
                           return (
                             <tr key={event._id}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-foreground">
                                   {event.title}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-sm text-muted-foreground">
                                   {event.type}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-foreground">
                                   {new Date(
                                     event.startDate
                                   ).toLocaleDateString()}
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                 {eventAttendees.length}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                 {checkedInCount}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                <div className="w-full bg-muted rounded-full h-2.5">
                                   <div
                                     className={`h-2.5 rounded-full ${
                                       attendanceRate > 70
-                                        ? 'bg-green-600'
+                                        ? 'bg-green-600 dark:bg-green-400'
                                         : attendanceRate > 40
-                                        ? 'bg-yellow-400'
-                                        : 'bg-red-500'
+                                        ? 'bg-yellow-400 dark:bg-yellow-300'
+                                        : 'bg-red-500 dark:bg-red-400'
                                     }`}
                                     style={{ width: `${attendanceRate}%` }}
                                   ></div>
                                 </div>
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-muted-foreground mt-1">
                                   {attendanceRate}%
                                 </div>
                               </td>
@@ -699,12 +705,12 @@ const EventReports: React.FC = () => {
           {reportType === 'financial' && (
             <div className="space-y-6">
               {/* Financial Overview */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Financial Overview
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
@@ -755,27 +761,27 @@ const EventReports: React.FC = () => {
 
                       return (
                         <>
-                          <div className="bg-green-50 rounded-lg p-4 text-center">
-                            <div className="text-3xl font-bold text-green-600">
+                          <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4 text-center border border-border">
+                            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                               ₦{totalActualRevenue.toLocaleString()}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                               Total Revenue
                             </div>
                           </div>
-                          <div className="bg-red-50 rounded-lg p-4 text-center">
-                            <div className="text-3xl font-bold text-red-600">
+                          <div className="bg-red-50 dark:bg-red-950 rounded-lg p-4 text-center border border-border">
+                            <div className="text-3xl font-bold text-red-600 dark:text-red-400">
                               ₦{outstandingRevenue.toLocaleString()}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                               Outstanding
                             </div>
                           </div>
-                          <div className="bg-blue-50 rounded-lg p-4 text-center">
-                            <div className="text-3xl font-bold text-blue-600">
+                          <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 text-center border border-border">
+                            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                               {getFilteredEvents().length}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                               Paid Events
                             </div>
                           </div>
@@ -787,12 +793,12 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Top Events by Revenue */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Top Events by Revenue
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
@@ -813,10 +819,10 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Payment Status */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">Payment Status</h3>
                 {getFilteredAttendees().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No attendance data available for the selected period
                   </div>
                 ) : (
@@ -829,64 +835,64 @@ const EventReports: React.FC = () => {
               </div>
 
               {/* Detailed Financial Table */}
-              <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="bg-card rounded-lg shadow-md p-4 border border-border">
                 <h3 className="text-lg font-semibold mb-4">
                   Detailed Financial Report
                 </h3>
                 {getFilteredEvents().length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No events data available for the selected period
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-border">
+                      <thead className="bg-muted">
                         <tr>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Event
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Date
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Fee (₦)
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Registrations
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Paid
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Revenue (₦)
                           </th>
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             Outstanding (₦)
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-card divide-y divide-border">
                         {getFilteredEvents().map((event) => {
                           const eventAttendees = attendees.filter((attendee) =>
                             typeof attendee.event === 'string'
@@ -909,35 +915,35 @@ const EventReports: React.FC = () => {
                           return (
                             <tr key={event._id}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-foreground">
                                   {event.title}
                                 </div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-sm text-muted-foreground">
                                   {event.type}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
+                                <div className="text-sm text-foreground">
                                   {new Date(
                                     event.startDate
                                   ).toLocaleDateString()}
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                 {event.registrationFee
                                   ? event.registrationFee.toLocaleString()
                                   : 'Free'}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                 {eventAttendees.length}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                 {paidCount} / {eventAttendees.length}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-medium">
                                 {revenue.toLocaleString()}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-medium">
                                 {outstanding.toLocaleString()}
                               </td>
                             </tr>

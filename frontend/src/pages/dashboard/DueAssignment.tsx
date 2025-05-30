@@ -192,21 +192,21 @@ const DueAssignment: React.FC = () => {
     <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Assign Due</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Assign Due</h1>
+        <p className="text-muted-foreground">
           Assign dues to individual pharmacies with optional recurring settings
         </p>
       </div>
 
       {/* Alert Messages */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <div className="mb-6 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded-md">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+        <div className="mb-6 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-200 px-4 py-3 rounded-md">
           {success}
         </div>
       )}
@@ -214,9 +214,9 @@ const DueAssignment: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Assignment Form */}
         <div className="lg:col-span-2">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
+          <div className="bg-card shadow-lg rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground">
                 Due Assignment Form
               </h2>
             </div>
@@ -224,7 +224,7 @@ const DueAssignment: React.FC = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Pharmacy Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Select Pharmacy *
                 </label>
                 <div className="space-y-3">
@@ -233,7 +233,7 @@ const DueAssignment: React.FC = () => {
                     placeholder="Search pharmacies..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                   />
 
                   <select
@@ -241,7 +241,7 @@ const DueAssignment: React.FC = () => {
                     value={formData.pharmacyId}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                   >
                     <option value="">Select a pharmacy</option>
                     {filteredPharmacies.map((pharmacy) => (
@@ -256,7 +256,7 @@ const DueAssignment: React.FC = () => {
 
               {/* Due Type Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Due Type *
                 </label>
                 <select
@@ -264,7 +264,7 @@ const DueAssignment: React.FC = () => {
                   value={formData.dueTypeId}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                 >
                   <option value="">Select due type</option>
                   {dueTypes.map((dueType) => (
@@ -278,7 +278,7 @@ const DueAssignment: React.FC = () => {
 
               {/* Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Amount (₦) *
                 </label>
                 <input
@@ -289,11 +289,11 @@ const DueAssignment: React.FC = () => {
                   min="0"
                   step="0.01"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                   placeholder="Enter amount"
                 />
                 {selectedDueType && (
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Default amount: ₦
                     {selectedDueType.defaultAmount?.toLocaleString() || '0'}
                   </p>
@@ -302,7 +302,7 @@ const DueAssignment: React.FC = () => {
 
               {/* Due Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Due Date *
                 </label>
                 <input
@@ -312,13 +312,13 @@ const DueAssignment: React.FC = () => {
                   onChange={handleInputChange}
                   required
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Description
                 </label>
                 <textarea
@@ -326,7 +326,7 @@ const DueAssignment: React.FC = () => {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                   placeholder="Optional description for this due assignment"
                 />
               </div>
@@ -339,16 +339,16 @@ const DueAssignment: React.FC = () => {
                     name="isRecurring"
                     checked={formData.isRecurring}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                   />
-                  <label className="ml-2 block text-sm text-gray-700">
+                  <label className="ml-2 block text-sm text-foreground">
                     Make this a recurring due
                   </label>
                 </div>
 
                 {formData.isRecurring && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Recurring Frequency *
                     </label>
                     <select
@@ -356,7 +356,7 @@ const DueAssignment: React.FC = () => {
                       value={formData.recurringFrequency || ''}
                       onChange={handleInputChange}
                       required={formData.isRecurring}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                     >
                       <option value="">Select frequency</option>
                       <option value="monthly">Monthly</option>
@@ -372,7 +372,7 @@ const DueAssignment: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                  className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
                 >
                   {loading ? 'Assigning Due...' : 'Assign Due'}
                 </button>
@@ -383,9 +383,9 @@ const DueAssignment: React.FC = () => {
 
         {/* Summary Panel */}
         <div className="lg:col-span-1">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-card shadow-lg rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground">
                 Assignment Summary
               </h3>
             </div>
@@ -393,8 +393,10 @@ const DueAssignment: React.FC = () => {
             <div className="p-6 space-y-4">
               {formData.pharmacyId && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Pharmacy:</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm font-medium text-foreground">
+                    Pharmacy:
+                  </p>
+                  <p className="text-sm text-muted-foreground">
                     {pharmacies.find((p) => p._id === formData.pharmacyId)
                       ?.name || 'Not selected'}
                   </p>
@@ -403,11 +405,13 @@ const DueAssignment: React.FC = () => {
 
               {selectedDueType && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Due Type:</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm font-medium text-foreground">
+                    Due Type:
+                  </p>
+                  <p className="text-sm text-muted-foreground">
                     {selectedDueType.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {selectedDueType.description}
                   </p>
                 </div>
@@ -415,8 +419,8 @@ const DueAssignment: React.FC = () => {
 
               {formData.amount > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Amount:</p>
-                  <p className="text-lg font-semibold text-green-600">
+                  <p className="text-sm font-medium text-foreground">Amount:</p>
+                  <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                     ₦{Number(formData.amount).toLocaleString()}
                   </p>
                 </div>
@@ -424,8 +428,10 @@ const DueAssignment: React.FC = () => {
 
               {formData.dueDate && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Due Date:</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm font-medium text-foreground">
+                    Due Date:
+                  </p>
+                  <p className="text-sm text-muted-foreground">
                     {new Date(formData.dueDate).toLocaleDateString()}
                   </p>
                 </div>
@@ -433,10 +439,10 @@ const DueAssignment: React.FC = () => {
 
               {formData.isRecurring && formData.recurringFrequency && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-foreground">
                     Recurring:
                   </p>
-                  <p className="text-sm text-blue-600 capitalize">
+                  <p className="text-sm text-primary capitalize">
                     {formData.recurringFrequency}
                   </p>
                 </div>
@@ -445,8 +451,8 @@ const DueAssignment: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">
+          <div className="mt-6 bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-foreground mb-3">
               Quick Actions
             </h4>
             <div className="space-y-2">
@@ -455,14 +461,14 @@ const DueAssignment: React.FC = () => {
                 onClick={() =>
                   (window.location.href = '/dashboard/bulk-assign-dues')
                 }
-                className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition duration-200"
+                className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-background hover:text-foreground rounded-md transition duration-200"
               >
                 Bulk Assign Dues
               </button>
               <button
                 type="button"
                 onClick={() => (window.location.href = '/dashboard/due-types')}
-                className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition duration-200"
+                className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-background hover:text-foreground rounded-md transition duration-200"
               >
                 Manage Due Types
               </button>
@@ -471,7 +477,7 @@ const DueAssignment: React.FC = () => {
                 onClick={() =>
                   (window.location.href = '/dashboard/admin-payment-review')
                 }
-                className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition duration-200"
+                className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-background hover:text-foreground rounded-md transition duration-200"
               >
                 Review Payments
               </button>

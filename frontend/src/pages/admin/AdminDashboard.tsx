@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PendingApprovals from '../../components/admin/PendingApprovals';
 import ApprovedUsers from '../../components/admin/ApprovedUsers';
+import { useTheme } from '../../context/ThemeContext';
 
 // Admin dashboard tabs - using string literal union type
 type AdminTab =
@@ -12,6 +13,7 @@ type AdminTab =
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('approvals');
+  const { theme } = useTheme();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -20,28 +22,36 @@ const AdminDashboard: React.FC = () => {
       case 'approved_users':
         return <ApprovedUsers />;
       case 'users':
-        return <div>User Management (Coming Soon)</div>;
+        return (
+          <div className="text-foreground">User Management (Coming Soon)</div>
+        );
       case 'settings':
-        return <div>Admin Settings (Coming Soon)</div>;
+        return (
+          <div className="text-foreground">Admin Settings (Coming Soon)</div>
+        );
       case 'overview':
       default:
-        return <div>Admin Overview (Coming Soon)</div>;
+        return (
+          <div className="text-foreground">Admin Overview (Coming Soon)</div>
+        );
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-6 text-foreground">
+        Admin Dashboard
+      </h1>
 
       <div className="mb-6">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-border">
           <nav className="-mb-px flex" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('overview')}
               className={`${
                 activeTab === 'overview'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
               } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Overview
@@ -50,8 +60,8 @@ const AdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('approvals')}
               className={`${
                 activeTab === 'approvals'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
               } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Pending Approvals
@@ -60,8 +70,8 @@ const AdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('approved_users')}
               className={`${
                 activeTab === 'approved_users'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
               } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Approved Users
@@ -70,8 +80,8 @@ const AdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('users')}
               className={`${
                 activeTab === 'users'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
               } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               User Management
@@ -80,8 +90,8 @@ const AdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('settings')}
               className={`${
                 activeTab === 'settings'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
               } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Settings
@@ -90,7 +100,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg p-6">
+      <div className="bg-card shadow-md rounded-lg p-6 text-foreground">
         {renderTabContent()}
       </div>
     </div>

@@ -190,10 +190,10 @@ const ElectionForm = () => {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-12 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-8 bg-muted rounded w-1/4"></div>
+          <div className="h-32 bg-muted rounded"></div>
+          <div className="h-32 bg-muted rounded"></div>
+          <div className="h-12 bg-muted rounded w-1/3"></div>
         </div>
       </div>
     );
@@ -202,11 +202,11 @@ const ElectionForm = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-foreground">
           {isEditing ? 'Edit Election' : 'Create Election'}
         </h1>
         <button
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm shadow"
+          className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           onClick={() => navigate(-1)}
         >
           <i className="fas fa-arrow-left mr-2"></i>
@@ -216,14 +216,14 @@ const ElectionForm = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-md p-6"
+        className="bg-card border border-border rounded-lg shadow-md p-6"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Title */}
           <div className="col-span-2">
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Title <span className="text-red-500">*</span>
             </label>
@@ -232,8 +232,8 @@ const ElectionForm = () => {
               name="title"
               type="text"
               className={`border ${
-                errors.title ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
+                errors.title ? 'border-red-500' : 'border-input'
+              } bg-background text-foreground rounded-md shadow-sm p-2 w-full focus:ring-ring focus:border-ring`}
               placeholder="Enter election title"
               value={formData.title || ''}
               onChange={handleChange}
@@ -247,7 +247,7 @@ const ElectionForm = () => {
           <div>
             <label
               htmlFor="startDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Start Date <span className="text-red-500">*</span>
             </label>
@@ -256,8 +256,8 @@ const ElectionForm = () => {
               name="startDate"
               type="date"
               className={`border ${
-                errors.startDate ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
+                errors.startDate ? 'border-red-500' : 'border-input'
+              } bg-background text-foreground rounded-md shadow-sm p-2 w-full focus:ring-ring focus:border-ring`}
               value={formData.startDate || ''}
               onChange={handleChange}
               min={new Date().toISOString().split('T')[0]}
@@ -271,7 +271,7 @@ const ElectionForm = () => {
           <div>
             <label
               htmlFor="endDate"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               End Date <span className="text-red-500">*</span>
             </label>
@@ -280,8 +280,8 @@ const ElectionForm = () => {
               name="endDate"
               type="date"
               className={`border ${
-                errors.endDate ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
+                errors.endDate ? 'border-red-500' : 'border-input'
+              } bg-background text-foreground rounded-md shadow-sm p-2 w-full focus:ring-ring focus:border-ring`}
               value={formData.endDate || ''}
               onChange={handleChange}
               min={formData.startDate || new Date().toISOString().split('T')[0]}
@@ -295,7 +295,7 @@ const ElectionForm = () => {
           <div className="col-span-2">
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Description <span className="text-red-500">*</span>
             </label>
@@ -304,8 +304,8 @@ const ElectionForm = () => {
               name="description"
               rows={3}
               className={`border ${
-                errors.description ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
+                errors.description ? 'border-red-500' : 'border-input'
+              } bg-background text-foreground rounded-md shadow-sm p-2 w-full focus:ring-ring focus:border-ring`}
               placeholder="Enter election description"
               value={formData.description || ''}
               onChange={handleChange}
@@ -319,7 +319,7 @@ const ElectionForm = () => {
           <div className="col-span-2">
             <label
               htmlFor="rules"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Rules & Regulations
             </label>
@@ -327,7 +327,7 @@ const ElectionForm = () => {
               id="rules"
               name="rules"
               rows={5}
-              className="border border-gray-300 rounded-md shadow-sm p-2 w-full"
+              className="border border-input bg-background text-foreground rounded-md shadow-sm p-2 w-full focus:ring-ring focus:border-ring"
               placeholder="Enter election rules and regulations"
               value={formData.rules || ''}
               onChange={handleChange}
@@ -336,12 +336,12 @@ const ElectionForm = () => {
 
           {/* Positions */}
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Positions <span className="text-red-500">*</span>
             </label>
 
             {availablePositions.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Loading available positions...
               </p>
             ) : (
@@ -357,14 +357,16 @@ const ElectionForm = () => {
                       value={position._id}
                       checked={selectedPositions.includes(position._id)}
                       onChange={handlePositionChange}
-                      className="mt-1"
+                      className="mt-1 h-4 w-4 text-primary border-input rounded focus:ring-ring"
                     />
                     <label
                       htmlFor={`position-${position._id}`}
                       className="text-sm"
                     >
-                      <div className="font-medium">{position.name}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="font-medium text-foreground">
+                        {position.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
                         {position.description}
                       </div>
                     </label>
@@ -381,7 +383,7 @@ const ElectionForm = () => {
         <div className="flex justify-end space-x-2">
           <button
             type="button"
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             onClick={() => navigate(-1)}
           >
             Cancel
@@ -389,7 +391,7 @@ const ElectionForm = () => {
 
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             disabled={isSaving}
           >
             {isSaving ? (

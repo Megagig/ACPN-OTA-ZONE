@@ -146,19 +146,19 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
           // Default variant
           variant === 'default' && 'px-3 py-1.5 text-sm font-medium',
           variant === 'default' && isSelected
-            ? 'bg-white text-gray-900 shadow rounded-md'
-            : 'text-gray-600 hover:text-gray-900',
+            ? 'bg-card text-foreground shadow rounded-md border border-border'
+            : 'text-muted-foreground hover:text-foreground',
           // Pills variant
           variant === 'pills' && 'px-4 py-2 text-sm font-medium rounded-full',
           variant === 'pills' && isSelected
-            ? 'bg-primary-100 text-primary-800'
-            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+            ? 'bg-primary/10 text-primary'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
           // Underline variant
           variant === 'underline' &&
             'px-4 py-2 text-sm font-medium border-b-2 -mb-px',
           variant === 'underline' && isSelected
-            ? 'border-primary-500 text-primary-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+            ? 'border-primary text-primary'
+            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
           className
         )}
         onClick={handleClick}

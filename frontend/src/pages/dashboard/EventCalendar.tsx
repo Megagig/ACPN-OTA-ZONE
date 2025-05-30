@@ -157,37 +157,37 @@ const EventCalendar: React.FC = () => {
   const getEventTypeBadgeClass = (type: string) => {
     switch (type) {
       case 'conference':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
       case 'workshop':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'seminar':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'training':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300';
       case 'meeting':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
       case 'social':
-        return 'bg-pink-100 text-pink-800';
+        return 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300';
       case 'other':
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Event Calendar</h1>
+        <h1 className="text-2xl font-bold text-foreground">Event Calendar</h1>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate('/events/create')}
           >
             <i className="fas fa-plus mr-2"></i>
             Create Event
           </button>
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate('/events')}
           >
             <i className="fas fa-list mr-2"></i>
@@ -199,11 +199,11 @@ const EventCalendar: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Calendar */}
         <div className="md:col-span-2">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-card rounded-lg shadow-md border border-border overflow-hidden">
             {/* Calendar navigation */}
-            <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+            <div className="bg-primary text-primary-foreground px-4 py-3 flex justify-between items-center">
               <button
-                className="text-white hover:bg-blue-700 rounded p-1"
+                className="text-primary-foreground hover:bg-primary/80 rounded p-1 focus:outline-none focus:ring-2 focus:ring-ring"
                 onClick={goToPreviousMonth}
               >
                 <i className="fas fa-chevron-left"></i>
@@ -216,14 +216,14 @@ const EventCalendar: React.FC = () => {
               </h2>
               <div className="flex space-x-2">
                 <button
-                  className="text-white hover:bg-blue-700 rounded p-1"
+                  className="text-primary-foreground hover:bg-primary/80 rounded p-1 focus:outline-none focus:ring-2 focus:ring-ring"
                   onClick={goToCurrentMonth}
                   title="Today"
                 >
                   <i className="fas fa-calendar-day"></i>
                 </button>
                 <button
-                  className="text-white hover:bg-blue-700 rounded p-1"
+                  className="text-primary-foreground hover:bg-primary/80 rounded p-1 focus:outline-none focus:ring-2 focus:ring-ring"
                   onClick={goToNextMonth}
                 >
                   <i className="fas fa-chevron-right"></i>
@@ -239,7 +239,7 @@ const EventCalendar: React.FC = () => {
                   (day, index) => (
                     <div
                       key={day}
-                      className="text-center text-sm font-medium text-gray-700 py-2"
+                      className="text-center text-sm font-medium text-muted-foreground py-2"
                     >
                       {day}
                     </div>
@@ -254,7 +254,7 @@ const EventCalendar: React.FC = () => {
                     {[...Array(35)].map((_, index) => (
                       <div
                         key={index}
-                        className="aspect-square bg-gray-200 rounded"
+                        className="aspect-square bg-muted rounded"
                       ></div>
                     ))}
                   </div>
@@ -278,12 +278,12 @@ const EventCalendar: React.FC = () => {
                           relative aspect-square p-1 rounded cursor-pointer
                           ${
                             isCurrentMonth
-                              ? 'bg-white'
-                              : 'bg-gray-100 text-gray-400'
+                              ? 'bg-card text-foreground'
+                              : 'bg-muted text-muted-foreground'
                           }
-                          ${isToday ? 'border border-blue-500' : ''}
-                          ${isSelected ? 'bg-blue-50' : ''}
-                          hover:bg-gray-100
+                          ${isToday ? 'border border-primary' : ''}
+                          ${isSelected ? 'bg-accent' : ''}
+                          hover:bg-muted/50
                         `}
                         onClick={() => setSelectedDate(date)}
                       >
@@ -291,7 +291,7 @@ const EventCalendar: React.FC = () => {
                           <div
                             className={`
                             text-right text-sm
-                            ${isToday ? 'text-blue-600 font-bold' : ''}
+                            ${isToday ? 'text-primary font-bold' : ''}
                           `}
                           >
                             {date.getDate()}
@@ -299,7 +299,7 @@ const EventCalendar: React.FC = () => {
 
                           {dateHasEvents && (
                             <div className="mt-1 flex justify-center">
-                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              <div className="w-2 h-2 rounded-full bg-primary"></div>
                             </div>
                           )}
                         </div>
@@ -314,8 +314,8 @@ const EventCalendar: React.FC = () => {
 
         {/* Events for selected date */}
         <div className="md:col-span-1">
-          <div className="bg-white rounded-lg shadow-md h-full p-4">
-            <h3 className="font-medium text-gray-800 mb-4">
+          <div className="bg-card rounded-lg shadow-md border border-border h-full p-4">
+            <h3 className="font-medium text-foreground mb-4">
               {selectedDate ? (
                 <>Events for {formatDate(selectedDate)}</>
               ) : (
@@ -324,8 +324,8 @@ const EventCalendar: React.FC = () => {
             </h3>
 
             {selectedDate && eventsForSelectedDate.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <i className="fas fa-calendar text-gray-300 text-3xl mb-2"></i>
+              <div className="text-center py-8 text-muted-foreground">
+                <i className="fas fa-calendar text-muted-foreground/50 text-3xl mb-2"></i>
                 <p>No events scheduled for this date</p>
               </div>
             ) : (
@@ -333,15 +333,15 @@ const EventCalendar: React.FC = () => {
                 {eventsForSelectedDate.map((event) => (
                   <div
                     key={event._id}
-                    className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
+                    className="border border-border rounded-lg p-3 hover:bg-muted/50 cursor-pointer"
                     onClick={() => navigate(`/events/${event._id}`)}
                   >
                     <div className="flex items-center mb-2">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
                         <i className="fas fa-calendar-alt"></i>
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">
+                        <h4 className="font-medium text-foreground">
                           {event.title}
                         </h4>
                         <span
@@ -355,7 +355,7 @@ const EventCalendar: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground">
                       <div className="flex items-center mb-1">
                         <i className="fas fa-clock w-4 text-center mr-2"></i>
                         <span>

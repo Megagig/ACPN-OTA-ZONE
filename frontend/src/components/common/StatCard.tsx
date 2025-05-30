@@ -36,17 +36,17 @@ const StatCard = ({
   // Get color scheme classes
   const getColorScheme = () => {
     const schemes = {
-      blue: 'text-blue-500',
+      blue: 'text-primary',
       green: 'text-green-500',
-      red: 'text-red-500',
-      gray: 'text-gray-500',
+      red: 'text-destructive',
+      gray: 'text-muted-foreground',
       purple: 'text-purple-500',
       teal: 'text-teal-500',
     };
     return schemes[colorScheme] || schemes.blue;
   };
   return (
-    <div className={`rounded-lg bg-white shadow-md p-4 ${className}`}>
+    <div className={`rounded-lg bg-card shadow-md p-4 ${className}`}>
       {isLoading ? (
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
@@ -56,24 +56,26 @@ const StatCard = ({
       ) : (
         <>
           <div className="flex justify-between items-start">
-            <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
+            <h3 className="text-muted-foreground text-sm font-medium mb-1">
+              {title}
+            </h3>
             {icon && <span className={getColorScheme()}>{renderIcon()}</span>}
           </div>
 
           <div className="flex items-baseline">
-            <p className="text-2xl font-semibold text-gray-900">{value}</p>
+            <p className="text-2xl font-semibold text-foreground">{value}</p>
           </div>
 
           {change !== undefined && (
             <div className="mt-2">
               <span
                 className={`text-xs font-medium inline-flex items-center ${
-                  change >= 0 ? 'text-green-600' : 'text-red-600'
+                  change >= 0 ? 'text-green-600' : 'text-destructive'
                 }`}
               >
                 <span
                   className={`mr-1 ${
-                    change >= 0 ? 'text-green-500' : 'text-red-500'
+                    change >= 0 ? 'text-green-500' : 'text-destructive'
                   }`}
                 >
                   {change >= 0 ? (
@@ -83,7 +85,9 @@ const StatCard = ({
                   )}
                 </span>
                 {Math.abs(change)}%{' '}
-                <span className="ml-1 text-gray-500">from last month</span>
+                <span className="ml-1 text-muted-foreground">
+                  from last month
+                </span>
               </span>
             </div>
           )}

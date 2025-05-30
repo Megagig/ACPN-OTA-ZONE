@@ -62,7 +62,7 @@ const LandingPage: React.FC = () => {
       <main>
         {/* Hero section */}
         <div className="relative">
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gray-100"></div>
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-muted"></div>
           <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div className="relative shadow-xl sm:rounded-2xl sm:overflow-hidden">
               <div className="absolute inset-0">
@@ -71,19 +71,21 @@ const LandingPage: React.FC = () => {
                   src="https://images.unsplash.com/photo-1576602976047-174e57a47881?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
                   alt="Pharmacy"
                 />
-                <div className="absolute inset-0 bg-indigo-700 mix-blend-multiply"></div>
+                <div className="absolute inset-0 bg-primary/80 mix-blend-multiply"></div>
               </div>
               <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
                 <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  <span className="block text-white">
+                  <span className="block text-primary-foreground">
                     Association of Community
                   </span>
-                  <span className="block text-indigo-200">
+                  <span className="block text-primary-foreground/80">
                     Pharmacists of Nigeria
                   </span>
-                  <span className="block text-white">Ota Zone</span>
+                  <span className="block text-primary-foreground">
+                    Ota Zone
+                  </span>
                 </h1>
-                <p className="mt-6 max-w-lg mx-auto text-center text-xl text-indigo-200 sm:max-w-3xl">
+                <p className="mt-6 max-w-lg mx-auto text-center text-xl text-primary-foreground/80 sm:max-w-3xl">
                   A comprehensive portal for managing pharmacy registrations,
                   dues, events, elections, and communications for ACPN Ota Zone
                   members.
@@ -92,13 +94,13 @@ const LandingPage: React.FC = () => {
                   <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
                     <Link
                       to="/login"
-                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 sm:px-8"
+                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary bg-primary-foreground hover:bg-primary-foreground/90 sm:px-8"
                     >
                       Sign in
                     </Link>
                     <Link
                       to="/register"
-                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-500 hover:bg-indigo-600 sm:px-8"
+                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary-foreground bg-primary/80 hover:bg-primary sm:px-8"
                     >
                       Register
                     </Link>
@@ -112,14 +114,14 @@ const LandingPage: React.FC = () => {
         {/* Features section */}
         <div
           id="features"
-          className="py-16 bg-gray-100 overflow-hidden lg:py-24"
+          className="py-16 bg-muted/30 overflow-hidden lg:py-24"
         >
           <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-8 lg:max-w-7xl">
             <div className="relative">
-              <h2 className="text-center text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+              <h2 className="text-center text-3xl leading-8 font-extrabold tracking-tight text-foreground sm:text-4xl">
                 A Modern Portal for Pharmacy Management
               </h2>
-              <p className="mt-4 max-w-3xl mx-auto text-center text-xl text-gray-500">
+              <p className="mt-4 max-w-3xl mx-auto text-center text-xl text-muted-foreground">
                 Our platform provides comprehensive tools to streamline pharmacy
                 operations, increase collaboration, and improve administrative
                 efficiency.
@@ -128,10 +130,10 @@ const LandingPage: React.FC = () => {
 
             <div className="relative mt-12 lg:mt-24 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
               <div className="relative">
-                <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight sm:text-3xl">
+                <h3 className="text-2xl font-extrabold text-foreground tracking-tight sm:text-3xl">
                   For Pharmacy Owners
                 </h3>
-                <p className="mt-3 text-lg text-gray-500">
+                <p className="mt-3 text-lg text-muted-foreground">
                   Manage your pharmacy profile, track dues payments, and stay
                   informed about zone activities.
                 </p>
@@ -139,14 +141,14 @@ const LandingPage: React.FC = () => {
                 <dl className="mt-10 space-y-10">
                   <div className="relative">
                     <dt>
-                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
                         <i className="fas fa-building"></i>
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                      <p className="ml-16 text-lg leading-6 font-medium text-foreground">
                         Pharmacy Registration
                       </p>
                     </dt>
-                    <dd className="mt-2 ml-16 text-base text-gray-500">
+                    <dd className="mt-2 ml-16 text-base text-muted-foreground">
                       Register your pharmacy details including location, license
                       information, and contact details.
                     </dd>
@@ -154,14 +156,14 @@ const LandingPage: React.FC = () => {
 
                   <div className="relative">
                     <dt>
-                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
                         <i className="fas fa-money-bill"></i>
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                      <p className="ml-16 text-lg leading-6 font-medium text-foreground">
                         Dues Management
                       </p>
                     </dt>
-                    <dd className="mt-2 ml-16 text-base text-gray-500">
+                    <dd className="mt-2 ml-16 text-base text-muted-foreground">
                       Track your dues payments, payment history, and upcoming
                       financial obligations.
                     </dd>
@@ -169,14 +171,14 @@ const LandingPage: React.FC = () => {
 
                   <div className="relative">
                     <dt>
-                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
                         <i className="fas fa-calendar"></i>
                       </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                      <p className="ml-16 text-lg leading-6 font-medium text-foreground">
                         Event Participation
                       </p>
                     </dt>
-                    <dd className="mt-2 ml-16 text-base text-gray-500">
+                    <dd className="mt-2 ml-16 text-base text-muted-foreground">
                       Register for zone events, track attendance, and access
                       event materials.
                     </dd>
@@ -196,10 +198,10 @@ const LandingPage: React.FC = () => {
             <div className="relative mt-12 sm:mt-16 lg:mt-24">
               <div className="lg:grid lg:grid-flow-row-dense lg:grid-cols-2 lg:gap-8 lg:items-center">
                 <div className="lg:col-start-2">
-                  <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight sm:text-3xl">
+                  <h3 className="text-2xl font-extrabold text-foreground tracking-tight sm:text-3xl">
                     For Zone Administrators
                   </h3>
-                  <p className="mt-3 text-lg text-gray-500">
+                  <p className="mt-3 text-lg text-muted-foreground">
                     Comprehensive tools for managing the zone's operations,
                     communications, and governance.
                   </p>
@@ -207,14 +209,14 @@ const LandingPage: React.FC = () => {
                   <dl className="mt-10 space-y-10">
                     <div className="relative">
                       <dt>
-                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
                           <i className="fas fa-users"></i>
                         </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                        <p className="ml-16 text-lg leading-6 font-medium text-foreground">
                           Member Management
                         </p>
                       </dt>
-                      <dd className="mt-2 ml-16 text-base text-gray-500">
+                      <dd className="mt-2 ml-16 text-base text-muted-foreground">
                         Complete user and pharmacy management with approval
                         workflows and detailed reporting.
                       </dd>
@@ -222,14 +224,14 @@ const LandingPage: React.FC = () => {
 
                     <div className="relative">
                       <dt>
-                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
                           <i className="fas fa-vote-yea"></i>
                         </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                        <p className="ml-16 text-lg leading-6 font-medium text-foreground">
                           Elections & Polls
                         </p>
                       </dt>
-                      <dd className="mt-2 ml-16 text-base text-gray-500">
+                      <dd className="mt-2 ml-16 text-base text-muted-foreground">
                         Create and manage elections, process candidate
                         registrations, and collect member feedback through
                         polls.
@@ -238,14 +240,14 @@ const LandingPage: React.FC = () => {
 
                     <div className="relative">
                       <dt>
-                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
                           <i className="fas fa-chart-line"></i>
                         </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                        <p className="ml-16 text-lg leading-6 font-medium text-foreground">
                           Financial Oversight
                         </p>
                       </dt>
-                      <dd className="mt-2 ml-16 text-base text-gray-500">
+                      <dd className="mt-2 ml-16 text-base text-muted-foreground">
                         Track zone finances, manage dues collection, and
                         maintain transparency with financial reports.
                       </dd>
@@ -266,19 +268,19 @@ const LandingPage: React.FC = () => {
         </div>
 
         {/* CTA section */}
-        <div id="contact" className="bg-indigo-700">
+        <div id="contact" className="bg-primary">
           <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
+            <h2 className="text-3xl font-extrabold text-primary-foreground sm:text-4xl">
               <span className="block">Ready to get started?</span>
               <span className="block">Join ACPN Ota Zone today.</span>
             </h2>
-            <p className="mt-4 text-lg leading-6 text-indigo-200">
+            <p className="mt-4 text-lg leading-6 text-primary-foreground/80">
               Register your pharmacy and become a part of our growing community
               of professional pharmacists.
             </p>
             <Link
               to="/register"
-              className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 sm:w-auto"
+              className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-primary-foreground hover:bg-primary-foreground/90 sm:w-auto"
             >
               Register Now
             </Link>
@@ -287,7 +289,7 @@ const LandingPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800">
+      <footer className="bg-card border-t border-border">
         <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
           <nav
             className="-mx-5 -my-2 flex flex-wrap justify-center"
@@ -296,7 +298,7 @@ const LandingPage: React.FC = () => {
             <div className="px-5 py-2">
               <Link
                 to="#"
-                className="text-base text-gray-400 hover:text-gray-300"
+                className="text-base text-muted-foreground hover:text-foreground"
               >
                 About
               </Link>
@@ -304,7 +306,7 @@ const LandingPage: React.FC = () => {
             <div className="px-5 py-2">
               <Link
                 to="#"
-                className="text-base text-gray-400 hover:text-gray-300"
+                className="text-base text-muted-foreground hover:text-foreground"
               >
                 Features
               </Link>
@@ -312,7 +314,7 @@ const LandingPage: React.FC = () => {
             <div className="px-5 py-2">
               <Link
                 to="#"
-                className="text-base text-gray-400 hover:text-gray-300"
+                className="text-base text-muted-foreground hover:text-foreground"
               >
                 Privacy
               </Link>
@@ -320,7 +322,7 @@ const LandingPage: React.FC = () => {
             <div className="px-5 py-2">
               <Link
                 to="#"
-                className="text-base text-gray-400 hover:text-gray-300"
+                className="text-base text-muted-foreground hover:text-foreground"
               >
                 Terms
               </Link>
@@ -328,27 +330,27 @@ const LandingPage: React.FC = () => {
             <div className="px-5 py-2">
               <Link
                 to="#"
-                className="text-base text-gray-400 hover:text-gray-300"
+                className="text-base text-muted-foreground hover:text-foreground"
               >
                 Contact
               </Link>
             </div>
           </nav>
           <div className="mt-8 flex justify-center space-x-6">
-            <a href="#" className="text-gray-400 hover:text-gray-300">
+            <a href="#" className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">Facebook</span>
               <i className="fab fa-facebook fa-2x"></i>
             </a>
-            <a href="#" className="text-gray-400 hover:text-gray-300">
+            <a href="#" className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">Twitter</span>
               <i className="fab fa-twitter fa-2x"></i>
             </a>
-            <a href="#" className="text-gray-400 hover:text-gray-300">
+            <a href="#" className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">Instagram</span>
               <i className="fab fa-instagram fa-2x"></i>
             </a>
           </div>
-          <p className="mt-8 text-center text-base text-gray-400">
+          <p className="mt-8 text-center text-base text-muted-foreground">
             &copy; {new Date().getFullYear()} Association of Community
             Pharmacists of Nigeria, Ota Zone. All rights reserved.
           </p>

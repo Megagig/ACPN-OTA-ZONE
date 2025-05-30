@@ -6,6 +6,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Card, CardBody, Alert } from '@chakra-ui/react';
 import { AlertIcon } from '../../components/ui/chakra-components';
 import { useToast } from '../../hooks/useToast';
+import { useTheme } from '../../context/ThemeContext';
 
 interface FormValues {
   [key: string]: string | string[] | number | boolean;
@@ -15,6 +16,7 @@ const PollResponse: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -161,9 +163,9 @@ const PollResponse: React.FC = () => {
                   onChange={(e) =>
                     handleInputChange(question._id, e.target.value)
                   }
-                  className="form-radio h-4 w-4 text-blue-600"
+                  className="form-radio h-4 w-4 text-primary"
                 />
-                <span className="text-gray-700">{option.text}</span>
+                <span className="text-foreground">{option.text}</span>
               </label>
             ))}
           </div>
@@ -188,9 +190,9 @@ const PollResponse: React.FC = () => {
                       : currentValues.filter((v) => v !== option._id);
                     handleInputChange(question._id, newValues);
                   }}
-                  className="form-checkbox h-4 w-4 text-blue-600"
+                  className="form-checkbox h-4 w-4 text-primary"
                 />
-                <span className="text-gray-700">{option.text}</span>
+                <span className="text-foreground">{option.text}</span>
               </label>
             ))}
           </div>
@@ -212,9 +214,9 @@ const PollResponse: React.FC = () => {
                   onChange={(e) =>
                     handleInputChange(question._id, parseInt(e.target.value))
                   }
-                  className="form-radio h-4 w-4 text-blue-600 mb-1"
+                  className="form-radio h-4 w-4 text-primary mb-1"
                 />
-                <span className="text-sm text-gray-600">{rating}</span>
+                <span className="text-sm text-muted-foreground">{rating}</span>
               </label>
             ))}
           </div>
@@ -230,9 +232,9 @@ const PollResponse: React.FC = () => {
                 value="true"
                 checked={value === true}
                 onChange={() => handleInputChange(question._id, true)}
-                className="form-radio h-4 w-4 text-blue-600"
+                className="form-radio h-4 w-4 text-primary"
               />
-              <span className="text-gray-700">Yes</span>
+              <span className="text-foreground">Yes</span>
             </label>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
@@ -241,9 +243,9 @@ const PollResponse: React.FC = () => {
                 value="false"
                 checked={value === false}
                 onChange={() => handleInputChange(question._id, false)}
-                className="form-radio h-4 w-4 text-blue-600"
+                className="form-radio h-4 w-4 text-primary"
               />
-              <span className="text-gray-700">No</span>
+              <span className="text-foreground">No</span>
             </label>
           </div>
         );
@@ -255,12 +257,14 @@ const PollResponse: React.FC = () => {
             onChange={(e) => handleInputChange(question._id, e.target.value)}
             placeholder="Enter your response..."
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         );
 
       default:
-        return <div className="text-gray-500">Unsupported question type</div>;
+        return (
+          <div className="text-muted-foreground">Unsupported question type</div>
+        );
     }
   };
 
@@ -268,7 +272,7 @@ const PollResponse: React.FC = () => {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     );
@@ -331,26 +335,26 @@ const PollResponse: React.FC = () => {
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             {poll.title}
           </h1>
-          <p className="text-gray-600">{poll.description}</p>
+          <p className="text-muted-foreground">{poll.description}</p>
         </div>
 
         {/* Progress Bar */}
         <Card>
           <CardBody>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 Progress
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 {currentStep + 1} of {poll.questions.length}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -362,11 +366,11 @@ const PollResponse: React.FC = () => {
           <CardBody>
             <div className="mb-6">
               <div className="flex items-start justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-foreground">
                   {currentStep + 1}. {currentQuestion.text}
                 </h2>
                 {currentQuestion.required && (
-                  <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                  <span className="text-xs bg-destructive/15 text-destructive px-2 py-1 rounded">
                     Required
                   </span>
                 )}
@@ -375,7 +379,7 @@ const PollResponse: React.FC = () => {
               <div className="mb-4">{renderQuestion(currentQuestion)}</div>
 
               {errors[currentQuestion._id] && (
-                <div className="text-red-600 text-sm mt-2">
+                <div className="text-destructive text-sm mt-2">
                   {errors[currentQuestion._id]}
                 </div>
               )}
@@ -388,8 +392,8 @@ const PollResponse: React.FC = () => {
                 disabled={currentStep === 0}
                 className={`px-4 py-2 rounded-md ${
                   currentStep === 0
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 } transition-colors`}
               >
                 Previous
@@ -401,16 +405,16 @@ const PollResponse: React.FC = () => {
                   disabled={submitting}
                   className={`px-6 py-2 rounded-md ${
                     submitting
-                      ? 'bg-blue-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  } text-white transition-colors`}
+                      ? 'bg-primary/50 cursor-not-allowed'
+                      : 'bg-primary hover:bg-primary/90'
+                  } text-primary-foreground transition-colors`}
                 >
                   {submitting ? 'Submitting...' : 'Submit Response'}
                 </button>
               ) : (
                 <button
                   onClick={handleNext}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                 >
                   Next
                 </button>
@@ -423,7 +427,7 @@ const PollResponse: React.FC = () => {
         <div className="text-center">
           <button
             onClick={() => navigate('/dashboard/polls')}
-            className="text-gray-600 hover:text-gray-800 underline"
+            className="text-muted-foreground hover:text-foreground underline"
           >
             Back to Polls
           </button>

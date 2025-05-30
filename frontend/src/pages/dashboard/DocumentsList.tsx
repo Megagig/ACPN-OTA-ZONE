@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import documentService from '../../services/document.service';
 import type {
   Document,
@@ -10,6 +11,7 @@ import type {
 } from '../../types/document.types';
 
 const DocumentsList: React.FC = () => {
+  const { theme } = useTheme();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -180,14 +182,32 @@ const DocumentsList: React.FC = () => {
 
   const getAccessLevelBadge = (level: DocumentAccessLevel): JSX.Element => {
     const colors: Record<DocumentAccessLevel, { bg: string; text: string }> = {
-      public: { bg: 'bg-green-100', text: 'text-green-800' },
-      members: { bg: 'bg-blue-100', text: 'text-blue-800' },
-      committee: { bg: 'bg-purple-100', text: 'text-purple-800' },
-      executives: { bg: 'bg-orange-100', text: 'text-orange-800' },
-      admin: { bg: 'bg-red-100', text: 'text-red-800' },
+      public: {
+        bg: 'bg-green-100 dark:bg-green-900/30',
+        text: 'text-green-800 dark:text-green-200',
+      },
+      members: {
+        bg: 'bg-blue-100 dark:bg-blue-900/30',
+        text: 'text-blue-800 dark:text-blue-200',
+      },
+      committee: {
+        bg: 'bg-purple-100 dark:bg-purple-900/30',
+        text: 'text-purple-800 dark:text-purple-200',
+      },
+      executives: {
+        bg: 'bg-orange-100 dark:bg-orange-900/30',
+        text: 'text-orange-800 dark:text-orange-200',
+      },
+      admin: {
+        bg: 'bg-red-100 dark:bg-red-900/30',
+        text: 'text-red-800 dark:text-red-200',
+      },
     };
 
-    const style = colors[level] || { bg: 'bg-gray-100', text: 'text-gray-800' };
+    const style = colors[level] || {
+      bg: 'bg-muted',
+      text: 'text-muted-foreground',
+    };
 
     return (
       <span
@@ -201,8 +221,8 @@ const DocumentsList: React.FC = () => {
   const getStatusBadge = (status: DocumentStatus): JSX.Element => {
     const style =
       status === 'active'
-        ? 'bg-green-100 text-green-800'
-        : 'bg-gray-100 text-gray-800';
+        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+        : 'bg-muted text-muted-foreground';
 
     return (
       <span
@@ -228,10 +248,10 @@ const DocumentsList: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="spinner-border text-indigo-500" role="status">
+          <div className="spinner-border text-primary" role="status">
             <i className="fas fa-circle-notch fa-spin text-3xl"></i>
           </div>
-          <p className="mt-2 text-gray-600">Loading documents...</p>
+          <p className="mt-2 text-muted-foreground">Loading documents...</p>
         </div>
       </div>
     );
@@ -240,7 +260,7 @@ const DocumentsList: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Documents</h1>
+        <h1 className="text-2xl font-bold text-foreground">Documents</h1>
         <Link
           to="/documents/upload"
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -252,7 +272,7 @@ const DocumentsList: React.FC = () => {
 
       {error && (
         <div
-          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6"
+          className="bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 mb-6"
           role="alert"
         >
           <p className="font-bold">Error</p>
@@ -261,14 +281,14 @@ const DocumentsList: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Filters</h2>
+      <div className="bg-card rounded-lg shadow p-6 mb-6 border border-border">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Filters</h2>
         <form onSubmit={handleSearch} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label
                 htmlFor="search"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Search
               </label>
@@ -279,13 +299,13 @@ const DocumentsList: React.FC = () => {
                 value={searchParams.search || ''}
                 onChange={handleInputChange}
                 placeholder="Search documents..."
-                className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full rounded-md border border-border bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             <div>
               <label
                 htmlFor="category"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Category
               </label>
@@ -294,7 +314,7 @@ const DocumentsList: React.FC = () => {
                 name="category"
                 value={searchParams.category || 'all'}
                 onChange={handleCategoryChange}
-                className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full rounded-md border border-border bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Categories</option>
                 <option value="policy">Policy</option>
@@ -309,7 +329,7 @@ const DocumentsList: React.FC = () => {
             <div>
               <label
                 htmlFor="accessLevel"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Access Level
               </label>
@@ -318,7 +338,7 @@ const DocumentsList: React.FC = () => {
                 name="accessLevel"
                 value={searchParams.accessLevel || 'all'}
                 onChange={handleAccessLevelChange}
-                className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full rounded-md border border-border bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Access Levels</option>
                 <option value="public">Public</option>
@@ -331,7 +351,7 @@ const DocumentsList: React.FC = () => {
             <div>
               <label
                 htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Status
               </label>
@@ -340,7 +360,7 @@ const DocumentsList: React.FC = () => {
                 name="status"
                 value={searchParams.status || 'all'}
                 onChange={handleStatusChange}
-                className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full rounded-md border border-border bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -355,7 +375,7 @@ const DocumentsList: React.FC = () => {
                 setSearchParams({});
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 mr-2"
+              className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mr-2"
             >
               Reset
             </button>
@@ -371,34 +391,34 @@ const DocumentsList: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedDocuments.length > 0 && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
               <i className="fas fa-exclamation-triangle text-yellow-400"></i>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-yellow-700">
+              <p className="text-sm text-yellow-700 dark:text-yellow-200">
                 {selectedDocuments.length} document(s) selected
               </p>
               <div className="mt-2 flex space-x-2">
                 <button
                   type="button"
                   onClick={handleBulkArchive}
-                  className="text-sm px-3 py-1 bg-yellow-200 text-yellow-800 rounded-md hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                  className="text-sm px-3 py-1 bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 rounded-md hover:bg-yellow-300 dark:hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
                 >
                   Archive Selected
                 </button>
                 <button
                   type="button"
                   onClick={handleBulkDelete}
-                  className="text-sm px-3 py-1 bg-red-200 text-red-800 rounded-md hover:bg-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  className="text-sm px-3 py-1 bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 rounded-md hover:bg-red-300 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
                   Delete Selected
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedDocuments([])}
-                  className="text-sm px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  className="text-sm px-3 py-1 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                   Cancel
                 </button>
@@ -410,23 +430,23 @@ const DocumentsList: React.FC = () => {
 
       {/* Documents List */}
       {documents.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <i className="fas fa-file-alt text-gray-400 text-5xl mb-4"></i>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
+        <div className="bg-card rounded-lg shadow p-6 text-center border border-border">
+          <i className="fas fa-file-alt text-muted-foreground text-5xl mb-4"></i>
+          <h3 className="text-lg font-medium text-foreground mb-1">
             No documents found
           </h3>
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             No documents match your search criteria or there are no documents
             available.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-card rounded-lg shadow overflow-hidden border border-border">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
@@ -438,61 +458,61 @@ const DocumentsList: React.FC = () => {
                       />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Document
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Access Level
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Date Uploaded
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Size
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {currentDocuments.map((doc) => (
-                  <tr key={doc._id} className="hover:bg-gray-50">
+                  <tr key={doc._id} className="hover:bg-muted/50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedDocuments.includes(doc._id)}
                         onChange={() => handleCheckboxChange(doc._id)}
-                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        className="h-4 w-4 text-indigo-600 border-border rounded focus:ring-indigo-500"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-gray-100 rounded-md">
+                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-muted rounded-md">
                           <i
                             className={`fas fa-${getCategoryIcon(
                               doc.category
-                            )} text-gray-600`}
+                            )} text-muted-foreground`}
                           ></i>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-foreground">
                             {doc.title}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {doc.fileName}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-muted text-muted-foreground">
                         {doc.category}
                       </span>
                     </td>
@@ -502,10 +522,10 @@ const DocumentsList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(doc.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(doc.uploadedAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatFileSize(doc.fileSize)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -590,10 +610,10 @@ const DocumentsList: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="bg-card px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-muted-foreground">
                     Showing{' '}
                     <span className="font-medium">
                       {indexOfFirstDocument + 1}
@@ -614,10 +634,10 @@ const DocumentsList: React.FC = () => {
                     <button
                       onClick={() => paginate(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-card text-sm font-medium ${
                         currentPage === 1
-                          ? 'text-gray-300 cursor-not-allowed'
-                          : 'text-gray-500 hover:bg-gray-50'
+                          ? 'text-muted-foreground cursor-not-allowed'
+                          : 'text-foreground hover:bg-muted'
                       }`}
                     >
                       <span className="sr-only">Previous</span>
@@ -628,10 +648,10 @@ const DocumentsList: React.FC = () => {
                       <button
                         key={i}
                         onClick={() => paginate(i + 1)}
-                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                        className={`relative inline-flex items-center px-4 py-2 border border-border bg-card text-sm font-medium ${
                           currentPage === i + 1
-                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                            : 'text-gray-500 hover:bg-gray-50'
+                            ? 'z-10 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 text-indigo-600 dark:text-indigo-300'
+                            : 'text-foreground hover:bg-muted'
                         }`}
                       >
                         {i + 1}
@@ -641,10 +661,10 @@ const DocumentsList: React.FC = () => {
                     <button
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-card text-sm font-medium ${
                         currentPage === totalPages
-                          ? 'text-gray-300 cursor-not-allowed'
-                          : 'text-gray-500 hover:bg-gray-50'
+                          ? 'text-muted-foreground cursor-not-allowed'
+                          : 'text-foreground hover:bg-muted'
                       }`}
                     >
                       <span className="sr-only">Next</span>

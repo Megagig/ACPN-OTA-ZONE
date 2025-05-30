@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import financialService from '../../services/financial.service';
 import type { PaymentSubmission } from '../../types/pharmacy.types';
 import type { Payment } from '../../types/financial.types';
@@ -19,6 +20,7 @@ interface PaymentWithDetails
     name: string;
     registrationNumber: string;
   };
+  approvalStatus?: 'pending' | 'approved' | 'rejected'; // Add this field for backward compatibility
 }
 
 // Define response types
@@ -38,6 +40,7 @@ import NotificationModal from '../../components/common/NotificationModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 
 const AdminPaymentReview: React.FC = () => {
+  const { theme } = useTheme();
   const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +122,9 @@ const AdminPaymentReview: React.FC = () => {
         // Normalize status field to handle both 'status' and 'approvalStatus'
         const normalizedPayments = response.map((payment) => {
           // Create a normalized copy that ensures status field exists
-          const normalizedPayment = { ...payment } as any;
+          const normalizedPayment = {
+            ...payment,
+          } as unknown as PaymentWithDetails;
 
           // If approvalStatus exists but status doesn't, copy it to status
           if (normalizedPayment.approvalStatus && !normalizedPayment.status) {
@@ -137,7 +142,7 @@ const AdminPaymentReview: React.FC = () => {
           return normalizedPayment;
         });
 
-        setPayments(normalizedPayments as unknown as PaymentWithDetails[]);
+        setPayments(normalizedPayments);
         setTotalPages(1); // No pagination info available
       } else {
         console.log(
@@ -148,7 +153,9 @@ const AdminPaymentReview: React.FC = () => {
         // Normalize status field in paginated response
         const normalizedPayments = response.payments?.map((payment) => {
           // Create a normalized copy that ensures status field exists
-          const normalizedPayment = { ...payment } as any;
+          const normalizedPayment = {
+            ...payment,
+          } as unknown as PaymentWithDetails;
 
           // If approvalStatus exists but status doesn't, copy it to status
           if (normalizedPayment.approvalStatus && !normalizedPayment.status) {
@@ -332,13 +339,13 @@ const AdminPaymentReview: React.FC = () => {
 
     switch (paymentStatus) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -363,7 +370,7 @@ const AdminPaymentReview: React.FC = () => {
 
   // Define a method to get payment status that checks both status and approvalStatus fields
   const getPaymentStatus = (payment: PaymentWithDetails): string => {
-    return payment?.status || (payment as any)?.approvalStatus || 'pending';
+    return payment?.status || payment?.approvalStatus || 'pending';
   };
 
   // Confirm and execute payment deletion
@@ -397,32 +404,34 @@ const AdminPaymentReview: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-lg text-gray-600">Loading payments...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Loading payments...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-foreground">
                 Payment Review
               </h1>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-muted-foreground">
                 Review and approve payment submissions from pharmacies
               </p>
             </div>
             <Link
               to="/dashboard/financial-management"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors"
             >
               Back to Financial Management
             </Link>
@@ -431,11 +440,11 @@ const AdminPaymentReview: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="mb-6 bg-destructive/15 border border-destructive/20 rounded-lg p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-400"
+                  className="h-5 w-5 text-destructive"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -447,8 +456,8 @@ const AdminPaymentReview: React.FC = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <div className="mt-2 text-sm text-red-700">
+                <h3 className="text-sm font-medium text-destructive">Error</h3>
+                <div className="mt-2 text-sm text-destructive">
                   <p>{error}</p>
                 </div>
               </div>
@@ -458,12 +467,12 @@ const AdminPaymentReview: React.FC = () => {
 
         {/* Filters */}
         <div className="mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow border border-border p-6">
             <div className="flex flex-wrap gap-4 items-center">
               <div>
                 <label
                   htmlFor="status-filter"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-foreground mb-1"
                 >
                   Status Filter
                 </label>
@@ -474,7 +483,7 @@ const AdminPaymentReview: React.FC = () => {
                     setFilterStatus(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="pending">Pending Review</option>
                   <option value="approved">Approved</option>
@@ -492,8 +501,8 @@ const AdminPaymentReview: React.FC = () => {
                   }}
                   className={`text-xs font-medium rounded px-3 py-1 mt-6 ${
                     debugMode
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 text-gray-700'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {debugMode ? 'Debug Mode: ON' : 'Debug Mode: OFF'}
@@ -505,11 +514,11 @@ const AdminPaymentReview: React.FC = () => {
 
         {/* Debug Panel */}
         {debugMode && (
-          <div className="mb-6 bg-gray-800 text-white p-4 rounded-lg overflow-auto max-h-64">
+          <div className="mb-6 bg-muted text-foreground p-4 rounded-lg overflow-auto max-h-64 border border-border">
             <h3 className="text-lg font-semibold mb-2">Debug Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-300">
+                <h4 className="text-sm font-medium text-muted-foreground">
                   Payment Count
                 </h4>
                 <p className="text-xs">Total: {payments?.length || 0}</p>
@@ -530,14 +539,16 @@ const AdminPaymentReview: React.FC = () => {
                 </p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-300">Filter</h4>
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  Filter
+                </h4>
                 <p className="text-xs">Current filter: {filterStatus}</p>
                 <p className="text-xs">Current page: {currentPage}</p>
                 <p className="text-xs">Total pages: {totalPages}</p>
               </div>
             </div>
             <div className="mt-4">
-              <h4 className="text-sm font-medium text-gray-300">
+              <h4 className="text-sm font-medium text-muted-foreground">
                 First 3 Payments
               </h4>
               <pre className="text-xs mt-2 overflow-auto max-h-32">
@@ -545,7 +556,7 @@ const AdminPaymentReview: React.FC = () => {
                   payments?.slice(0, 3).map((p) => ({
                     id: p._id,
                     status: p.status,
-                    approvalStatus: (p as any).approvalStatus,
+                    approvalStatus: p.approvalStatus,
                     calculatedStatus: getPaymentStatus(p),
                     pharmacy:
                       typeof p.pharmacyId === 'object'
@@ -563,12 +574,12 @@ const AdminPaymentReview: React.FC = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow border border-border p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-yellow-500/10 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-yellow-600"
+                    className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -584,10 +595,10 @@ const AdminPaymentReview: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Pending Review
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-foreground">
                     {payments?.filter((p) => getPaymentStatus(p) === 'pending')
                       ?.length || 0}
                   </dd>
@@ -596,12 +607,12 @@ const AdminPaymentReview: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow border border-border p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-500/10 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-green-600"
+                    className="w-5 h-5 text-green-600 dark:text-green-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -617,10 +628,10 @@ const AdminPaymentReview: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Approved
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-foreground">
                     {payments?.filter((p) => getPaymentStatus(p) === 'approved')
                       ?.length || 0}
                   </dd>
@@ -629,12 +640,12 @@ const AdminPaymentReview: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow border border-border p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-red-500/10 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-red-600"
+                    className="w-5 h-5 text-red-600 dark:text-red-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -650,10 +661,10 @@ const AdminPaymentReview: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Rejected
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-foreground">
                     {payments?.filter((p) => getPaymentStatus(p) === 'rejected')
                       ?.length || 0}
                   </dd>
@@ -662,12 +673,12 @@ const AdminPaymentReview: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow border border-border p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-blue-600"
+                    className="w-5 h-5 text-blue-600 dark:text-blue-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -683,10 +694,10 @@ const AdminPaymentReview: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">
                     Total Amount
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-medium text-foreground">
                     {formatCurrency(
                       payments?.reduce((sum, p) => sum + p.amount, 0) || 0
                     )}
@@ -698,20 +709,20 @@ const AdminPaymentReview: React.FC = () => {
         </div>
 
         {/* Payments Table */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-card shadow rounded-lg border border-border">
+          <div className="px-6 py-4 border-b border-border">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-foreground">
                 Payment Submissions
               </h3>
               <button
                 onClick={() => fetchPayments()}
                 disabled={loading}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               >
                 {loading ? (
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-primary-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -750,53 +761,53 @@ const AdminPaymentReview: React.FC = () => {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Pharmacy
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Payment Method
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Submitted
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {!payments || payments.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-4 whitespace-nowrap text-center text-gray-500"
+                      className="px-6 py-4 whitespace-nowrap text-center text-muted-foreground"
                     >
                       No payments found
                     </td>
                   </tr>
                 ) : (
                   payments.map((payment) => (
-                    <tr key={payment._id} className="hover:bg-gray-50">
+                    <tr key={payment._id} className="hover:bg-muted/50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-foreground">
                             {typeof payment.pharmacyId === 'object'
                               ? payment.pharmacyId.name
                               : 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {typeof payment.pharmacyId === 'object'
                               ? payment.pharmacyId.registrationNumber
                               : 'N/A'}
@@ -805,27 +816,27 @@ const AdminPaymentReview: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-foreground">
                             {typeof payment.dueId === 'object'
                               ? payment.dueId.title
                               : 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {typeof payment.dueId === 'object'
                               ? payment.dueId.dueTypeId.name
                               : 'N/A'}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatCurrency(payment.amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 capitalize">
+                        <div className="text-sm text-foreground capitalize">
                           {payment.paymentMethod.replace('_', ' ')}
                         </div>
                         {payment.paymentReference && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             Ref: {payment.paymentReference}
                           </div>
                         )}
@@ -839,7 +850,7 @@ const AdminPaymentReview: React.FC = () => {
                           {getPaymentStatus(payment)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(payment.submittedAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -848,7 +859,7 @@ const AdminPaymentReview: React.FC = () => {
                             onClick={() =>
                               openReceiptViewer(payment.receiptUrl)
                             }
-                            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-medium flex items-center justify-center"
+                            className="px-3 py-1.5 bg-blue-500/10 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-500/20 text-xs font-medium flex items-center justify-center transition-colors"
                           >
                             <svg
                               className="w-3.5 h-3.5 mr-1.5"
@@ -874,7 +885,7 @@ const AdminPaymentReview: React.FC = () => {
                           {/* Always show action buttons regardless of status */}
                           <button
                             onClick={() => handleApprovePayment(payment)}
-                            className="px-3 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 text-xs font-medium flex items-center justify-center"
+                            className="px-3 py-1.5 bg-green-500/10 text-green-700 dark:text-green-300 rounded hover:bg-green-500/20 text-xs font-medium flex items-center justify-center transition-colors"
                           >
                             <svg
                               className="w-3.5 h-3.5 mr-1.5"
@@ -893,7 +904,7 @@ const AdminPaymentReview: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleRejectPayment(payment)}
-                            className="px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-medium flex items-center justify-center"
+                            className="px-3 py-1.5 bg-red-500/10 text-red-700 dark:text-red-300 rounded hover:bg-red-500/20 text-xs font-medium flex items-center justify-center transition-colors"
                           >
                             <svg
                               className="w-3.5 h-3.5 mr-1.5"
@@ -912,7 +923,7 @@ const AdminPaymentReview: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleDeletePayment(payment._id)}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-xs font-medium flex items-center justify-center"
+                            className="px-3 py-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 text-xs font-medium flex items-center justify-center transition-colors"
                           >
                             <svg
                               className="w-3.5 h-3.5 mr-1.5"
@@ -940,18 +951,18 @@ const AdminPaymentReview: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-border flex items-center justify-between">
               <div className="flex-1 flex justify-between">
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-muted-foreground">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
@@ -959,7 +970,7 @@ const AdminPaymentReview: React.FC = () => {
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>
@@ -970,14 +981,14 @@ const AdminPaymentReview: React.FC = () => {
 
         {/* Review Modal */}
         {showReviewModal && selectedPayment && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border border-border w-96 shadow-lg rounded-md bg-card">
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <h3 className="text-lg font-medium text-foreground mb-4">
                   Review Payment
                 </h3>
 
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="mb-4 p-4 bg-muted rounded-lg">
                   <p className="text-sm">
                     <strong>Pharmacy:</strong>{' '}
                     {typeof selectedPayment.pharmacyId === 'object'
@@ -1002,7 +1013,7 @@ const AdminPaymentReview: React.FC = () => {
 
                 <form onSubmit={handleSubmitReview}>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Decision
                     </label>
                     <select
@@ -1013,7 +1024,7 @@ const AdminPaymentReview: React.FC = () => {
                           status: e.target.value as 'approved' | 'rejected',
                         }))
                       }
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     >
                       <option value="approved">Approve</option>
@@ -1023,7 +1034,7 @@ const AdminPaymentReview: React.FC = () => {
 
                   {reviewData.status === 'rejected' && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-foreground mb-2">
                         Rejection Reason *
                       </label>
                       <textarea
@@ -1034,7 +1045,7 @@ const AdminPaymentReview: React.FC = () => {
                             rejectionReason: e.target.value,
                           }))
                         }
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                         rows={3}
                         placeholder="Please provide a reason for rejection..."
                         required
@@ -1049,18 +1060,18 @@ const AdminPaymentReview: React.FC = () => {
                         setShowReviewModal(false);
                         setSelectedPayment(null);
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                      className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={processingReview}
-                      className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                      className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 ${
                         reviewData.status === 'approved'
                           ? 'bg-green-600 hover:bg-green-700'
                           : 'bg-red-600 hover:bg-red-700'
-                      } disabled:opacity-50`}
+                      }`}
                     >
                       {processingReview
                         ? 'Processing...'
@@ -1097,7 +1108,7 @@ const AdminPaymentReview: React.FC = () => {
             confirmText={processingAction ? 'Processing...' : 'Reject Payment'}
             cancelText="Cancel"
           >
-            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="mb-4 p-4 bg-muted rounded-lg">
               <p className="text-sm">
                 <strong>Pharmacy:</strong>{' '}
                 {typeof selectedPayment.pharmacyId === 'object'
@@ -1121,13 +1132,13 @@ const AdminPaymentReview: React.FC = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Rejection Reason *
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 rows={3}
                 placeholder="Please provide a reason for rejection..."
                 required
@@ -1152,6 +1163,7 @@ const AdminPaymentReview: React.FC = () => {
         {/* Notification Modal */}
         {notification.isOpen && (
           <NotificationModal
+            isOpen={notification.isOpen}
             type={notification.type}
             title={notification.title}
             message={notification.message}

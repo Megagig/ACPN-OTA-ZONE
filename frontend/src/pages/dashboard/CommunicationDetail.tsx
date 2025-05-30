@@ -112,26 +112,32 @@ const CommunicationDetail = () => {
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
-    let color = 'gray';
+    let colorClasses = '';
 
     switch (status) {
       case 'sent':
-        color = 'green';
+        colorClasses =
+          'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
         break;
       case 'draft':
-        color = 'yellow';
+        colorClasses =
+          'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
         break;
       case 'scheduled':
-        color = 'blue';
+        colorClasses =
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
         break;
       case 'failed':
-        color = 'red';
+        colorClasses =
+          'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
         break;
+      default:
+        colorClasses = 'bg-muted text-muted-foreground';
     }
 
     return (
       <span
-        className={`bg-${color}-100 text-${color}-800 text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
+        className={`${colorClasses} text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
       >
         {status}
       </span>
@@ -158,7 +164,7 @@ const CommunicationDetail = () => {
     }
 
     return (
-      <span className="inline-flex items-center">
+      <span className="inline-flex items-center text-muted-foreground">
         <i className={`fas fa-${icon} mr-1`}></i>
         <span className="capitalize">{type.replace('_', ' ')}</span>
       </span>
@@ -170,7 +176,7 @@ const CommunicationDetail = () => {
     let label = type.replace('_', ' ');
 
     return (
-      <span className="inline-flex items-center capitalize">
+      <span className="inline-flex items-center capitalize text-muted-foreground">
         <i className="fas fa-users mr-1"></i>
         {label}
       </span>
@@ -181,9 +187,9 @@ const CommunicationDetail = () => {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-muted rounded w-1/2"></div>
+          <div className="h-32 bg-muted rounded"></div>
+          <div className="h-64 bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -192,12 +198,12 @@ const CommunicationDetail = () => {
   if (!communication) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">
           <p>Communication not found or was deleted.</p>
         </div>
         <div className="mt-4">
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm"
             onClick={() => navigate('/communications/list')}
           >
             Back to Communications
@@ -212,12 +218,12 @@ const CommunicationDetail = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <div className="flex items-center mb-2">
-            <h1 className="text-2xl font-bold text-gray-800 mr-3">
+            <h1 className="text-2xl font-bold text-foreground mr-3">
               {communication.title}
             </h1>
             <StatusBadge status={communication.status} />
           </div>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Sent by {communication.senderName} on{' '}
             {formatDate(communication.sentAt || communication.createdAt)}
           </p>
@@ -227,7 +233,7 @@ const CommunicationDetail = () => {
           {communication.status === 'draft' && (
             <>
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background"
                 onClick={handleSend}
                 disabled={isSending}
               >
@@ -245,7 +251,7 @@ const CommunicationDetail = () => {
               </button>
 
               <button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm shadow"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
                 onClick={() => navigate(`/communications/${id}/edit`)}
               >
                 <i className="fas fa-edit mr-2"></i>
@@ -255,7 +261,7 @@ const CommunicationDetail = () => {
           )}
 
           <button
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-background"
             onClick={handleDelete}
           >
             <i className="fas fa-trash-alt mr-2"></i>
@@ -263,7 +269,7 @@ const CommunicationDetail = () => {
           </button>
 
           <button
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
             onClick={() => navigate('/communications/list')}
           >
             <i className="fas fa-arrow-left mr-2"></i>
@@ -276,17 +282,17 @@ const CommunicationDetail = () => {
         {/* Left Column - Communication Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Communication Info Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-card rounded-lg shadow-md p-6 border border-border">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <p className="text-sm text-gray-500">Type</p>
+                <p className="text-sm text-muted-foreground">Type</p>
                 <p className="font-medium">
                   <TypeBadge type={communication.type} />
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Recipients</p>
+                <p className="text-sm text-muted-foreground">Recipients</p>
                 <p className="font-medium">
                   <RecipientBadge type={communication.recipientType} />
                 </p>
@@ -295,8 +301,10 @@ const CommunicationDetail = () => {
               {communication.status === 'scheduled' &&
                 communication.scheduledFor && (
                   <div>
-                    <p className="text-sm text-gray-500">Scheduled For</p>
-                    <p className="font-medium">
+                    <p className="text-sm text-muted-foreground">
+                      Scheduled For
+                    </p>
+                    <p className="font-medium text-foreground">
                       {formatDate(communication.scheduledFor)}
                     </p>
                   </div>
@@ -304,8 +312,8 @@ const CommunicationDetail = () => {
 
               {communication.status === 'sent' && communication.sentAt && (
                 <div>
-                  <p className="text-sm text-gray-500">Sent At</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-muted-foreground">Sent At</p>
+                  <p className="font-medium text-foreground">
                     {formatDate(communication.sentAt)}
                   </p>
                 </div>
@@ -313,8 +321,10 @@ const CommunicationDetail = () => {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-2">Content</h3>
-              <div className="bg-gray-50 p-4 rounded whitespace-pre-wrap">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
+                Content
+              </h3>
+              <div className="bg-muted p-4 rounded border border-border whitespace-pre-wrap text-foreground">
                 {communication.content}
               </div>
             </div>
@@ -322,21 +332,22 @@ const CommunicationDetail = () => {
             {communication.attachments &&
               communication.attachments.length > 0 && (
                 <div className="mt-4">
-                  <h3 className="text-lg font-semibold mb-2">Attachments</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">
+                    Attachments
+                  </h3>
                   <div className="space-y-2">
                     {communication.attachments.map((attachment, index) => (
                       <div
                         key={index}
-                        className="flex items-center bg-gray-50 p-2 rounded-md"
+                        className="flex items-center bg-muted p-2 rounded-md border border-border"
                       >
-                        <i className="fas fa-file-alt text-gray-500 mr-2"></i>
-                        <span className="text-sm text-gray-700 truncate flex-1">
+                        <i className="fas fa-file-alt text-muted-foreground mr-2"></i>
+                        <span className="text-sm text-foreground truncate flex-1">
                           Attachment {index + 1}
                         </span>
                         <button
                           type="button"
-                          className="text-blue-500 hover:text-blue-700"
-                          onClick={() => window.open(attachment, '_blank')}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded"
                         >
                           <i className="fas fa-download"></i>
                         </button>
@@ -351,20 +362,26 @@ const CommunicationDetail = () => {
         {/* Right Column - Delivery Stats */}
         <div className="space-y-6">
           {/* Delivery Stats Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Delivery Statistics</h3>
+          <div className="bg-card rounded-lg shadow-md p-6 border border-border">
+            <h3 className="text-lg font-semibold mb-4 text-foreground">
+              Delivery Statistics
+            </h3>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Recipients</span>
-                <span className="font-semibold">{stats.total}</span>
+                <span className="text-muted-foreground">Total Recipients</span>
+                <span className="font-semibold text-foreground">
+                  {stats.total}
+                </span>
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Delivered</span>
+                <span className="text-muted-foreground">Delivered</span>
                 <div className="flex items-center">
-                  <span className="font-semibold mr-2">{stats.delivered}</span>
-                  <span className="text-sm text-gray-500">
+                  <span className="font-semibold mr-2 text-foreground">
+                    {stats.delivered}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
                     (
                     {stats.total > 0
                       ? Math.round((stats.delivered / stats.total) * 100)
@@ -375,10 +392,12 @@ const CommunicationDetail = () => {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Read</span>
+                <span className="text-muted-foreground">Read</span>
                 <div className="flex items-center">
-                  <span className="font-semibold mr-2">{stats.read}</span>
-                  <span className="text-sm text-gray-500">
+                  <span className="font-semibold mr-2 text-foreground">
+                    {stats.read}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
                     (
                     {stats.total > 0
                       ? Math.round((stats.read / stats.total) * 100)
@@ -389,12 +408,12 @@ const CommunicationDetail = () => {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Failed</span>
+                <span className="text-muted-foreground">Failed</span>
                 <div className="flex items-center">
-                  <span className="font-semibold text-red-600 mr-2">
+                  <span className="font-semibold text-red-600 dark:text-red-400 mr-2">
                     {stats.failed}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     (
                     {stats.total > 0
                       ? Math.round((stats.failed / stats.total) * 100)
@@ -405,12 +424,12 @@ const CommunicationDetail = () => {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pending</span>
+                <span className="text-muted-foreground">Pending</span>
                 <div className="flex items-center">
-                  <span className="font-semibold text-yellow-600 mr-2">
+                  <span className="font-semibold text-yellow-600 dark:text-yellow-400 mr-2">
                     {stats.pending}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     (
                     {stats.total > 0
                       ? Math.round((stats.pending / stats.total) * 100)
@@ -423,13 +442,13 @@ const CommunicationDetail = () => {
 
             {/* Progress bar */}
             <div className="mt-6">
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="w-full bg-muted rounded-full h-2.5 border border-border">
                 <div
-                  className="bg-green-600 h-2.5 rounded-full"
+                  className="bg-green-600 dark:bg-green-500 h-2.5 rounded-full"
                   style={{ width: `${(stats.delivered / stats.total) * 100}%` }}
                 ></div>
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>0%</span>
                 <span>
                   Delivery Rate:{' '}
@@ -444,18 +463,20 @@ const CommunicationDetail = () => {
           </div>
 
           {/* Recipients List */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-card rounded-lg shadow-md p-6 border border-border">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Recipients</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Recipients
+              </h3>
               {recipients.length > 10 && (
-                <button className="text-indigo-600 hover:text-indigo-800 text-sm">
+                <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded">
                   View All
                 </button>
               )}
             </div>
 
             {recipients.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
+              <p className="text-muted-foreground text-center py-4">
                 No recipient data available
               </p>
             ) : (
@@ -463,16 +484,16 @@ const CommunicationDetail = () => {
                 {recipients.slice(0, 10).map((recipient) => (
                   <div
                     key={recipient._id}
-                    className="flex items-start border-b border-gray-100 pb-2"
+                    className="flex items-start border-b border-border pb-2"
                   >
-                    <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center mr-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mr-3">
                       {recipient.userName.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         {recipient.userName}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {recipient.email ||
                           recipient.phone ||
                           'No contact info'}
@@ -480,18 +501,27 @@ const CommunicationDetail = () => {
                     </div>
                     <div>
                       {recipient.deliveryStatus === 'delivered' ? (
-                        <span className="text-green-500" title="Delivered">
+                        <span
+                          className="text-green-600 dark:text-green-400"
+                          title="Delivered"
+                        >
                           <i className="fas fa-check-circle"></i>
                           {recipient.readStatus && (
                             <i className="fas fa-eye ml-1" title="Read"></i>
                           )}
                         </span>
                       ) : recipient.deliveryStatus === 'failed' ? (
-                        <span className="text-red-500" title="Failed">
+                        <span
+                          className="text-red-600 dark:text-red-400"
+                          title="Failed"
+                        >
                           <i className="fas fa-times-circle"></i>
                         </span>
                       ) : (
-                        <span className="text-yellow-500" title="Pending">
+                        <span
+                          className="text-yellow-600 dark:text-yellow-400"
+                          title="Pending"
+                        >
                           <i className="fas fa-clock"></i>
                         </span>
                       )}

@@ -57,15 +57,15 @@ const EventDetail = () => {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'published':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
       case 'canceled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       case 'completed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -73,19 +73,19 @@ const EventDetail = () => {
   const getAttendeeStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'registered':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'waitlisted':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
       case 'canceled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       case 'attended':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
       case 'no-show':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -93,12 +93,12 @@ const EventDetail = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-40 bg-gray-200 rounded"></div>
+          <div className="h-10 bg-muted rounded w-3/4"></div>
+          <div className="h-6 bg-muted rounded w-1/2"></div>
+          <div className="h-40 bg-muted rounded"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-muted rounded"></div>
+            <div className="h-20 bg-muted rounded"></div>
           </div>
         </div>
       </div>
@@ -108,15 +108,15 @@ const EventDetail = () => {
   if (!event) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <h2 className="text-xl font-medium text-gray-900 mb-2">
+        <div className="bg-card rounded-lg shadow-md p-6 text-center border border-border">
+          <h2 className="text-xl font-medium text-foreground mb-2">
             Event Not Found
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             The event you are looking for does not exist or has been removed.
           </p>
           <button
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
             onClick={() => navigate('/events')}
           >
             Back to Events
@@ -131,7 +131,7 @@ const EventDetail = () => {
       {/* Header with actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">{event.title}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{event.title}</h1>
           <div className="flex flex-wrap items-center mt-2">
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
@@ -140,21 +140,21 @@ const EventDetail = () => {
             >
               {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
             </span>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
               {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
             </span>
           </div>
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm shadow hover:bg-gray-50"
+            className="bg-card border border-border text-foreground px-4 py-2 rounded-md text-sm shadow hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
             onClick={() => navigate('/events')}
           >
             <i className="fas fa-arrow-left mr-2"></i>
             Back to List
           </button>
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background"
             onClick={() => navigate(`/events/${id}/edit`)}
           >
             <i className="fas fa-edit mr-2"></i>
@@ -164,14 +164,14 @@ const EventDetail = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-border mb-6">
         <nav className="-mb-px flex space-x-8">
           <button
             className={`${
               activeTab === 'details'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
             onClick={() => setActiveTab('details')}
           >
             Event Details
@@ -179,9 +179,9 @@ const EventDetail = () => {
           <button
             className={`${
               activeTab === 'attendees'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
             onClick={() => setActiveTab('attendees')}
           >
             Attendees ({attendees.length})
@@ -191,7 +191,7 @@ const EventDetail = () => {
 
       {/* Content based on active tab */}
       {activeTab === 'details' ? (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
           {/* Event image or icon */}
           {event.thumbnail ? (
             <div
@@ -207,10 +207,10 @@ const EventDetail = () => {
           <div className="p-6">
             {/* Description */}
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+              <h2 className="text-lg font-semibold text-foreground mb-2">
                 Description
               </h2>
-              <p className="text-gray-600 whitespace-pre-line">
+              <p className="text-muted-foreground whitespace-pre-line">
                 {event.description}
               </p>
             </div>
@@ -219,17 +219,17 @@ const EventDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Date and time */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Date & Time
                 </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg border border-border">
                   <div className="flex items-center mb-2">
-                    <i className="fas fa-calendar text-blue-500 mr-3"></i>
+                    <i className="fas fa-calendar text-blue-500 dark:text-blue-400 mr-3"></i>
                     <div>
-                      <div className="text-sm font-medium text-gray-800">
+                      <div className="text-sm font-medium text-foreground">
                         {formatDate(event.startDate)}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {formatTime(event.startDate)} -{' '}
                         {formatTime(event.endDate)}
                       </div>
@@ -237,12 +237,12 @@ const EventDetail = () => {
                   </div>
                   {event.registrationRequired && (
                     <div className="flex items-center mt-3">
-                      <i className="fas fa-user-check text-green-500 mr-3"></i>
+                      <i className="fas fa-user-check text-green-500 dark:text-green-400 mr-3"></i>
                       <div>
-                        <div className="text-sm font-medium text-gray-800">
+                        <div className="text-sm font-medium text-foreground">
                           Registration Deadline
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {event.registrationDeadline
                             ? formatDate(event.registrationDeadline) +
                               ' at ' +
@@ -257,34 +257,34 @@ const EventDetail = () => {
 
               {/* Location */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Location
                 </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg border border-border">
                   <div className="flex items-center">
                     <i
                       className={`${
                         event.location.virtual
                           ? 'fas fa-video'
                           : 'fas fa-map-marker-alt'
-                      } text-blue-500 mr-3`}
+                      } text-blue-500 dark:text-blue-400 mr-3`}
                     ></i>
                     <div>
-                      <div className="text-sm font-medium text-gray-800">
+                      <div className="text-sm font-medium text-foreground">
                         {event.location.name}
                         {event.location.virtual && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                          <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded">
                             Virtual
                           </span>
                         )}
                       </div>
                       {!event.location.virtual ? (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {event.location.address}, {event.location.city},{' '}
                           {event.location.state}
                         </div>
                       ) : event.location.meetingLink ? (
-                        <div className="text-xs text-blue-500">
+                        <div className="text-xs text-blue-500 dark:text-blue-400">
                           <a
                             href={event.location.meetingLink}
                             target="_blank"
@@ -302,44 +302,44 @@ const EventDetail = () => {
 
               {/* Registration details */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Registration
                 </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg border border-border">
                   {event.registrationRequired ? (
                     <>
                       <div className="flex items-center mb-2">
-                        <i className="fas fa-clipboard-check text-green-500 mr-3"></i>
-                        <div className="text-sm text-gray-800">
+                        <i className="fas fa-clipboard-check text-green-500 dark:text-green-400 mr-3"></i>
+                        <div className="text-sm text-foreground">
                           Registration required
                         </div>
                       </div>
                       {event.registrationFee ? (
                         <div className="flex items-center mb-2">
-                          <i className="fas fa-money-bill-wave text-green-500 mr-3"></i>
-                          <div className="text-sm text-gray-800">
+                          <i className="fas fa-money-bill-wave text-green-500 dark:text-green-400 mr-3"></i>
+                          <div className="text-sm text-foreground">
                             Fee: ₦{event.registrationFee.toLocaleString()}
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center mb-2">
-                          <i className="fas fa-ticket-alt text-green-500 mr-3"></i>
-                          <div className="text-sm text-gray-800">
+                          <i className="fas fa-ticket-alt text-green-500 dark:text-green-400 mr-3"></i>
+                          <div className="text-sm text-foreground">
                             Free event
                           </div>
                         </div>
                       )}
                       {event.maxAttendees ? (
                         <div className="flex items-center">
-                          <i className="fas fa-users text-blue-500 mr-3"></i>
-                          <div className="text-sm text-gray-800">
+                          <i className="fas fa-users text-blue-500 dark:text-blue-400 mr-3"></i>
+                          <div className="text-sm text-foreground">
                             Limited to {event.maxAttendees} attendees
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center">
-                          <i className="fas fa-users text-blue-500 mr-3"></i>
-                          <div className="text-sm text-gray-800">
+                          <i className="fas fa-users text-blue-500 dark:text-blue-400 mr-3"></i>
+                          <div className="text-sm text-foreground">
                             Unlimited attendance
                           </div>
                         </div>
@@ -347,8 +347,8 @@ const EventDetail = () => {
                     </>
                   ) : (
                     <div className="flex items-center">
-                      <i className="fas fa-door-open text-blue-500 mr-3"></i>
-                      <div className="text-sm text-gray-800">
+                      <i className="fas fa-door-open text-blue-500 dark:text-blue-400 mr-3"></i>
+                      <div className="text-sm text-foreground">
                         No registration required
                       </div>
                     </div>
@@ -358,13 +358,13 @@ const EventDetail = () => {
 
               {/* Organizer details */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Organizer
                 </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-muted p-4 rounded-lg border border-border">
                   <div className="flex items-center">
-                    <i className="fas fa-user-tie text-blue-500 mr-3"></i>
-                    <div className="text-sm text-gray-800">
+                    <i className="fas fa-user-tie text-blue-500 dark:text-blue-400 mr-3"></i>
+                    <div className="text-sm text-foreground">
                       {event.organizerName}
                     </div>
                   </div>
@@ -375,12 +375,14 @@ const EventDetail = () => {
             {/* Tags */}
             {event.tags && event.tags.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Tags</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                  Tags
+                </h3>
                 <div className="flex flex-wrap">
                   {event.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mr-2 mb-2"
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 mr-2 mb-2"
                     >
                       {tag}
                     </span>
@@ -390,8 +392,8 @@ const EventDetail = () => {
             )}
 
             {/* Action buttons */}
-            <div className="flex flex-wrap justify-between items-center border-t pt-6 mt-6">
-              <div className="text-sm text-gray-500 mb-4 md:mb-0">
+            <div className="flex flex-wrap justify-between items-center border-t border-border pt-6 mt-6">
+              <div className="text-sm text-muted-foreground mb-4 md:mb-0">
                 Created: {formatDate(event.createdAt || '')}
                 {event.updatedAt &&
                   event.updatedAt !== event.createdAt &&
@@ -400,7 +402,7 @@ const EventDetail = () => {
               <div className="flex space-x-3">
                 {event.status === 'published' && (
                   <button
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
+                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-background"
                     onClick={() => navigate(`/events/${id}/register`)}
                   >
                     <i className="fas fa-user-plus mr-2"></i>
@@ -408,7 +410,7 @@ const EventDetail = () => {
                   </button>
                 )}
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background"
                   onClick={() => setActiveTab('attendees')}
                 >
                   <i className="fas fa-users mr-2"></i>
@@ -419,19 +421,19 @@ const EventDetail = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-card rounded-lg shadow-md border border-border p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">Attendees</h2>
+            <h2 className="text-lg font-semibold text-foreground">Attendees</h2>
             <div className="flex space-x-2">
               <button
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-background"
                 onClick={() => navigate(`/events/${id}/register`)}
               >
                 <i className="fas fa-user-plus mr-2"></i>
                 Add Attendee
               </button>
               <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background"
                 onClick={() => navigate(`/events/${id}/check-in`)}
               >
                 <i className="fas fa-clipboard-check mr-2"></i>
@@ -441,84 +443,84 @@ const EventDetail = () => {
           </div>
 
           {attendees.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <i className="fas fa-users text-gray-300 text-4xl mb-3"></i>
+            <div className="text-center py-8 text-muted-foreground">
+              <i className="fas fa-users text-muted-foreground/50 text-4xl mb-3"></i>
               <p>No attendees registered for this event yet.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted">
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Attendee
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Pharmacy
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Registered On
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Status
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Payment
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Check-in
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-card divide-y divide-border">
                   {attendees.map((attendee) => (
                     <tr key={attendee._id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <i className="fas fa-user text-gray-500"></i>
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                            <i className="fas fa-user text-muted-foreground"></i>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               {attendee.userName}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-foreground">
                           {attendee.pharmacyName || 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-foreground">
                           {formatDate(attendee.registeredAt)}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {formatTime(attendee.registeredAt)}
                         </div>
                       </td>
@@ -535,30 +537,30 @@ const EventDetail = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {attendee.paid ? (
                           <div>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                               Paid
                             </span>
                             {attendee.paymentMethod && (
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-muted-foreground mt-1">
                                 via {attendee.paymentMethod}
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                             Unpaid
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {attendee.checkedIn ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                             <i className="fas fa-check-circle mr-1"></i> Checked
                             In
                           </span>
                         ) : (
                           <button
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded px-2 py-1"
                             onClick={async () => {
                               try {
                                 await eventService.checkInAttendee(
@@ -593,7 +595,7 @@ const EventDetail = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <button
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded p-2"
                             onClick={() =>
                               navigate(
                                 `/events/${id}/attendees/${attendee._id}`
@@ -603,7 +605,7 @@ const EventDetail = () => {
                             <i className="fas fa-edit"></i>
                           </button>
                           <button
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded p-2"
                             onClick={async () => {
                               if (
                                 window.confirm(

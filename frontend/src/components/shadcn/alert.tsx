@@ -46,7 +46,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         case 'success':
           return (
             <svg
-              className="w-5 h-5 text-green-500"
+              className="w-5 h-5 text-green-600 dark:text-green-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -62,7 +62,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         case 'error':
           return (
             <svg
-              className="w-5 h-5 text-red-500"
+              className="w-5 h-5 text-red-600 dark:text-red-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -78,7 +78,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         case 'warning':
           return (
             <svg
-              className="w-5 h-5 text-yellow-500"
+              className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -95,7 +95,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         default:
           return (
             <svg
-              className="w-5 h-5 text-blue-500"
+              className="w-5 h-5 text-blue-600 dark:text-blue-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

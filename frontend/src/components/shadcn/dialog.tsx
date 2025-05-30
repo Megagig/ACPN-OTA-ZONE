@@ -96,7 +96,7 @@ const Dialog: React.FC<DialogProps> = ({
       <div
         ref={dialogRef}
         className={cn(
-          'bg-white rounded-lg shadow-xl overflow-hidden relative w-full',
+          'bg-card rounded-lg shadow-xl overflow-hidden relative w-full border border-border',
           maxWidthClasses[maxWidth]
         )}
       >
@@ -111,7 +111,7 @@ interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
 const DialogHeader = ({ className, ...props }: DialogHeaderProps) => (
   <div
     className={cn(
-      'flex flex-col space-y-1.5 p-6 border-b border-gray-200',
+      'flex flex-col space-y-1.5 p-6 border-b border-border',
       className
     )}
     {...props}
@@ -123,7 +123,7 @@ interface DialogTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 const DialogTitle = ({ className, ...props }: DialogTitleProps) => (
   <h2
     className={cn(
-      'text-lg font-semibold leading-none tracking-tight',
+      'text-lg font-semibold leading-none tracking-tight text-foreground',
       className
     )}
     {...props}
@@ -134,13 +134,13 @@ interface DialogDescriptionProps
   extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 const DialogDescription = ({ className, ...props }: DialogDescriptionProps) => (
-  <p className={cn('text-sm text-gray-500', className)} {...props} />
+  <p className={cn('text-sm text-muted-foreground', className)} {...props} />
 );
 
 interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const DialogContent = ({ className, ...props }: DialogContentProps) => (
-  <div className={cn('p-6', className)} {...props} />
+  <div className={cn('p-6 text-foreground', className)} {...props} />
 );
 
 interface DialogFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -167,7 +167,7 @@ const DialogCloseButton = ({
 }: DialogCloseButtonProps) => (
   <button
     className={cn(
-      'absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400',
+      'absolute top-3 right-3 p-1 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring text-muted-foreground hover:text-foreground transition-colors',
       className
     )}
     onClick={onClose}

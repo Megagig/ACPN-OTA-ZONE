@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import authService from '../../services/auth.service';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState('');
@@ -8,6 +10,7 @@ const ResetPassword: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { theme } = useTheme();
 
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -46,8 +49,11 @@ const ResetPassword: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
+          <div className="flex justify-end">
+            <ThemeToggle />
+          </div>
           <div className="text-center">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
@@ -63,17 +69,14 @@ const ResetPassword: React.FC = () => {
                 d="M5 13l4 4L19 7"
               ></path>
             </svg>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
               Password Reset Successful!
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-center text-sm text-muted-foreground">
               Your password has been successfully reset. Redirecting to login...
             </p>
             <div className="mt-5">
-              <Link
-                to="/login"
-                className="text-indigo-600 hover:text-indigo-500"
-              >
+              <Link to="/login" className="text-primary hover:text-primary/80">
                 Click here to login
               </Link>
             </div>
@@ -84,23 +87,26 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
+        <div className="flex justify-end">
+          <ThemeToggle />
+        </div>
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
             Reset Your Password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             Association of Community Pharmacists of Nigeria - Ota Zone
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="bg-destructive/15 border-l-4 border-destructive p-4 mb-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-500"
+                  className="h-5 w-5 text-destructive"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -113,7 +119,7 @@ const ResetPassword: React.FC = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             </div>
           </div>
@@ -130,7 +136,7 @@ const ResetPassword: React.FC = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border placeholder-muted-foreground text-foreground bg-background rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="New Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -146,7 +152,7 @@ const ResetPassword: React.FC = () => {
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border placeholder-muted-foreground text-foreground bg-background rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Confirm New Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -155,7 +161,7 @@ const ResetPassword: React.FC = () => {
             </div>
           </div>
 
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             <p>
               Password must be at least 6 characters long and include a
               combination of letters, numbers, and special characters.
@@ -166,12 +172,12 @@ const ResetPassword: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-primary/50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                   <svg
-                    className="animate-spin h-5 w-5 text-indigo-300"
+                    className="animate-spin h-5 w-5 text-primary-foreground/70"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -194,7 +200,7 @@ const ResetPassword: React.FC = () => {
               ) : (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                   <svg
-                    className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400"
+                    className="h-5 w-5 text-primary-foreground/70 group-hover:text-primary-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -215,10 +221,10 @@ const ResetPassword: React.FC = () => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
+              <span className="px-2 bg-card text-muted-foreground">
                 Remember your password?
               </span>
             </div>
@@ -226,7 +232,7 @@ const ResetPassword: React.FC = () => {
           <div className="mt-6">
             <Link
               to="/login"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-gray-50 border-indigo-600"
+              className="w-full flex justify-center py-2 px-4 border border-primary rounded-md shadow-sm text-sm font-medium text-primary bg-background hover:bg-muted"
             >
               Sign in
             </Link>

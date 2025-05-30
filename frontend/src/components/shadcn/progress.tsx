@@ -48,14 +48,14 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
     const getVariantClasses = () => {
       switch (variant) {
         case 'success':
-          return 'bg-green-600';
+          return 'bg-green-600 dark:bg-green-500';
         case 'warning':
-          return 'bg-yellow-500';
+          return 'bg-yellow-500 dark:bg-yellow-400';
         case 'error':
-          return 'bg-red-600';
+          return 'bg-red-600 dark:bg-red-500';
         case 'default':
         default:
-          return 'bg-primary-600';
+          return 'bg-primary';
       }
     };
 
@@ -69,7 +69,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       <div className={cn('relative', className)} {...props} ref={ref}>
         <div
           className={cn(
-            'w-full overflow-hidden bg-gray-200 rounded-full',
+            'w-full overflow-hidden bg-muted rounded-full',
             sizeClasses[size]
           )}
         >
@@ -95,7 +95,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
               className={cn(
                 'text-xs font-medium',
                 size === 'sm' ? 'hidden' : 'block',
-                percentage > 55 ? 'text-white' : 'text-gray-700'
+                percentage > 55 ? 'text-white' : 'text-foreground'
               )}
             >
               {Math.round(percentage)}%

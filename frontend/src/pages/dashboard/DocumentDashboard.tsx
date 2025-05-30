@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import documentService from '../../services/document.service';
 import type {
   DocumentSummary,
@@ -30,6 +31,7 @@ ChartJS.register(
 );
 
 const DocumentDashboard: React.FC = () => {
+  const { theme } = useTheme();
   const [summary, setSummary] = useState<DocumentSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,10 +57,12 @@ const DocumentDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="spinner-border text-indigo-500" role="status">
+          <div className="spinner-border text-primary" role="status">
             <i className="fas fa-circle-notch fa-spin text-3xl"></i>
           </div>
-          <p className="mt-2 text-gray-600">Loading document summary...</p>
+          <p className="mt-2 text-muted-foreground">
+            Loading document summary...
+          </p>
         </div>
       </div>
     );
@@ -67,7 +71,7 @@ const DocumentDashboard: React.FC = () => {
   if (error || !summary) {
     return (
       <div
-        className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4"
+        className="bg-destructive/15 border-l-4 border-destructive text-destructive p-4 my-4"
         role="alert"
       >
         <p className="font-bold">Error</p>
@@ -170,12 +174,12 @@ const DocumentDashboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-foreground">
           Document Management Dashboard
         </h1>
         <Link
           to="/documents/upload"
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           <i className="fas fa-upload mr-2"></i>
           Upload Document
@@ -184,30 +188,32 @@ const DocumentDashboard: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-indigo-100 p-3 rounded-full mr-4">
-              <i className="fas fa-file-alt text-indigo-600 text-xl"></i>
+            <div className="bg-primary/15 p-3 rounded-full mr-4">
+              <i className="fas fa-file-alt text-primary text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">
+              <h2 className="text-sm font-medium text-muted-foreground">
                 Total Documents
               </h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <p className="text-2xl font-semibold text-foreground">
                 {summary.total}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-green-100 p-3 rounded-full mr-4">
-              <i className="fas fa-eye text-green-600 text-xl"></i>
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full mr-4">
+              <i className="fas fa-eye text-green-600 dark:text-green-400 text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">Total Views</h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Total Views
+              </h2>
+              <p className="text-2xl font-semibold text-foreground">
                 {summary.documentActivity.reduce(
                   (sum, item) => sum + item.views,
                   0
@@ -217,16 +223,16 @@ const DocumentDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-blue-100 p-3 rounded-full mr-4">
-              <i className="fas fa-download text-blue-600 text-xl"></i>
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+              <i className="fas fa-download text-blue-600 dark:text-blue-400 text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">
+              <h2 className="text-sm font-medium text-muted-foreground">
                 Total Downloads
               </h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <p className="text-2xl font-semibold text-foreground">
                 {summary.documentActivity.reduce(
                   (sum, item) => sum + item.downloads,
                   0
@@ -239,8 +245,8 @@ const DocumentDashboard: React.FC = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="bg-card rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Documents by Category
           </h2>
           <div className="h-64">
@@ -251,8 +257,8 @@ const DocumentDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="bg-card rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Documents by Access Level
           </h2>
           <div className="h-64">
@@ -264,8 +270,8 @@ const DocumentDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      <div className="bg-card rounded-lg shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
           Document Activity
         </h2>
         <div className="h-64">
@@ -284,66 +290,66 @@ const DocumentDashboard: React.FC = () => {
       </div>
 
       {/* Recent Documents */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-card rounded-lg shadow p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-foreground">
             Recent Documents
           </h2>
           <Link
             to="/documents/list"
-            className="text-indigo-600 hover:text-indigo-800"
+            className="text-primary hover:text-primary/80"
           >
             View All Documents
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Document
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Access Level
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Date Uploaded
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Size
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {summary.recentDocuments.map((doc) => (
-                <tr key={doc._id}>
+                <tr key={doc._id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-gray-100 rounded-md">
+                      <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-muted rounded-md">
                         <i
                           className={`fas fa-${getCategoryIcon(
                             doc.category
-                          )} text-gray-600`}
+                          )} text-muted-foreground`}
                         ></i>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-foreground">
                           {doc.title}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           {doc.fileName}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-muted text-foreground">
                       {doc.category}
                     </span>
                   </td>
@@ -351,21 +357,27 @@ const DocumentDashboard: React.FC = () => {
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${getAccessLevelColor(
                         doc.accessLevel
-                      )}-100 text-${getAccessLevelColor(doc.accessLevel)}-800`}
+                      )}-100 dark:bg-${getAccessLevelColor(
+                        doc.accessLevel
+                      )}-900/30 text-${getAccessLevelColor(
+                        doc.accessLevel
+                      )}-800 dark:text-${getAccessLevelColor(
+                        doc.accessLevel
+                      )}-400`}
                     >
                       {doc.accessLevel}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(doc.uploadedAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {formatFileSize(doc.fileSize)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
                       to={`/documents/${doc._id}`}
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      className="text-primary hover:text-primary/80 mr-3"
                     >
                       View
                     </Link>
@@ -385,7 +397,7 @@ const DocumentDashboard: React.FC = () => {
                             a.remove();
                           });
                       }}
-                      className="text-green-600 hover:text-green-900"
+                      className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
                     >
                       Download
                     </a>
@@ -398,33 +410,38 @@ const DocumentDashboard: React.FC = () => {
       </div>
 
       {/* Popular Documents */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-card rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-foreground">
             Popular Documents
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {summary.popularDocuments.map((doc) => (
-            <div key={doc._id} className="border rounded-lg p-4 bg-gray-50">
+            <div
+              key={doc._id}
+              className="border border-border rounded-lg p-4 bg-muted/50"
+            >
               <div className="flex items-start">
-                <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-gray-100 rounded-md">
+                <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-muted rounded-md">
                   <i
                     className={`fas fa-${getCategoryIcon(
                       doc.category
-                    )} text-gray-600`}
+                    )} text-muted-foreground`}
                   ></i>
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-sm font-medium text-gray-900">
+                  <h3 className="text-sm font-medium text-foreground">
                     {doc.title}
                   </h3>
-                  <p className="text-xs text-gray-500 mb-2">{doc.fileName}</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {doc.fileName}
+                  </p>
                   <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       <i className="fas fa-eye mr-1"></i> {doc.viewCount} views
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       <i className="fas fa-download mr-1"></i>{' '}
                       {doc.downloadCount} downloads
                     </span>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import electionService from '../../services/election.service';
 import type { ElectionSummary, Election } from '../../types/election.types';
 import ChartComponent from '../../components/common/ChartComponent';
@@ -7,6 +8,7 @@ import StatCard from '../../components/common/StatCard';
 
 const ElectionDashboard = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<ElectionSummary | null>(null);
 
@@ -66,29 +68,28 @@ const ElectionDashboard = () => {
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
-    let color = 'gray';
-
-    switch (status) {
-      case 'upcoming':
-        color = 'blue';
-        break;
-      case 'ongoing':
-        color = 'green';
-        break;
-      case 'ended':
-        color = 'gray';
-        break;
-      case 'cancelled':
-        color = 'red';
-        break;
-      case 'draft':
-        color = 'yellow';
-        break;
-    }
+    const getBadgeClasses = (status: string) => {
+      switch (status) {
+        case 'upcoming':
+          return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+        case 'ongoing':
+          return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+        case 'ended':
+          return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300';
+        case 'cancelled':
+          return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
+        case 'draft':
+          return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
+        default:
+          return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300';
+      }
+    };
 
     return (
       <span
-        className={`bg-${color}-100 text-${color}-800 text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
+        className={`${getBadgeClasses(
+          status
+        )} text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
       >
         {status}
       </span>
@@ -98,34 +99,46 @@ const ElectionDashboard = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'upcoming':
-        return <i className="fas fa-clock text-blue-500"></i>;
+        return (
+          <i className="fas fa-clock text-blue-500 dark:text-blue-400"></i>
+        );
       case 'ongoing':
-        return <i className="fas fa-vote-yea text-green-500"></i>;
+        return (
+          <i className="fas fa-vote-yea text-green-500 dark:text-green-400"></i>
+        );
       case 'ended':
-        return <i className="fas fa-check-circle text-gray-500"></i>;
+        return (
+          <i className="fas fa-check-circle text-gray-500 dark:text-gray-400"></i>
+        );
       case 'cancelled':
-        return <i className="fas fa-ban text-red-500"></i>;
+        return <i className="fas fa-ban text-red-500 dark:text-red-400"></i>;
       case 'draft':
-        return <i className="fas fa-pencil-alt text-yellow-500"></i>;
+        return (
+          <i className="fas fa-pencil-alt text-yellow-500 dark:text-yellow-400"></i>
+        );
       default:
-        return <i className="fas fa-question-circle text-gray-500"></i>;
+        return (
+          <i className="fas fa-question-circle text-gray-500 dark:text-gray-400"></i>
+        );
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Elections Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Elections Overview
+        </h1>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
             onClick={() => navigate('/elections/create')}
           >
             <i className="fas fa-plus mr-2"></i>
             Create Election
           </button>
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md text-sm shadow"
             onClick={() => navigate('/elections/list')}
           >
             <i className="fas fa-list mr-2"></i>
@@ -168,37 +181,39 @@ const ElectionDashboard = () => {
 
       {/* Active Election Section */}
       {summary?.activeElection && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-card rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Active Election</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              Active Election
+            </h2>
             <StatusBadge status={summary.activeElection.status} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 {summary.activeElection.title}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 {summary.activeElection.description}
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">Start Date</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-muted-foreground">Start Date</p>
+                  <p className="font-medium text-foreground">
                     {formatDate(summary.activeElection.startDate)}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {formatTime(summary.activeElection.startDate)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">End Date</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-muted-foreground">End Date</p>
+                  <p className="font-medium text-foreground">
                     {formatDate(summary.activeElection.endDate)}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {formatTime(summary.activeElection.endDate)}
                   </p>
                 </div>
@@ -206,14 +221,14 @@ const ElectionDashboard = () => {
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">Positions</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-muted-foreground">Positions</p>
+                  <p className="font-medium text-foreground">
                     {summary.activeElection.positions.length}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Candidates</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-muted-foreground">Candidates</p>
+                  <p className="font-medium text-foreground">
                     {summary.activeElection.candidates.length}
                   </p>
                 </div>
@@ -221,7 +236,7 @@ const ElectionDashboard = () => {
 
               <div className="space-x-2">
                 <button
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
+                  className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm"
                   onClick={() =>
                     navigate(`/elections/${summary.activeElection?._id}/vote`)
                   }
@@ -230,7 +245,7 @@ const ElectionDashboard = () => {
                   Vote Now
                 </button>
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                  className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
                   onClick={() =>
                     navigate(`/elections/${summary.activeElection?._id}`)
                   }
@@ -241,20 +256,22 @@ const ElectionDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold mb-2">Voting Progress</h4>
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h4 className="font-semibold mb-2 text-foreground">
+                Voting Progress
+              </h4>
 
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Votes Cast</span>
-                  <span>
+                  <span className="text-muted-foreground">Votes Cast</span>
+                  <span className="text-foreground">
                     {summary.activeElection.votesSubmitted} /{' '}
                     {summary.activeElection.totalVoters}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="w-full bg-muted rounded-full h-2.5">
                   <div
-                    className="bg-blue-600 h-2.5 rounded-full"
+                    className="bg-primary h-2.5 rounded-full"
                     style={{
                       width: `${
                         summary.activeElection.totalVoters > 0
@@ -266,7 +283,7 @@ const ElectionDashboard = () => {
                     }}
                   ></div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {summary.activeElection.totalVoters > 0
                     ? (
                         (summary.activeElection.votesSubmitted /
@@ -278,15 +295,19 @@ const ElectionDashboard = () => {
                 </p>
               </div>
 
-              <h4 className="font-semibold mb-2">Positions & Candidates</h4>
+              <h4 className="font-semibold mb-2 text-foreground">
+                Positions & Candidates
+              </h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {summary.activeElection.positions.map((position) => (
                   <div
                     key={position._id}
-                    className="bg-white p-2 rounded shadow-sm"
+                    className="bg-card p-2 rounded shadow-sm border border-border"
                   >
-                    <p className="font-medium">{position.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="font-medium text-foreground">
+                      {position.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
                       {summary.activeElection?.candidates.filter(
                         (c) => c.position === position._id
                       ).length || 0}{' '}
@@ -302,12 +323,12 @@ const ElectionDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Election Status Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-lg font-semibold mb-4">
+        <div className="bg-card rounded-lg shadow-md p-4">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">
             Election Status Distribution
           </h2>
           {isLoading ? (
-            <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+            <div className="animate-pulse h-64 bg-muted rounded"></div>
           ) : (
             getElectionStatusChartData() && (
               <ChartComponent
@@ -320,11 +341,13 @@ const ElectionDashboard = () => {
         </div>
 
         {/* Recent Elections */}
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="bg-card rounded-lg shadow-md p-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Recent Elections</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              Recent Elections
+            </h2>
             <button
-              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+              className="text-primary hover:text-primary/80 text-sm font-medium"
               onClick={() => navigate('/elections/list')}
             >
               View All
@@ -334,11 +357,11 @@ const ElectionDashboard = () => {
           {isLoading ? (
             <div className="animate-pulse space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={index} className="h-16 bg-gray-200 rounded"></div>
+                <div key={index} className="h-16 bg-muted rounded"></div>
               ))}
             </div>
           ) : summary?.recentElections.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No elections available yet
             </div>
           ) : (
@@ -346,7 +369,7 @@ const ElectionDashboard = () => {
               {summary?.recentElections.map((election) => (
                 <div
                   key={election._id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                  className="border border-border rounded-lg p-4 hover:bg-muted/50 cursor-pointer"
                   onClick={() => navigate(`/elections/${election._id}`)}
                 >
                   <div className="flex items-start">
@@ -355,15 +378,15 @@ const ElectionDashboard = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {election.title}
                         </p>
                         <StatusBadge status={election.status} />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 truncate">
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
                         {election.description}
                       </p>
-                      <div className="flex mt-2 text-xs text-gray-500">
+                      <div className="flex mt-2 text-xs text-muted-foreground">
                         <span className="mr-3">
                           <i className="fas fa-calendar-alt mr-1"></i>
                           {formatDate(election.startDate)}
@@ -386,42 +409,44 @@ const ElectionDashboard = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:bg-gray-50"
+          className="bg-card rounded-lg shadow-md p-6 cursor-pointer hover:bg-muted/50"
           onClick={() => navigate('/elections/create')}
         >
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600 mb-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-primary/10 text-primary mb-4">
             <i className="fas fa-plus text-lg"></i>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">Create Election</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-foreground">
+            Create Election
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             Set up a new election with positions and configure eligibility rules
           </p>
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:bg-gray-50"
+          className="bg-card rounded-lg shadow-md p-6 cursor-pointer hover:bg-muted/50"
           onClick={() => navigate('/elections/candidates')}
         >
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-100 text-green-600 mb-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-4">
             <i className="fas fa-user-tie text-lg"></i>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="text-lg font-medium text-foreground">
             Manage Candidates
           </h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             Review applications and manage candidates for elections
           </p>
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:bg-gray-50"
+          className="bg-card rounded-lg shadow-md p-6 cursor-pointer hover:bg-muted/50"
           onClick={() => navigate('/elections/results')}
         >
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 text-blue-600 mb-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
             <i className="fas fa-chart-bar text-lg"></i>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">View Results</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-foreground">View Results</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             Access results and analytics for past elections
           </p>
         </div>

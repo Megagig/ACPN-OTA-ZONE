@@ -5,6 +5,7 @@ import {
   FaExclamationTriangle,
   FaInfoCircle,
 } from 'react-icons/fa';
+import { useTheme } from '../../context/ThemeContext';
 
 type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -23,35 +24,35 @@ const getIconAndColor = (type: NotificationType) => {
     case 'success':
       return {
         icon: FaCheckCircle,
-        iconColor: 'text-green-500',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-500',
-        textColor: 'text-green-700',
+        iconColor: 'text-green-600 dark:text-green-400',
+        bgColor: 'bg-green-100 dark:bg-green-900/30',
+        borderColor: 'border-green-600 dark:border-green-400',
+        textColor: 'text-green-800 dark:text-green-200',
       };
     case 'error':
       return {
         icon: FaTimesCircle,
-        iconColor: 'text-red-500',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-500',
-        textColor: 'text-red-700',
+        iconColor: 'text-red-600 dark:text-red-400',
+        bgColor: 'bg-red-100 dark:bg-red-900/30',
+        borderColor: 'border-red-600 dark:border-red-400',
+        textColor: 'text-red-800 dark:text-red-200',
       };
     case 'warning':
       return {
         icon: FaExclamationTriangle,
-        iconColor: 'text-yellow-500',
-        bgColor: 'bg-yellow-50',
-        borderColor: 'border-yellow-500',
-        textColor: 'text-yellow-700',
+        iconColor: 'text-yellow-600 dark:text-yellow-400',
+        bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+        borderColor: 'border-yellow-600 dark:border-yellow-400',
+        textColor: 'text-yellow-800 dark:text-yellow-200',
       };
     case 'info':
     default:
       return {
         icon: FaInfoCircle,
-        iconColor: 'text-blue-500',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-500',
-        textColor: 'text-blue-700',
+        iconColor: 'text-blue-600 dark:text-blue-400',
+        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+        borderColor: 'border-blue-600 dark:border-blue-400',
+        textColor: 'text-blue-800 dark:text-blue-200',
       };
   }
 };
@@ -103,12 +104,12 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
           <div className="ml-3 w-0 flex-1">
             <h3 className={`text-lg font-medium ${textColor}`}>{title}</h3>
             <div className="mt-2">
-              <p className="text-sm text-gray-600">{message}</p>
+              <p className="text-sm text-foreground/80">{message}</p>
             </div>
           </div>
           <div className="ml-4 flex-shrink-0 flex">
             <button
-              className="inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
+              className="inline-flex text-foreground/50 hover:text-foreground/80 focus:outline-none"
               onClick={onClose}
             >
               <span className="sr-only">Close</span>

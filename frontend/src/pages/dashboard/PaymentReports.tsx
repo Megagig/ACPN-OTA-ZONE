@@ -186,18 +186,18 @@ const PaymentReports: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">{error}</p>
+      <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+        <p className="text-destructive">{error}</p>
         <button
           onClick={fetchPaymentData}
-          className="mt-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+          className="mt-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 transition-colors"
         >
           Retry
         </button>
@@ -208,10 +208,10 @@ const PaymentReports: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Payment Reports</h1>
+        <h1 className="text-3xl font-bold text-foreground">Payment Reports</h1>
         <button
           onClick={exportReport}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
         >
           Export Report
         </button>
@@ -220,13 +220,13 @@ const PaymentReports: React.FC = () => {
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Period
           </label>
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
+            className="w-full border border-border bg-background text-foreground rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="all">All Time</option>
             <option value="this_month">This Month</option>
@@ -235,13 +235,13 @@ const PaymentReports: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Status
           </label>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
+            className="w-full border border-border bg-background text-foreground rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -255,31 +255,35 @@ const PaymentReports: React.FC = () => {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border">
+              <h3 className="text-sm font-medium text-muted-foreground">
                 Total Payments
               </h3>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-foreground">
                 {reportData.totalPayments}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border">
+              <h3 className="text-sm font-medium text-muted-foreground">
                 Total Amount
               </h3>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 ₦{reportData.totalAmount.toLocaleString()}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">Approved</h3>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Approved
+              </h3>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {reportData.approvedPayments}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-sm font-medium text-gray-500">Pending</h3>
-              <p className="text-2xl font-bold text-yellow-600">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Pending
+              </h3>
+              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {reportData.pendingPayments}
               </p>
             </div>
@@ -288,30 +292,43 @@ const PaymentReports: React.FC = () => {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Monthly Payments Chart */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border">
+              <h3 className="text-lg font-medium text-foreground mb-4">
                 Monthly Payments
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={reportData.monthlyPayments}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12, fill: 'currentColor' }}
+                  />
+                  <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} />
                   <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      color: 'hsl(var(--popover-foreground))',
+                    }}
                     formatter={(value: any, name: string) => {
                       if (name === 'amount')
                         return [`₦${value.toLocaleString()}`, 'Amount'];
                       return [value, 'Count'];
                     }}
                   />
-                  <Bar dataKey="count" fill="#8884d8" name="count" />
+                  <Bar
+                    dataKey="count"
+                    fill="hsl(var(--primary))"
+                    name="count"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Payment Methods Distribution */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border">
+              <h3 className="text-lg font-medium text-foreground mb-4">
                 Payment Methods
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -321,7 +338,7 @@ const PaymentReports: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill="hsl(var(--primary))"
                     dataKey="count"
                     label={({ method, count }) => `${method}: ${count}`}
                   >
@@ -332,79 +349,102 @@ const PaymentReports: React.FC = () => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      color: 'hsl(var(--popover-foreground))',
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
 
             {/* State-wise Payments */}
-            <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-card text-card-foreground p-6 rounded-lg shadow border border-border lg:col-span-2">
+              <h3 className="text-lg font-medium text-foreground mb-4">
                 State-wise Payments
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={reportData.stateWisePayments}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="state" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis
+                    dataKey="state"
+                    tick={{ fontSize: 12, fill: 'currentColor' }}
+                  />
+                  <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} />
                   <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      color: 'hsl(var(--popover-foreground))',
+                    }}
                     formatter={(value: any, name: string) => {
                       if (name === 'amount')
                         return [`₦${value.toLocaleString()}`, 'Amount'];
                       return [value, 'Count'];
                     }}
                   />
-                  <Bar dataKey="amount" fill="#82ca9d" name="amount" />
+                  <Bar
+                    dataKey="amount"
+                    fill="hsl(var(--secondary))"
+                    name="amount"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Recent Payments Table */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+          <div className="bg-card rounded-lg shadow border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h3 className="text-lg font-medium text-foreground">
                 Recent Payments
               </h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Payment ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-card divide-y divide-border">
                   {payments.slice(0, 10).map((payment) => (
-                    <tr key={payment._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr
+                      key={payment._id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {payment._id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         ₦{payment.amount.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {new Date(payment.paymentDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             payment.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                               : payment.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           }`}
                         >
                           {payment.status}

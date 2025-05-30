@@ -4,6 +4,7 @@ import {
   getClearanceCertificate,
 } from '../../services/financial.service';
 import type { CertificateData } from '../../types/financial.types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface CertificateViewProps {
   dueId: string;
@@ -26,6 +27,7 @@ const CertificateView: React.FC<CertificateViewProps> = ({
   isVisible,
   onClose,
 }) => {
+  const { theme } = useTheme();
   const [certificateData, setCertificateData] =
     useState<CertificateData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

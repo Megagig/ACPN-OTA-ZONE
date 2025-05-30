@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import authService from '../../services/auth.service';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { theme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,23 +30,26 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
+        <div className="flex justify-end">
+          <ThemeToggle />
+        </div>
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
             Forgot Password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             Association of Community Pharmacists of Nigeria - Ota Zone
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="bg-destructive/15 border-l-4 border-destructive p-4 mb-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-500"
+                  className="h-5 w-5 text-destructive"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -56,7 +62,7 @@ const ForgotPassword: React.FC = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             </div>
           </div>
@@ -92,7 +98,7 @@ const ForgotPassword: React.FC = () => {
             <div>
               <label
                 htmlFor="email-address"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-foreground"
               >
                 Email address
               </label>
@@ -103,7 +109,7 @@ const ForgotPassword: React.FC = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground bg-background text-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                   placeholder="Enter your registered email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -115,12 +121,12 @@ const ForgotPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-primary/50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                     <svg
-                      className="animate-spin h-5 w-5 text-indigo-300"
+                      className="animate-spin h-5 w-5 text-primary-foreground/70"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -143,7 +149,7 @@ const ForgotPassword: React.FC = () => {
                 ) : (
                   <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                     <svg
-                      className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400"
+                      className="h-5 w-5 text-primary-foreground/70 group-hover:text-primary-foreground"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -165,10 +171,10 @@ const ForgotPassword: React.FC = () => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
+              <span className="px-2 bg-card text-muted-foreground">
                 Remember your password?
               </span>
             </div>
@@ -176,7 +182,7 @@ const ForgotPassword: React.FC = () => {
           <div className="mt-6">
             <Link
               to="/login"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-gray-50 border-indigo-600"
+              className="w-full flex justify-center py-2 px-4 border border-primary rounded-md shadow-sm text-sm font-medium text-primary bg-background hover:bg-muted"
             >
               Sign in
             </Link>

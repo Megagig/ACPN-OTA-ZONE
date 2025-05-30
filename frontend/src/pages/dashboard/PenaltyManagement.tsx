@@ -127,17 +127,19 @@ const PenaltyManagement: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusClasses = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      paid: 'bg-green-100 text-green-800',
-      overdue: 'bg-red-100 text-red-800',
-      partially_paid: 'bg-blue-100 text-blue-800',
+      pending:
+        'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+      paid: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      overdue: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      partially_paid:
+        'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
     };
 
     return (
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${
           statusClasses[status as keyof typeof statusClasses] ||
-          'bg-gray-100 text-gray-800'
+          'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300'
         }`}
       >
         {status.replace('_', ' ').toUpperCase()}
@@ -148,7 +150,7 @@ const PenaltyManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -157,32 +159,32 @@ const PenaltyManagement: React.FC = () => {
     <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Penalty Management
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Add penalties to existing dues for late payments or violations
         </p>
       </div>
 
       {/* Alert Messages */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <div className="mb-6 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+        <div className="mb-6 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800/30 text-green-700 dark:text-green-300 px-4 py-3 rounded-md">
           {success}
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div className="bg-card shadow-sm rounded-lg p-6 mb-6 border border-border">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Search Dues
             </label>
             <input
@@ -190,18 +192,18 @@ const PenaltyManagement: React.FC = () => {
               placeholder="Search by title or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Filter by Status
             </label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -214,7 +216,7 @@ const PenaltyManagement: React.FC = () => {
           <div className="flex items-end">
             <button
               onClick={fetchDues}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+              className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
             >
               Refresh
             </button>
@@ -223,56 +225,59 @@ const PenaltyManagement: React.FC = () => {
       </div>
 
       {/* Dues List */}
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="bg-card shadow-lg rounded-lg overflow-hidden border border-border">
+        <div className="px-6 py-4 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">
             Dues Available for Penalty Assignment ({filteredDues.length})
           </h2>
         </div>
 
         {filteredDues.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-muted-foreground">
             <p>No dues found matching your criteria.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Current Penalties
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {filteredDues.map((due) => (
-                  <tr key={due._id} className="hover:bg-gray-50">
+                  <tr
+                    key={due._id}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-foreground">
                           {due.title}
                         </div>
                         {due.description && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {due.description}
                           </div>
                         )}
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground/70">
                           {typeof due.dueTypeId === 'object'
                             ? due.dueTypeId.name
                             : 'N/A'}
@@ -280,27 +285,27 @@ const PenaltyManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-foreground">
                         {formatCurrency(due.totalAmount)}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Paid: {formatCurrency(due.amountPaid)}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Balance: {formatCurrency(due.balance)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(due.paymentStatus)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {formatDate(due.dueDate)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-foreground">
                         {due.penalties.length} penalties
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Total:{' '}
                         {formatCurrency(
                           due.penalties.reduce(
@@ -313,7 +318,7 @@ const PenaltyManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => openPenaltyModal(due)}
-                        className="text-red-600 hover:text-red-900 transition duration-200"
+                        className="text-destructive hover:text-destructive/80 transition-colors"
                       >
                         Add Penalty
                       </button>
@@ -328,16 +333,16 @@ const PenaltyManagement: React.FC = () => {
 
       {/* Penalty Modal */}
       {showPenaltyModal && selectedDue && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-border w-96 shadow-lg rounded-md bg-card">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-foreground">
                   Add Penalty
                 </h3>
                 <button
                   onClick={closePenaltyModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <svg
                     className="w-6 h-6"
@@ -355,21 +360,21 @@ const PenaltyManagement: React.FC = () => {
                 </button>
               </div>
 
-              <div className="mb-4 p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="mb-4 p-3 bg-muted rounded-md">
+                <p className="text-sm font-medium text-foreground">
                   {selectedDue.title}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Current Total: {formatCurrency(selectedDue.totalAmount)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Existing Penalties: {selectedDue.penalties.length}
                 </p>
               </div>
 
               <form onSubmit={handlePenaltySubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Penalty Amount (₦) *
                   </label>
                   <input
@@ -384,13 +389,13 @@ const PenaltyManagement: React.FC = () => {
                     min="0"
                     step="0.01"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Enter penalty amount"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Reason for Penalty *
                   </label>
                   <textarea
@@ -403,7 +408,7 @@ const PenaltyManagement: React.FC = () => {
                     }
                     required
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Explain why this penalty is being added..."
                   />
                 </div>
@@ -412,14 +417,14 @@ const PenaltyManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={closePenaltyModal}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200"
+                    className="flex-1 bg-muted text-muted-foreground py-2 px-4 rounded-md hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-muted transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                    className="flex-1 bg-destructive text-destructive-foreground py-2 px-4 rounded-md hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {submitting ? 'Adding...' : 'Add Penalty'}
                   </button>

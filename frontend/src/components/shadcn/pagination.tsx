@@ -169,10 +169,10 @@ const PaginationButton = React.forwardRef<
       ref={ref}
       className={cn(
         'flex items-center justify-center h-8 w-8 rounded-md text-sm transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1',
+        'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
         active
-          ? 'bg-primary-600 text-white hover:bg-primary-700'
-          : 'text-gray-700 hover:bg-gray-100',
+          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+          : 'text-foreground hover:bg-muted',
         props.disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
         className
       )}
@@ -192,7 +192,7 @@ const PaginationEllipsis = React.forwardRef<
     <span
       ref={ref}
       className={cn(
-        'flex items-center justify-center h-8 w-8 text-gray-400',
+        'flex items-center justify-center h-8 w-8 text-muted-foreground',
         className
       )}
       {...props}

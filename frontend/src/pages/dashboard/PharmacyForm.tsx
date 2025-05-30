@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { PharmacyFormData } from '../../types/pharmacy.types';
+import { useTheme } from '../../context/ThemeContext';
 
 const PharmacyForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isEdit = location.pathname.includes('/edit');
+  const { theme } = useTheme();
 
   const initialFormData: PharmacyFormData = {
     name: '',
@@ -180,7 +182,7 @@ const PharmacyForm: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -191,23 +193,23 @@ const PharmacyForm: React.FC = () => {
         <div>
           <Link
             to="/my-pharmacy"
-            className="text-indigo-600 hover:text-indigo-800 mb-2 inline-block"
+            className="text-primary hover:text-primary/80 mb-2 inline-block"
           >
             <i className="fas fa-arrow-left mr-2"></i>
             Back to Pharmacy Profile
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-foreground">
             {isEdit ? 'Edit Pharmacy Profile' : 'Register New Pharmacy'}
           </h1>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+        <div className="bg-destructive/15 border-l-4 border-destructive/20 p-4 mb-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-red-400"
+                className="h-5 w-5 text-destructive"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -219,18 +221,18 @@ const PharmacyForm: React.FC = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           </div>
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-200 dark:border-green-800 p-4 mb-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-green-400"
+                className="h-5 w-5 text-green-500 dark:text-green-400"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -242,7 +244,7 @@ const PharmacyForm: React.FC = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-green-700">
+              <p className="text-sm text-green-700 dark:text-green-400">
                 Pharmacy successfully {isEdit ? 'updated' : 'created'}!
                 Redirecting...
               </p>
@@ -251,17 +253,17 @@ const PharmacyForm: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-card rounded-lg shadow border border-border p-6">
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Basic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pharmacy Name<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Pharmacy Name<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -269,13 +271,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Email Address<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="email"
@@ -283,13 +285,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Phone Number<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="tel"
@@ -297,12 +299,12 @@ const PharmacyForm: React.FC = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Year Established
                 </label>
                 <input
@@ -310,7 +312,7 @@ const PharmacyForm: React.FC = () => {
                   name="yearEstablished"
                   value={formData.yearEstablished || ''}
                   onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
             </div>
@@ -318,13 +320,13 @@ const PharmacyForm: React.FC = () => {
 
           {/* Address Information */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Address Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Street Address<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Street Address<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -332,13 +334,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.address}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Landmark<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Landmark<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -346,13 +348,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.landmark}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Town/Area<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Town/Area<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -360,7 +362,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.townArea}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
             </div>
@@ -368,13 +370,13 @@ const PharmacyForm: React.FC = () => {
 
           {/* Registration & Personnel */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Registration & Personnel
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  PCN License Number<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  PCN License Number<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -382,13 +384,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.pcnLicense}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  License Expiry Date<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  License Expiry Date<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="date"
@@ -396,12 +398,12 @@ const PharmacyForm: React.FC = () => {
                   value={formData.licenseExpiryDate}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Number of Staff
                 </label>
                 <input
@@ -409,13 +411,13 @@ const PharmacyForm: React.FC = () => {
                   name="numberOfStaff"
                   value={formData.numberOfStaff || ''}
                   onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Superintendent Name<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Superintendent Name<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -423,14 +425,14 @@ const PharmacyForm: React.FC = () => {
                   value={formData.superintendentName}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Superintendent License Number
-                  <span className="text-red-500">*</span>
+                  <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -438,13 +440,14 @@ const PharmacyForm: React.FC = () => {
                   value={formData.superintendentLicenseNumber}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Superintendent Photo<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Superintendent Photo
+                  <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="file"
@@ -452,13 +455,14 @@ const PharmacyForm: React.FC = () => {
                   onChange={handleFileChange}
                   accept="image/*"
                   required={!isEdit || !formData.superintendentPhoto}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Superintendent Phone<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Superintendent Phone
+                  <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="tel"
@@ -466,13 +470,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.superintendentPhone}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Director Name<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Director Name<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="text"
@@ -480,13 +484,13 @@ const PharmacyForm: React.FC = () => {
                   value={formData.directorName}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Director Photo<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Director Photo<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="file"
@@ -494,13 +498,13 @@ const PharmacyForm: React.FC = () => {
                   onChange={handleFileChange}
                   accept="image/*"
                   required={!isEdit || !formData.directorPhoto}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Director Phone<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Director Phone<span className="text-destructive">*</span>
                 </label>
                 <input
                   type="tel"
@@ -508,7 +512,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.directorPhone}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
             </div>
@@ -516,12 +520,12 @@ const PharmacyForm: React.FC = () => {
 
           {/* Additional Information */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Additional Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Operating Hours
                 </label>
                 <input
@@ -529,13 +533,13 @@ const PharmacyForm: React.FC = () => {
                   name="operatingHours"
                   value={formData.operatingHours}
                   onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                   placeholder="e.g., Mon-Fri: 9am-5pm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Website URL
                 </label>
                 <input
@@ -543,13 +547,13 @@ const PharmacyForm: React.FC = () => {
                   name="websiteUrl"
                   value={formData.websiteUrl}
                   onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                   placeholder="https://example.com"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-foreground">
                   Social Media Links
                 </label>
                 <input
@@ -558,7 +562,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.socialMedia?.facebookUrl}
                   onChange={handleChange}
                   placeholder="Facebook URL"
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
                 <input
                   type="url"
@@ -566,7 +570,7 @@ const PharmacyForm: React.FC = () => {
                   value={formData.socialMedia?.twitterUrl}
                   onChange={handleChange}
                   placeholder="Twitter URL"
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
                 <input
                   type="url"
@@ -574,12 +578,12 @@ const PharmacyForm: React.FC = () => {
                   value={formData.socialMedia?.instagramUrl}
                   onChange={handleChange}
                   placeholder="Instagram URL"
-                  className="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Services Offered
                 </label>
                 <div className="flex space-x-2">
@@ -587,13 +591,13 @@ const PharmacyForm: React.FC = () => {
                     type="text"
                     value={currentService}
                     onChange={(e) => setCurrentService(e.target.value)}
-                    className="flex-1 rounded-l-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="flex-1 rounded-l-md border border-input bg-background text-foreground shadow-sm px-4 py-2 focus:outline-none focus:ring-ring focus:border-ring placeholder:text-muted-foreground"
                     placeholder="Add a service"
                   />
                   <button
                     type="button"
                     onClick={handleAddService}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-r-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
                   >
                     Add
                   </button>
@@ -602,13 +606,13 @@ const PharmacyForm: React.FC = () => {
                   {formData.servicesOffered?.map((service, index) => (
                     <div
                       key={index}
-                      className="inline-flex items-center bg-gray-100 rounded-full px-3 py-1"
+                      className="inline-flex items-center bg-muted/50 rounded-full px-3 py-1"
                     >
-                      <span className="text-sm">{service}</span>
+                      <span className="text-sm text-foreground">{service}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveService(service)}
-                        className="ml-2 text-gray-500 hover:text-gray-700"
+                        className="ml-2 text-muted-foreground hover:text-foreground"
                       >
                         ×
                       </button>
@@ -623,14 +627,14 @@ const PharmacyForm: React.FC = () => {
           <div className="flex justify-end space-x-4">
             <Link
               to="/my-pharmacy"
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50"
             >
               {loading
                 ? 'Saving...'

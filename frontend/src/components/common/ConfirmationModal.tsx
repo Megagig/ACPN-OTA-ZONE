@@ -28,11 +28,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md transform transition-all duration-300 ease-in-out scale-100">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className="bg-card rounded-lg shadow-xl p-6 w-full max-w-md transform transition-all duration-300 ease-in-out scale-100">
+        <h3 className="text-lg font-medium leading-6 text-foreground mb-4">
           {title}
         </h3>
-        {message && <p className="text-sm text-gray-600 mb-6">{message}</p>}
+        {message && (
+          <p className="text-sm text-muted-foreground mb-6">{message}</p>
+        )}
         {children}
         <div className="flex justify-end space-x-3 mt-6">
           <Button variant="outline" onClick={onClose}>

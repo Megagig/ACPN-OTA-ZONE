@@ -5,6 +5,7 @@ import financialService from '../../services/financial.service';
 import type { Payment } from '../../types/financial.types';
 import type { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
 import CertificateView from '../../components/certificate/CertificateView';
+import { useTheme } from '../../context/ThemeContext';
 
 // Enhanced payment interface that extends Payment with a dueInfo property
 interface EnhancedPayment extends Omit<Payment, 'dueInfo'> {
@@ -36,6 +37,7 @@ const PharmacyDues: React.FC = () => {
   const [selectedCertificateDueId, setSelectedCertificateDueId] = useState<
     string | null
   >(null);
+  const { theme } = useTheme();
 
   const fetchPharmacyAndDues = useCallback(async () => {
     try {
@@ -342,26 +344,26 @@ const PharmacyDues: React.FC = () => {
     switch (paymentStatus) {
       case 'paid':
         return (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
             Paid
           </span>
         );
       case 'partially_paid':
         return (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
             Partially Paid
           </span>
         );
       case 'overdue':
         return (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
             Overdue
           </span>
         );
       case 'pending':
       default:
         return (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-muted text-muted-foreground">
             Pending
           </span>
         );
@@ -399,10 +401,12 @@ const PharmacyDues: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="spinner-border text-indigo-500" role="status">
+          <div className="spinner-border text-primary" role="status">
             <i className="fas fa-circle-notch fa-spin text-3xl"></i>
           </div>
-          <p className="mt-2 text-gray-600">Loading dues information...</p>
+          <p className="mt-2 text-muted-foreground">
+            Loading dues information...
+          </p>
         </div>
       </div>
     );
@@ -411,7 +415,7 @@ const PharmacyDues: React.FC = () => {
   if (error && !pharmacy) {
     return (
       <div
-        className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4"
         role="alert"
       >
         <p className="font-bold">Error</p>
@@ -419,7 +423,7 @@ const PharmacyDues: React.FC = () => {
         <div className="mt-4">
           <Link
             to="/my-pharmacy/create"
-            className="text-red-700 hover:text-red-900 underline"
+            className="text-destructive hover:text-destructive/80 underline"
           >
             Register Pharmacy
           </Link>
@@ -431,7 +435,7 @@ const PharmacyDues: React.FC = () => {
   if (error) {
     return (
       <div
-        className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4"
         role="alert"
       >
         <p className="font-bold">Error</p>
@@ -442,7 +446,7 @@ const PharmacyDues: React.FC = () => {
               setError(null);
               fetchPharmacyAndDues();
             }}
-            className="text-red-700 hover:text-red-900 underline"
+            className="text-destructive hover:text-destructive/80 underline"
           >
             Try Again
           </button>
@@ -457,14 +461,16 @@ const PharmacyDues: React.FC = () => {
         <div>
           <Link
             to="/my-pharmacy"
-            className="text-indigo-600 hover:text-indigo-800 mb-2 inline-block"
+            className="text-primary hover:text-primary/80 mb-2 inline-block"
           >
             <i className="fas fa-arrow-left mr-2"></i>
             Back to Pharmacy Profile
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800">Dues & Payments</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Dues & Payments
+          </h1>
           {pharmacy && (
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Pharmacy: <span className="font-medium">{pharmacy.name}</span>
             </p>
           )}
@@ -473,14 +479,16 @@ const PharmacyDues: React.FC = () => {
 
       {/* Dues Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-green-100 p-3 rounded-full mr-4">
-              <i className="fas fa-check-circle text-green-600 text-xl"></i>
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full mr-4">
+              <i className="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">Paid Amount</h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Paid Amount
+              </h2>
+              <p className="text-2xl font-semibold text-foreground">
                 {formatCurrency(
                   (dues || [])
                     .filter((due) => due.paymentStatus === 'paid')
@@ -491,16 +499,16 @@ const PharmacyDues: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-red-100 p-3 rounded-full mr-4">
-              <i className="fas fa-exclamation-circle text-red-600 text-xl"></i>
+            <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-full mr-4">
+              <i className="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">
+              <h2 className="text-sm font-medium text-muted-foreground">
                 Outstanding Balance
               </h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <p className="text-2xl font-semibold text-foreground">
                 {formatCurrency(
                   (dues || [])
                     .filter((due) => due.paymentStatus !== 'paid')
@@ -511,14 +519,16 @@ const PharmacyDues: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-yellow-100 p-3 rounded-full mr-4">
-              <i className="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-full mr-4">
+              <i className="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">Penalties</h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Penalties
+              </h2>
+              <p className="text-2xl font-semibold text-foreground">
                 {formatCurrency(
                   (dues || []).reduce(
                     (sum, due) =>
@@ -535,16 +545,16 @@ const PharmacyDues: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-card rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="bg-blue-100 p-3 rounded-full mr-4">
-              <i className="fas fa-calendar text-blue-600 text-xl"></i>
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+              <i className="fas fa-calendar text-blue-600 dark:text-blue-400 text-xl"></i>
             </div>
             <div>
-              <h2 className="text-sm font-medium text-gray-500">
+              <h2 className="text-sm font-medium text-muted-foreground">
                 Due This Month
               </h2>
-              <p className="text-2xl font-semibold text-gray-800">
+              <p className="text-2xl font-semibold text-foreground">
                 {formatCurrency(
                   (dues || [])
                     .filter((due) => {
@@ -570,7 +580,7 @@ const PharmacyDues: React.FC = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="rounded-md border border-gray-300 shadow-sm px-4 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="rounded-md border border-border shadow-sm px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -582,7 +592,7 @@ const PharmacyDues: React.FC = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => setShowPaymentHistory(!showPaymentHistory)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <i className="fas fa-history mr-2"></i>
             Payment History
@@ -592,11 +602,11 @@ const PharmacyDues: React.FC = () => {
 
       {/* Payment Modal */}
       {showPaymentModal && selectedDue && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-border w-11/12 md:w-1/2 shadow-lg rounded-md bg-card">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-foreground">
                   Submit Payment for {selectedDue.title}
                 </h3>
                 <button
@@ -604,53 +614,55 @@ const PharmacyDues: React.FC = () => {
                     setShowPaymentModal(false);
                     setSelectedDue(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <i className="fas fa-times text-xl"></i>
                 </button>
               </div>
 
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mb-4 p-4 bg-muted rounded-lg">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-muted-foreground">
                       Total Amount:
                     </span>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-lg font-semibold text-foreground">
                       {formatCurrency(selectedDue.totalAmount)}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-muted-foreground">
                       Outstanding Balance:
                     </span>
-                    <p className="text-lg font-semibold text-red-600">
+                    <p className="text-lg font-semibold text-destructive">
                       {formatCurrency(selectedDue.balance)}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-muted-foreground">
                       Amount Paid:
                     </span>
-                    <p className="text-lg font-semibold text-green-600">
+                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                       {formatCurrency(selectedDue.amountPaid)}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">Due Date:</span>
-                    <p className="text-gray-900">
+                    <span className="font-medium text-muted-foreground">
+                      Due Date:
+                    </span>
+                    <p className="text-foreground">
                       {formatDate(selectedDue.dueDate)}
                     </p>
                   </div>
                 </div>
                 {selectedDue.penalties.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <span className="font-medium text-gray-700">
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <span className="font-medium text-muted-foreground">
                       Penalties:
                     </span>
                     <div className="mt-1 space-y-1">
                       {selectedDue.penalties.map((penalty, index) => (
-                        <div key={index} className="text-sm text-red-600">
+                        <div key={index} className="text-sm text-destructive">
                           {penalty.reason}: {formatCurrency(penalty.amount)}
                         </div>
                       ))}
@@ -662,7 +674,7 @@ const PharmacyDues: React.FC = () => {
               <form onSubmit={handlePaymentSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-foreground mb-1">
                       Payment Amount *
                     </label>
                     <input
@@ -685,21 +697,21 @@ const PharmacyDues: React.FC = () => {
                       min="0.01"
                       step="0.01"
                       required
-                      className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                       placeholder="0.00"
                     />
                     <div className="mt-1 flex flex-col">
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Minimum: ₦0.01 | Maximum:{' '}
                         {formatCurrency(selectedDue.balance)}
                       </p>
                       {paymentData.amount <= 0 && (
-                        <p className="text-xs text-red-500">
+                        <p className="text-xs text-destructive">
                           Payment amount must be greater than zero
                         </p>
                       )}
                       {paymentData.amount > selectedDue.balance && (
-                        <p className="text-xs text-red-500">
+                        <p className="text-xs text-destructive">
                           Payment cannot exceed the outstanding balance
                         </p>
                       )}
@@ -707,7 +719,7 @@ const PharmacyDues: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-foreground mb-1">
                       Payment Method *
                     </label>
                     <select
@@ -719,7 +731,7 @@ const PharmacyDues: React.FC = () => {
                         }))
                       }
                       required
-                      className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                     >
                       <option value="">Select Method</option>
                       <option value="bank_transfer">Bank Transfer</option>
@@ -731,7 +743,7 @@ const PharmacyDues: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Payment Reference (Optional)
                   </label>
                   <input
@@ -743,13 +755,13 @@ const PharmacyDues: React.FC = () => {
                         paymentReference: e.target.value,
                       }))
                     }
-                    className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="Transaction ID, cheque number, etc."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Payment Receipt *
                   </label>
                   <input
@@ -762,9 +774,9 @@ const PharmacyDues: React.FC = () => {
                       }))
                     }
                     required
-                    className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Upload receipt in PDF, JPG, JPEG, or PNG format (max 5MB)
                   </p>
                 </div>
@@ -776,14 +788,14 @@ const PharmacyDues: React.FC = () => {
                       setShowPaymentModal(false);
                       setSelectedDue(null);
                     }}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submittingPayment}
-                    className={`px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                    className={`px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                       submittingPayment ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                   >
@@ -808,9 +820,9 @@ const PharmacyDues: React.FC = () => {
 
       {/* Payment History Section */}
       {showPaymentHistory && (
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-          <div className="p-6 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">
+        <div className="bg-card rounded-lg shadow overflow-hidden mb-6">
+          <div className="p-6 bg-muted border-b border-border">
+            <h2 className="text-lg font-semibold text-foreground">
               Payment History
             </h2>
           </div>
@@ -819,40 +831,40 @@ const PharmacyDues: React.FC = () => {
           {payments.length === 0 &&
           dues.filter((d) => d.paymentStatus !== 'paid').length === 0 ? (
             <div className="p-6 text-center">
-              <i className="fas fa-history text-gray-400 text-5xl mb-4"></i>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
+              <i className="fas fa-history text-muted-foreground text-5xl mb-4"></i>
+              <h3 className="text-lg font-medium text-foreground mb-1">
                 No payment history
               </h3>
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 You haven't made any payments yet.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Due Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Method
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Receipt
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-card divide-y divide-border">
                   {/* Show all dues as pending if no payment exists for them */}
                   {(dues || [])
                     .filter((due) => {
@@ -867,22 +879,22 @@ const PharmacyDues: React.FC = () => {
                     .map((due) => (
                       <tr
                         key={due._id + '-pending'}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-muted/50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {formatDate(due.dueDate)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {due.title ||
                             (due.dueTypeId &&
                               typeof due.dueTypeId === 'object' &&
                               (due.dueTypeId as { name?: string })?.name) ||
                             'Unknown Due'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                           {formatCurrency(due.totalAmount)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
                           -
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -891,7 +903,7 @@ const PharmacyDues: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => handleDueSelection(due)}
-                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                            className="text-primary hover:text-primary/80 mr-3"
                           >
                             Make Payment
                           </button>
@@ -907,38 +919,38 @@ const PharmacyDues: React.FC = () => {
                         ? (payment.dueId as PharmacyDue)
                         : null);
                     return (
-                      <tr key={payment._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <tr key={payment._id} className="hover:bg-muted/50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {payment.paymentDate
                             ? formatDate(payment.paymentDate)
                             : formatDate(payment.createdAt) || 'N/A'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {dueInfo?.title ||
                             (dueInfo?.dueTypeId &&
                               typeof dueInfo.dueTypeId === 'object' &&
                               (dueInfo.dueTypeId as { name?: string })?.name) ||
                             'Unknown Due'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                           {formatCurrency(payment.amount)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
                           {payment.paymentMethod ||
                             payment.paymentReference ||
                             'Bank Transfer'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {payment.status === 'approved' ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                               Approved
                             </span>
                           ) : payment.status === 'rejected' ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                               Rejected
                             </span>
                           ) : (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                               Pending
                             </span>
                           )}
@@ -955,7 +967,7 @@ const PharmacyDues: React.FC = () => {
                               }
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-indigo-600 hover:text-indigo-900 mr-3"
+                              className="text-primary hover:text-primary/80 mr-3"
                             >
                               View Receipt
                             </a>
@@ -969,7 +981,7 @@ const PharmacyDues: React.FC = () => {
                                     : (payment.dueId as { _id: string })?._id
                                 )
                               }
-                              className="text-green-600 hover:text-green-900"
+                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
                             >
                               Certificate
                             </button>
@@ -986,75 +998,79 @@ const PharmacyDues: React.FC = () => {
       )}
 
       {/* Dues List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 bg-gray-50 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Dues History</h2>
+      <div className="bg-card rounded-lg shadow overflow-hidden">
+        <div className="p-6 bg-muted border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">
+            Dues History
+          </h2>
         </div>
 
         {(dues || []).length === 0 ? (
           <div className="p-6 text-center">
-            <i className="fas fa-file-invoice-dollar text-gray-400 text-5xl mb-4"></i>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">
+            <i className="fas fa-file-invoice-dollar text-muted-foreground text-5xl mb-4"></i>
+            <h3 className="text-lg font-medium text-foreground mb-1">
               No dues found
             </h3>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               You currently have no dues assigned to your pharmacy.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Description
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Paid Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {(dues || []).map((due) => (
                   <tr
                     key={due._id}
                     className={
-                      due.paymentStatus === 'paid' ? 'bg-green-50' : ''
+                      due.paymentStatus === 'paid'
+                        ? 'bg-green-50 dark:bg-green-950/30'
+                        : ''
                     }
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <span className="font-medium text-gray-900 capitalize">
+                        <span className="font-medium text-foreground capitalize">
                           {due.title}
                         </span>
                         {due.dueTypeId?.isRecurring && (
-                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                             Recurring
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-foreground">
                         {due.description || due.dueTypeId?.description || '-'}
                       </div>
                       {due.penalties.length > 0 && (
-                        <div className="text-xs text-red-600 mt-1">
+                        <div className="text-xs text-destructive mt-1">
                           Penalties:{' '}
                           {formatCurrency(
                             due.penalties.reduce((sum, p) => sum + p.amount, 0)
@@ -1064,21 +1080,21 @@ const PharmacyDues: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           Total: {formatCurrency(due.totalAmount)}
                         </div>
-                        <div className="text-green-600">
+                        <div className="text-green-600 dark:text-green-400">
                           Paid: {formatCurrency(due.amountPaid)}
                         </div>
-                        <div className="text-red-600">
+                        <div className="text-destructive">
                           Balance: {formatCurrency(due.balance)}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       <div>Due: {formatDate(due.dueDate)}</div>
                       {due.assignedAt && (
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground/70">
                           Assigned: {formatDate(due.assignedAt)}
                         </div>
                       )}
@@ -1086,7 +1102,7 @@ const PharmacyDues: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(due.paymentStatus)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {due.paymentStatus === 'paid'
                         ? formatDate(due.updatedAt)
                         : '-'}
@@ -1095,7 +1111,7 @@ const PharmacyDues: React.FC = () => {
                       {due.paymentStatus !== 'paid' && due.balance > 0 && (
                         <button
                           onClick={() => handleDueSelection(due)}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-primary hover:text-primary/80"
                         >
                           Pay Now
                         </button>
@@ -1103,7 +1119,7 @@ const PharmacyDues: React.FC = () => {
                       {due.paymentStatus === 'paid' && (
                         <button
                           onClick={() => downloadClearanceCertificate(due._id)}
-                          className="text-green-600 hover:text-green-900"
+                          className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
                         >
                           Certificate
                         </button>
@@ -1118,10 +1134,10 @@ const PharmacyDues: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="bg-card px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-muted-foreground">
                   Showing{' '}
                   <span className="font-medium">
                     {(currentPage - 1) * itemsPerPage + 1}
@@ -1148,10 +1164,10 @@ const PharmacyDues: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-card text-sm font-medium ${
                       currentPage === 1
-                        ? 'text-gray-300 cursor-not-allowed'
-                        : 'text-gray-500 hover:bg-gray-50'
+                        ? 'text-muted-foreground cursor-not-allowed'
+                        : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >
                     <span className="sr-only">Previous</span>
@@ -1162,10 +1178,10 @@ const PharmacyDues: React.FC = () => {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                      className={`relative inline-flex items-center px-4 py-2 border border-border bg-card text-sm font-medium ${
                         currentPage === i + 1
-                          ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                          : 'text-gray-500 hover:bg-gray-50'
+                          ? 'z-10 bg-primary/10 border-primary text-primary'
+                          : 'text-muted-foreground hover:bg-muted'
                       }`}
                     >
                       {i + 1}
@@ -1175,10 +1191,10 @@ const PharmacyDues: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-card text-sm font-medium ${
                       currentPage === totalPages
-                        ? 'text-gray-300 cursor-not-allowed'
-                        : 'text-gray-500 hover:bg-gray-50'
+                        ? 'text-muted-foreground cursor-not-allowed'
+                        : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >
                     <span className="sr-only">Next</span>

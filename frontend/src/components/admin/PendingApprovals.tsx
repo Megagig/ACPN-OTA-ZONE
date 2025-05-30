@@ -3,6 +3,7 @@ import userService from '../../services/user.service';
 import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
 import { useToast } from '@chakra-ui/react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PendingUserType extends User {
   createdAt?: string; // This is fine as it's not in the frontend User type
@@ -20,6 +21,7 @@ const PendingApprovals: React.FC = () => {
     total: 0,
   });
   const { toast } = useToast();
+  const { theme } = useTheme();
 
   const fetchPendingUsers = useCallback(
     async (page: number, limit: number) => {
@@ -119,7 +121,7 @@ const PendingApprovals: React.FC = () => {
     // Show loader only on initial load or when users array is empty
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -127,7 +129,7 @@ const PendingApprovals: React.FC = () => {
   if (error && !loading) {
     return (
       <div
-        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-4"
+        className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded relative my-4"
         role="alert"
       >
         <strong className="font-bold">Error!</strong>
@@ -144,85 +146,87 @@ const PendingApprovals: React.FC = () => {
 
   if (!loading && pendingUsers.length === 0 && !error) {
     return (
-      <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
+      <div className="px-4 py-5 sm:p-6 text-center text-muted-foreground">
         No pending approvals at this time.
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div className="bg-card shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 sm:px-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
+        <h3 className="text-lg leading-6 font-medium text-foreground">
           Pending Account Approvals
         </h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           Review and manage new user registrations that require approval.
           (Total: {pagination.total})
         </p>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Phone
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 PCN License
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Registered
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-border">
             {pendingUsers
               .filter((user): user is PendingUserType => !!user)
               .map((user) => (
                 <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       {user.firstName} {user.lastName}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {user.email}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.phone || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.pcnLicense || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(
                       user.createdAt || user.registrationDate || Date.now()
                     ).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         user.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
                           : user.status === 'active'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
                           : user.status === 'rejected'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                          : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       {user.status}
@@ -233,7 +237,7 @@ const PendingApprovals: React.FC = () => {
                       onClick={() => handleApprove(user._id)}
                       variant="outline"
                       size="sm"
-                      className="text-green-600 hover:text-green-900 border-green-600 hover:bg-green-50"
+                      className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30"
                     >
                       Approve
                     </Button>
@@ -241,7 +245,7 @@ const PendingApprovals: React.FC = () => {
                       onClick={() => handleDeny(user._id)}
                       variant="outline"
                       size="sm"
-                      className="text-yellow-600 hover:text-yellow-900 border-yellow-600 hover:bg-yellow-50"
+                      className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 border-yellow-600 dark:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
                     >
                       Deny
                     </Button>
@@ -259,7 +263,7 @@ const PendingApprovals: React.FC = () => {
         </table>
         {/* Basic Pagination Controls */}
         {pagination.total > 0 && pagination.totalPages > 1 && (
-          <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <Button
                 onClick={() =>
@@ -280,7 +284,7 @@ const PendingApprovals: React.FC = () => {
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-muted-foreground">
                   Showing{' '}
                   <span className="font-medium">
                     {(pagination.page - 1) * pagination.limit + 1}
@@ -307,7 +311,7 @@ const PendingApprovals: React.FC = () => {
                     }
                     disabled={pagination.page <= 1}
                     variant="outline"
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
                   >
                     Previous
                   </Button>
@@ -318,7 +322,7 @@ const PendingApprovals: React.FC = () => {
                     }
                     disabled={pagination.page >= pagination.totalPages}
                     variant="outline"
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
                   >
                     Next
                   </Button>

@@ -196,7 +196,7 @@ const SkeletonCard = React.forwardRef<HTMLDivElement, SkeletonCardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl border border-gray-200 overflow-hidden',
+          'rounded-xl border border-border overflow-hidden',
           className
         )}
         style={{ width: typeof width === 'number' ? `${width}px` : width }}

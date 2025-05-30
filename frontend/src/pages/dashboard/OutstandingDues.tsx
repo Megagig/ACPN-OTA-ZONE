@@ -192,9 +192,11 @@ const OutstandingDues: React.FC = () => {
   };
 
   const getPriorityColor = (daysPastDue: number) => {
-    if (daysPastDue > 60) return 'text-red-600 bg-red-100';
-    if (daysPastDue > 30) return 'text-yellow-600 bg-yellow-100';
-    return 'text-green-600 bg-green-100';
+    if (daysPastDue > 60)
+      return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
+    if (daysPastDue > 30)
+      return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+    return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
   };
 
   const getPriorityLabel = (daysPastDue: number) => {
@@ -232,18 +234,18 @@ const OutstandingDues: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">{error}</p>
+      <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+        <p className="text-destructive">{error}</p>
         <button
           onClick={fetchOutstandingDues}
-          className="mt-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+          className="mt-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 transition-colors"
         >
           Retry
         </button>
@@ -254,10 +256,10 @@ const OutstandingDues: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Outstanding Dues</h1>
+        <h1 className="text-3xl font-bold text-foreground">Outstanding Dues</h1>
         <button
           onClick={exportData}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 flex items-center gap-2 transition-colors"
         >
           <Download size={16} />
           Export Report
@@ -266,51 +268,53 @@ const OutstandingDues: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
           <div className="flex items-center">
-            <AlertTriangle className="h-8 w-8 text-red-600" />
+            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-sm font-medium text-muted-foreground">
                 Total Outstanding
               </p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                 ₦{totalOutstanding.toLocaleString()}
               </p>
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
           <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-yellow-600" />
+            <Calendar className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-sm font-medium text-muted-foreground">
                 Total Penalties
               </p>
-              <p className="text-2xl font-bold text-yellow-600">
+              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 ₦{totalPenalties.toLocaleString()}
               </p>
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
           <div className="flex items-center">
-            <AlertTriangle className="h-8 w-8 text-red-600" />
+            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-sm font-medium text-muted-foreground">
                 Critical Cases
               </p>
-              <p className="text-2xl font-bold text-red-600">{criticalCount}</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                {criticalCount}
+              </p>
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-card p-6 rounded-lg shadow border border-border">
           <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-blue-600" />
+            <Calendar className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-sm font-medium text-muted-foreground">
                 Avg Days Overdue
               </p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {averageDaysOverdue.toFixed(0)}
               </p>
             </div>
@@ -322,7 +326,7 @@ const OutstandingDues: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="relative">
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
             size={16}
           />
           <input
@@ -330,14 +334,14 @@ const OutstandingDues: React.FC = () => {
             placeholder="Search dues or pharmacy..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
           />
         </div>
         <div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
+            className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
           >
             <option value="all">All Status</option>
             <option value="critical">Critical (60+ days)</option>
@@ -351,7 +355,7 @@ const OutstandingDues: React.FC = () => {
             onChange={(e) =>
               setSortBy(e.target.value as 'amount' | 'date' | 'penalty')
             }
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
+            className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
           >
             <option value="date">Sort by Days Overdue</option>
             <option value="amount">Sort by Amount</option>
@@ -359,51 +363,54 @@ const OutstandingDues: React.FC = () => {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <Filter size={16} className="text-gray-500" />
-          <span className="text-sm text-gray-600">
+          <Filter size={16} className="text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
             {filteredDues.length} of {outstandingDues.length} items
           </span>
         </div>
       </div>
 
       {/* Outstanding Dues Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-card rounded-lg shadow border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Due Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Pharmacy
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Days Overdue
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Penalty
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Total Owed
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {paginatedDues.map((due) => (
-                <tr key={due._id} className="hover:bg-gray-50">
+                <tr
+                  key={due._id}
+                  className="hover:bg-muted/30 transition-colors"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-foreground">
                         {due.title}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         Due: {new Date(due.dueDate).toLocaleDateString()}
                       </div>
                       <span
@@ -415,10 +422,10 @@ const OutstandingDues: React.FC = () => {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                     {due.pharmacyName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                     ₦{due.amount.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -430,23 +437,23 @@ const OutstandingDues: React.FC = () => {
                       {due.daysPastDue} days
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
                     ₦{due.penaltyAmount.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                     ₦{due.totalOwed.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleSendReminder()}
-                        className="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 border border-blue-600 rounded"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs px-2 py-1 border border-blue-600 dark:border-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                       >
                         Send Reminder
                       </button>
                       <button
                         onClick={() => handleAddPenalty(due._id)}
-                        className="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded"
+                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs px-2 py-1 border border-red-600 dark:border-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                       >
                         Add Penalty
                       </button>
@@ -460,13 +467,13 @@ const OutstandingDues: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+          <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
@@ -475,21 +482,26 @@ const OutstandingDues: React.FC = () => {
                     setCurrentPage(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-muted-foreground">
                     Showing{' '}
-                    <span className="font-medium">{startIndex + 1}</span> to{' '}
-                    <span className="font-medium">
+                    <span className="font-medium text-foreground">
+                      {startIndex + 1}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-medium text-foreground">
                       {Math.min(startIndex + itemsPerPage, filteredDues.length)}
                     </span>{' '}
                     of{' '}
-                    <span className="font-medium">{filteredDues.length}</span>{' '}
+                    <span className="font-medium text-foreground">
+                      {filteredDues.length}
+                    </span>{' '}
                     results
                   </p>
                 </div>
@@ -500,10 +512,10 @@ const OutstandingDues: React.FC = () => {
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
                             currentPage === page
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                              ? 'z-10 bg-primary/10 border-primary text-primary'
+                              : 'bg-card border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                           }`}
                         >
                           {page}

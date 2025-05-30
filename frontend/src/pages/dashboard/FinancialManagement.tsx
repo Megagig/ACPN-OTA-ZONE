@@ -211,10 +211,10 @@ const FinancialManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-lg text-gray-600">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <p className="mt-4 text-lg text-muted-foreground">
             Loading financial data...
           </p>
         </div>
@@ -223,22 +223,22 @@ const FinancialManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-foreground">
                 Financial Management
               </h1>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-muted-foreground">
                 Comprehensive dues and payments management system
               </p>
             </div>
             <Link
               to="/dashboard"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors"
             >
               Back to Dashboard
             </Link>
@@ -247,11 +247,11 @@ const FinancialManagement: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="mb-6 bg-destructive/10 border border-destructive/30 rounded-lg p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-400"
+                  className="h-5 w-5 text-destructive"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -263,8 +263,8 @@ const FinancialManagement: React.FC = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <div className="mt-2 text-sm text-red-700">
+                <h3 className="text-sm font-medium text-destructive">Error</h3>
+                <div className="mt-2 text-sm text-destructive/80">
                   <p>{error}</p>
                 </div>
               </div>
@@ -274,16 +274,16 @@ const FinancialManagement: React.FC = () => {
 
         {/* Financial Overview */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             Financial Overview
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-blue-600"
+                      className="w-5 h-5 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -299,10 +299,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       Total Dues Amount
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {formatCurrency(stats.totalDues)}
                     </dd>
                   </dl>
@@ -310,12 +310,12 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-green-600"
+                      className="w-5 h-5 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -331,10 +331,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       Total Collected
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {formatCurrency(stats.totalPaid)}
                     </dd>
                   </dl>
@@ -342,12 +342,12 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-yellow-600"
+                      className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -363,10 +363,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       Outstanding Balance
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {formatCurrency(stats.totalOutstanding)}
                     </dd>
                   </dl>
@@ -374,12 +374,12 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-purple-600"
+                      className="w-5 h-5 text-purple-600 dark:text-purple-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -395,10 +395,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       This Month's Collection
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {formatCurrency(stats.monthlyCollection)}
                     </dd>
                   </dl>
@@ -410,16 +410,16 @@ const FinancialManagement: React.FC = () => {
 
         {/* Payment Status Overview */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             Payment Status Overview
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-yellow-600"
+                      className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -435,10 +435,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       Pending Review
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {stats.pendingPayments}
                     </dd>
                   </dl>
@@ -447,19 +447,19 @@ const FinancialManagement: React.FC = () => {
               <div className="mt-4">
                 <Link
                   to="/dashboard/admin-payment-review"
-                  className="text-sm text-yellow-600 hover:text-yellow-800 font-medium"
+                  className="text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 font-medium"
                 >
                   Review Payments →
                 </Link>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-green-600"
+                      className="w-5 h-5 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -475,10 +475,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       Approved Payments
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {stats.approvedPayments}
                     </dd>
                   </dl>
@@ -486,12 +486,12 @@ const FinancialManagement: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-lg shadow p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-red-600"
+                      className="w-5 h-5 text-red-600 dark:text-red-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -507,10 +507,10 @@ const FinancialManagement: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
+                    <dt className="text-sm font-medium text-muted-foreground truncate">
                       Rejected Payments
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">
+                    <dd className="text-lg font-medium text-foreground">
                       {stats.rejectedPayments}
                     </dd>
                   </dl>
@@ -522,27 +522,29 @@ const FinancialManagement: React.FC = () => {
 
         {/* Management Sections */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-6">
             Management Areas
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {managementSections.map((section, index) => (
               <div
                 key={index}
-                className="bg-white rounded-lg shadow-lg overflow-hidden"
+                className="bg-card rounded-lg shadow-lg overflow-hidden"
               >
                 <div
-                  className={`bg-${section.color}-50 px-6 py-4 border-b border-${section.color}-100`}
+                  className={`bg-${section.color}-50 dark:bg-${section.color}-900/20 px-6 py-4 border-b border-border`}
                 >
                   <div className="flex items-center">
-                    <div className={`text-${section.color}-600 mr-3`}>
+                    <div
+                      className={`text-${section.color}-600 dark:text-${section.color}-400 mr-3`}
+                    >
                       {section.icon}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {section.title}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {section.description}
                       </p>
                     </div>
@@ -554,7 +556,7 @@ const FinancialManagement: React.FC = () => {
                       <Link
                         key={linkIndex}
                         to={link.href}
-                        className={`block px-4 py-3 rounded-lg text-sm font-medium bg-${section.color}-50 text-${section.color}-700 hover:bg-${section.color}-100 transition-colors`}
+                        className={`block px-4 py-3 rounded-lg text-sm font-medium bg-${section.color}-50 dark:bg-${section.color}-900/20 text-${section.color}-700 dark:text-${section.color}-300 hover:bg-${section.color}-100 dark:hover:bg-${section.color}-900/30 transition-colors`}
                       >
                         {link.label}
                       </Link>
@@ -567,15 +569,17 @@ const FinancialManagement: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+        <div className="bg-card rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-border">
+            <h3 className="text-lg font-medium text-foreground">
+              Quick Actions
+            </h3>
           </div>
           <div className="px-6 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Link
                 to="/dashboard/admin-payment-review"
-                className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center justify-center px-4 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
               >
                 <svg
                   className="w-5 h-5 mr-2"
@@ -592,7 +596,7 @@ const FinancialManagement: React.FC = () => {
                 </svg>
                 Review Payments
               </Link>
-              <button className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <button className="flex items-center justify-center px-4 py-3 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition-colors">
                 <svg
                   className="w-5 h-5 mr-2"
                   fill="none"
@@ -608,7 +612,7 @@ const FinancialManagement: React.FC = () => {
                 </svg>
                 Assign New Dues
               </button>
-              <button className="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+              <button className="flex items-center justify-center px-4 py-3 bg-purple-600 dark:bg-purple-700 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-800 transition-colors">
                 <svg
                   className="w-5 h-5 mr-2"
                   fill="none"
@@ -624,7 +628,7 @@ const FinancialManagement: React.FC = () => {
                 </svg>
                 View Analytics
               </button>
-              <button className="flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+              <button className="flex items-center justify-center px-4 py-3 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-800 transition-colors">
                 <svg
                   className="w-5 h-5 mr-2"
                   fill="none"

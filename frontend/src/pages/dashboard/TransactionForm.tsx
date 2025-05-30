@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import financialService from '../../services/financial.service';
-import type {
-  FinancialRecord,
-  FinancialCategory,
-  PaymentMethod,
-} from '../../types/financial.types';
+import type { FinancialRecord } from '../../types/financial.types';
 
 const TransactionForm = () => {
   const navigate = useNavigate();
@@ -119,7 +115,7 @@ const TransactionForm = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -128,11 +124,11 @@ const TransactionForm = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-foreground">
           {isEditMode ? 'Edit Transaction' : 'Add Transaction'}
         </h1>
         <button
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm shadow"
+          className="bg-muted hover:bg-muted/80 text-foreground px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
           onClick={() => navigate(-1)}
         >
           <i className="fas fa-arrow-left mr-2"></i>
@@ -141,18 +137,18 @@ const TransactionForm = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-card border border-border rounded-lg shadow-md p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label
                 htmlFor="title"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Title <span className="text-red-500">*</span>
               </label>
@@ -163,7 +159,7 @@ const TransactionForm = () => {
                 required
                 value={formData.title || ''}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
                 placeholder="Enter transaction title"
               />
             </div>
@@ -171,7 +167,7 @@ const TransactionForm = () => {
             <div>
               <label
                 htmlFor="amount"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Amount (NGN) <span className="text-red-500">*</span>
               </label>
@@ -184,7 +180,7 @@ const TransactionForm = () => {
                 step="0.01"
                 value={formData.amount || ''}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
                 placeholder="0.00"
               />
             </div>
@@ -192,7 +188,7 @@ const TransactionForm = () => {
             <div>
               <label
                 htmlFor="type"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Type <span className="text-red-500">*</span>
               </label>
@@ -202,7 +198,7 @@ const TransactionForm = () => {
                 required
                 value={formData.type || 'expense'}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="income">Income</option>
                 <option value="expense">Expense</option>
@@ -212,7 +208,7 @@ const TransactionForm = () => {
             <div>
               <label
                 htmlFor="category"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Category <span className="text-red-500">*</span>
               </label>
@@ -222,7 +218,7 @@ const TransactionForm = () => {
                 required
                 value={formData.category || 'administrative'}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="dues">Dues</option>
                 <option value="donation">Donation</option>
@@ -241,7 +237,7 @@ const TransactionForm = () => {
             <div>
               <label
                 htmlFor="date"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Date <span className="text-red-500">*</span>
               </label>
@@ -252,14 +248,14 @@ const TransactionForm = () => {
                 required
                 value={formData.date || ''}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               />
             </div>
 
             <div>
               <label
                 htmlFor="paymentMethod"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Payment Method <span className="text-red-500">*</span>
               </label>
@@ -269,7 +265,7 @@ const TransactionForm = () => {
                 required
                 value={formData.paymentMethod || 'bank_transfer'}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="cash">Cash</option>
                 <option value="bank_transfer">Bank Transfer</option>
@@ -284,7 +280,7 @@ const TransactionForm = () => {
             <div>
               <label
                 htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Status <span className="text-red-500">*</span>
               </label>
@@ -294,7 +290,7 @@ const TransactionForm = () => {
                 required
                 value={formData.status || 'pending'}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
@@ -305,7 +301,7 @@ const TransactionForm = () => {
             <div className="md:col-span-2">
               <label
                 htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Description
               </label>
@@ -315,7 +311,7 @@ const TransactionForm = () => {
                 rows={4}
                 value={formData.description || ''}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
                 placeholder="Enter transaction details..."
               ></textarea>
             </div>
@@ -323,7 +319,7 @@ const TransactionForm = () => {
             <div className="md:col-span-2">
               <label
                 htmlFor="attachments"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Attachments
               </label>
@@ -333,18 +329,18 @@ const TransactionForm = () => {
                 name="attachments"
                 multiple
                 onChange={handleFileChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Upload receipts, invoices, or any other supporting documents.
                 Maximum 5 files, 2MB each.
               </p>
               {attachments.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-foreground">
                     Selected files:
                   </p>
-                  <ul className="mt-1 text-sm text-gray-500">
+                  <ul className="mt-1 text-sm text-muted-foreground">
                     {attachments.map((file, index) => (
                       <li key={index} className="flex items-center">
                         <i className="fas fa-file mr-2"></i>
@@ -361,14 +357,14 @@ const TransactionForm = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-input rounded-md text-sm font-medium text-foreground bg-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className={`px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              className={`px-4 py-2 bg-primary hover:bg-primary/90 border border-transparent rounded-md text-sm font-medium text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${
                 isSaving ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import communicationService from '../../services/communication.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
@@ -11,6 +12,7 @@ import type {
 
 const CommunicationsDashboard = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<CommunicationSummary | null>(null);
   const [recentCommunications, setRecentCommunications] = useState<
@@ -97,26 +99,32 @@ const CommunicationsDashboard = () => {
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
-    let color = 'gray';
+    let colorClasses = '';
 
     switch (status) {
       case 'sent':
-        color = 'green';
+        colorClasses =
+          'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
         break;
       case 'draft':
-        color = 'yellow';
+        colorClasses =
+          'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
         break;
       case 'scheduled':
-        color = 'blue';
+        colorClasses =
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
         break;
       case 'failed':
-        color = 'red';
+        colorClasses =
+          'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
         break;
+      default:
+        colorClasses = 'bg-muted text-muted-foreground';
     }
 
     return (
       <span
-        className={`bg-${color}-100 text-${color}-800 text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
+        className={`${colorClasses} text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
       >
         {status}
       </span>
@@ -143,7 +151,7 @@ const CommunicationsDashboard = () => {
     }
 
     return (
-      <span className="inline-flex items-center">
+      <span className="inline-flex items-center text-muted-foreground">
         <i className={`fas fa-${icon} mr-1`}></i>
         <span className="capitalize">{type.replace('_', ' ')}</span>
       </span>
@@ -153,19 +161,19 @@ const CommunicationsDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-foreground">
           Communications Overview
         </h1>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
             onClick={() => navigate('/communications/compose')}
           >
             <i className="fas fa-paper-plane mr-2"></i>
             Compose New
           </button>
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md text-sm shadow"
             onClick={() => navigate('/communications/messages')}
           >
             <i className="fas fa-comment mr-2"></i>
@@ -209,10 +217,12 @@ const CommunicationsDashboard = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Communication Types Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-lg font-semibold mb-4">Communication Types</h2>
+        <div className="bg-card rounded-lg shadow-md p-4">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">
+            Communication Types
+          </h2>
           {isLoading ? (
-            <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+            <div className="animate-pulse h-64 bg-muted rounded"></div>
           ) : (
             getCommunicationTypeChartData() && (
               <ChartComponent
@@ -225,10 +235,12 @@ const CommunicationsDashboard = () => {
         </div>
 
         {/* Communication Status Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-lg font-semibold mb-4">Communication Status</h2>
+        <div className="bg-card rounded-lg shadow-md p-4">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">
+            Communication Status
+          </h2>
           {isLoading ? (
-            <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+            <div className="animate-pulse h-64 bg-muted rounded"></div>
           ) : (
             getCommunicationStatusChartData() && (
               <ChartComponent
@@ -242,11 +254,13 @@ const CommunicationsDashboard = () => {
       </div>
 
       {/* Recent Communications */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div className="bg-card rounded-lg shadow-md p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Recent Communications</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Recent Communications
+          </h2>
           <button
-            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+            className="text-primary hover:text-primary/80 text-sm font-medium"
             onClick={() => navigate('/communications/list')}
           >
             View All
@@ -256,80 +270,80 @@ const CommunicationsDashboard = () => {
         {isLoading ? (
           <div className="animate-pulse space-y-3">
             {[...Array(5)].map((_, index) => (
-              <div key={index} className="h-16 bg-gray-200 rounded"></div>
+              <div key={index} className="h-16 bg-muted rounded"></div>
             ))}
           </div>
         ) : recentCommunications.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             No communications available yet
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                   >
                     Title
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                   >
                     Type
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                   >
                     Status
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                   >
                     Sender
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {recentCommunications.map((communication) => (
                   <tr
                     key={communication._id}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() =>
                       navigate(`/communications/${communication._id}`)
                     }
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-foreground">
                         {communication.title}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm">
                         <TypeBadge type={communication.type} />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={communication.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(
                         communication.sentAt ||
                           communication.updatedAt ||
                           communication.createdAt
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {communication.senderName}
                     </td>
                   </tr>
@@ -343,42 +357,42 @@ const CommunicationsDashboard = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:bg-gray-50"
+          className="bg-card rounded-lg shadow-md p-6 cursor-pointer hover:bg-muted/50"
           onClick={() => navigate('/communications/compose?type=announcement')}
         >
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-100 text-indigo-600 mb-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-primary/15 text-primary mb-4">
             <i className="fas fa-bullhorn text-lg"></i>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="text-lg font-medium text-foreground">
             Create Announcement
           </h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             Send important announcements to all members or specific groups
           </p>
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:bg-gray-50"
+          className="bg-card rounded-lg shadow-md p-6 cursor-pointer hover:bg-muted/50"
           onClick={() => navigate('/communications/compose?type=email')}
         >
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-100 text-green-600 mb-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-4">
             <i className="fas fa-envelope text-lg"></i>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">Send Email</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-foreground">Send Email</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             Send emails to individual members or groups
           </p>
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:bg-gray-50"
+          className="bg-card rounded-lg shadow-md p-6 cursor-pointer hover:bg-muted/50"
           onClick={() => navigate('/communications/compose?type=sms')}
         >
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 text-blue-600 mb-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
             <i className="fas fa-sms text-lg"></i>
           </div>
-          <h3 className="text-lg font-medium text-gray-900">Send SMS</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-foreground">Send SMS</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
             Send SMS messages for urgent communications
           </p>
         </div>

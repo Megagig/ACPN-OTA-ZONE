@@ -95,17 +95,17 @@ const EventDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Events Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">Events Overview</h1>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate('/events/create')}
           >
             <i className="fas fa-plus mr-2"></i>
             Create Event
           </button>
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate('/events/calendar')}
           >
             <i className="fas fa-calendar-alt mr-2"></i>
@@ -142,10 +142,12 @@ const EventDashboard = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Event Types Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-lg font-semibold mb-4">Event Types</h2>
+        <div className="bg-card rounded-lg shadow-md border border-border p-4">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Event Types
+          </h2>
           {isLoading ? (
-            <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+            <div className="animate-pulse h-64 bg-muted rounded"></div>
           ) : (
             getEventTypeChartData() && (
               <ChartComponent
@@ -158,16 +160,18 @@ const EventDashboard = () => {
         </div>
 
         {/* Top Attended Events */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-lg font-semibold mb-4">Top Attended Events</h2>
+        <div className="bg-card rounded-lg shadow-md border border-border p-4">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Top Attended Events
+          </h2>
           {isLoading ? (
             <div className="animate-pulse space-y-3">
               {[...Array(3)].map((_, index) => (
-                <div key={index} className="h-16 bg-gray-200 rounded"></div>
+                <div key={index} className="h-16 bg-muted rounded"></div>
               ))}
             </div>
           ) : summary?.topAttendedEvents.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No event attendance data available yet
             </div>
           ) : (
@@ -175,21 +179,21 @@ const EventDashboard = () => {
               {summary?.topAttendedEvents.map(({ event, attendeeCount }) => (
                 <div
                   key={event._id}
-                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer"
                   onClick={() => navigate(`/events/${event._id}`)}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 text-indigo-500 rounded-lg flex items-center justify-center mr-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mr-4">
                     <i className="fas fa-users text-lg"></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {event.title}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {formatDate(event.startDate)}
                     </p>
                   </div>
-                  <div className="inline-flex items-center text-sm font-semibold text-gray-900 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                  <div className="inline-flex items-center text-sm font-semibold text-foreground bg-muted px-2.5 py-0.5 rounded-full">
                     {attendeeCount}{' '}
                     {attendeeCount === 1 ? 'Attendee' : 'Attendees'}
                   </div>
@@ -201,11 +205,13 @@ const EventDashboard = () => {
       </div>
 
       {/* Upcoming Events List */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div className="bg-card rounded-lg shadow-md border border-border p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Upcoming Events</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Upcoming Events
+          </h2>
           <button
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="text-primary hover:text-primary/80 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
             onClick={() => navigate('/events')}
           >
             View All
@@ -215,11 +221,11 @@ const EventDashboard = () => {
         {isLoading ? (
           <div className="animate-pulse space-y-3">
             {[...Array(5)].map((_, index) => (
-              <div key={index} className="h-20 bg-gray-200 rounded"></div>
+              <div key={index} className="h-20 bg-muted rounded"></div>
             ))}
           </div>
         ) : upcomingEvents.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             No upcoming events scheduled
           </div>
         ) : (
@@ -227,11 +233,11 @@ const EventDashboard = () => {
             {upcomingEvents.map((event) => (
               <div
                 key={event._id}
-                className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out"
+                className="border border-border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition duration-150 ease-in-out"
                 onClick={() => navigate(`/events/${event._id}`)}
               >
                 <div className="flex">
-                  <div className="flex-shrink-0 w-16 bg-blue-50 text-blue-600 flex flex-col items-center justify-center rounded-lg mr-4">
+                  <div className="flex-shrink-0 w-16 bg-primary/10 text-primary flex flex-col items-center justify-center rounded-lg mr-4">
                     <span className="text-sm font-semibold">
                       {new Date(event.startDate).toLocaleDateString('en-NG', {
                         day: '2-digit',
@@ -244,10 +250,10 @@ const EventDashboard = () => {
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-md font-semibold text-gray-900 mb-1">
+                    <h3 className="text-md font-semibold text-foreground mb-1">
                       {event.title}
                     </h3>
-                    <div className="flex flex-col sm:flex-row sm:items-center text-xs text-gray-500 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center text-xs text-muted-foreground mb-2">
                       <span className="flex items-center mr-3">
                         <i className="fas fa-clock mr-1"></i>
                         {formatTime(event.startDate)} -{' '}
@@ -264,23 +270,23 @@ const EventDashboard = () => {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           event.type === 'conference'
-                            ? 'bg-purple-100 text-purple-800'
+                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
                             : event.type === 'workshop'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                             : event.type === 'seminar'
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                             : event.type === 'meeting'
-                            ? 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
                             : event.type === 'social'
-                            ? 'bg-pink-100 text-pink-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
                         }`}
                       >
                         {event.type.charAt(0).toUpperCase() +
                           event.type.slice(1)}
                       </span>
                       {event.registrationRequired && (
-                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                           Registration Required
                         </span>
                       )}
@@ -296,21 +302,21 @@ const EventDashboard = () => {
       {/* Quick Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
-          className="bg-white hover:bg-gray-50 text-blue-600 font-medium py-4 px-4 rounded-lg shadow flex items-center justify-center transition-colors duration-150"
+          className="bg-card hover:bg-muted/50 text-primary font-medium py-4 px-4 rounded-lg shadow border border-border flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
           onClick={() => navigate('/events')}
         >
           <i className="fas fa-list mr-2"></i>
           Manage Events
         </button>
         <button
-          className="bg-white hover:bg-gray-50 text-purple-600 font-medium py-4 px-4 rounded-lg shadow flex items-center justify-center transition-colors duration-150"
+          className="bg-card hover:bg-muted/50 text-secondary font-medium py-4 px-4 rounded-lg shadow border border-border flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
           onClick={() => navigate('/events/attendees')}
         >
           <i className="fas fa-user-check mr-2"></i>
           Attendance Records
         </button>
         <button
-          className="bg-white hover:bg-gray-50 text-gray-700 font-medium py-4 px-4 rounded-lg shadow flex items-center justify-center transition-colors duration-150"
+          className="bg-card hover:bg-muted/50 text-foreground font-medium py-4 px-4 rounded-lg shadow border border-border flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring dark:focus:ring-offset-background"
           onClick={() => navigate('/events/report')}
         >
           <i className="fas fa-chart-bar mr-2"></i>

@@ -69,13 +69,13 @@ const PollDetail: React.FC = () => {
   const getPollStatusColor = (status: string): string => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'closed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -129,17 +129,21 @@ const PollDetail: React.FC = () => {
               {answerStats.options?.map((option: OptionStatistic) => (
                 <div key={option.optionId}>
                   <div className="flex justify-between mb-1">
-                    <span className="text-sm">{option.optionText}</span>
+                    <span className="text-sm text-foreground">
+                      {option.optionText}
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-bold">{option.count}</span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm font-bold text-foreground">
+                        {option.count}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
                         ({option.percentage.toFixed(1)}%)
                       </span>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full"
+                      className="bg-primary h-2 rounded-full"
                       style={{ width: `${option.percentage}%` }}
                     ></div>
                   </div>
@@ -154,11 +158,13 @@ const PollDetail: React.FC = () => {
         return (
           <div>
             <div className="mb-4 text-center">
-              <div className="text-sm text-gray-600">Average Rating</div>
-              <div className="text-3xl font-bold">
+              <div className="text-sm text-muted-foreground">
+                Average Rating
+              </div>
+              <div className="text-3xl font-bold text-foreground">
                 {answerStats.averageRating?.toFixed(1) || 0}
               </div>
-              <div className="text-sm text-gray-500">out of 5</div>
+              <div className="text-sm text-muted-foreground">out of 5</div>
             </div>
 
             <div className="h-48">
@@ -252,7 +258,7 @@ const PollDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -278,7 +284,7 @@ const PollDetail: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">{poll.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{poll.title}</h1>
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${getPollStatusColor(
                 poll.status
@@ -287,12 +293,12 @@ const PollDetail: React.FC = () => {
               {poll.status.charAt(0).toUpperCase() + poll.status.slice(1)}
             </span>
           </div>
-          <p className="text-gray-600 text-lg">{poll.description}</p>
+          <p className="text-muted-foreground text-lg">{poll.description}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => navigate(`/dashboard/polls/${poll._id}/edit`)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
           >
             <FaEdit />
             Edit Poll
@@ -301,7 +307,7 @@ const PollDetail: React.FC = () => {
             onClick={() => {
               // Handle delete poll
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
           >
             <FaTrash />
             Delete
@@ -313,42 +319,46 @@ const PollDetail: React.FC = () => {
       <div className="grid md:grid-cols-3 gap-6">
         <Card>
           <CardBody className="text-center">
-            <FaUsers className="mx-auto text-3xl text-blue-500 mb-2" />
-            <div className="text-2xl font-bold">
+            <FaUsers className="mx-auto text-3xl text-primary mb-2" />
+            <div className="text-2xl font-bold text-foreground">
               {results?.totalResponses || 0}
             </div>
-            <div className="text-sm text-gray-600">Total Responses</div>
+            <div className="text-sm text-muted-foreground">Total Responses</div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody className="text-center">
-            <FaChartBar className="mx-auto text-3xl text-green-500 mb-2" />
-            <div className="text-2xl font-bold">{poll.questions.length}</div>
-            <div className="text-sm text-gray-600">Questions</div>
+            <FaChartBar className="mx-auto text-3xl text-green-600 dark:text-green-400 mb-2" />
+            <div className="text-2xl font-bold text-foreground">
+              {poll.questions.length}
+            </div>
+            <div className="text-sm text-muted-foreground">Questions</div>
           </CardBody>
         </Card>
 
         <Card>
           <CardBody className="text-center">
-            <FaRegClock className="mx-auto text-3xl text-orange-500 mb-2" />
-            <div className="text-sm text-gray-600">Created</div>
-            <div className="font-medium">{formatDate(poll.createdAt)}</div>
+            <FaRegClock className="mx-auto text-3xl text-orange-600 dark:text-orange-400 mb-2" />
+            <div className="text-sm text-muted-foreground">Created</div>
+            <div className="font-medium text-foreground">
+              {formatDate(poll.createdAt)}
+            </div>
           </CardBody>
         </Card>
       </div>
 
       {/* Poll Details and Results */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-card rounded-lg border border-border">
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-border">
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab(0)}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 0
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               Questions
@@ -358,8 +368,8 @@ const PollDetail: React.FC = () => {
                 onClick={() => setActiveTab(1)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 1
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
               >
                 Results
@@ -372,21 +382,23 @@ const PollDetail: React.FC = () => {
         <div className="p-6">
           {activeTab === 0 && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Poll Questions</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Poll Questions
+              </h3>
               {poll.questions.map((question: PollQuestion, index: number) => (
                 <Card key={question._id}>
                   <CardBody>
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h4 className="font-medium text-lg">
+                        <h4 className="font-medium text-lg text-foreground">
                           {index + 1}. {question.text}
                         </h4>
-                        <span className="text-sm text-gray-500 capitalize">
+                        <span className="text-sm text-muted-foreground capitalize">
                           {question.type.replace('_', ' ')}
                         </span>
                       </div>
                       {question.required && (
-                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                        <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded">
                           Required
                         </span>
                       )}
@@ -394,10 +406,10 @@ const PollDetail: React.FC = () => {
 
                     {question.options && question.options.length > 0 && (
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-700 mb-2">
+                        <div className="text-sm font-medium text-foreground mb-2">
                           Options:
                         </div>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                           {question.options.map((option: PollOption) => (
                             <li key={option._id}>{option.text}</li>
                           ))}
@@ -412,15 +424,17 @@ const PollDetail: React.FC = () => {
 
           {activeTab === 1 && results && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Poll Results</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Poll Results
+              </h3>
               {results.answersStatistics.map(
                 (questionResult, index: number) => (
                   <Card key={questionResult.questionId}>
                     <CardBody>
-                      <h4 className="font-medium text-lg mb-4">
+                      <h4 className="font-medium text-lg mb-4 text-foreground">
                         {index + 1}. {questionResult.questionText}
                       </h4>
-                      <div className="text-sm text-gray-600 mb-4">
+                      <div className="text-sm text-muted-foreground mb-4">
                         {questionResult.totalResponses} response(s)
                       </div>
                       {renderQuestionResults(questionResult)}
@@ -437,14 +451,14 @@ const PollDetail: React.FC = () => {
       <div className="flex gap-4">
         <button
           onClick={() => navigate('/dashboard/polls')}
-          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+          className="px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted/80 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
         >
           Back to Polls
         </button>
         {poll.status === 'active' && (
           <button
             onClick={() => navigate(`/dashboard/polls/${poll._id}/respond`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
           >
             Take Poll
           </button>

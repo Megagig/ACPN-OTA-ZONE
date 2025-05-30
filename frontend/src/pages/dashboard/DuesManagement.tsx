@@ -120,13 +120,13 @@ const DuesManagement = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+        <h1 className="text-2xl font-bold text-foreground mb-4 md:mb-0">
           Dues Management
         </h1>
         <div className="flex space-x-2">
           {activeTab === 'dues' ? (
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow transition-colors"
               onClick={() => navigate('/finances/dues/new')}
             >
               <i className="fas fa-plus mr-2"></i>
@@ -134,7 +134,7 @@ const DuesManagement = () => {
             </button>
           ) : (
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow transition-colors"
               onClick={() => navigate('/finances/payments/new')}
             >
               <i className="fas fa-plus mr-2"></i>
@@ -145,23 +145,23 @@ const DuesManagement = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-border mb-6">
         <nav className="-mb-px flex">
           <button
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm mr-8 ${
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm mr-8 transition-colors ${
               activeTab === 'dues'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             }`}
             onClick={() => setActiveTab('dues')}
           >
             Dues
           </button>
           <button
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm mr-8 ${
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm mr-8 transition-colors ${
               activeTab === 'payments'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
             }`}
             onClick={() => setActiveTab('payments')}
           >
@@ -171,69 +171,72 @@ const DuesManagement = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-6">
           {error}
         </div>
       )}
 
       {/* Content based on active tab */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
         {isLoading ? (
           <div className="p-4">
             <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-muted rounded w-1/4"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-10 bg-muted rounded"></div>
             </div>
           </div>
         ) : activeTab === 'dues' ? (
           // Dues Table
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Title
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Frequency
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {dues.length === 0 ? (
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-6 py-4 text-center text-sm text-gray-500"
+                      className="px-6 py-4 text-center text-sm text-muted-foreground"
                     >
                       No dues found
                     </td>
                   </tr>
                 ) : (
                   dues.map((due) => (
-                    <tr key={due._id} className="hover:bg-gray-50">
+                    <tr
+                      key={due._id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               {due.title}
                             </div>
                             {due.description && (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 {due.description.length > 50
                                   ? `${due.description.substring(0, 50)}...`
                                   : due.description}
@@ -243,27 +246,27 @@ const DuesManagement = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-foreground">
                           {formatCurrency(due.amount)}
                         </div>
                         {due.lateAmount && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             Late: {formatCurrency(due.lateAmount)}
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(due.dueDate)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
                         {due.frequency}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             due.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                              : 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300'
                           }`}
                         >
                           {due.status.charAt(0).toUpperCase() +
@@ -272,13 +275,13 @@ const DuesManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          className="text-primary hover:text-primary/80 mr-3 transition-colors"
                           onClick={() => navigate(`/finances/dues/${due._id}`)}
                         >
                           <i className="fas fa-eye"></i>
                         </button>
                         <button
-                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3 transition-colors"
                           onClick={() =>
                             navigate(`/finances/dues/${due._id}/edit`)
                           }
@@ -286,10 +289,10 @@ const DuesManagement = () => {
                           <i className="fas fa-edit"></i>
                         </button>
                         <button
-                          className={`mr-3 ${
+                          className={`mr-3 transition-colors ${
                             due.status === 'active'
-                              ? 'text-yellow-600 hover:text-yellow-900'
-                              : 'text-green-600 hover:text-green-900'
+                              ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300'
+                              : 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300'
                           }`}
                           onClick={() =>
                             handleDueStatusChange(
@@ -305,7 +308,7 @@ const DuesManagement = () => {
                           )}
                         </button>
                         <button
-                          className="text-red-600 hover:text-red-900"
+                          className="text-destructive hover:text-destructive/80 transition-colors"
                           onClick={() => handleDeleteDue(due._id)}
                         >
                           <i className="fas fa-trash"></i>
@@ -320,70 +323,73 @@ const DuesManagement = () => {
         ) : (
           // Payments Table
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Due
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Member
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Payment Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Method
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {payments.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-4 text-center text-sm text-gray-500"
+                      className="px-6 py-4 text-center text-sm text-muted-foreground"
                     >
                       No payments found
                     </td>
                   </tr>
                 ) : (
                   payments.map((payment) => (
-                    <tr key={payment._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr
+                      key={payment._id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {typeof payment.due === 'string'
                           ? payment.due
                           : payment.due.title}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {payment.user}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {formatCurrency(payment.amount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(payment.paymentDate)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
                         {payment.paymentMethod.replace(/_/g, ' ')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             payment.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                               : payment.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           }`}
                         >
                           {payment.status.charAt(0).toUpperCase() +
@@ -392,7 +398,7 @@ const DuesManagement = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          className="text-primary hover:text-primary/80 mr-3 transition-colors"
                           onClick={() =>
                             navigate(`/finances/payments/${payment._id}`)
                           }
@@ -402,7 +408,7 @@ const DuesManagement = () => {
                         {payment.status === 'pending' && (
                           <>
                             <button
-                              className="text-green-600 hover:text-green-900 mr-3"
+                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 mr-3 transition-colors"
                               onClick={() =>
                                 handlePaymentStatusChange(
                                   payment._id,
@@ -414,7 +420,7 @@ const DuesManagement = () => {
                               <i className="fas fa-check"></i>
                             </button>
                             <button
-                              className="text-red-600 hover:text-red-900 mr-3"
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 mr-3 transition-colors"
                               onClick={() =>
                                 handlePaymentStatusChange(
                                   payment._id,
@@ -428,7 +434,7 @@ const DuesManagement = () => {
                           </>
                         )}
                         <button
-                          className="text-red-600 hover:text-red-900"
+                          className="text-destructive hover:text-destructive/80 transition-colors"
                           onClick={() => handleDeletePayment(payment._id)}
                           title="Delete"
                         >

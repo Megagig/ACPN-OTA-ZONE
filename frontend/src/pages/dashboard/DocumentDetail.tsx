@@ -45,10 +45,10 @@ const DocumentDetail: React.FC = () => {
     try {
       const blob = await documentService.downloadDocument(id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document?.fileName || `document-${id}.pdf`;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       a.remove();
     } catch (err) {
@@ -139,10 +139,12 @@ const DocumentDetail: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="spinner-border text-indigo-500" role="status">
+          <div className="spinner-border text-primary" role="status">
             <i className="fas fa-circle-notch fa-spin text-3xl"></i>
           </div>
-          <p className="mt-2 text-gray-600">Loading document details...</p>
+          <p className="mt-2 text-muted-foreground">
+            Loading document details...
+          </p>
         </div>
       </div>
     );
@@ -151,7 +153,7 @@ const DocumentDetail: React.FC = () => {
   if (error || !document) {
     return (
       <div
-        className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
+        className="bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4"
         role="alert"
       >
         <p className="font-bold">Error</p>
@@ -159,7 +161,7 @@ const DocumentDetail: React.FC = () => {
         <div className="mt-4">
           <Link
             to="/documents/list"
-            className="text-red-700 hover:text-red-900 underline"
+            className="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 underline"
           >
             Back to Documents
           </Link>
@@ -174,17 +176,19 @@ const DocumentDetail: React.FC = () => {
         <div>
           <Link
             to="/documents/list"
-            className="text-indigo-600 hover:text-indigo-800 mb-2 inline-block"
+            className="text-primary hover:text-primary/80 mb-2 inline-block"
           >
             <i className="fas fa-arrow-left mr-2"></i>
             Back to Documents
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800">{document.title}</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {document.title}
+          </h1>
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <button
             onClick={handleDownload}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-background"
           >
             <i className="fas fa-download mr-2"></i>
             Download
@@ -192,7 +196,7 @@ const DocumentDetail: React.FC = () => {
           {document.version > 1 && (
             <button
               onClick={toggleVersionHistory}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
             >
               <i className="fas fa-history mr-2"></i>
               {showVersionHistory ? 'Hide History' : 'Version History'}
@@ -201,7 +205,7 @@ const DocumentDetail: React.FC = () => {
           {document.status === 'active' && (
             <button
               onClick={handleArchive}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-background"
             >
               <i className="fas fa-archive mr-2"></i>
               Archive
@@ -209,7 +213,7 @@ const DocumentDetail: React.FC = () => {
           )}
           <button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-background"
           >
             <i className="fas fa-trash-alt mr-2"></i>
             Delete
@@ -218,26 +222,26 @@ const DocumentDetail: React.FC = () => {
       </div>
 
       {/* Document Preview */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-card rounded-lg shadow p-6 mb-6">
         <div className="flex flex-col md:flex-row">
           {/* File preview icon */}
           <div className="w-full md:w-1/3 flex justify-center items-start mb-6 md:mb-0">
-            <div className="bg-gray-100 rounded-lg p-6 text-center">
+            <div className="bg-muted rounded-lg p-6 text-center">
               <i
                 className={`fas fa-${getFileIcon(
                   document.fileType
-                )} text-gray-600 text-7xl mb-4`}
+                )} text-muted-foreground text-7xl mb-4`}
               ></i>
-              <h3 className="text-lg font-medium text-gray-800 truncate max-w-xs mx-auto">
+              <h3 className="text-lg font-medium text-foreground truncate max-w-xs mx-auto">
                 {document.fileName}
               </h3>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {formatFileSize(document.fileSize)}
               </p>
               <div className="mt-4">
                 <button
                   onClick={handleDownload}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
                 >
                   <i className="fas fa-download mr-2"></i>
                   Download
@@ -249,68 +253,90 @@ const DocumentDetail: React.FC = () => {
           {/* Document details */}
           <div className="w-full md:w-2/3 md:pl-6">
             <div className="mb-4">
-              <h2 className="text-xl font-semibold text-gray-800 mb-1">
+              <h2 className="text-xl font-semibold text-foreground mb-1">
                 {document.title}
               </h2>
-              <p className="text-gray-600">{document.description}</p>
+              <p className="text-muted-foreground">{document.description}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Category</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Category
+                </h3>
                 <p className="flex items-center">
                   <i
                     className={`fas fa-${getCategoryIcon(
                       document.category
-                    )} text-gray-400 mr-2`}
+                    )} text-muted-foreground mr-2`}
                   ></i>
-                  <span className="capitalize">{document.category}</span>
+                  <span className="capitalize text-foreground">
+                    {document.category}
+                  </span>
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">
+                <h3 className="text-sm font-medium text-muted-foreground">
                   Access Level
                 </h3>
-                <p className="capitalize">{document.accessLevel}</p>
+                <p className="capitalize text-foreground">
+                  {document.accessLevel}
+                </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                <p className="capitalize">{document.status}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Status
+                </h3>
+                <p className="capitalize text-foreground">{document.status}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Version</h3>
-                <p>{document.version}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Version
+                </h3>
+                <p className="text-foreground">{document.version}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Uploaded</h3>
-                <p>{formatDate(document.uploadedAt)}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Uploaded
+                </h3>
+                <p className="text-foreground">
+                  {formatDate(document.uploadedAt)}
+                </p>
               </div>
               {document.modifiedAt && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
+                  <h3 className="text-sm font-medium text-muted-foreground">
                     Last Modified
                   </h3>
-                  <p>{formatDate(document.modifiedAt)}</p>
+                  <p className="text-foreground">
+                    {formatDate(document.modifiedAt)}
+                  </p>
                 </div>
               )}
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Downloads</h3>
-                <p>{document.downloadCount}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Downloads
+                </h3>
+                <p className="text-foreground">{document.downloadCount}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Views</h3>
-                <p>{document.viewCount}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Views
+                </h3>
+                <p className="text-foreground">{document.viewCount}</p>
               </div>
             </div>
 
             {document.tags && document.tags.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Tags</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Tags
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {document.tags.map((tag) => (
                     <span
                       key={tag._id}
-                      className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                      className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-full"
                     >
                       {tag.name}
                     </span>
@@ -321,10 +347,12 @@ const DocumentDetail: React.FC = () => {
 
             {document.expirationDate && (
               <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-500">
+                <h3 className="text-sm font-medium text-muted-foreground">
                   Expiration Date
                 </h3>
-                <p>{formatDate(document.expirationDate)}</p>
+                <p className="text-foreground">
+                  {formatDate(document.expirationDate)}
+                </p>
               </div>
             )}
           </div>
@@ -333,56 +361,56 @@ const DocumentDetail: React.FC = () => {
 
       {/* Version History */}
       {showVersionHistory && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="bg-card rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Version History
           </h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Version
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Uploaded By
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     File Size
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Changes
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {versions.map((version) => (
                   <tr
                     key={version._id}
                     className={
                       version.version === activeVersion
-                        ? 'bg-indigo-50'
-                        : 'hover:bg-gray-50'
+                        ? 'bg-primary/10'
+                        : 'hover:bg-muted/50'
                     }
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {version.version === activeVersion && (
                           <span className="flex h-2 w-2 mr-2">
-                            <span className="animate-pulse relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                            <span className="animate-pulse relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                           </span>
                         )}
                         <span
                           className={
                             version.version === activeVersion
-                              ? 'font-semibold'
-                              : ''
+                              ? 'font-semibold text-foreground'
+                              : 'text-foreground'
                           }
                         >
                           v{version.version}
@@ -390,20 +418,20 @@ const DocumentDetail: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(version.uploadedAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {typeof version.uploadedBy === 'string'
                         ? version.uploadedBy
                         : version.uploadedBy.firstName +
                           ' ' +
                           version.uploadedBy.lastName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatFileSize(version.fileSize)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {version.changes || 'No change description'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -414,7 +442,7 @@ const DocumentDetail: React.FC = () => {
                           // In a real app, we would download this specific version
                           alert('Downloading version ' + version.version);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-primary hover:text-primary/80"
                       >
                         Download
                       </a>
@@ -432,7 +460,7 @@ const DocumentDetail: React.FC = () => {
         <div className="flex justify-end">
           <Link
             to={`/documents/${id}/upload-version`}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
           >
             <i className="fas fa-upload mr-2"></i>
             Upload New Version

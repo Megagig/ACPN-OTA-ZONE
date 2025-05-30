@@ -99,11 +99,11 @@ const TransactionList = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-foreground">
           Financial Transactions
         </h1>
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow mt-4 md:mt-0"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow mt-4 md:mt-0 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
           onClick={() => navigate('/finances/transactions/new')}
         >
           <i className="fas fa-plus mr-2"></i>
@@ -112,14 +112,14 @@ const TransactionList = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
+      <div className="bg-card border border-border rounded-lg shadow-md p-4 mb-6">
+        <h2 className="text-lg font-semibold mb-4 text-foreground">Filters</h2>
         <form onSubmit={handleSearch}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div>
               <label
                 htmlFor="search"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Search
               </label>
@@ -130,14 +130,14 @@ const TransactionList = () => {
                 value={filters.search}
                 onChange={handleFilterChange}
                 placeholder="Search title or description..."
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               />
             </div>
 
             <div>
               <label
                 htmlFor="type"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Type
               </label>
@@ -146,7 +146,7 @@ const TransactionList = () => {
                 name="type"
                 value={filters.type}
                 onChange={handleFilterChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="all">All Types</option>
                 <option value="income">Income</option>
@@ -157,7 +157,7 @@ const TransactionList = () => {
             <div>
               <label
                 htmlFor="category"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Category
               </label>
@@ -166,7 +166,7 @@ const TransactionList = () => {
                 name="category"
                 value={filters.category}
                 onChange={handleFilterChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="all">All Categories</option>
                 <option value="dues">Dues</option>
@@ -184,7 +184,7 @@ const TransactionList = () => {
             <div>
               <label
                 htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Status
               </label>
@@ -193,7 +193,7 @@ const TransactionList = () => {
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -205,7 +205,7 @@ const TransactionList = () => {
             <div>
               <label
                 htmlFor="startDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Start Date
               </label>
@@ -215,14 +215,14 @@ const TransactionList = () => {
                 name="startDate"
                 value={filters.startDate}
                 onChange={handleFilterChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               />
             </div>
 
             <div>
               <label
                 htmlFor="endDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 End Date
               </label>
@@ -232,7 +232,7 @@ const TransactionList = () => {
                 name="endDate"
                 value={filters.endDate}
                 onChange={handleFilterChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
               />
             </div>
           </div>
@@ -240,14 +240,14 @@ const TransactionList = () => {
           <div className="flex justify-end space-x-2">
             <button
               type="button"
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-input rounded-md text-sm font-medium text-foreground bg-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
               onClick={handleClearFilters}
             >
               Clear Filters
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 border border-transparent rounded-md text-sm font-medium text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
             >
               Apply Filters
             </button>
@@ -256,96 +256,96 @@ const TransactionList = () => {
       </div>
 
       {/* Transactions Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
         {isLoading ? (
           <div className="p-4">
             <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-muted rounded w-1/4"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-10 bg-muted rounded"></div>
             </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Title
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {transactions.length === 0 ? (
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-4 text-center text-sm text-gray-500"
+                      className="px-6 py-4 text-center text-sm text-muted-foreground"
                     >
                       No transactions found
                     </td>
                   </tr>
                 ) : (
                   transactions.map((transaction) => (
-                    <tr key={transaction._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <tr key={transaction._id} className="hover:bg-muted/50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                         {transaction.title}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             transaction.type === 'income'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           }`}
                         >
                           {transaction.type === 'income' ? 'Income' : 'Expense'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
                         {transaction.category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(transaction.date)}
                       </td>
                       <td
                         className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
                           transaction.type === 'income'
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
                         }`}
                       >
                         {formatCurrency(transaction.amount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             transaction.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                               : transaction.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           }`}
                         >
                           {transaction.status.charAt(0).toUpperCase() +
@@ -354,7 +354,7 @@ const TransactionList = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          className="text-primary hover:text-primary/80 mr-3 focus:outline-none focus:ring-2 focus:ring-ring rounded"
                           onClick={() =>
                             navigate(
                               `/finances/transactions/${transaction._id}`
@@ -364,7 +364,7 @@ const TransactionList = () => {
                           <i className="fas fa-eye"></i>
                         </button>
                         <button
-                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 mr-3 focus:outline-none focus:ring-2 focus:ring-ring rounded"
                           onClick={() =>
                             navigate(
                               `/finances/transactions/${transaction._id}/edit`
@@ -374,7 +374,7 @@ const TransactionList = () => {
                           <i className="fas fa-edit"></i>
                         </button>
                         <button
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-ring rounded"
                           onClick={() => {
                             // Add delete confirmation
                             if (
@@ -409,7 +409,7 @@ const TransactionList = () => {
         )}
 
         {/* Pagination */}
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+        <div className="bg-card px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() =>
@@ -419,10 +419,10 @@ const TransactionList = () => {
                 }))
               }
               disabled={pagination.page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+              className={`relative inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md ${
                 pagination.page === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
               }`}
             >
               Previous
@@ -432,10 +432,10 @@ const TransactionList = () => {
                 setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
               }
               disabled={pagination.page * pagination.limit >= pagination.total}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md ${
                 pagination.page * pagination.limit >= pagination.total
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
               }`}
             >
               Next
@@ -443,22 +443,25 @@ const TransactionList = () => {
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-muted-foreground">
                 Showing{' '}
-                <span className="font-medium">
+                <span className="font-medium text-foreground">
                   {Math.min(
                     (pagination.page - 1) * pagination.limit + 1,
                     pagination.total
                   )}
                 </span>{' '}
                 to{' '}
-                <span className="font-medium">
+                <span className="font-medium text-foreground">
                   {Math.min(
                     pagination.page * pagination.limit,
                     pagination.total
                   )}
                 </span>{' '}
-                of <span className="font-medium">{pagination.total}</span>{' '}
+                of{' '}
+                <span className="font-medium text-foreground">
+                  {pagination.total}
+                </span>{' '}
                 results
               </p>
             </div>
@@ -475,10 +478,10 @@ const TransactionList = () => {
                     }))
                   }
                   disabled={pagination.page === 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${
+                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-input text-sm font-medium ${
                     pagination.page === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
                   }`}
                 >
                   <span className="sr-only">Previous</span>
@@ -486,7 +489,7 @@ const TransactionList = () => {
                 </button>
 
                 {/* Page numbers would go here in a real implementation */}
-                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                <span className="relative inline-flex items-center px-4 py-2 border border-input bg-background text-sm font-medium text-foreground">
                   {pagination.page}
                 </span>
 
@@ -497,10 +500,10 @@ const TransactionList = () => {
                   disabled={
                     pagination.page * pagination.limit >= pagination.total
                   }
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${
+                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-input text-sm font-medium ${
                     pagination.page * pagination.limit >= pagination.total
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
                   }`}
                 >
                   <span className="sr-only">Next</span>

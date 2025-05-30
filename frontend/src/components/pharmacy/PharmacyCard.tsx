@@ -36,15 +36,15 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
   };
 
   return (
-    <div className="bg-white overflow-hidden shadow rounded-lg transition hover:shadow-md">
+    <div className="bg-card overflow-hidden shadow rounded-lg transition hover:shadow-md">
       {/* Card Header */}
       <div className="px-4 py-5 sm:p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1 truncate">
-            <h3 className="text-lg font-medium text-gray-900 truncate">
+            <h3 className="text-lg font-medium text-foreground truncate">
               {pharmacy.name}
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {pharmacy.address}, {pharmacy.townArea}
             </p>
           </div>
@@ -53,25 +53,25 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
               switch (pharmacy.registrationStatus) {
                 case 'active':
                   return (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                       Active
                     </span>
                   );
                 case 'pending':
                   return (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                       Pending
                     </span>
                   );
                 case 'expired':
                   return (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                       Expired
                     </span>
                   );
                 case 'suspended':
                   return (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300">
                       Suspended
                     </span>
                   );
@@ -84,40 +84,44 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
       </div>
 
       {/* Card Content */}
-      <div className="border-t border-gray-200 px-4 py-4 sm:px-6">
+      <div className="border-t border-border px-4 py-4 sm:px-6">
         <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
           <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-gray-500">
+            <dt className="text-xs font-medium text-muted-foreground">
               Registration Number
             </dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dd className="mt-1 text-sm text-foreground">
               {pharmacy.registrationNumber}
             </dd>
           </div>
           <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-gray-500">
+            <dt className="text-xs font-medium text-muted-foreground">
               License Expiry
             </dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dd className="mt-1 text-sm text-foreground">
               {new Date(pharmacy.licenseExpiryDate).toLocaleDateString()}
             </dd>
           </div>
           <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-gray-500">Contact</dt>
-            <dd className="mt-1 text-sm text-gray-900">{pharmacy.phone}</dd>
+            <dt className="text-xs font-medium text-muted-foreground">
+              Contact
+            </dt>
+            <dd className="mt-1 text-sm text-foreground">{pharmacy.phone}</dd>
           </div>
           <div className="sm:col-span-1">
-            <dt className="text-xs font-medium text-gray-500">Status</dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dt className="text-xs font-medium text-muted-foreground">
+              Status
+            </dt>
+            <dd className="mt-1 text-sm text-foreground">
               <span
                 className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                   pharmacy.registrationStatus === 'active'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                     : pharmacy.registrationStatus === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
                     : pharmacy.registrationStatus === 'expired'
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                    : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300'
                 }`}
               >
                 {pharmacy.registrationStatus.charAt(0).toUpperCase() +
@@ -129,11 +133,11 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
       </div>
 
       {/* Card Footer */}
-      <div className="bg-gray-50 px-4 py-4 sm:px-6">
+      <div className="bg-muted/50 px-4 py-4 sm:px-6">
         <div className="flex justify-between items-center">
           <Link
             to={`/pharmacies/${pharmacy._id}`}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            className="text-sm font-medium text-primary hover:text-primary/80"
           >
             View Details
           </Link>
@@ -143,20 +147,20 @@ const PharmacyCard: React.FC<PharmacyCardProps> = ({
               {pharmacy.registrationStatus === 'pending' && (
                 <button
                   onClick={handleApprove}
-                  className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200"
+                  className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50"
                 >
                   Approve
                 </button>
               )}
               <button
                 onClick={handleEdit}
-                className="text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
+                className="text-xs px-2 py-1 bg-primary/10 text-primary rounded hover:bg-primary/20"
               >
                 Edit
               </button>
               <button
                 onClick={handleDelete}
-                className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200"
+                className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50"
               >
                 Delete
               </button>
