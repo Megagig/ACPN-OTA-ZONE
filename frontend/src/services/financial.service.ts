@@ -233,6 +233,46 @@ export const getDonations = async (params?: {
 }): Promise<Donation[]> => {
   try {
     const response = await api.get('/donations', { params });
+
+    // Transform backend data to match frontend Donation type
+    if (Array.isArray(response.data.data)) {
+      return response.data.data.map(
+        (donation: {
+          _id: string;
+          pharmacyId?: string;
+          pharmacyName?: string;
+          amount?: number;
+          donationDate?: string;
+          purpose?: string;
+          acknowledgmentStatus?: string;
+          createdAt?: string;
+          updatedAt?: string;
+        }) => {
+          // Handle missing properties to match the frontend Donation type
+          return {
+            _id: donation._id,
+            title: donation.purpose || 'Donation',
+            description: donation.purpose || '',
+            amount: donation.amount || 0,
+            donor: {
+              name: donation.pharmacyName || 'Unknown Pharmacy',
+              type: 'organization',
+              pharmacyId: donation.pharmacyId,
+            },
+            purpose: donation.purpose || '',
+            date:
+              donation.donationDate ||
+              donation.createdAt ||
+              new Date().toISOString(),
+            paymentMethod: 'cash',
+            status: donation.acknowledgmentStatus || 'pending',
+            createdAt: donation.createdAt,
+            updatedAt: donation.updatedAt,
+          };
+        }
+      );
+    }
+
     return response.data.data;
   } catch (error) {
     console.error('Error fetching donations:', error);
@@ -243,6 +283,32 @@ export const getDonations = async (params?: {
 export const getDonationById = async (id: string): Promise<Donation> => {
   try {
     const response = await api.get(`/donations/${id}`);
+
+    // Transform backend data to match frontend Donation type
+    const donation = response.data.data;
+    if (donation) {
+      return {
+        _id: donation._id,
+        title: donation.purpose || 'Donation',
+        description: donation.purpose || '',
+        amount: donation.amount || 0,
+        donor: {
+          name: donation.pharmacyName || 'Unknown Pharmacy',
+          type: 'organization',
+          pharmacyId: donation.pharmacyId,
+        },
+        purpose: donation.purpose || '',
+        date:
+          donation.donationDate ||
+          donation.createdAt ||
+          new Date().toISOString(),
+        paymentMethod: 'cash',
+        status: donation.acknowledgmentStatus || 'pending',
+        createdAt: donation.createdAt,
+        updatedAt: donation.updatedAt,
+      };
+    }
+
     return response.data.data;
   } catch (error) {
     console.error(`Error fetching donation with id ${id}:`, error);

@@ -30,6 +30,10 @@ router
   .get(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.TREASURER),
     getAllDonations
+  )
+  .post(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.TREASURER),
+    createDonation
   );
 
 // Individual donation routes

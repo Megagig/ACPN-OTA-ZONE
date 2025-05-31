@@ -151,36 +151,54 @@ export const getDonation = asyncHandler(
 );
 
 // @desc    Create a donation
-// @route   POST /api/pharmacies/:pharmacyId/donations
-// @access  Private
+// @route   POST /api/donations
+// @access  Private/Admin/Treasurer
 export const createDonation = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    req.body.pharmacyId = req.params.pharmacyId;
+    // If the donation is coming from a pharmacy and pharmacyId is provided
+    if (req.params.pharmacyId) {
+      req.body.pharmacyId = req.params.pharmacyId;
 
-    const pharmacy = await Pharmacy.findById(req.params.pharmacyId);
+      const pharmacy = await Pharmacy.findById(req.params.pharmacyId);
 
-    if (!pharmacy) {
-      return next(
-        new ErrorResponse(
-          `Pharmacy not found with id of ${req.params.pharmacyId}`,
-          404
-        )
-      );
-    }
+      if (!pharmacy) {
+        return next(
+          new ErrorResponse(
+            `Pharmacy not found with id of ${req.params.pharmacyId}`,
+            404
+          )
+        );
+      }
 
-    // Check if user is the pharmacy owner or admin/treasurer
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'treasurer' &&
-      pharmacy.userId.toString() !== req.user._id.toString()
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to create donations for this pharmacy`,
-          403
-        )
-      );
+      // Check if user is the pharmacy owner or admin/treasurer
+      if (
+        req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin' &&
+        req.user.role !== 'treasurer' &&
+        pharmacy.userId.toString() !== req.user._id.toString()
+      ) {
+        return next(
+          new ErrorResponse(
+            `User ${req.user._id} is not authorized to create donations for this pharmacy`,
+            403
+          )
+        );
+      }
+    } else {
+      // For direct donations not associated with a pharmacy
+      // Only admins and treasurers can create these
+      if (
+        req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin' &&
+        req.user.role !== 'treasurer'
+      ) {
+        return next(
+          new ErrorResponse(
+            `User ${req.user._id} is not authorized to create donations`,
+            403
+          )
+        );
+      }
     }
 
     const donation = await Donation.create(req.body);

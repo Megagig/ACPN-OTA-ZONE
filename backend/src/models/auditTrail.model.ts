@@ -9,6 +9,13 @@ export enum ActionType {
   LOGOUT = 'logout',
   PAYMENT = 'payment',
   APPROVAL = 'approval',
+  REJECTION = 'rejection',
+  ACTIVATION = 'activation',
+  DEACTIVATION = 'deactivation',
+  SUSPENSION = 'suspension',
+  ROLE_ASSIGNMENT = 'role_assignment',
+  PERMISSION_ASSIGNMENT = 'permission_assignment',
+  BULK_ACTION = 'bulk_action',
   OTHER = 'other',
 }
 

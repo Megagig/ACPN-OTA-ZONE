@@ -18,10 +18,19 @@ const DonationsManagement = () => {
     setError(null);
     try {
       const data = await financialService.getDonations();
-      setDonations(data);
+
+      // Validate that data is an array before setting state
+      if (Array.isArray(data)) {
+        setDonations(data);
+      } else {
+        console.error('Unexpected data format from API:', data);
+        setDonations([]);
+        setError('Received invalid data format from the server.');
+      }
     } catch (err) {
       console.error('Error fetching donations:', err);
       setError('Failed to load donations data. Please try again.');
+      setDonations([]);
     } finally {
       setIsLoading(false);
     }
@@ -124,19 +133,21 @@ const DonationsManagement = () => {
                     }
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                      {donation.title}
+                      {donation.title || 'Untitled Donation'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {donation.donor.name}
+                      {donation.donor?.name || 'Unknown'}
                       <span className="ml-1 text-xs text-muted-foreground">
-                        ({donation.donor.type})
+                        ({donation.donor?.type || 'unknown'})
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 dark:text-green-400">
-                      {formatCurrency(donation.amount)}
+                      {formatCurrency(donation.amount || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(donation.date)}
+                      {donation.date
+                        ? formatDate(donation.date)
+                        : 'Unknown date'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -181,6 +192,17 @@ const DonationsManagement = () => {
           </div>
         )}
       </div>
+
+      {/* Development debug info - will only show in development */}
+      {import.meta.env.DEV && error && (
+        <div className="mt-8 p-4 border border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+          <h3 className="text-sm font-semibold mb-2">Debug Information:</h3>
+          <p className="text-xs font-mono">{error}</p>
+          <p className="text-xs mt-2">
+            Data loaded: {donations.length > 0 ? 'Yes' : 'No'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

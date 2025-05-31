@@ -34,6 +34,7 @@ import TransactionForm from './pages/dashboard/TransactionForm';
 import TransactionDetail from './pages/dashboard/TransactionDetail';
 import DuesManagement from './pages/dashboard/DuesManagement';
 import DonationsManagement from './pages/dashboard/DonationsManagement';
+import DonationFormComponent from './pages/dashboard/DonationFormComponent';
 import FinancialReports from './pages/dashboard/FinancialReports';
 import FinancialManagement from './pages/dashboard/FinancialManagement';
 import AdminPaymentReview from './pages/dashboard/AdminPaymentReview';
@@ -243,6 +244,18 @@ function App() {
                   <Route
                     path="/finances/donations"
                     element={<DonationsManagement />}
+                  />
+                  <Route
+                    path="/finances/donations/new"
+                    element={<DonationFormComponent />}
+                  />
+                  <Route
+                    path="/finances/donations/:id"
+                    element={<DonationFormComponent />}
+                  />
+                  <Route
+                    path="/finances/donations/:id/edit"
+                    element={<DonationFormComponent />}
                   />
                   <Route
                     path="/finances/reports"
