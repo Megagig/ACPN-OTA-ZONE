@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import api from '../../services/api';
+import MemberEventWidget from '../../components/member/MemberEventWidget';
+import AdminEventWidget from '../../components/admin/AdminEventWidget';
 
 interface DashboardStats {
   totalPharmacies: number;
@@ -13,7 +13,6 @@ interface DashboardStats {
 
 const DashboardHome: React.FC = () => {
   const { user } = useAuth();
-  const { theme } = useTheme();
   const [stats, setStats] = useState<DashboardStats>({
     totalPharmacies: 0,
     totalMembers: 0,
@@ -42,7 +41,7 @@ const DashboardHome: React.FC = () => {
           });
           setIsLoading(false);
         }, 1000);
-      } catch (err: any) {
+      } catch {
         setError('Failed to load dashboard data');
         setIsLoading(false);
       }
@@ -328,6 +327,16 @@ const DashboardHome: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Event Management Widget */}
+      <div className="mb-6">
+        {user?.role &&
+        ['admin', 'superadmin', 'secretary'].includes(user.role) ? (
+          <AdminEventWidget />
+        ) : (
+          <MemberEventWidget />
+        )}
       </div>
 
       {/* Recent Activity Section */}

@@ -40,7 +40,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       },
       { name: 'Pharmacies', path: '/admin/pharmacies', icon: 'building' },
       { name: 'Users', path: '/users', icon: 'users' },
-      { name: 'Events', path: '/events', icon: 'calendar' },
+      { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
+      { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },
       { name: 'Elections', path: '/elections', icon: 'vote-yea' },
       { name: 'Polls', path: '/polls', icon: 'poll' },
       { name: 'Communications', path: '/communications', icon: 'envelope' },
@@ -58,7 +59,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       { name: 'My Pharmacy', path: '/my-pharmacy', icon: 'building' },
       { name: 'My Documents', path: '/my-documents', icon: 'file-alt' },
       { name: 'Dues & Payments', path: '/payments', icon: 'money-bill' },
-      { name: 'Events', path: '/events', icon: 'calendar' },
+      { name: 'Events', path: '/member/events', icon: 'calendar' },
       { name: 'Elections', path: '/elections', icon: 'vote-yea' },
       { name: 'Messages', path: '/messages', icon: 'envelope' },
     ];
@@ -82,7 +83,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       return [
         ...commonItems,
         { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
-        { name: 'Events', path: '/events', icon: 'calendar' },
+        { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
+        { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },
         { name: 'Communications', path: '/communications', icon: 'envelope' },
         { name: 'Documents', path: '/documents', icon: 'file-alt' },
       ];

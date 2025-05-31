@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import Event, { EventStatus, EventType } from '../models/event.model';
-import EventRegistration, { RegistrationStatus } from '../models/eventRegistration.model';
+import EventRegistration, {
+  RegistrationStatus,
+} from '../models/eventRegistration.model';
 import EventAttendance from '../models/eventAttendance.model';
 import EventNotification from '../models/eventNotification.model';
 import MeetingPenaltyConfig from '../models/meetingPenaltyConfig.model';
@@ -8,7 +10,7 @@ import User from '../models/user.model';
 import Due from '../models/due.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
-import { sendEmail } from '../utils/emailService';
+import emailService from '../services/email.service';
 import { v2 as cloudinary } from 'cloudinary';
 
 // @desc    Get all events
@@ -59,48 +61,26 @@ export const getAllEvents = asyncHandler(
         path: 'createdBy',
         select: 'firstName lastName email',
       })
-      .populate('registrations')
-      .populate('attendance')
       .sort({ startDate: 1 })
       .skip(startIndex)
       .limit(limit);
 
-    res.status(200).json({
-      success: true,
-      count: events.length,
-      pagination: {
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-        total,
-      },
-      data: events,
-    });
-  }
-);
-      .populate({
-        path: 'attendees',
-        select: 'userId attendanceStatus paymentStatus',
-        options: { limit: 5 }, // Just get a sample of attendees
-      })
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ startDate: -1 });
-
-    // Get total count
-    const total = await Event.countDocuments(query);
-
-    // For each event, get the attendee count
+    // For each event, get registration and attendance counts
     const eventsWithCounts = await Promise.all(
       events.map(async (event) => {
-        const attendeeCount = await EventAttendee.countDocuments({
+        const registrationCount = await EventRegistration.countDocuments({
           eventId: event._id,
+        });
+        const attendanceCount = await EventAttendance.countDocuments({
+          eventId: event._id,
+          attended: true,
         });
 
         const eventObj = event.toObject();
         return {
           ...eventObj,
-          attendeeCount,
+          registrationCount,
+          attendanceCount,
         };
       })
     );
@@ -124,19 +104,10 @@ export const getAllEvents = asyncHandler(
 // @access  Private
 export const getEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const event = await Event.findById(req.params.id)
-      .populate({
-        path: 'createdBy',
-        select: 'firstName lastName email',
-      })
-      .populate({
-        path: 'attendees',
-        select: 'userId attendanceStatus paymentStatus registrationDate',
-        populate: {
-          path: 'userId',
-          select: 'firstName lastName email phone',
-        },
-      });
+    const event = await Event.findById(req.params.id).populate({
+      path: 'createdBy',
+      select: 'firstName lastName email',
+    });
 
     if (!event) {
       return next(
@@ -144,26 +115,33 @@ export const getEvent = asyncHandler(
       );
     }
 
-    // Get attendee count
-    const attendeeCount = await EventAttendee.countDocuments({
-      eventId: event._id,
-    });
+    // Get registrations and attendance
+    const registrations = await EventRegistration.find({ eventId: event._id })
+      .populate('userId', 'firstName lastName email phone')
+      .sort({ registrationDate: -1 });
 
-    // Check if the user is registered for this event
-    const isRegistered = await EventAttendee.findOne({
-      eventId: event._id,
-      userId: req.user._id,
-    });
+    const attendance = await EventAttendance.find({ eventId: event._id })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('markedBy', 'firstName lastName')
+      .sort({ markedAt: -1 });
+
+    // Mark as seen for current user
+    const userId = (req as any).user.id;
+    await EventNotification.findOneAndUpdate(
+      { eventId: event._id, userId },
+      { seen: true, seenAt: new Date() },
+      { upsert: true }
+    );
 
     const eventObj = event.toObject();
-
     res.status(200).json({
       success: true,
       data: {
         ...eventObj,
-        attendeeCount,
-        isUserRegistered: !!isRegistered,
-        userRegistration: isRegistered || null,
+        registrations,
+        attendance,
+        registrationCount: registrations.length,
+        attendanceCount: attendance.filter((a) => a.attended).length,
       },
     });
   }
@@ -171,46 +149,60 @@ export const getEvent = asyncHandler(
 
 // @desc    Create new event
 // @route   POST /api/events
-// @access  Private/Admin/Secretary
+// @access  Private (Admin only)
 export const createEvent = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // Only admin and secretary can create events
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to create events`,
-          403
-        )
-      );
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+
+    // Handle image upload if provided
+    let imageUrl = '';
+    if (req.body.image) {
+      try {
+        const uploadResponse = await cloudinary.uploader.upload(
+          req.body.image,
+          {
+            folder: 'events',
+            resource_type: 'image',
+            quality: 'auto:best',
+            format: 'webp',
+          }
+        );
+        imageUrl = uploadResponse.secure_url;
+      } catch (error) {
+        console.error('Image upload error:', error);
+      }
     }
 
-    // Add user to req.body
-    req.body.createdBy = req.user._id;
+    const eventData = {
+      ...req.body,
+      createdBy: userId,
+      imageUrl: imageUrl || undefined,
+      // Make sure these fields are set correctly
+      eventType: req.body.eventType || EventType.OTHER,
+      organizer: req.body.organizer || 'ACPN',
+      status: req.body.status || EventStatus.DRAFT,
+    };
 
-    // Validate dates
-    const startDate = new Date(req.body.startDate);
-    const endDate = new Date(req.body.endDate);
+    const event = await Event.create(eventData);
 
-    if (startDate > endDate) {
-      return next(new ErrorResponse('End date must be after start date', 400));
-    }
+    // Send notifications to all users
+    await sendEventNotifications((event._id as string).toString());
 
-    const event = await Event.create(req.body);
+    const populatedEvent = await Event.findById(event._id).populate(
+      'createdBy',
+      'firstName lastName email'
+    );
 
     res.status(201).json({
       success: true,
-      data: event,
+      data: populatedEvent,
     });
   }
 );
 
 // @desc    Update event
 // @route   PUT /api/events/:id
-// @access  Private/Admin/Secretary
+// @access  Private (Admin only)
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     let event = await Event.findById(req.params.id);
@@ -221,36 +213,36 @@ export const updateEvent = asyncHandler(
       );
     }
 
-    // Check if user is admin or the secretary
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to update events`,
-          403
-        )
-      );
-    }
+    // Handle image upload if provided
+    if (req.body.image) {
+      try {
+        // Delete old image if exists
+        if (event.imageUrl) {
+          const publicId = event.imageUrl.split('/').pop()?.split('.')[0];
+          if (publicId) {
+            await cloudinary.uploader.destroy(`events/${publicId}`);
+          }
+        }
 
-    // Validate dates if they are being updated
-    if (req.body.startDate && req.body.endDate) {
-      const startDate = new Date(req.body.startDate);
-      const endDate = new Date(req.body.endDate);
-
-      if (startDate > endDate) {
-        return next(
-          new ErrorResponse('End date must be after start date', 400)
+        const uploadResponse = await cloudinary.uploader.upload(
+          req.body.image,
+          {
+            folder: 'events',
+            resource_type: 'image',
+            quality: 'auto:best',
+            format: 'webp',
+          }
         );
+        req.body.imageUrl = uploadResponse.secure_url;
+      } catch (error) {
+        console.error('Image upload error:', error);
       }
     }
 
     event = await Event.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    });
+    }).populate('createdBy', 'firstName lastName email');
 
     res.status(200).json({
       success: true,
@@ -261,7 +253,7 @@ export const updateEvent = asyncHandler(
 
 // @desc    Delete event
 // @route   DELETE /api/events/:id
-// @access  Private/Admin/Secretary
+// @access  Private (Admin only)
 export const deleteEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const event = await Event.findById(req.params.id);
@@ -272,38 +264,23 @@ export const deleteEvent = asyncHandler(
       );
     }
 
-    // Check if user is admin or the secretary
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to delete events`,
-          403
-        )
-      );
+    // Delete associated records
+    await EventRegistration.deleteMany({ eventId: event._id });
+    await EventAttendance.deleteMany({ eventId: event._id });
+    await EventNotification.deleteMany({ eventId: event._id });
+
+    // Delete image if exists
+    if (event.imageUrl) {
+      try {
+        const publicId = event.imageUrl.split('/').pop()?.split('.')[0];
+        if (publicId) {
+          await cloudinary.uploader.destroy(`events/${publicId}`);
+        }
+      } catch (error) {
+        console.error('Image deletion error:', error);
+      }
     }
 
-    // Check if there are attendees
-    const attendeeCount = await EventAttendee.countDocuments({
-      eventId: event._id,
-    });
-
-    if (attendeeCount > 0 && event.status !== EventStatus.CANCELLED) {
-      return next(
-        new ErrorResponse(
-          `Cannot delete an event with registered attendees. Consider cancelling it instead.`,
-          400
-        )
-      );
-    }
-
-    // Remove all attendees if any
-    await EventAttendee.deleteMany({ eventId: event._id });
-
-    // Then delete the event
     await event.deleteOne();
 
     res.status(200).json({
@@ -313,164 +290,126 @@ export const deleteEvent = asyncHandler(
   }
 );
 
-// @desc    Cancel event
-// @route   PUT /api/events/:id/cancel
-// @access  Private/Admin/Secretary
-export const cancelEvent = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    let event = await Event.findById(req.params.id);
-
-    if (!event) {
-      return next(
-        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
-      );
-    }
-
-    // Check if user is admin or the secretary
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to cancel events`,
-          403
-        )
-      );
-    }
-
-    // Set status to cancelled
-    event = await Event.findByIdAndUpdate(
-      req.params.id,
-      { status: EventStatus.CANCELLED },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    res.status(200).json({
-      success: true,
-      data: event,
-    });
-  }
-);
-
 // @desc    Register for event
 // @route   POST /api/events/:id/register
 // @access  Private
 export const registerForEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const event = await Event.findById(req.params.id);
+    const eventId = req.params.id;
+    const userId = (req as any).user.id;
 
+    const event = await Event.findById(eventId);
     if (!event) {
       return next(
-        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
+        new ErrorResponse(`Event not found with id of ${eventId}`, 404)
       );
     }
 
-    if (event.status === EventStatus.CANCELLED) {
+    // Check if registration is required
+    if (!event.requiresRegistration) {
       return next(
-        new ErrorResponse(`Cannot register for a cancelled event`, 400)
+        new ErrorResponse('This event does not require registration', 400)
       );
     }
 
-    if (event.status === EventStatus.COMPLETED) {
-      return next(
-        new ErrorResponse(`Cannot register for a completed event`, 400)
-      );
+    // Check if registration deadline has passed
+    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
+      return next(new ErrorResponse('Registration deadline has passed', 400));
     }
 
-    // Check if event has maximum attendees limit and if it's reached
-    if (event.maxAttendees) {
-      const currentAttendees = await EventAttendee.countDocuments({
-        eventId: event._id,
-      });
-
-      if (currentAttendees >= event.maxAttendees) {
-        return next(
-          new ErrorResponse(`Event has reached maximum capacity`, 400)
-        );
-      }
-    }
-
-    // Check if user is already registered
-    const existingRegistration = await EventAttendee.findOne({
-      eventId: event._id,
-      userId: req.user._id,
+    // Check if already registered
+    const existingRegistration = await EventRegistration.findOne({
+      eventId,
+      userId,
     });
 
     if (existingRegistration) {
       return next(
-        new ErrorResponse(`You are already registered for this event`, 400)
+        new ErrorResponse('You are already registered for this event', 400)
       );
     }
 
-    // Set payment status based on whether the event requires payment
-    const paymentStatus = event.requiresPayment
-      ? PaymentStatus.PENDING
-      : PaymentStatus.NOT_REQUIRED;
+    // Check capacity
+    if (event.capacity) {
+      const currentRegistrations = await EventRegistration.countDocuments({
+        eventId,
+        status: {
+          $in: [RegistrationStatus.REGISTERED, RegistrationStatus.CONFIRMED],
+        },
+      });
 
-    // Create attendee record
-    const attendee = await EventAttendee.create({
-      eventId: event._id,
-      userId: req.user._id,
-      paymentStatus,
-      attendanceStatus: AttendanceStatus.REGISTERED,
+      if (currentRegistrations >= event.capacity) {
+        // Add to waitlist
+        await EventRegistration.create({
+          eventId,
+          userId,
+          status: RegistrationStatus.WAITLIST,
+          paymentStatus: event.registrationFee ? 'pending' : 'waived',
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Added to waitlist',
+          data: { status: 'waitlist' },
+        });
+        return;
+      }
+    }
+
+    // Create registration
+    const registration = await EventRegistration.create({
+      eventId,
+      userId,
+      status: RegistrationStatus.REGISTERED,
+      paymentStatus: event.registrationFee ? 'pending' : 'waived',
+      ...req.body,
     });
+
+    const populatedRegistration = await EventRegistration.findById(
+      registration._id
+    )
+      .populate('eventId', 'title startDate location')
+      .populate('userId', 'firstName lastName email');
 
     res.status(201).json({
       success: true,
-      data: attendee,
+      data: populatedRegistration,
     });
   }
 );
 
-// @desc    Unregister from event
+// @desc    Cancel event registration
 // @route   DELETE /api/events/:id/register
 // @access  Private
-export const unregisterFromEvent = asyncHandler(
+export const cancelRegistration = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const event = await Event.findById(req.params.id);
+    const eventId = req.params.id;
+    const userId = (req as any).user.id;
 
-    if (!event) {
-      return next(
-        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
-      );
-    }
-
-    if (event.status === EventStatus.COMPLETED) {
-      return next(
-        new ErrorResponse(`Cannot unregister from a completed event`, 400)
-      );
-    }
-
-    const registration = await EventAttendee.findOne({
-      eventId: event._id,
-      userId: req.user._id,
+    const registration = await EventRegistration.findOne({
+      eventId,
+      userId,
     });
 
     if (!registration) {
-      return next(
-        new ErrorResponse(`You are not registered for this event`, 404)
-      );
-    }
-
-    // Only allow unregistering if payment status is not 'paid'
-    if (
-      event.requiresPayment &&
-      registration.paymentStatus === PaymentStatus.PAID
-    ) {
-      return next(
-        new ErrorResponse(
-          `Cannot unregister from an event you've already paid for. Please contact the administrator.`,
-          400
-        )
-      );
+      return next(new ErrorResponse('Registration not found', 404));
     }
 
     await registration.deleteOne();
+
+    // If there's a waitlist, promote the next person
+    const waitlistRegistration = await EventRegistration.findOne({
+      eventId,
+      status: RegistrationStatus.WAITLIST,
+    }).sort({ registrationDate: 1 });
+
+    if (waitlistRegistration) {
+      waitlistRegistration.status = RegistrationStatus.REGISTERED;
+      await waitlistRegistration.save();
+
+      // Send notification to promoted user
+      // Implementation depends on notification system
+    }
 
     res.status(200).json({
       success: true,
@@ -479,302 +418,678 @@ export const unregisterFromEvent = asyncHandler(
   }
 );
 
-// @desc    Mark attendance
-// @route   PUT /api/events/:id/attendance/:userId
-// @access  Private/Admin/Secretary
+// @desc    Mark attendance for event
+// @route   POST /api/events/:id/attendance
+// @access  Private (Admin only)
 export const markAttendance = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const event = await Event.findById(req.params.id);
+    const eventId = req.params.id;
+    const adminId = (req as any).user.id;
+    const { attendanceList } = req.body; // Array of { userId, attended, notes? }
 
+    const event = await Event.findById(eventId);
     if (!event) {
       return next(
-        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
+        new ErrorResponse(`Event not found with id of ${eventId}`, 404)
       );
     }
 
-    // Check if user is admin or the secretary
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to mark attendance`,
-          403
-        )
-      );
-    }
-
-    let registration = await EventAttendee.findOne({
-      eventId: event._id,
-      userId: req.params.userId,
-    });
-
-    if (!registration) {
-      return next(
-        new ErrorResponse(`User is not registered for this event`, 404)
-      );
-    }
-
-    // Update attendance status
-    const { attendanceStatus } = req.body;
-
-    if (
-      !attendanceStatus ||
-      !Object.values(AttendanceStatus).includes(attendanceStatus)
-    ) {
-      return next(
-        new ErrorResponse(
-          `Invalid attendance status. Must be one of: ${Object.values(
-            AttendanceStatus
-          ).join(', ')}`,
-          400
-        )
-      );
-    }
-
-    registration = await EventAttendee.findOneAndUpdate(
-      {
-        eventId: event._id,
-        userId: req.params.userId,
-      },
-      { attendanceStatus },
-      {
-        new: true,
-        runValidators: true,
+    // Check if event is ongoing (for meetings, only during meetings)
+    if (event.eventType === EventType.MEETING) {
+      const now = new Date();
+      if (now < event.startDate || now > event.endDate) {
+        return next(
+          new ErrorResponse(
+            'Attendance can only be marked during the meeting',
+            400
+          )
+        );
       }
-    );
+    }
+
+    const attendanceRecords = [];
+
+    for (const attendance of attendanceList) {
+      const existingAttendance = await EventAttendance.findOne({
+        eventId,
+        userId: attendance.userId,
+      });
+
+      if (existingAttendance) {
+        // Update existing record
+        existingAttendance.attended = attendance.attended;
+        existingAttendance.markedBy = adminId;
+        existingAttendance.markedAt = new Date();
+        if (attendance.notes) {
+          existingAttendance.notes = attendance.notes;
+        }
+        await existingAttendance.save();
+        attendanceRecords.push(existingAttendance);
+      } else {
+        // Create new record
+        const newAttendance = await EventAttendance.create({
+          eventId,
+          userId: attendance.userId,
+          attended: attendance.attended,
+          markedBy: adminId,
+          notes: attendance.notes,
+        });
+        attendanceRecords.push(newAttendance);
+      }
+    }
+
+    // If this is a meeting, calculate penalties after attendance is marked
+    if (event.eventType === EventType.MEETING) {
+      await calculateMeetingPenalties(new Date().getFullYear());
+    }
+
+    const populatedRecords = await EventAttendance.find({
+      _id: { $in: attendanceRecords.map((r) => r._id) },
+    })
+      .populate('userId', 'firstName lastName email')
+      .populate('markedBy', 'firstName lastName');
 
     res.status(200).json({
       success: true,
-      data: registration,
+      data: populatedRecords,
     });
   }
 );
 
-// @desc    Update payment status
-// @route   PUT /api/events/:id/payment/:userId
-// @access  Private/Admin/Treasurer
-export const updatePaymentStatus = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const event = await Event.findById(req.params.id);
-
-    if (!event) {
-      return next(
-        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
-      );
-    }
-
-    // Check if user is admin or treasurer
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'treasurer'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to update payment status`,
-          403
-        )
-      );
-    }
-
-    if (!event.requiresPayment) {
-      return next(
-        new ErrorResponse(`This event does not require payment`, 400)
-      );
-    }
-
-    let registration = await EventAttendee.findOne({
-      eventId: event._id,
-      userId: req.params.userId,
-    });
-
-    if (!registration) {
-      return next(
-        new ErrorResponse(`User is not registered for this event`, 404)
-      );
-    }
-
-    // Update payment status
-    const { paymentStatus, paymentReference } = req.body;
-
-    if (
-      !paymentStatus ||
-      !Object.values(PaymentStatus).includes(paymentStatus)
-    ) {
-      return next(
-        new ErrorResponse(
-          `Invalid payment status. Must be one of: ${Object.values(
-            PaymentStatus
-          ).join(', ')}`,
-          400
-        )
-      );
-    }
-
-    registration = await EventAttendee.findOneAndUpdate(
-      {
-        eventId: event._id,
-        userId: req.params.userId,
-      },
-      { paymentStatus, paymentReference },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    res.status(200).json({
-      success: true,
-      data: registration,
-    });
-  }
-);
-
-// @desc    Get event attendees
-// @route   GET /api/events/:id/attendees
-// @access  Private/Admin/Secretary
-export const getEventAttendees = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const event = await Event.findById(req.params.id);
-
-    if (!event) {
-      return next(
-        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
-      );
-    }
-
-    // Check if user is admin or secretary
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to view attendees`,
-          403
-        )
-      );
-    }
-
+// @desc    Get user's events (for member dashboard)
+// @route   GET /api/events/my-events
+// @access  Private
+export const getMyEvents = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 50;
+    const limit = parseInt(req.query.limit as string) || 10;
     const startIndex = (page - 1) * limit;
 
-    // Build query
-    const query: any = { eventId: event._id };
+    // Get all events
+    const eventsQuery: any = {};
 
-    // Filter by attendance status if provided
-    if (req.query.attendanceStatus) {
-      query.attendanceStatus = req.query.attendanceStatus;
+    // Filter by status if provided
+    if (req.query.status) {
+      eventsQuery.status = req.query.status;
     }
 
-    // Filter by payment status if provided
-    if (req.query.paymentStatus) {
-      query.paymentStatus = req.query.paymentStatus;
+    // Filter by event type if provided
+    if (req.query.eventType) {
+      eventsQuery.eventType = req.query.eventType;
     }
 
-    const attendees = await EventAttendee.find(query)
-      .populate({
-        path: 'userId',
-        select: 'firstName lastName email phone',
-        populate: {
-          path: 'pharmacy',
-          select: 'name registrationNumber',
-        },
-      })
+    // Filter for upcoming events only by default
+    if (req.query.includeAll !== 'true') {
+      eventsQuery.endDate = { $gte: new Date() };
+    }
+
+    const total = await Event.countDocuments(eventsQuery);
+    const events = await Event.find(eventsQuery)
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ startDate: 1 })
       .skip(startIndex)
-      .limit(limit)
-      .sort({ registrationDate: -1 });
+      .limit(limit);
 
-    // Get total count
-    const total = await EventAttendee.countDocuments(query);
+    // For each event, get user's registration and attendance status
+    const eventsWithUserStatus = await Promise.all(
+      events.map(async (event) => {
+        const registration = await EventRegistration.findOne({
+          eventId: event._id,
+          userId,
+        });
+
+        const attendance = await EventAttendance.findOne({
+          eventId: event._id,
+          userId,
+        });
+
+        const notification = await EventNotification.findOne({
+          eventId: event._id,
+          userId,
+        });
+
+        return {
+          ...event.toObject(),
+          userRegistration: registration,
+          userAttendance: attendance,
+          notification: notification || { seen: false, acknowledged: false },
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
-      count: attendees.length,
+      count: events.length,
       pagination: {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
         total,
       },
-      data: attendees,
+      data: eventsWithUserStatus,
+    });
+  }
+);
+
+// @desc    Acknowledge event notification
+// @route   POST /api/events/:id/acknowledge
+// @access  Private
+export const acknowledgeEvent = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const eventId = req.params.id;
+    const userId = (req as any).user.id;
+
+    await EventNotification.findOneAndUpdate(
+      { eventId, userId },
+      {
+        acknowledged: true,
+        acknowledgedAt: new Date(),
+        seen: true,
+        seenAt: new Date(),
+      },
+      { upsert: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {},
     });
   }
 );
 
 // @desc    Get event statistics
 // @route   GET /api/events/stats
-// @access  Private/Admin
+// @access  Private (Admin only)
 export const getEventStats = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     // Only admin can view event statistics
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+    if (
+      (req as any).user.role !== 'admin' &&
+      (req as any).user.role !== 'superadmin'
+    ) {
       throw new ErrorResponse(
-        `User ${req.user._id} is not authorized to view event statistics`,
+        `User ${(req as any).user._id} is not authorized to view event statistics`,
         403
       );
     }
 
-    // Count events by status
-    const eventsByStatus = await Event.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } },
+    // Get total events count
+    const totalEvents = await Event.countDocuments();
+
+    // Get upcoming events count
+    const upcomingEvents = await Event.countDocuments({
+      startDate: { $gt: new Date() },
+      status: { $in: [EventStatus.DRAFT, EventStatus.PUBLISHED] },
+    });
+
+    // Get completed events count
+    const completedEvents = await Event.countDocuments({
+      status: EventStatus.COMPLETED,
+    });
+
+    // Get total registrations count
+    const totalRegistrations = await EventRegistration.countDocuments();
+
+    // Get total attendees count (people who actually attended)
+    const totalAttendees = await EventAttendance.countDocuments({
+      attended: true,
+    });
+
+    // Get events count by type
+    const eventsByTypeData = await Event.aggregate([
+      { $group: { _id: '$eventType', count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]);
 
-    // Count registration by attendance status
-    const byAttendanceStatus = await EventAttendee.aggregate([
-      { $group: { _id: '$attendanceStatus', count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]);
-
-    // Count registration by payment status
-    const byPaymentStatus = await EventAttendee.aggregate([
-      { $group: { _id: '$paymentStatus', count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]);
-
-    // Get monthly events count (for current year)
-    const currentYear = new Date().getFullYear();
-    const monthlyEvents = await Event.aggregate([
-      {
-        $match: {
-          startDate: {
-            $gte: new Date(`${currentYear}-01-01`),
-            $lte: new Date(`${currentYear}-12-31`),
-          },
-        },
-      },
-      {
-        $group: {
-          _id: { $month: '$startDate' },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: 1 } },
-    ]);
-
-    // Get upcoming events
-    const upcomingEvents = await Event.find({
-      status: EventStatus.UPCOMING,
-    })
-      .select('title startDate location')
-      .sort({ startDate: 1 })
-      .limit(5);
+    // Convert to the expected format
+    const eventsByType: Record<string, number> = {};
+    eventsByTypeData.forEach((item) => {
+      eventsByType[item._id] = item.count;
+    });
 
     res.status(200).json({
       success: true,
       data: {
-        eventsByStatus,
-        byAttendanceStatus,
-        byPaymentStatus,
-        monthlyEvents,
+        totalEvents,
         upcomingEvents,
+        completedEvents,
+        totalRegistrations,
+        totalAttendees,
+        eventsByType,
       },
+    });
+  }
+);
+
+// @desc    Get user's penalties (for user dashboard)
+// @route   GET /api/events/my-penalties
+// @access  Private
+export const getUserPenalties = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const year = parseInt(req.query.year as string) || new Date().getFullYear();
+
+    // Get penalty configuration for the year
+    const penaltyConfig = await MeetingPenaltyConfig.findOne({
+      year,
+      isActive: true,
+    });
+
+    if (!penaltyConfig) {
+      res.status(200).json({
+        success: true,
+        data: {
+          year,
+          meetingsAttended: 0,
+          missedMeetings: 0,
+          penaltyAmount: 0,
+          totalPenalty: 0,
+          penaltyType: 'none',
+          isPaid: false,
+        },
+      });
+      return;
+    }
+
+    // Get all meeting events for the year
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31);
+
+    const meetings = await Event.find({
+      eventType: EventType.MEETING,
+      startDate: { $gte: startOfYear, $lte: endOfYear },
+      status: { $in: [EventStatus.COMPLETED, EventStatus.PUBLISHED] },
+    });
+
+    // Count user's meeting attendance for the year
+    const attendedMeetings = await EventAttendance.countDocuments({
+      eventId: { $in: meetings.map((m) => m._id) },
+      userId,
+      attended: true,
+    });
+
+    const totalMeetings = meetings.length;
+    const missedMeetings = totalMeetings - attendedMeetings;
+
+    // Find applicable penalty rule
+    let applicablePenalty = penaltyConfig.defaultPenalty;
+    let penaltyDescription = 'Default penalty';
+
+    for (const rule of penaltyConfig.penaltyRules) {
+      if (
+        attendedMeetings >= rule.minAttendance &&
+        attendedMeetings <= rule.maxAttendance
+      ) {
+        applicablePenalty = {
+          penaltyType: rule.penaltyType,
+          penaltyValue: rule.penaltyValue,
+        };
+        penaltyDescription = rule.description;
+        break;
+      }
+    }
+
+    // Calculate penalty amount
+    let penaltyAmount = 0;
+    if (applicablePenalty.penaltyType === 'multiplier') {
+      // Get user's annual dues
+      const userAnnualDue = await Due.findOne({
+        assignedTo: userId,
+        dueTypeId: { $exists: true },
+        year,
+      }).populate('dueTypeId');
+
+      if (userAnnualDue) {
+        penaltyAmount = userAnnualDue.amount * applicablePenalty.penaltyValue;
+      }
+    } else {
+      penaltyAmount = applicablePenalty.penaltyValue;
+    }
+
+    // Check if penalty has been paid
+    const penaltyDue = await Due.findOne({
+      assignedTo: userId,
+      title: `Meeting Attendance Penalty ${year}`,
+      year,
+      isPenalty: true,
+    });
+
+    const isPaid = penaltyDue ? penaltyDue.paymentStatus === 'paid' : false;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        year,
+        meetingsAttended: attendedMeetings,
+        totalMeetings,
+        missedMeetings,
+        penaltyAmount,
+        totalPenalty: penaltyAmount,
+        penaltyType: applicablePenalty.penaltyType,
+        penaltyDescription,
+        isPaid,
+        penaltyDue: penaltyDue || null,
+      },
+    });
+  }
+);
+
+// @desc    Get user's event registrations (for user dashboard)
+// @route   GET /api/events/my-registrations
+// @access  Private
+export const getUserRegistrations = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    // Build query
+    const query: any = { userId };
+
+    // Filter by status if provided
+    if (req.query.status) {
+      query.status = req.query.status;
+    }
+
+    // Filter by date range if provided
+    if (req.query.startDate || req.query.endDate) {
+      const eventQuery: any = {};
+      if (req.query.startDate) {
+        eventQuery.startDate = {
+          $gte: new Date(req.query.startDate as string),
+        };
+      }
+      if (req.query.endDate) {
+        eventQuery.endDate = { $lte: new Date(req.query.endDate as string) };
+      }
+
+      // Get event IDs that match the date criteria
+      const matchingEvents = await Event.find(eventQuery).select('_id');
+      query.eventId = { $in: matchingEvents.map((e) => e._id) };
+    }
+
+    const total = await EventRegistration.countDocuments(query);
+    const registrations = await EventRegistration.find(query)
+      .populate({
+        path: 'eventId',
+        select:
+          'title description startDate endDate location eventType status requiresRegistration registrationFee',
+        populate: {
+          path: 'createdBy',
+          select: 'firstName lastName email',
+        },
+      })
+      .populate('userId', 'firstName lastName email')
+      .sort({ registrationDate: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    // For each registration, check if user attended
+    const registrationsWithAttendance = await Promise.all(
+      registrations.map(async (registration) => {
+        const attendance = await EventAttendance.findOne({
+          eventId: registration.eventId,
+          userId: registration.userId,
+        });
+
+        return {
+          ...registration.toObject(),
+          attended: attendance ? attendance.attended : false,
+          attendanceMarkedAt: attendance ? attendance.markedAt : null,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      count: registrations.length,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        total,
+      },
+      data: registrationsWithAttendance,
+    });
+  }
+);
+
+// Helper function to send notifications to all users
+async function sendEventNotifications(eventId: string) {
+  try {
+    const event = await Event.findById(eventId).populate(
+      'createdBy',
+      'firstName lastName'
+    );
+    if (!event) return;
+
+    const users = await User.find({
+      role: { $in: ['member', 'pharmacy'] },
+      isActive: true,
+    });
+
+    // Create notification records for all users
+    const notifications = users.map((user) => ({
+      eventId: event._id,
+      userId: user._id,
+      seen: false,
+      acknowledged: false,
+      emailSent: false,
+    }));
+
+    await EventNotification.insertMany(notifications);
+
+    // Send email notifications
+    for (const user of users) {
+      try {
+        await emailService.sendEmail({
+          to: user.email,
+          subject: `New Event: ${event.title}`,
+          template: 'event-notification',
+          context: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            eventTitle: event.title,
+            eventDescription: event.description,
+            eventType: event.eventType.toUpperCase(),
+            eventDate: event.startDate.toLocaleDateString(),
+            eventTime: event.startDate.toLocaleTimeString(),
+            eventLocation: event.location,
+            organizer: event.organizer,
+            requiresRegistration: event.requiresRegistration,
+            registrationDeadline:
+              event.registrationDeadline?.toLocaleDateString(),
+            registrationFee: event.registrationFee,
+            isMeeting: event.eventType === EventType.MEETING,
+            dashboardUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+          },
+        });
+
+        // Mark email as sent
+        await EventNotification.findOneAndUpdate(
+          { eventId: event._id, userId: user._id },
+          { emailSent: true, emailSentAt: new Date() }
+        );
+      } catch (emailError) {
+        console.error(`Failed to send email to ${user.email}:`, emailError);
+      }
+    }
+  } catch (error) {
+    console.error('Error sending event notifications:', error);
+  }
+}
+
+// Helper function to calculate meeting penalties
+async function calculateMeetingPenalties(year: number) {
+  try {
+    const penaltyConfig = await MeetingPenaltyConfig.findOne({
+      year,
+      isActive: true,
+    });
+
+    if (!penaltyConfig) {
+      console.warn(`No penalty configuration found for year ${year}`);
+      return;
+    }
+
+    // Get all meeting events for the year
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31);
+
+    const meetings = await Event.find({
+      eventType: EventType.MEETING,
+      startDate: { $gte: startOfYear, $lte: endOfYear },
+      status: { $in: [EventStatus.COMPLETED, EventStatus.PUBLISHED] },
+    });
+
+    if (meetings.length === 0) return;
+
+    // Get all users
+    const users = await User.find({
+      role: { $in: ['member', 'pharmacy'] },
+      isActive: true,
+    });
+
+    for (const user of users) {
+      // Count user's meeting attendance for the year
+      const attendanceCount = await EventAttendance.countDocuments({
+        eventId: { $in: meetings.map((m) => m._id) },
+        userId: user._id,
+        attended: true,
+      });
+
+      // Find applicable penalty rule
+      let applicablePenalty = penaltyConfig.defaultPenalty;
+
+      for (const rule of penaltyConfig.penaltyRules) {
+        if (
+          attendanceCount >= rule.minAttendance &&
+          attendanceCount <= rule.maxAttendance
+        ) {
+          applicablePenalty = {
+            penaltyType: rule.penaltyType,
+            penaltyValue: rule.penaltyValue,
+          };
+          break;
+        }
+      }
+
+      // Calculate penalty amount
+      let penaltyAmount = 0;
+      if (applicablePenalty.penaltyType === 'multiplier') {
+        // Get user's annual dues
+        const userAnnualDue = await Due.findOne({
+          assignedTo: user._id,
+          dueTypeId: { $exists: true }, // Assuming annual dues have a specific type
+          year,
+        }).populate('dueTypeId');
+
+        if (userAnnualDue) {
+          penaltyAmount = userAnnualDue.amount * applicablePenalty.penaltyValue;
+        }
+      } else {
+        penaltyAmount = applicablePenalty.penaltyValue;
+      }
+
+      // Create or update penalty due if amount > 0
+      if (penaltyAmount > 0) {
+        await Due.findOneAndUpdate(
+          {
+            assignedTo: user._id,
+            title: `Meeting Attendance Penalty ${year}`,
+            year,
+          },
+          {
+            assignedTo: user._id,
+            title: `Meeting Attendance Penalty ${year}`,
+            description: `Penalty for attending ${attendanceCount} meetings in ${year}`,
+            amount: penaltyAmount,
+            dueDate: new Date(year + 1, 2, 31), // March 31st of next year
+            status: 'pending',
+            year,
+            isPenalty: true,
+          },
+          { upsert: true }
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error calculating meeting penalties:', error);
+  }
+}
+
+// Meeting Penalty Configuration Controllers
+
+// @desc    Get penalty configuration for a year
+// @route   GET /api/events/penalty-config/:year
+// @access  Private (Admin only)
+export const getPenaltyConfig = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const year = parseInt(req.params.year);
+
+    const config = await MeetingPenaltyConfig.findOne({ year }).populate(
+      'createdBy',
+      'firstName lastName email'
+    );
+
+    if (!config) {
+      return next(
+        new ErrorResponse(
+          `Penalty configuration not found for year ${year}`,
+          404
+        )
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      data: config,
+    });
+  }
+);
+
+// @desc    Create or update penalty configuration
+// @route   POST /api/events/penalty-config
+// @access  Private (Admin only)
+export const createPenaltyConfig = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+
+    const config = await MeetingPenaltyConfig.findOneAndUpdate(
+      { year: req.body.year },
+      {
+        ...req.body,
+        createdBy: userId,
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+      }
+    ).populate('createdBy', 'firstName lastName email');
+
+    res.status(200).json({
+      success: true,
+      data: config,
+    });
+  }
+);
+
+// @desc    Get all penalty configurations
+// @route   GET /api/events/penalty-configs
+// @access  Private (Admin only)
+export const getAllPenaltyConfigs = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const configs = await MeetingPenaltyConfig.find()
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ year: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: configs.length,
+      data: configs,
     });
   }
 );

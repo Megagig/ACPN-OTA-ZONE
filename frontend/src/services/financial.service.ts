@@ -298,7 +298,7 @@ export const getDuesByType = async (
     page: number;
     limit: number;
     total: number;
-    pages: number;
+    totalPages: number;
   };
 }> => {
   const response = await api.get(`${BASE_URL}/dues/type/${typeId}`, {
@@ -316,7 +316,7 @@ export const getOverdueDues = async (
     page: number;
     limit: number;
     total: number;
-    pages: number;
+    totalPages: number;
   };
 }> => {
   const response = await api.get(`${BASE_URL}/dues/overdue`, {
@@ -399,7 +399,7 @@ export const getAllPayments = async (params?: {
     page: number;
     limit: number;
     total: number;
-    pages: number;
+    totalPages: number;
   };
 }> => {
   const response = await api.get(`${BASE_URL}/payments/admin/all`, { params });
@@ -492,7 +492,7 @@ export const getRealDues = async (params?: {
     page: number;
     limit: number;
     total: number;
-    pages: number;
+    totalPages: number;
   };
 }> => {
   // Add populate parameter to ensure due type information is included

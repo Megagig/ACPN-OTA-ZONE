@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import { muiTheme, muiDarkTheme } from '../theme/mui-theme';
 
 type Theme = 'light' | 'dark';
 
@@ -55,7 +57,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
+      <MuiThemeProvider theme={theme === 'dark' ? muiDarkTheme : muiTheme}>
+        {children}
+      </MuiThemeProvider>
     </ThemeContext.Provider>
   );
 }

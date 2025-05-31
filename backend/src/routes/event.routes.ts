@@ -6,12 +6,16 @@ import {
   updateEvent,
   deleteEvent,
   registerForEvent,
-  unregisterFromEvent,
+  cancelRegistration,
   markAttendance,
-  updatePaymentStatus,
-  getEventAttendees,
-  cancelEvent,
+  getMyEvents,
+  acknowledgeEvent,
   getEventStats,
+  getPenaltyConfig,
+  createPenaltyConfig,
+  getAllPenaltyConfigs,
+  getUserPenalties,
+  getUserRegistrations,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -21,19 +25,27 @@ const router = express.Router();
 // Protect all routes
 router.use(protect);
 
-// Public routes (still protected but available to all logged-in users)
+// Public routes (available to all logged-in users)
 router.route('/').get(getAllEvents);
-router.route('/:id').get(getEvent);
-router
-  .route('/:id/register')
-  .post(registerForEvent)
-  .delete(unregisterFromEvent);
+router.route('/my-events').get(getMyEvents);
+router.route('/my-penalties').get(getUserPenalties);
+router.route('/my-registrations').get(getUserRegistrations);
 
-// Admin/Secretary routes
+// Stats route (must come before /:id to avoid conflict)
 router
   .route('/stats')
   .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getEventStats);
 
+router.route('/:id').get(getEvent);
+
+// Event registration routes
+router.route('/:id/register').post(registerForEvent);
+router.route('/:id/register').delete(cancelRegistration);
+
+// Event notification routes
+router.route('/:id/acknowledge').post(acknowledgeEvent);
+
+// Admin/Secretary routes - Event management
 router
   .route('/')
   .post(
@@ -52,33 +64,25 @@ router
     deleteEvent
   );
 
+// Admin/Secretary routes - Attendance management
 router
-  .route('/:id/cancel')
-  .put(
-    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
-    cancelEvent
-  );
-
-router
-  .route('/:id/attendees')
-  .get(
-    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
-    getEventAttendees
-  );
-
-router
-  .route('/:id/attendance/:userId')
-  .put(
+  .route('/:id/attendance')
+  .post(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
     markAttendance
   );
 
-// Admin/Treasurer routes
+// Admin routes - Penalty configuration
 router
-  .route('/:id/payment/:userId')
-  .put(
-    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.TREASURER),
-    updatePaymentStatus
-  );
+  .route('/penalty-config/:year')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getPenaltyConfig);
+
+router
+  .route('/penalty-config')
+  .post(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), createPenaltyConfig);
+
+router
+  .route('/penalty-configs')
+  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getAllPenaltyConfigs);
 
 export default router;

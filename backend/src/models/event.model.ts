@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export enum EventStatus {
-  UPCOMING = 'upcoming',
-  ONGOING = 'ongoing',
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
@@ -12,8 +12,8 @@ export enum EventType {
   WORKSHOP = 'workshop',
   SEMINAR = 'seminar',
   TRAINING = 'training',
-  MEETING = 'meeting',
-  STATE_EVENT = 'state_event',
+  MEETING = 'meetings',
+  STATE_EVENT = 'state_events',
   SOCIAL = 'social',
   OTHER = 'other',
 }
@@ -24,7 +24,16 @@ export interface IEvent extends Document {
   eventType: EventType;
   startDate: Date;
   endDate: Date;
-  location: string;
+  location:
+    | {
+        name: string;
+        address: string;
+        city: string;
+        state: string;
+        virtual?: boolean;
+        meetingLink?: string;
+      }
+    | any; // Support both object and string formats for backwards compatibility
   imageUrl?: string;
   organizer: string;
   requiresRegistration: boolean;
@@ -63,7 +72,7 @@ const eventSchema = new Schema<IEvent>(
       required: [true, 'End date is required'],
     },
     location: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
       required: [true, 'Location is required'],
     },
     imageUrl: {
@@ -94,7 +103,7 @@ const eventSchema = new Schema<IEvent>(
     status: {
       type: String,
       enum: Object.values(EventStatus),
-      default: EventStatus.UPCOMING,
+      default: EventStatus.DRAFT,
     },
     registrationDeadline: {
       type: Date,
@@ -129,13 +138,15 @@ eventSchema.virtual('attendance', {
 
 // Update event status automatically based on dates
 eventSchema.pre('save', function (next) {
-  const now = new Date();
-  if (this.startDate <= now && this.endDate >= now) {
-    this.status = EventStatus.ONGOING;
-  } else if (this.endDate < now) {
-    this.status = EventStatus.COMPLETED;
-  } else {
-    this.status = EventStatus.UPCOMING;
+  // Only auto-update status if it's not being explicitly set
+  if (!this.isModified('status')) {
+    const now = new Date();
+    if (this.startDate <= now && this.endDate >= now) {
+      this.status = EventStatus.PUBLISHED;
+    } else if (this.endDate < now) {
+      this.status = EventStatus.COMPLETED;
+    }
+    // Don't change if it's a future event (leave as DRAFT or PUBLISHED)
   }
   next();
 });

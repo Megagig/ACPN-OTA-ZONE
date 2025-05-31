@@ -3,7 +3,7 @@ export interface Event {
   _id: string;
   title: string;
   description: string;
-  type: EventType;
+  eventType: EventType;
   startDate: string;
   endDate: string;
   location: {
@@ -15,17 +15,19 @@ export interface Event {
     meetingLink?: string;
   };
   status: EventStatus;
-  registrationRequired: boolean;
+  requiresRegistration: boolean;
   registrationDeadline?: string;
   registrationFee?: number;
-  maxAttendees?: number;
-  organizerName: string;
+  capacity?: number;
+  isAttendanceRequired: boolean;
+  organizer: string;
   organizerId?: string; // Reference to user ID
-  attachments?: string[]; // URLs to event attachments
-  thumbnail?: string; // URL to event image
+  imageUrl?: string; // URL to event image
   tags?: string[];
   createdAt?: string;
   updatedAt?: string;
+  registrations?: EventRegistration[];
+  attendees?: EventAttendance[];
 }
 
 export type EventType =
@@ -33,12 +35,72 @@ export type EventType =
   | 'workshop'
   | 'seminar'
   | 'training'
-  | 'meeting'
+  | 'meetings'
+  | 'state_events'
   | 'social'
   | 'other';
 
-export type EventStatus = 'draft' | 'published' | 'canceled' | 'completed';
+export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed';
 
+export interface EventRegistration {
+  _id: string;
+  eventId: string;
+  userId: string;
+  status: RegistrationStatus;
+  paymentStatus: PaymentStatus;
+  paymentReference?: string;
+  registeredAt: string;
+  registrationDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type RegistrationStatus =
+  | 'registered'
+  | 'confirmed'
+  | 'cancelled'
+  | 'waitlist';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'waived';
+
+export interface EventAttendance {
+  _id: string;
+  eventId: string;
+  userId: string;
+  attendedAt: string;
+  markedBy: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventNotification {
+  _id: string;
+  eventId: string;
+  userId: string;
+  emailSent: boolean;
+  emailSentAt?: string;
+  seen: boolean;
+  seenAt?: string;
+  acknowledged: boolean;
+  acknowledgedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MeetingPenaltyConfig {
+  _id: string;
+  year: number;
+  penaltyRules: {
+    attendanceCount: number;
+    penaltyType: 'multiplier' | 'fixed';
+    penaltyValue: number;
+  }[];
+  createdBy: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Legacy interface for backward compatibility
 export interface EventAttendee {
   _id: string;
   event: string | Event; // Event ID or Event object
@@ -77,4 +139,93 @@ export interface EventSummary {
     event: Event;
     attendeeCount: number;
   }[];
+}
+
+// Additional types for the new event management system
+
+export interface CreateEventData {
+  title: string;
+  description: string;
+  eventType: EventType;
+  startDate: string;
+  endDate: string;
+  location: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    virtual?: boolean;
+    meetingLink?: string;
+  };
+  requiresRegistration: boolean;
+  registrationDeadline?: string;
+  registrationFee?: number;
+  capacity?: number;
+  isAttendanceRequired: boolean;
+  organizer: string;
+  imageUrl?: string;
+  tags?: string[];
+}
+
+export interface UpdateEventData extends Partial<CreateEventData> {
+  status?: EventStatus;
+}
+
+export interface EventFilters {
+  eventType?: EventType;
+  status?: EventStatus;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  organizer?: string;
+  requiresRegistration?: boolean;
+}
+
+export interface AttendanceMarkingData {
+  userId: string;
+  eventId: string;
+  notes?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface EventRegistrationData {
+  eventId: string;
+  paymentReference?: string;
+  notes?: string;
+  emergencyContact?: string;
+  dietaryRequirements?: string;
+  specialNeeds?: string;
+}
+
+export interface EventStats {
+  totalEvents: number;
+  upcomingEvents: number;
+  completedEvents: number;
+  totalRegistrations: number;
+  totalAttendees: number;
+  eventsByType: Record<EventType, number>;
+}
+
+export interface UserEventHistory {
+  registrations: EventRegistration[];
+  attendance: EventAttendance[];
+  penalties: PenaltyInfo[];
+}
+
+export interface PenaltyInfo {
+  year: number;
+  meetingsAttended: number;
+  missedMeetings?: number;
+  penaltyAmount: number;
+  totalPenalty?: number;
+  penaltyType: string;
+  isPaid: boolean;
 }

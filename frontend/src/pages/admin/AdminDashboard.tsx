@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PendingApprovals from '../../components/admin/PendingApprovals';
 import ApprovedUsers from '../../components/admin/ApprovedUsers';
+import AdminEventWidget from '../../components/admin/AdminEventWidget';
 import { useTheme } from '../../context/ThemeContext';
 
 // Admin dashboard tabs - using string literal union type
@@ -8,6 +9,7 @@ type AdminTab =
   | 'overview'
   | 'approvals'
   | 'approved_users'
+  | 'events'
   | 'users'
   | 'settings';
 
@@ -21,6 +23,8 @@ const AdminDashboard: React.FC = () => {
         return <PendingApprovals />;
       case 'approved_users':
         return <ApprovedUsers />;
+      case 'events':
+        return <AdminEventWidget />;
       case 'users':
         return (
           <div className="text-foreground">User Management (Coming Soon)</div>
@@ -52,7 +56,7 @@ const AdminDashboard: React.FC = () => {
                 activeTab === 'overview'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/6 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Overview
             </button>
@@ -62,7 +66,7 @@ const AdminDashboard: React.FC = () => {
                 activeTab === 'approvals'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/6 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Pending Approvals
             </button>
@@ -72,9 +76,19 @@ const AdminDashboard: React.FC = () => {
                 activeTab === 'approved_users'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/6 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Approved Users
+            </button>
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`${
+                activeTab === 'events'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+              } w-1/6 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+            >
+              Events
             </button>
             <button
               onClick={() => setActiveTab('users')}
@@ -82,7 +96,7 @@ const AdminDashboard: React.FC = () => {
                 activeTab === 'users'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/6 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               User Management
             </button>
@@ -92,7 +106,7 @@ const AdminDashboard: React.FC = () => {
                 activeTab === 'settings'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-              } w-1/5 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+              } w-1/6 py-4 px-1 text-center border-b-2 font-medium text-sm`}
             >
               Settings
             </button>

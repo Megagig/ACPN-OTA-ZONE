@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import eventService from '../../services/event.service';
-import type { Event, EventAttendee } from '../../types/event.types';
+import type {
+  Event,
+  EventRegistration,
+  RegistrationStatus,
+} from '../../types/event.types';
+
+// UI-specific extension of EventRegistration to include UI state
+interface UIEventRegistration extends EventRegistration {
+  checkedIn?: boolean;
+  checkedInAt?: string;
+}
 
 const EventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
-  const [attendees, setAttendees] = useState<EventAttendee[]>([]);
+  const [attendees, setAttendees] = useState<UIEventRegistration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'attendees'>(
     'details'
@@ -19,13 +29,13 @@ const EventDetail = () => {
     const fetchEventData = async () => {
       setIsLoading(true);
       try {
-        const [eventData, attendeeData] = await Promise.all([
+        const [eventData, attendanceData] = await Promise.all([
           eventService.getEventById(id),
-          eventService.getEventAttendees(id),
+          eventService.getEventRegistrations(id),
         ]);
 
         setEvent(eventData);
-        setAttendees(attendeeData);
+        setAttendees(attendanceData.data || []);
       } catch (error) {
         console.error('Error fetching event details:', error);
       } finally {
@@ -53,6 +63,56 @@ const EventDetail = () => {
     });
   };
 
+  // Handle updating registration status
+  const handleUpdateRegistrationStatus = async (
+    registrationId: string,
+    status: RegistrationStatus
+  ) => {
+    if (!id) return;
+    try {
+      await eventService.updateRegistrationStatus(id, registrationId, status);
+      // Update the attendee status in the state
+      setAttendees(
+        attendees.map((a) =>
+          a._id === registrationId ? { ...a, status: status } : a
+        )
+      );
+    } catch (error) {
+      console.error('Error updating registration status:', error);
+      alert('Failed to update registration status');
+    }
+  };
+
+  // Handle attendee check-in
+  const handleCheckIn = async (registrationId: string) => {
+    if (!id) return;
+    try {
+      // Since there's no direct check-in method, we'll use updateRegistrationStatus
+      // to set status to 'confirmed' as a workaround
+      await eventService.updateRegistrationStatus(
+        id,
+        registrationId,
+        'confirmed' as RegistrationStatus
+      );
+      // Update the attendee status in the state and add a "checked in" flag
+      setAttendees(
+        attendees.map((a) =>
+          a._id === registrationId
+            ? {
+                ...a,
+                status: 'confirmed' as RegistrationStatus,
+                checkedIn: true, // This is now properly typed with our UIEventRegistration interface
+                checkedInAt: new Date().toISOString(),
+              }
+            : a
+        )
+      );
+    } catch (error) {
+      console.error('Error checking in attendee:', error);
+      alert('Failed to check in attendee');
+    }
+  };
+
   // Get status badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -60,7 +120,7 @@ const EventDetail = () => {
         return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'draft':
         return 'bg-muted text-muted-foreground';
-      case 'canceled':
+      case 'cancelled':
         return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       case 'completed':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
@@ -70,20 +130,16 @@ const EventDetail = () => {
   };
 
   // Get attendee status badge class
-  const getAttendeeStatusBadgeClass = (status: string) => {
+  const getAttendeeStatusBadgeClass = (status: RegistrationStatus) => {
     switch (status) {
       case 'registered':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'confirmed':
         return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
-      case 'waitlisted':
+      case 'waitlist':
         return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
-      case 'canceled':
+      case 'cancelled':
         return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
-      case 'attended':
-        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
-      case 'no-show':
-        return 'bg-muted text-muted-foreground';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -141,7 +197,8 @@ const EventDetail = () => {
               {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
             </span>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-              {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+              {event.eventType.charAt(0).toUpperCase() +
+                event.eventType.slice(1)}
             </span>
           </div>
         </div>
@@ -193,10 +250,10 @@ const EventDetail = () => {
       {activeTab === 'details' ? (
         <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
           {/* Event image or icon */}
-          {event.thumbnail ? (
+          {event.imageUrl ? (
             <div
               className="h-48 w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${event.thumbnail})` }}
+              style={{ backgroundImage: `url(${event.imageUrl})` }}
             ></div>
           ) : (
             <div className="h-48 w-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
@@ -235,7 +292,7 @@ const EventDetail = () => {
                       </div>
                     </div>
                   </div>
-                  {event.registrationRequired && (
+                  {event.requiresRegistration && (
                     <div className="flex items-center mt-3">
                       <i className="fas fa-user-check text-green-500 dark:text-green-400 mr-3"></i>
                       <div>
@@ -306,7 +363,7 @@ const EventDetail = () => {
                   Registration
                 </h3>
                 <div className="bg-muted p-4 rounded-lg border border-border">
-                  {event.registrationRequired ? (
+                  {event.requiresRegistration ? (
                     <>
                       <div className="flex items-center mb-2">
                         <i className="fas fa-clipboard-check text-green-500 dark:text-green-400 mr-3"></i>
@@ -329,11 +386,11 @@ const EventDetail = () => {
                           </div>
                         </div>
                       )}
-                      {event.maxAttendees ? (
+                      {event.capacity ? (
                         <div className="flex items-center">
                           <i className="fas fa-users text-blue-500 dark:text-blue-400 mr-3"></i>
                           <div className="text-sm text-foreground">
-                            Limited to {event.maxAttendees} attendees
+                            Limited to {event.capacity} attendees
                           </div>
                         </div>
                       ) : (
@@ -365,7 +422,7 @@ const EventDetail = () => {
                   <div className="flex items-center">
                     <i className="fas fa-user-tie text-blue-500 dark:text-blue-400 mr-3"></i>
                     <div className="text-sm text-foreground">
-                      {event.organizerName}
+                      {event.organizer}
                     </div>
                   </div>
                 </div>
@@ -506,22 +563,24 @@ const EventDetail = () => {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-foreground">
-                              {attendee.userName}
+                              {attendee.userId}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-foreground">
-                          {attendee.pharmacyName || 'N/A'}
-                        </div>
+                        <div className="text-sm text-foreground">N/A</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-foreground">
-                          {formatDate(attendee.registeredAt)}
+                          {formatDate(
+                            attendee.registeredAt || attendee.createdAt || ''
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatTime(attendee.registeredAt)}
+                          {formatTime(
+                            attendee.registeredAt || attendee.createdAt || ''
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -535,25 +594,26 @@ const EventDetail = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {attendee.paid ? (
+                        {attendee.paymentStatus === 'paid' ? (
                           <div>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                               Paid
                             </span>
-                            {attendee.paymentMethod && (
+                            {attendee.paymentReference && (
                               <div className="text-xs text-muted-foreground mt-1">
-                                via {attendee.paymentMethod}
+                                Ref: {attendee.paymentReference}
                               </div>
                             )}
                           </div>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
-                            Unpaid
+                            {attendee.paymentStatus.charAt(0).toUpperCase() +
+                              attendee.paymentStatus.slice(1)}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {attendee.checkedIn ? (
+                        {attendee.status === 'confirmed' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                             <i className="fas fa-check-circle mr-1"></i> Checked
                             In
@@ -561,32 +621,7 @@ const EventDetail = () => {
                         ) : (
                           <button
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded px-2 py-1"
-                            onClick={async () => {
-                              try {
-                                await eventService.checkInAttendee(
-                                  id!,
-                                  attendee._id
-                                );
-                                // Update the attendee in the state
-                                setAttendees(
-                                  attendees.map((a) =>
-                                    a._id === attendee._id
-                                      ? {
-                                          ...a,
-                                          checkedIn: true,
-                                          checkedInAt: new Date().toISOString(),
-                                        }
-                                      : a
-                                  )
-                                );
-                              } catch (error) {
-                                console.error(
-                                  'Error checking in attendee:',
-                                  error
-                                );
-                                alert('Failed to check in attendee');
-                              }
-                            }}
+                            onClick={() => handleCheckIn(attendee._id)}
                           >
                             Check In
                           </button>
@@ -606,33 +641,16 @@ const EventDetail = () => {
                           </button>
                           <button
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-background rounded p-2"
-                            onClick={async () => {
+                            onClick={() => {
                               if (
                                 window.confirm(
                                   'Are you sure you want to remove this attendee?'
                                 )
                               ) {
-                                try {
-                                  await eventService.updateAttendeeStatus(
-                                    id!,
-                                    attendee._id,
-                                    'canceled'
-                                  );
-                                  // Update the attendee status in the state
-                                  setAttendees(
-                                    attendees.map((a) =>
-                                      a._id === attendee._id
-                                        ? { ...a, status: 'canceled' }
-                                        : a
-                                    )
-                                  );
-                                } catch (error) {
-                                  console.error(
-                                    'Error removing attendee:',
-                                    error
-                                  );
-                                  alert('Failed to remove attendee');
-                                }
+                                handleUpdateRegistrationStatus(
+                                  attendee._id,
+                                  'cancelled' as RegistrationStatus
+                                );
                               }
                             }}
                           >

@@ -48,7 +48,7 @@ import PaymentReports from './pages/dashboard/PaymentReports';
 import CollectionReports from './pages/dashboard/CollectionReports';
 import OutstandingDues from './pages/dashboard/OutstandingDues';
 
-// Event Management Pages
+// Event Management Pages (Old - keeping for backward compatibility)
 import EventDashboard from './pages/dashboard/EventDashboard';
 import EventList from './pages/dashboard/EventList';
 import EventForm from './pages/dashboard/EventForm';
@@ -57,6 +57,14 @@ import EventCalendar from './pages/dashboard/EventCalendar';
 import EventReports from './pages/dashboard/EventReports';
 import EventCheckIn from './pages/dashboard/EventCheckIn';
 import AttendeeManagement from './pages/dashboard/AttendeeManagement';
+
+// New Event Management Pages
+import AdminEventsList from './pages/admin/AdminEventsList';
+import AdminEventForm from './pages/admin/AdminEventForm';
+import AdminAttendanceMarking from './pages/admin/AdminAttendanceMarking';
+import MemberEventsList from './pages/member/MemberEventsList';
+import MemberEventDetails from './pages/member/MemberEventDetails';
+import MemberEventRegistration from './pages/member/MemberEventRegistration';
 
 // Communication Pages
 import CommunicationsDashboard from './pages/dashboard/CommunicationsDashboard';
@@ -273,7 +281,7 @@ function App() {
                     />
                   </Route>
 
-                  {/* Secretary Routes */}
+                  {/* Secretary/Admin Routes */}
                   <Route
                     element={
                       <ProtectedRoute
@@ -281,6 +289,22 @@ function App() {
                       />
                     }
                   >
+                    {/* New Event Management System */}
+                    <Route path="/admin/events" element={<AdminEventsList />} />
+                    <Route
+                      path="/admin/events/create"
+                      element={<AdminEventForm />}
+                    />
+                    <Route
+                      path="/admin/events/:id/edit"
+                      element={<AdminEventForm />}
+                    />
+                    <Route
+                      path="/admin/events/:id/attendance"
+                      element={<AdminAttendanceMarking />}
+                    />
+
+                    {/* Legacy event routes (keeping for backward compatibility) */}
                     <Route path="/events" element={<EventList />} />
                     <Route
                       path="/events/dashboard"
@@ -365,6 +389,18 @@ function App() {
                   <Route path="/my-pharmacy/edit" element={<PharmacyForm />} />
                   <Route path="/payments" element={<PharmacyDues />} />
                   <Route path="/my-documents" element={<DocumentsList />} />
+
+                  {/* Member Event Routes */}
+                  <Route path="/member/events" element={<MemberEventsList />} />
+                  <Route
+                    path="/member/events/:id"
+                    element={<MemberEventDetails />}
+                  />
+                  <Route
+                    path="/member/events/:id/register"
+                    element={<MemberEventRegistration />}
+                  />
+
                   <Route
                     path="/messages"
                     element={<div>Messages (Coming Soon)</div>}

@@ -9,20 +9,33 @@ export interface SelectOption {
 
 export interface SelectProps
   extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
-  options: SelectOption[];
+  options?: SelectOption[];
   label?: string;
   error?: string;
   fullWidth?: boolean;
   onChange?: (value: string) => void;
+  onValueChange?: (value: string) => void;
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   (
-    { className, options, label, error, fullWidth = false, onChange, ...props },
+    {
+      className,
+      options = [],
+      label,
+      error,
+      fullWidth = false,
+      onChange,
+      onValueChange,
+      children,
+      ...props
+    },
     ref
   ) => {
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      onChange?.(event.target.value);
+      const value = event.target.value;
+      onChange?.(value);
+      onValueChange?.(value);
     };
 
     return (
@@ -51,15 +64,16 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           onChange={handleChange}
           {...props}
         >
-          {options.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-              disabled={option.disabled}
-            >
-              {option.label}
-            </option>
-          ))}
+          {children ||
+            options.map((option) => (
+              <option
+                key={option.value}
+                value={option.value}
+                disabled={option.disabled}
+              >
+                {option.label}
+              </option>
+            ))}
         </select>
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       </div>
@@ -69,4 +83,26 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
 Select.displayName = 'Select';
 
-export { Select };
+// Additional exports for compatibility
+const SelectContent = ({ children }: { children: React.ReactNode }) => (
+  <>{children}</>
+);
+const SelectItem = ({
+  value,
+  children,
+  disabled,
+}: {
+  value: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) => (
+  <option value={value} disabled={disabled}>
+    {children}
+  </option>
+);
+const SelectTrigger = Select;
+const SelectValue = ({ placeholder }: { placeholder?: string }) => (
+  <option value="">{placeholder}</option>
+);
+
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

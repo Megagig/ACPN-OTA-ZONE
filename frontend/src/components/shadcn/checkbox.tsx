@@ -2,13 +2,22 @@ import * as React from 'react';
 import { cn } from '../../lib/utils/cn';
 
 export interface CheckboxProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label?: string;
   description?: string;
+  onCheckedChange?: (checked: boolean) => void;
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, label, description, ...props }, ref) => {
+  (
+    { className, label, description, onCheckedChange, onChange, ...props },
+    ref
+  ) => {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      onChange?.(event);
+      onCheckedChange?.(event.target.checked);
+    };
+
     return (
       <div className="flex items-start space-x-2">
         <input
@@ -21,6 +30,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             'transition-colors duration-200 ease-in-out cursor-pointer',
             className
           )}
+          onChange={handleChange}
           {...props}
         />
         {(label || description) && (

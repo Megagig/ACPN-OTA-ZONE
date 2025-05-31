@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import eventService from '../../services/event.service';
-import type { Event, EventType, EventStatus } from '../../types/event.types';
+import type { Event, CreateEventData } from '../../types/event.types';
 
 // Type for form errors
 type FormErrors = {
@@ -17,7 +17,7 @@ const EventForm: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Event>>({
     title: '',
     description: '',
-    type: 'conference',
+    eventType: 'conference',
     startDate: '',
     endDate: '',
     location: {
@@ -29,11 +29,11 @@ const EventForm: React.FC = () => {
       meetingLink: '',
     },
     status: 'draft',
-    registrationRequired: false,
+    requiresRegistration: false,
     registrationDeadline: '',
     registrationFee: 0,
-    maxAttendees: 0,
-    organizerName: '',
+    capacity: 0,
+    organizer: '',
     organizerId: '',
     tags: [],
   });
@@ -168,7 +168,7 @@ const EventForm: React.FC = () => {
     }
 
     // If registration is required, validate registration fields
-    if (formData.registrationRequired) {
+    if (formData.requiresRegistration) {
       if (!formData.registrationDeadline) {
         newErrors.registrationDeadline = 'Registration deadline is required';
       }
@@ -185,7 +185,7 @@ const EventForm: React.FC = () => {
     }
 
     if (
-      formData.registrationRequired &&
+      formData.requiresRegistration &&
       formData.startDate &&
       formData.registrationDeadline
     ) {
@@ -214,10 +214,33 @@ const EventForm: React.FC = () => {
     setIsSaving(true);
 
     try {
+      // Ensure required fields for backend are set
+      const eventData: CreateEventData = {
+        title: formData.title || '',
+        description: formData.description || '',
+        eventType: formData.eventType || 'conference',
+        startDate: formData.startDate || '',
+        endDate: formData.endDate || '',
+        location: formData.location || {
+          name: '',
+          address: '',
+          city: '',
+          state: '',
+        },
+        requiresRegistration: formData.requiresRegistration || false,
+        registrationDeadline: formData.registrationDeadline,
+        registrationFee: formData.registrationFee,
+        capacity: formData.capacity,
+        isAttendanceRequired: formData.isAttendanceRequired || false,
+        organizer: formData.organizer || 'ACPN',
+        imageUrl: formData.imageUrl,
+        tags: formData.tags,
+      };
+
       if (isEditMode && id) {
-        await eventService.updateEvent(id, formData);
+        await eventService.updateEvent(id, eventData);
       } else {
-        await eventService.createEvent(formData);
+        await eventService.createEvent(eventData);
       }
 
       navigate('/events');
@@ -311,23 +334,24 @@ const EventForm: React.FC = () => {
             {/* Event Type */}
             <div>
               <label
-                htmlFor="type"
+                htmlFor="eventType"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Event Type*
               </label>
               <select
-                id="type"
-                name="type"
+                id="eventType"
+                name="eventType"
                 className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                value={formData.type}
+                value={formData.eventType}
                 onChange={handleInputChange}
               >
                 <option value="conference">Conference</option>
                 <option value="workshop">Workshop</option>
                 <option value="seminar">Seminar</option>
                 <option value="training">Training</option>
-                <option value="meeting">Meeting</option>
+                <option value="meetings">Meeting</option>
+                <option value="state_events">State Event</option>
                 <option value="social">Social</option>
                 <option value="other">Other</option>
               </select>
@@ -565,9 +589,9 @@ const EventForm: React.FC = () => {
                 <label className="inline-flex items-center">
                   <input
                     type="checkbox"
-                    name="registrationRequired"
+                    name="requiresRegistration"
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
-                    checked={formData.registrationRequired}
+                    checked={formData.requiresRegistration}
                     onChange={handleInputChange}
                   />
                   <span className="ml-2 text-sm text-gray-700">
@@ -576,7 +600,7 @@ const EventForm: React.FC = () => {
                 </label>
               </div>
 
-              {formData.registrationRequired && (
+              {formData.requiresRegistration && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                   <div>
                     <label
@@ -626,17 +650,17 @@ const EventForm: React.FC = () => {
 
                   <div>
                     <label
-                      htmlFor="maxAttendees"
+                      htmlFor="capacity"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Max Attendees
+                      Capacity
                     </label>
                     <input
                       type="number"
-                      id="maxAttendees"
-                      name="maxAttendees"
+                      id="capacity"
+                      name="capacity"
                       className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.maxAttendees || ''}
+                      value={formData.capacity || ''}
                       onChange={handleInputChange}
                       min="0"
                     />
@@ -651,17 +675,17 @@ const EventForm: React.FC = () => {
             {/* Organizer */}
             <div className="col-span-1 md:col-span-2">
               <label
-                htmlFor="organizerName"
+                htmlFor="organizer"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Organizer Name
               </label>
               <input
                 type="text"
-                id="organizerName"
-                name="organizerName"
+                id="organizer"
+                name="organizer"
                 className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                value={formData.organizerName || ''}
+                value={formData.organizer || ''}
                 onChange={handleInputChange}
                 placeholder="e.g., ACPN Event Committee"
               />
@@ -725,17 +749,17 @@ const EventForm: React.FC = () => {
             {/* Thumbnail URL */}
             <div className="col-span-1 md:col-span-2">
               <label
-                htmlFor="thumbnail"
+                htmlFor="imageUrl"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Thumbnail URL
               </label>
               <input
                 type="text"
-                id="thumbnail"
-                name="thumbnail"
+                id="imageUrl"
+                name="imageUrl"
                 className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                value={formData.thumbnail || ''}
+                value={formData.imageUrl || ''}
                 onChange={handleInputChange}
                 placeholder="e.g., https://example.com/images/event.jpg"
               />

@@ -48,7 +48,7 @@ const EventList = () => {
 
     // Event type filter
     if (typeFilter !== 'all') {
-      results = results.filter((event) => event.type === typeFilter);
+      results = results.filter((event) => event.eventType === typeFilter);
     }
 
     // Status filter
@@ -83,7 +83,7 @@ const EventList = () => {
         return 'bg-green-100 text-green-800';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
-      case 'canceled':
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'completed':
         return 'bg-blue-100 text-blue-800';
@@ -93,7 +93,9 @@ const EventList = () => {
   };
 
   // Get event type badge class
-  const getEventTypeBadgeClass = (type: EventType) => {
+  const getEventTypeBadgeClass = (type?: EventType | string) => {
+    if (!type) return 'bg-gray-100 text-gray-800';
+
     switch (type) {
       case 'conference':
         return 'bg-purple-100 text-purple-800';
@@ -103,8 +105,12 @@ const EventList = () => {
         return 'bg-blue-100 text-blue-800';
       case 'training':
         return 'bg-indigo-100 text-indigo-800';
+      case 'meetings':
       case 'meeting':
         return 'bg-yellow-100 text-yellow-800';
+      case 'state_events':
+      case 'state_event':
+        return 'bg-orange-100 text-orange-800';
       case 'social':
         return 'bg-pink-100 text-pink-800';
       case 'other':
@@ -198,7 +204,8 @@ const EventList = () => {
               <option value="workshop">Workshop</option>
               <option value="seminar">Seminar</option>
               <option value="training">Training</option>
-              <option value="meeting">Meeting</option>
+              <option value="meetings">Meetings</option>
+              <option value="state_events">State Events</option>
               <option value="social">Social</option>
               <option value="other">Other</option>
             </select>
@@ -223,7 +230,7 @@ const EventList = () => {
               <option value="all">All Statuses</option>
               <option value="draft">Draft</option>
               <option value="published">Published</option>
-              <option value="canceled">Canceled</option>
+              <option value="cancelled">Cancelled</option>
               <option value="completed">Completed</option>
             </select>
           </div>
@@ -340,11 +347,12 @@ const EventList = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEventTypeBadgeClass(
-                          event.type
+                          event.eventType
                         )}`}
                       >
-                        {event.type.charAt(0).toUpperCase() +
-                          event.type.slice(1)}
+                        {event.eventType &&
+                          event.eventType.charAt(0).toUpperCase() +
+                            event.eventType.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
