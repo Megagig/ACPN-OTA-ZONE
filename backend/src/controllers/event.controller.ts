@@ -1,18 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import Event, { EventStatus } from '../models/event.model';
-import EventAttendee, {
-  AttendanceStatus,
-  PaymentStatus,
-} from '../models/eventAttendee.model';
+import Event, { EventStatus, EventType } from '../models/event.model';
+import EventRegistration, { RegistrationStatus } from '../models/eventRegistration.model';
+import EventAttendance from '../models/eventAttendance.model';
+import EventNotification from '../models/eventNotification.model';
+import MeetingPenaltyConfig from '../models/meetingPenaltyConfig.model';
+import User from '../models/user.model';
+import Due from '../models/due.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
+import { sendEmail } from '../utils/emailService';
+import { v2 as cloudinary } from 'cloudinary';
 
 // @desc    Get all events
 // @route   GET /api/events
 // @access  Private
 export const getAllEvents = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    // Implement pagination, filtering and sorting
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const startIndex = (page - 1) * limit;
@@ -25,6 +28,11 @@ export const getAllEvents = asyncHandler(
       query.status = req.query.status;
     }
 
+    // Filter by event type if provided
+    if (req.query.eventType) {
+      query.eventType = req.query.eventType;
+    }
+
     // Filter by date range if provided
     if (req.query.startDate) {
       query.startDate = { $gte: new Date(req.query.startDate as string) };
@@ -34,21 +42,42 @@ export const getAllEvents = asyncHandler(
       query.endDate = { $lte: new Date(req.query.endDate as string) };
     }
 
-    // Search by title or description
+    // Search by title, description, or location
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search as string, 'i');
       query.$or = [
         { title: searchRegex },
         { description: searchRegex },
         { location: searchRegex },
+        { organizer: searchRegex },
       ];
     }
 
+    const total = await Event.countDocuments(query);
     const events = await Event.find(query)
       .populate({
         path: 'createdBy',
         select: 'firstName lastName email',
       })
+      .populate('registrations')
+      .populate('attendance')
+      .sort({ startDate: 1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      count: events.length,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        total,
+      },
+      data: events,
+    });
+  }
+);
       .populate({
         path: 'attendees',
         select: 'userId attendanceStatus paymentStatus',
