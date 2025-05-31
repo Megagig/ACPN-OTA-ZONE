@@ -16,177 +16,272 @@ import type {
 } from '../types/financial.types';
 import type { PharmacyDue } from '../types/pharmacy.types';
 import type { DueType, Pharmacy } from '../types/pharmacy.types';
-import mockFinancialService from './mockData.service';
 
 // Remove the /api prefix since it's already included in the axios baseURL
 const BASE_URL = '';
 
-// ============== ORIGINAL FINANCIAL RECORDS API ==============
+// ============== FINANCIAL RECORDS API ==============
 
-export const getFinancialRecords = async (): Promise<FinancialRecord[]> => {
-  return mockFinancialService.getFinancialRecords();
+export const getFinancialRecords = async (params?: {
+  limit?: number;
+  page?: number;
+  sort?: string;
+  search?: string;
+  type?: string;
+  category?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<FinancialRecord[]> => {
+  try {
+    const response = await api.get('/financial-records', { params });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching financial records:', error);
+    throw error;
+  }
 };
 
 export const getFinancialRecordById = async (
   id: string
 ): Promise<FinancialRecord> => {
-  return mockFinancialService.getFinancialRecordById(id);
+  try {
+    const response = await api.get(`/financial-records/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching financial record with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createFinancialRecord = async (
   data: Partial<FinancialRecord>
 ): Promise<FinancialRecord> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: 'new-' + Date.now(),
-    ...data,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  } as FinancialRecord;
+  try {
+    const response = await api.post('/financial-records', data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating financial record:', error);
+    throw error;
+  }
 };
 
 export const updateFinancialRecord = async (
   id: string,
   data: Partial<FinancialRecord>
 ): Promise<FinancialRecord> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: id,
-    ...data,
-    updatedAt: new Date().toISOString(),
-  } as FinancialRecord;
+  try {
+    const response = await api.put(`/financial-records/${id}`, data);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error updating financial record with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteFinancialRecord = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  console.log('Deleting financial record:', id);
+  try {
+    await api.delete(`/financial-records/${id}`);
+  } catch (error) {
+    console.error(`Error deleting financial record with id ${id}:`, error);
+    throw error;
+  }
 };
 
-export const getFinancialSummary = async (): Promise<FinancialSummary> => {
-  return mockFinancialService.getFinancialSummary();
+export const getFinancialSummary = async (
+  period: string = 'month'
+): Promise<FinancialSummary> => {
+  try {
+    const response = await api.get('/financial-records/summary', {
+      params: { period },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching financial summary:', error);
+    throw error;
+  }
 };
 
-// ============== ORIGINAL DUES API ==============
+// ============== DUES API ==============
 
-export const getDues = async (): Promise<Due[]> => {
-  return mockFinancialService.getDues();
+export const getDues = async (params?: {
+  limit?: number;
+  page?: number;
+  sort?: string;
+  year?: number;
+}): Promise<Due[]> => {
+  try {
+    const response = await api.get('/dues', { params });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching dues:', error);
+    throw error;
+  }
 };
 
 export const getDueById = async (id: string): Promise<Due> => {
-  return mockFinancialService.getDueById(id);
+  try {
+    const response = await api.get(`/dues/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching due with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createDue = async (data: Partial<Due>): Promise<Due> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: 'new-' + Date.now(),
-    ...data,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  } as Due;
+  try {
+    const response = await api.post('/dues', data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating due:', error);
+    throw error;
+  }
 };
 
 export const updateDue = async (
   id: string,
   data: Partial<Due>
 ): Promise<Due> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: id,
-    ...data,
-    updatedAt: new Date().toISOString(),
-  } as Due;
+  try {
+    const response = await api.put(`/dues/${id}`, data);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error updating due with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteDue = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  console.log('Deleting due:', id);
+  try {
+    await api.delete(`/dues/${id}`);
+  } catch (error) {
+    console.error(`Error deleting due with id ${id}:`, error);
+    throw error;
+  }
 };
 
-// ============== ORIGINAL DUE PAYMENTS API ==============
+// ============== DUE PAYMENTS API ==============
 
-export const getDuePayments = async (): Promise<DuePayment[]> => {
-  return mockFinancialService.getDuePayments();
+export const getDuePayments = async (params?: {
+  limit?: number;
+  page?: number;
+  sort?: string;
+  dueId?: string;
+  pharmacyId?: string;
+  status?: string;
+}): Promise<DuePayment[]> => {
+  try {
+    const response = await api.get('/payments', { params });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching due payments:', error);
+    throw error;
+  }
 };
 
 export const getDuePaymentById = async (id: string): Promise<DuePayment> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  const payment = (await mockFinancialService.getDuePayments()).find(
-    (p) => p._id === id
-  );
-  if (!payment) throw new Error('Payment not found');
-  return payment;
+  try {
+    const response = await api.get(`/payments/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching due payment with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createDuePayment = async (
   data: Partial<DuePayment>
 ): Promise<DuePayment> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: 'new-' + Date.now(),
-    ...data,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  } as DuePayment;
+  try {
+    const response = await api.post('/payments', data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating due payment:', error);
+    throw error;
+  }
 };
 
 export const updateDuePayment = async (
   id: string,
   data: Partial<DuePayment>
 ): Promise<DuePayment> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: id,
-    ...data,
-    updatedAt: new Date().toISOString(),
-  } as DuePayment;
+  try {
+    const response = await api.put(`/payments/${id}`, data);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error updating due payment with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteDuePayment = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  console.log('Deleting due payment:', id);
+  try {
+    await api.delete(`/payments/${id}`);
+  } catch (error) {
+    console.error(`Error deleting due payment with id ${id}:`, error);
+    throw error;
+  }
 };
 
-// ============== ORIGINAL DONATIONS API ==============
+// ============== DONATIONS API ==============
 
-export const getDonations = async (): Promise<Donation[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return [];
+export const getDonations = async (params?: {
+  limit?: number;
+  page?: number;
+  sort?: string;
+  pharmacyId?: string;
+}): Promise<Donation[]> => {
+  try {
+    const response = await api.get('/donations', { params });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+    throw error;
+  }
 };
 
 export const getDonationById = async (id: string): Promise<Donation> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  console.log('Getting donation by id:', id);
-  throw new Error('Donation not found');
+  try {
+    const response = await api.get(`/donations/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching donation with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createDonation = async (
   data: Partial<Donation>
 ): Promise<Donation> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: 'new-' + Date.now(),
-    ...data,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  } as Donation;
+  try {
+    const response = await api.post('/donations', data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating donation:', error);
+    throw error;
+  }
 };
 
 export const updateDonation = async (
   id: string,
   data: Partial<Donation>
 ): Promise<Donation> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    _id: id,
-    ...data,
-    updatedAt: new Date().toISOString(),
-  } as Donation;
+  try {
+    const response = await api.put(`/donations/${id}`, data);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error updating donation with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteDonation = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  console.log('Deleting donation:', id);
+  try {
+    await api.delete(`/donations/${id}`);
+  } catch (error) {
+    console.error(`Error deleting donation with id ${id}:`, error);
+    throw error;
+  }
 };
 
 // ============== NEW COMPREHENSIVE DUES & PAYMENTS API ==============
@@ -431,35 +526,29 @@ export const generateClearanceCertificate = async (
 export const checkClearanceEligibility = async (
   pharmacyId: string
 ): Promise<ClearanceEligibility> => {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  const mockEligibility: ClearanceEligibility = {
-    isEligible: Math.random() > 0.3,
-    reason:
-      Math.random() > 0.3 ? undefined : 'Outstanding dues exceed allowed limit',
-    details: {
-      totalDuesPaid: Math.floor(Math.random() * 500000) + 100000,
-      outstandingAmount: Math.floor(Math.random() * 50000),
-      lastPaymentDate: new Date(
-        Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      complianceStatus: Math.random() > 0.2 ? 'compliant' : 'non-compliant',
-    },
-  };
-
-  if (!mockEligibility.isEligible && !mockEligibility.reason) {
-    mockEligibility.reason = 'Outstanding amount exceeds threshold';
+  try {
+    const response = await api.get(
+      `${BASE_URL}/dues/clearance-eligibility/${pharmacyId}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error(
+      `Error checking clearance eligibility for pharmacy ${pharmacyId}:`,
+      error
+    );
+    throw error;
   }
-
-  console.log('Checking clearance eligibility for pharmacy:', pharmacyId);
-  return mockEligibility;
 };
 
 export const recordCertificateGeneration = async (
   certificateData: CertificateData
 ): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log('Recording certificate generation:', certificateData);
+  try {
+    await api.post(`${BASE_URL}/dues/certificates`, certificateData);
+  } catch (error) {
+    console.error('Error recording certificate generation:', error);
+    throw error;
+  }
 };
 
 export const getAllPharmacies = async (): Promise<Pharmacy[]> => {

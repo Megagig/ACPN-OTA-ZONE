@@ -51,9 +51,26 @@ export const getAllFinancialRecords = asyncHandler(
       };
     }
 
-    // Search by description
+    // Search by description or title
     if (req.query.search) {
-      query.description = { $regex: req.query.search, $options: 'i' };
+      query.$or = [
+        { description: { $regex: req.query.search, $options: 'i' } },
+        { title: { $regex: req.query.search, $options: 'i' } },
+      ];
+    }
+
+    // Parse sort parameter (e.g., '-createdAt' for descending by createdAt)
+    let sortBy: any = {};
+    if (req.query.sort) {
+      const sortParam = req.query.sort as string;
+      if (sortParam.startsWith('-')) {
+        sortBy = { [sortParam.substring(1)]: -1 };
+      } else {
+        sortBy = { [sortParam]: 1 };
+      }
+    } else {
+      // Default sort by most recent
+      sortBy = { date: -1 };
     }
 
     const records = await FinancialRecord.find(query)
@@ -63,10 +80,40 @@ export const getAllFinancialRecords = asyncHandler(
       })
       .skip(startIndex)
       .limit(limit)
-      .sort({ date: -1 });
+      .sort(sortBy);
 
     // Get total count
     const total = await FinancialRecord.countDocuments(query);
+
+    // Format the records to match frontend expectations
+    const formattedRecords = records.map((record) => {
+      // Convert recordedBy to string format if it's populated
+      let createdBy = '';
+      if (record.recordedBy) {
+        const user = record.recordedBy as any;
+        createdBy =
+          user && user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : (user && user.email) || 'Unknown';
+      }
+
+      // Map backend model to frontend expected structure
+      return {
+        _id: record._id,
+        title: record.title || record.description,
+        description: record.description,
+        amount: record.amount,
+        type: record.type.toLowerCase(),
+        category: record.category.toLowerCase(),
+        date: record.date.toISOString(),
+        paymentMethod: record.paymentMethod || 'bank_transfer',
+        status: record.status || 'pending',
+        attachments: record.attachments || [],
+        createdBy,
+        createdAt: record.createdAt?.toISOString(),
+        updatedAt: record.updatedAt?.toISOString(),
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -77,7 +124,7 @@ export const getAllFinancialRecords = asyncHandler(
         totalPages: Math.ceil(total / limit),
         total,
       },
-      data: records,
+      data: formattedRecords,
     });
   }
 );
@@ -115,9 +162,32 @@ export const getFinancialRecord = asyncHandler(
       );
     }
 
+    // Format the record to match frontend expectations
+    const user = record.recordedBy as any;
+    const createdBy =
+      user && user.firstName && user.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : (user && user.email) || 'Unknown';
+
+    const formattedRecord = {
+      _id: record._id,
+      title: record.title || record.description,
+      description: record.description,
+      amount: record.amount,
+      type: record.type.toLowerCase(),
+      category: record.category.toLowerCase(),
+      date: record.date.toISOString(),
+      paymentMethod: record.paymentMethod || 'bank_transfer',
+      status: record.status || 'pending',
+      attachments: record.attachments || [],
+      createdBy,
+      createdAt: record.createdAt?.toISOString(),
+      updatedAt: record.updatedAt?.toISOString(),
+    };
+
     res.status(200).json({
       success: true,
-      data: record,
+      data: formattedRecord,
     });
   }
 );
@@ -149,12 +219,47 @@ export const createFinancialRecord = asyncHandler(
     // Add recorded by
     req.body.recordedBy = req.user._id;
 
-    const record = await FinancialRecord.create(req.body);
+    // If title is not provided, use description as title
+    if (!req.body.title && req.body.description) {
+      req.body.title = req.body.description;
+    }
 
-    res.status(201).json({
-      success: true,
-      data: record,
-    });
+    try {
+      const record = await FinancialRecord.create(req.body);
+
+      // Format the response to match frontend expectations
+      const formattedRecord = {
+        _id: record._id,
+        title: record.title || record.description,
+        description: record.description,
+        amount: record.amount,
+        type: record.type.toLowerCase(),
+        category: record.category.toLowerCase(),
+        date: record.date.toISOString(),
+        paymentMethod: record.paymentMethod || 'bank_transfer',
+        status: record.status || 'pending',
+        attachments: record.attachments || [],
+        createdBy:
+          req.user && req.user.firstName
+            ? `${req.user.firstName} ${req.user.lastName || ''}`
+            : (req.user && req.user.email) || 'Unknown',
+        createdAt: record.createdAt?.toISOString(),
+        updatedAt: record.updatedAt?.toISOString(),
+      };
+
+      res.status(201).json({
+        success: true,
+        data: formattedRecord,
+      });
+    } catch (error) {
+      console.error('Error creating financial record:', error);
+      return next(
+        new ErrorResponse(
+          `Failed to create financial record: ${(error as Error).message}`,
+          500
+        )
+      );
+    }
   }
 );
 
@@ -193,14 +298,55 @@ export const updateFinancialRecord = asyncHandler(
       return next(new ErrorResponse(`Amount must be greater than 0`, 400));
     }
 
+    // If title is not provided but description is, use description as title
+    if (!req.body.title && req.body.description) {
+      req.body.title = req.body.description;
+    }
+
+    // Update record
     record = await FinancialRecord.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
+    }).populate({
+      path: 'recordedBy',
+      select: 'firstName lastName email',
     });
+
+    if (!record) {
+      return next(
+        new ErrorResponse(
+          `Financial record not found with id of ${req.params.id} after update`,
+          404
+        )
+      );
+    }
+
+    // Format the record to match frontend expectations
+    const user = record.recordedBy as any;
+    const createdBy =
+      user && user.firstName && user.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : (user && user.email) || 'Unknown';
+
+    const formattedRecord = {
+      _id: record._id,
+      title: record.title || record.description,
+      description: record.description,
+      amount: record.amount,
+      type: record.type.toLowerCase(),
+      category: record.category.toLowerCase(),
+      date: record.date.toISOString(),
+      paymentMethod: record.paymentMethod || 'bank_transfer',
+      status: record.status || 'pending',
+      attachments: record.attachments || [],
+      createdBy,
+      createdAt: record.createdAt?.toISOString(),
+      updatedAt: record.updatedAt?.toISOString(),
+    };
 
     res.status(200).json({
       success: true,
-      data: record,
+      data: formattedRecord,
     });
   }
 );
@@ -263,15 +409,40 @@ export const getFinancialSummary = asyncHandler(
       );
     }
 
-    // Get date range from query (default to current year)
-    const currentYear = new Date().getFullYear();
-    const startDate = req.query.startDate
-      ? new Date(req.query.startDate as string)
-      : new Date(`${currentYear}-01-01`);
+    // Get period from query
+    const period = (req.query.period as string) || 'month';
 
-    const endDate = req.query.endDate
-      ? new Date(req.query.endDate as string)
-      : new Date(`${currentYear}-12-31`);
+    // Calculate date range based on period
+    const now = new Date();
+    let startDate: Date, endDate: Date;
+
+    switch (period) {
+      case 'week':
+        // Last 7 days
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        endDate = now;
+        break;
+      case 'month':
+        // Current month
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'quarter':
+        // Current quarter
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        startDate = new Date(now.getFullYear(), currentQuarter * 3, 1);
+        endDate = new Date(now.getFullYear(), (currentQuarter + 1) * 3, 0);
+        break;
+      case 'year':
+        // Current year
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = new Date(now.getFullYear(), 11, 31);
+        break;
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
 
     // Get total income
     const totalIncome = await FinancialRecord.aggregate([
@@ -295,84 +466,226 @@ export const getFinancialSummary = asyncHandler(
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]);
 
-    // Get breakdown by category
-    const categoryBreakdown = await FinancialRecord.aggregate([
+    // Get income by category
+    const incomeByCategory = await FinancialRecord.aggregate([
       {
         $match: {
+          type: RecordType.INCOME,
           date: { $gte: startDate, $lte: endDate },
         },
       },
       {
         $group: {
-          _id: { type: '$type', category: '$category' },
+          _id: '$category',
           total: { $sum: '$amount' },
-          count: { $sum: 1 },
         },
       },
-      { $sort: { '_id.type': 1, '_id.category': 1 } },
     ]);
 
-    // Format the category breakdown for easier consumption
-    const formattedCategoryBreakdown = categoryBreakdown.map((item) => ({
-      type: item._id.type,
-      category: item._id.category,
-      total: item.total,
-      count: item.count,
-    }));
-
-    // Get monthly breakdown
-    const monthlyBreakdown = await FinancialRecord.aggregate([
+    // Get expense by category
+    const expenseByCategory = await FinancialRecord.aggregate([
       {
         $match: {
+          type: RecordType.EXPENSE,
           date: { $gte: startDate, $lte: endDate },
         },
       },
       {
         $group: {
-          _id: {
-            type: '$type',
-            year: { $year: '$date' },
-            month: { $month: '$date' },
+          _id: '$category',
+          total: { $sum: '$amount' },
+        },
+      },
+    ]);
+
+    // Convert category data to the format expected by frontend
+    const incomeByCategoryMap: Record<string, number> = {};
+    incomeByCategory.forEach((item) => {
+      incomeByCategoryMap[item._id] = item.total;
+    });
+
+    const expenseByCategoryMap: Record<string, number> = {};
+    expenseByCategory.forEach((item) => {
+      expenseByCategoryMap[item._id] = item.total;
+    });
+
+    // Get monthly data for charts
+    const monthsForLabels = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    // For "month" period, show daily data for the current month
+    // For other periods, show monthly data
+    let labels: string[] = [];
+    let incomeData: number[] = [];
+    let expenseData: number[] = [];
+
+    if (period === 'month') {
+      // Daily data for current month
+      const daysInMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0
+      ).getDate();
+      labels = Array.from({ length: daysInMonth }, (_, i) =>
+        (i + 1).toString()
+      );
+
+      // Initialize with zeros
+      incomeData = new Array(daysInMonth).fill(0);
+      expenseData = new Array(daysInMonth).fill(0);
+
+      // Get daily income
+      const dailyIncome = await FinancialRecord.aggregate([
+        {
+          $match: {
+            type: RecordType.INCOME,
+            date: { $gte: startDate, $lte: endDate },
           },
-          total: { $sum: '$amount' },
         },
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1, '_id.type': 1 } },
-    ]);
+        {
+          $group: {
+            _id: { day: { $dayOfMonth: '$date' } },
+            total: { $sum: '$amount' },
+          },
+        },
+        { $sort: { '_id.day': 1 } },
+      ]);
 
-    // Format the monthly breakdown for easier consumption
-    const formattedMonthlyBreakdown = monthlyBreakdown.map((item) => ({
-      type: item._id.type,
-      year: item._id.year,
-      month: item._id.month,
-      total: item.total,
-    }));
+      // Get daily expenses
+      const dailyExpenses = await FinancialRecord.aggregate([
+        {
+          $match: {
+            type: RecordType.EXPENSE,
+            date: { $gte: startDate, $lte: endDate },
+          },
+        },
+        {
+          $group: {
+            _id: { day: { $dayOfMonth: '$date' } },
+            total: { $sum: '$amount' },
+          },
+        },
+        { $sort: { '_id.day': 1 } },
+      ]);
 
-    // Recent transactions
-    const recentTransactions = await FinancialRecord.find()
-      .sort({ date: -1 })
-      .limit(5)
-      .populate({
-        path: 'recordedBy',
-        select: 'firstName lastName',
+      // Fill in the data
+      dailyIncome.forEach((item) => {
+        const day = item._id.day - 1; // adjust for 0-based array
+        if (day >= 0 && day < daysInMonth) {
+          incomeData[day] = item.total;
+        }
       });
+
+      dailyExpenses.forEach((item) => {
+        const day = item._id.day - 1; // adjust for 0-based array
+        if (day >= 0 && day < daysInMonth) {
+          expenseData[day] = item.total;
+        }
+      });
+    } else {
+      // Monthly data
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      const yearEnd = new Date(now.getFullYear(), 11, 31);
+
+      // Default to showing the last 6 months
+      if (period === 'week') {
+        labels = monthsForLabels.slice(0, 6);
+        incomeData = new Array(6).fill(0);
+        expenseData = new Array(6).fill(0);
+      } else {
+        labels = monthsForLabels;
+        incomeData = new Array(12).fill(0);
+        expenseData = new Array(12).fill(0);
+      }
+
+      // Get monthly income for the year
+      const monthlyIncome = await FinancialRecord.aggregate([
+        {
+          $match: {
+            type: RecordType.INCOME,
+            date: { $gte: yearStart, $lte: yearEnd },
+          },
+        },
+        {
+          $group: {
+            _id: { month: { $month: '$date' } },
+            total: { $sum: '$amount' },
+          },
+        },
+        { $sort: { '_id.month': 1 } },
+      ]);
+
+      // Get monthly expenses for the year
+      const monthlyExpenses = await FinancialRecord.aggregate([
+        {
+          $match: {
+            type: RecordType.EXPENSE,
+            date: { $gte: yearStart, $lte: yearEnd },
+          },
+        },
+        {
+          $group: {
+            _id: { month: { $month: '$date' } },
+            total: { $sum: '$amount' },
+          },
+        },
+        { $sort: { '_id.month': 1 } },
+      ]);
+
+      // Fill in the data
+      monthlyIncome.forEach((item) => {
+        const month = item._id.month - 1; // adjust for 0-based array
+        if (month >= 0 && month < 12) {
+          incomeData[month] = item.total;
+        }
+      });
+
+      monthlyExpenses.forEach((item) => {
+        const month = item._id.month - 1; // adjust for 0-based array
+        if (month >= 0 && month < 12) {
+          expenseData[month] = item.total;
+        }
+      });
+
+      // For week period, only show the last 6 months
+      if (period === 'week') {
+        labels = monthsForLabels.slice(0, 6);
+        incomeData = incomeData.slice(0, 6);
+        expenseData = expenseData.slice(0, 6);
+      }
+    }
+
+    // Format the response to match frontend expectations
+    const response = {
+      totalIncome: totalIncome.length > 0 ? totalIncome[0].total : 0,
+      totalExpense: totalExpenses.length > 0 ? totalExpenses[0].total : 0,
+      balance:
+        (totalIncome.length > 0 ? totalIncome[0].total : 0) -
+        (totalExpenses.length > 0 ? totalExpenses[0].total : 0),
+      incomeByCategory: incomeByCategoryMap,
+      expenseByCategory: expenseByCategoryMap,
+      monthlyData: {
+        labels,
+        income: incomeData,
+        expense: expenseData,
+      },
+    };
 
     res.status(200).json({
       success: true,
-      data: {
-        totalIncome: totalIncome.length > 0 ? totalIncome[0].total : 0,
-        totalExpenses: totalExpenses.length > 0 ? totalExpenses[0].total : 0,
-        balance:
-          (totalIncome.length > 0 ? totalIncome[0].total : 0) -
-          (totalExpenses.length > 0 ? totalExpenses[0].total : 0),
-        categoryBreakdown: formattedCategoryBreakdown,
-        monthlyBreakdown: formattedMonthlyBreakdown,
-        recentTransactions,
-        dateRange: {
-          startDate,
-          endDate,
-        },
-      },
+      data: response,
     });
   }
 );
