@@ -33,6 +33,8 @@ import TransactionList from './pages/dashboard/TransactionList';
 import TransactionForm from './pages/dashboard/TransactionForm';
 import TransactionDetail from './pages/dashboard/TransactionDetail';
 import DuesManagement from './pages/dashboard/DuesManagement';
+import DonationsManagement from './pages/dashboard/DonationsManagement';
+import FinancialReports from './pages/dashboard/FinancialReports';
 import FinancialManagement from './pages/dashboard/FinancialManagement';
 import AdminPaymentReview from './pages/dashboard/AdminPaymentReview';
 import DueAssignment from './pages/dashboard/DueAssignment';
@@ -238,6 +240,14 @@ function App() {
                     element={<TransactionForm />}
                   />
                   <Route path="/finances/dues" element={<DuesManagement />} />
+                  <Route
+                    path="/finances/donations"
+                    element={<DonationsManagement />}
+                  />
+                  <Route
+                    path="/finances/reports"
+                    element={<FinancialReports />}
+                  />
                   <Route
                     path="/donations"
                     element={<div>Donations Management (Coming Soon)</div>}

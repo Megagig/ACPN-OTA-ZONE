@@ -269,8 +269,10 @@ const DuesManagement = () => {
                               : 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300'
                           }`}
                         >
-                          {due.status.charAt(0).toUpperCase() +
-                            due.status.slice(1)}
+                          {due.status && typeof due.status === 'string'
+                            ? due.status.charAt(0).toUpperCase() +
+                              due.status.slice(1)
+                            : 'Unknown'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -392,8 +394,10 @@ const DuesManagement = () => {
                               : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           }`}
                         >
-                          {payment.status.charAt(0).toUpperCase() +
-                            payment.status.slice(1)}
+                          {payment.status && typeof payment.status === 'string'
+                            ? payment.status.charAt(0).toUpperCase() +
+                              payment.status.slice(1)
+                            : 'Unknown'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
