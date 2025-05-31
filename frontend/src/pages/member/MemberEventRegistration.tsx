@@ -2,71 +2,75 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
-  Grid,
+  CardBody,
+  Text,
+  SimpleGrid,
   Button,
-  CircularProgress,
+  Spinner,
   Alert,
-  TextField,
-  FormControlLabel,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Input,
+  Textarea,
   Checkbox,
-  Divider,
-  Paper,
   List,
   ListItem,
-  ListItemText,
-  ListItemIcon,
-  Stepper,
+  ListIcon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  ModalFooter,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Link as ChakraLink,
+  FormControl,
+  FormLabel,
+  Heading,
+  VStack,
+  HStack,
+  useSteps,
   Step,
-  StepLabel,
-  StepContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Breadcrumbs,
-  Link,
-} from '@mui/material';
+  StepIndicator,
+  StepStatus,
+  StepIcon,
+  StepNumber,
+  StepTitle,
+  StepDescription,
+  StepSeparator,
+  Stepper as ChakraStepper,
+  Icon,
+  Flex,
+  useToast,
+} from '@chakra-ui/react';
 import {
-  CalendarToday,
-  LocationOn,
-  Person,
-  AttachMoney,
-  CheckCircle,
-  ArrowBack,
-} from '@mui/icons-material';
+  FaCalendarDay,
+  FaMapMarkerAlt,
+  FaUser,
+  FaDollarSign,
+  FaCheckCircle as FaCheckCircleIcon,
+  FaArrowLeft,
+} from 'react-icons/fa';
 import { EventService } from '../../services/event.service';
-import type {
-  Event,
-  EventType,
-  EventRegistrationData,
-} from '../../types/event.types';
+import type { Event, EventRegistrationData } from '../../types/event.types';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom';
 import { format, isPast } from 'date-fns';
-
-const eventTypeLabels: Record<EventType, string> = {
-  conference: 'Conference',
-  workshop: 'Workshop',
-  seminar: 'Seminar',
-  training: 'Training',
-  meetings: 'Meeting',
-  state_events: 'State Event',
-  social: 'Social',
-  other: 'Other',
-};
 
 const MemberEventRegistration: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState(0);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const [formData, setFormData] = useState<EventRegistrationData>({
@@ -83,6 +87,17 @@ const MemberEventRegistration: React.FC = () => {
     photography: false,
   });
 
+  const stepsConfig = [
+    { title: 'Event Details', description: 'Review event information' },
+    { title: 'Registration Form', description: 'Provide your details' },
+    { title: 'Agreements', description: 'Confirm terms' },
+  ];
+
+  const { activeStep, goToNext, goToPrevious } = useSteps({
+    index: 0,
+    count: stepsConfig.length,
+  });
+
   const loadEventDetails = useCallback(async () => {
     if (!eventId) return;
 
@@ -93,7 +108,6 @@ const MemberEventRegistration: React.FC = () => {
       const eventData = await EventService.getEventById(eventId);
       setEvent(eventData);
 
-      // Check if user is already registered
       const registrations = await EventService.getUserRegistrations(
         user?._id,
         1,
@@ -104,8 +118,13 @@ const MemberEventRegistration: React.FC = () => {
       );
 
       if (existingRegistration) {
+        // Use navigate with replace and state for the message
         navigate(`/member/events/${eventId}`, {
-          state: { message: 'You are already registered for this event' },
+          replace: true,
+          state: {
+            message: 'You are already registered for this event',
+            status: 'info',
+          },
         });
         return;
       }
@@ -119,6 +138,9 @@ const MemberEventRegistration: React.FC = () => {
 
   useEffect(() => {
     loadEventDetails();
+    // Access location state for messages passed via navigate
+    // This requires react-router-dom v6 specific way or a custom hook if using older versions with such patterns
+    // For now, assuming a modern setup or that the message is handled on the target page
   }, [loadEventDetails]);
 
   const handleInputChange = (
@@ -141,20 +163,12 @@ const MemberEventRegistration: React.FC = () => {
     }));
   };
 
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
-  };
-
   const canProceed = () => {
     switch (activeStep) {
       case 0:
-        return true; // Event details - just informational
+        return true;
       case 1:
-        return true; // Registration form - all fields are optional
+        return true;
       case 2:
         return (
           agreements.terms &&
@@ -170,13 +184,20 @@ const MemberEventRegistration: React.FC = () => {
 
     try {
       setRegistering(true);
-
+      setError(null);
       await EventService.registerForEvent(event._id, formData);
-
       setShowConfirmDialog(true);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to register for event');
+      toast({
+        title: 'Registration Failed',
+        description:
+          error.response?.data?.message || 'An unexpected error occurred.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setRegistering(false);
     }
@@ -209,26 +230,45 @@ const MemberEventRegistration: React.FC = () => {
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
+      <Flex justify="center" align="center" minH="400px">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
+  if (error && !event) {
+    // Show error if event couldn't be loaded
+    return (
+      <Box p={4}>
+        <Alert status="error" mb={3}>
+          <AlertIcon />
+          <AlertTitle>Error Loading Event!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button
+          variant="outline"
+          leftIcon={<Icon as={FaArrowLeft} />}
+          onClick={() => navigate('/member/events')}
+        >
+          Back to Events
+        </Button>
       </Box>
     );
   }
 
-  if (error || !event) {
+  if (!event) {
+    // Fallback if event is null after loading and no specific error was set for it
     return (
-      <Box>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error || 'Event not found'}
+      <Box p={4}>
+        <Alert status="info" mb={3}>
+          <AlertIcon />
+          <AlertDescription>
+            Event details are currently unavailable.
+          </AlertDescription>
         </Alert>
         <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
+          variant="outline"
+          leftIcon={<Icon as={FaArrowLeft} />}
           onClick={() => navigate('/member/events')}
         >
           Back to Events
@@ -239,13 +279,19 @@ const MemberEventRegistration: React.FC = () => {
 
   if (!canRegister()) {
     return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Registration is not available for this event
+      <Box p={4}>
+        <Alert status="warning" mb={3}>
+          <AlertIcon />
+          <AlertTitle>Registration Not Available</AlertTitle>
+          <AlertDescription>
+            Registration is not currently available for this event. This might
+            be because the deadline has passed, the event is not published, or
+            it does not require registration.
+          </AlertDescription>
         </Alert>
         <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
+          variant="outline"
+          leftIcon={<Icon as={FaArrowLeft} />}
           onClick={() => navigate(`/member/events/${eventId}`)}
         >
           Back to Event Details
@@ -254,434 +300,345 @@ const MemberEventRegistration: React.FC = () => {
     );
   }
 
-  const steps = [
-    {
-      label: 'Event Details',
-      content: (
-        <Box>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {event.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                {event.description}
-              </Typography>
-
-              <List dense>
-                <ListItem>
-                  <ListItemIcon>
-                    <CalendarToday />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Date & Time"
-                    secondary={`${format(
-                      new Date(event.startDate),
-                      'EEEE, MMMM dd, yyyy • h:mm a'
-                    )} - ${format(new Date(event.endDate), 'h:mm a')}`}
-                  />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon>
-                    <LocationOn />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Location"
-                    secondary={
-                      event.location.virtual
-                        ? 'Virtual Event'
-                        : `${event.location.name}, ${event.location.city}`
-                    }
-                  />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon>
-                    <Person />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Organizer"
-                    secondary={event.organizer}
-                  />
-                </ListItem>
-
-                {event.registrationFee && (
-                  <ListItem>
-                    <ListItemIcon>
-                      <AttachMoney />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Registration Fee"
-                      secondary={`₦${event.registrationFee.toLocaleString()}`}
-                    />
-                  </ListItem>
-                )}
-              </List>
-
-              {isRegistrationFull() && (
-                <Alert severity="warning" sx={{ mt: 2 }}>
-                  This event is at capacity. You will be added to the waitlist.
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
-      ),
-    },
-    {
-      label: 'Registration Information',
-      content: (
-        <Box>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Additional Information
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Please provide any additional information that may be helpful
-                for event planning.
-              </Typography>
-
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Notes or Comments"
-                    multiline
-                    rows={3}
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
-                    placeholder="Any special requirements, questions, or comments..."
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Emergency Contact"
-                    value={formData.emergencyContact}
-                    onChange={(e) =>
-                      handleInputChange('emergencyContact', e.target.value)
-                    }
-                    placeholder="Name and phone number"
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Dietary Requirements"
-                    value={formData.dietaryRequirements}
-                    onChange={(e) =>
-                      handleInputChange('dietaryRequirements', e.target.value)
-                    }
-                    placeholder="Allergies, vegetarian, etc."
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Special Needs or Accessibility Requirements"
-                    value={formData.specialNeeds}
-                    onChange={(e) =>
-                      handleInputChange('specialNeeds', e.target.value)
-                    }
-                    placeholder="Wheelchair access, hearing assistance, etc."
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Box>
-      ),
-    },
-    {
-      label: 'Terms & Agreements',
-      content: (
-        <Box>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Terms and Conditions
-              </Typography>
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={agreements.terms}
-                    onChange={(e) =>
-                      handleAgreementChange('terms', e.target.checked)
-                    }
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    I agree to the{' '}
-                    <Link href="#" onClick={(e) => e.preventDefault()}>
-                      terms and conditions
-                    </Link>{' '}
-                    for this event
-                  </Typography>
-                }
-                sx={{ mb: 2 }}
+  const stepContents = [
+    // Step 1: Event Details
+    <Box>
+      <Card mb={3} variant="outline">
+        <CardBody>
+          <Heading size="md" mb={2}>
+            {event.title}
+          </Heading>
+          <Text color="gray.600" mb={4}>
+            {event.description}
+          </Text>
+          <List spacing={3}>
+            <ListItem>
+              <ListIcon as={FaCalendarDay} color="blue.500" />
+              <Text display="inline" fontWeight="bold">
+                Date & Time:
+              </Text>
+              <Text ml={2} display="inline">
+                {`${format(
+                  new Date(event.startDate),
+                  'EEEE, MMMM dd, yyyy • h:mm a'
+                )} - ${format(new Date(event.endDate), 'h:mm a')}`}
+              </Text>
+            </ListItem>
+            <ListItem>
+              <ListIcon as={FaMapMarkerAlt} color="blue.500" />
+              <Text display="inline" fontWeight="bold">
+                Location:
+              </Text>
+              <Text ml={2} display="inline">
+                {event.location.virtual
+                  ? 'Virtual Event'
+                  : `${event.location.name}, ${event.location.city}`}
+              </Text>
+            </ListItem>
+            <ListItem>
+              <ListIcon as={FaUser} color="blue.500" />
+              <Text display="inline" fontWeight="bold">
+                Organizer:
+              </Text>
+              <Text ml={2} display="inline">
+                {event.organizer}
+              </Text>
+            </ListItem>
+            {event.registrationFee && (
+              <ListItem>
+                <ListIcon as={FaDollarSign} color="blue.500" />
+                <Text display="inline" fontWeight="bold">
+                  Registration Fee:
+                </Text>
+                <Text
+                  ml={2}
+                  display="inline"
+                >{`₦${event.registrationFee.toLocaleString()}`}</Text>
+              </ListItem>
+            )}
+          </List>
+          {isRegistrationFull() && (
+            <Alert status="warning" mt={4}>
+              <AlertIcon />
+              This event is at capacity. You may be added to the waitlist.
+            </Alert>
+          )}
+        </CardBody>
+      </Card>
+    </Box>,
+    // Step 2: Registration Information
+    <Box>
+      <Card mb={3} variant="outline">
+        <CardBody>
+          <Heading size="md" mb={2}>
+            Additional Information
+          </Heading>
+          <Text color="gray.600" mb={4}>
+            Please provide any additional information that may be helpful for
+            event planning.
+          </Text>
+          <VStack spacing={4} align="stretch">
+            <FormControl>
+              <FormLabel htmlFor="notes">Notes or Comments</FormLabel>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                placeholder="Any special requirements, questions, or comments..."
+                rows={3}
               />
-
-              {event.eventType === 'training' && (
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={agreements.waiver}
-                      onChange={(e) =>
-                        handleAgreementChange('waiver', e.target.checked)
-                      }
-                    />
+            </FormControl>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+              <FormControl>
+                <FormLabel htmlFor="emergencyContact">
+                  Emergency Contact
+                </FormLabel>
+                <Input
+                  id="emergencyContact"
+                  value={formData.emergencyContact}
+                  onChange={(e) =>
+                    handleInputChange('emergencyContact', e.target.value)
                   }
-                  label={
-                    <Typography variant="body2">
-                      I acknowledge and accept the{' '}
-                      <Link href="#" onClick={(e) => e.preventDefault()}>
-                        liability waiver
-                      </Link>{' '}
-                      for this training event
-                    </Typography>
-                  }
-                  sx={{ mb: 2 }}
+                  placeholder="Name and phone number"
                 />
-              )}
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={agreements.photography}
-                    onChange={(e) =>
-                      handleAgreementChange('photography', e.target.checked)
-                    }
-                  />
+              </FormControl>
+              <FormControl>
+                <FormLabel htmlFor="dietaryRequirements">
+                  Dietary Requirements
+                </FormLabel>
+                <Input
+                  id="dietaryRequirements"
+                  value={formData.dietaryRequirements}
+                  onChange={(e) =>
+                    handleInputChange('dietaryRequirements', e.target.value)
+                  }
+                  placeholder="Allergies, vegetarian, etc."
+                />
+              </FormControl>
+            </SimpleGrid>
+            <FormControl>
+              <FormLabel htmlFor="specialNeeds">
+                Special Needs or Accessibility Requirements
+              </FormLabel>
+              <Input
+                id="specialNeeds"
+                value={formData.specialNeeds}
+                onChange={(e) =>
+                  handleInputChange('specialNeeds', e.target.value)
                 }
-                label={
-                  <Typography variant="body2">
-                    I consent to photography and video recording during the
-                    event for promotional purposes (optional)
-                  </Typography>
-                }
+                placeholder="Wheelchair access, hearing assistance, etc."
               />
-
-              {event.registrationFee && (
-                <Alert severity="info" sx={{ mt: 3 }}>
-                  <Typography variant="body2">
-                    <strong>Payment:</strong> A registration fee of ₦
-                    {event.registrationFee.toLocaleString()} applies. Payment
-                    instructions will be provided after registration
-                    confirmation.
-                  </Typography>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
-      ),
-    },
+            </FormControl>
+          </VStack>
+        </CardBody>
+      </Card>
+    </Box>,
+    // Step 3: Terms & Agreements
+    <Box>
+      <Card mb={3} variant="outline">
+        <CardBody>
+          <Heading size="md" mb={4}>
+            Terms and Conditions
+          </Heading>
+          <VStack spacing={4} align="stretch">
+            <Checkbox
+              isChecked={agreements.terms}
+              onChange={(e) => handleAgreementChange('terms', e.target.checked)}
+            >
+              <Text fontSize="sm">
+                I agree to the{' '}
+                <ChakraLink
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  color="blue.500"
+                  isExternal
+                >
+                  terms and conditions
+                </ChakraLink>{' '}
+                for this event.
+              </Text>
+            </Checkbox>
+            {event.eventType === 'training' && (
+              <Checkbox
+                isChecked={agreements.waiver}
+                onChange={(e) =>
+                  handleAgreementChange('waiver', e.target.checked)
+                }
+              >
+                <Text fontSize="sm">
+                  I acknowledge and accept the{' '}
+                  <ChakraLink
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    color="blue.500"
+                    isExternal
+                  >
+                    liability waiver
+                  </ChakraLink>{' '}
+                  for this training event.
+                </Text>
+              </Checkbox>
+            )}
+            <Checkbox
+              isChecked={agreements.photography}
+              onChange={(e) =>
+                handleAgreementChange('photography', e.target.checked)
+              }
+            >
+              <Text fontSize="sm">
+                I consent to photography and video recording during the event
+                for promotional purposes (optional).
+              </Text>
+            </Checkbox>
+          </VStack>
+          {event.registrationFee && (
+            <Alert status="info" mt={6} variant="subtle">
+              <AlertIcon />
+              <Box>
+                <AlertTitle>Payment Information</AlertTitle>
+                <AlertDescription>
+                  A registration fee of ₦
+                  {event.registrationFee.toLocaleString()} applies. Payment
+                  instructions will be provided after registration confirmation.
+                </AlertDescription>
+              </Box>
+            </Alert>
+          )}
+        </CardBody>
+      </Card>
+    </Box>,
   ];
 
   return (
-    <Box>
-      {/* Breadcrumbs */}
-      <Breadcrumbs sx={{ mb: 3 }}>
-        <Link component={RouterLink} to="/member/events" underline="hover">
-          Events
-        </Link>
-        <Link
-          component={RouterLink}
-          to={`/member/events/${eventId}`}
-          underline="hover"
-        >
-          {event.title}
-        </Link>
-        <Typography color="text.primary">Register</Typography>
-      </Breadcrumbs>
+    <Box p={{ base: 2, md: 4 }}>
+      <Breadcrumb mb={4} separator="/">
+        <BreadcrumbItem>
+          <BreadcrumbLink as={RouterLink} to="/member/events">
+            Events
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+          <BreadcrumbLink as={RouterLink} to={`/member/events/${eventId}`}>
+            {event?.title || 'Event'}
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbItem isCurrentPage>
+          <BreadcrumbLink>Register</BreadcrumbLink>
+        </BreadcrumbItem>
+      </Breadcrumb>
 
-      {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={4}>
+      <Flex align="center" gap={2} mb={6}>
         <Button
-          startIcon={<ArrowBack />}
+          leftIcon={<Icon as={FaArrowLeft} />}
           onClick={() => navigate(`/member/events/${eventId}`)}
-          variant="outlined"
+          variant="ghost"
+          size="sm"
         >
-          Back
+          Back to Event
         </Button>
-        <Typography variant="h4" component="h1">
-          Event Registration
-        </Typography>
-      </Box>
+      </Flex>
 
-      {/* Error Alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      <Heading size="lg" mb={2}>
+        Register for: {event.title}
+      </Heading>
+      <Text fontSize="md" color="gray.600" mb={6}>
+        Complete the steps below to secure your spot.
+      </Text>
 
-      <Grid container spacing={3}>
-        {/* Main Content */}
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Paper sx={{ p: 3 }}>
-            <Stepper activeStep={activeStep} orientation="vertical">
-              {steps.map((step, index) => (
-                <Step key={step.label}>
-                  <StepLabel>{step.label}</StepLabel>
-                  <StepContent>
-                    {step.content}
-
-                    <Box sx={{ mb: 2 }}>
-                      <Button
-                        variant="contained"
-                        onClick={
-                          index === steps.length - 1
-                            ? handleRegister
-                            : handleNext
-                        }
-                        disabled={!canProceed() || registering}
-                        sx={{ mt: 1, mr: 1 }}
-                      >
-                        {index === steps.length - 1 ? (
-                          registering ? (
-                            <CircularProgress size={20} />
-                          ) : (
-                            'Complete Registration'
-                          )
-                        ) : (
-                          'Continue'
-                        )}
-                      </Button>
-                      <Button
-                        disabled={index === 0}
-                        onClick={handleBack}
-                        sx={{ mt: 1, mr: 1 }}
-                      >
-                        Back
-                      </Button>
-                    </Box>
-                  </StepContent>
-                </Step>
-              ))}
-            </Stepper>
-          </Paper>
-        </Grid>
-
-        {/* Sidebar */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Registration Summary
-              </Typography>
-
-              <Box mb={2}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Event
-                </Typography>
-                <Typography variant="body2">{event.title}</Typography>
-              </Box>
-
-              <Box mb={2}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Type
-                </Typography>
-                <Typography variant="body2">
-                  {eventTypeLabels[event.eventType]}
-                </Typography>
-              </Box>
-
-              <Box mb={2}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Date
-                </Typography>
-                <Typography variant="body2">
-                  {format(new Date(event.startDate), 'MMM dd, yyyy')}
-                </Typography>
-              </Box>
-
-              {event.registrationFee && (
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Registration Fee
-                  </Typography>
-                  <Typography variant="h6" color="primary">
-                    ₦{event.registrationFee.toLocaleString()}
-                  </Typography>
+      <ChakraStepper index={activeStep} colorScheme="blue" mb={6}>
+        {stepsConfig.map((step, index) => (
+          <Step key={index}>
+            <StepIndicator>
+              <StepStatus
+                complete={<StepIcon />}
+                incomplete={<StepNumber />}
+                active={<StepNumber />}
+              />
+            </StepIndicator>
+            <Box flexShrink="0" width="100%" pl={{ base: 2, md: 4 }}>
+              <StepTitle>{step.title}</StepTitle>
+              <StepDescription>{step.description}</StepDescription>
+              {activeStep === index && (
+                <Box mt={4}>
+                  {stepContents[index]}
+                  <HStack mt={6} spacing={4}>
+                    <Button
+                      onClick={
+                        index === stepsConfig.length - 1
+                          ? handleRegister
+                          : goToNext
+                      }
+                      isDisabled={!canProceed() || registering}
+                      isLoading={
+                        index === stepsConfig.length - 1 && registering
+                      }
+                      colorScheme="blue"
+                      loadingText={
+                        index === stepsConfig.length - 1
+                          ? 'Registering...'
+                          : 'Loading...'
+                      }
+                    >
+                      {index === stepsConfig.length - 1
+                        ? 'Complete Registration'
+                        : 'Continue'}
+                    </Button>
+                    <Button
+                      isDisabled={index === 0 || registering}
+                      onClick={goToPrevious}
+                      variant="ghost"
+                    >
+                      Back
+                    </Button>
+                  </HStack>
                 </Box>
               )}
+            </Box>
+            {index < stepsConfig.length - 1 && <StepSeparator />}
+          </Step>
+        ))}
+      </ChakraStepper>
 
-              <Divider sx={{ my: 2 }} />
-
-              <Box mb={2}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Registrant
-                </Typography>
-                <Typography variant="body2">
-                  {user?.firstName} {user?.lastName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {user?.email}
-                </Typography>
-              </Box>
-
-              {isRegistrationFull() && (
-                <Alert severity="warning">
-                  You will be added to the waitlist
+      <Modal isOpen={showConfirmDialog} onClose={handleConfirmClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Registration Confirmed!</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="center" textAlign="center" py={4}>
+              <Icon as={FaCheckCircleIcon} w={12} h={12} color="green.500" />
+              <Heading size="md">Thank You!</Heading>
+              <Text>
+                Your registration for <strong>\"{event?.title}\"</strong> has
+                been successfully submitted.
+              </Text>
+              <Text fontSize="sm" color="gray.600">
+                You will receive a confirmation email shortly with further
+                details.
+              </Text>
+              {event?.registrationFee && event.registrationFee > 0 && (
+                <Alert status="info" variant="subtle" borderRadius="md" mt={2}>
+                  <AlertIcon />
+                  <Box flex="1">
+                    <AlertTitle>Payment Required</AlertTitle>
+                    <AlertDescription fontSize="sm">
+                      Please note: A registration fee of{' '}
+                      <strong>₦{event.registrationFee.toLocaleString()}</strong>{' '}
+                      applies. Payment instructions will be included in your
+                      confirmation email.
+                    </AlertDescription>
+                  </Box>
                 </Alert>
               )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Confirmation Dialog */}
-      <Dialog
-        open={showConfirmDialog}
-        onClose={handleConfirmClose}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box display="flex" alignItems="center" gap={1}>
-            <CheckCircle color="success" />
-            Registration Successful!
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" gutterBottom>
-            Thank you for registering for "{event.title}".
-          </Typography>
-
-          {event.registrationFee ? (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Please complete your payment of ₦
-              {event.registrationFee.toLocaleString()} to confirm your
-              registration. Payment instructions have been sent to your email.
-            </Alert>
-          ) : (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Your registration is confirmed. Event details and any updates will
-              be sent to your email.
-            </Alert>
-          )}
-
-          {isRegistrationFull() && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              You have been added to the waitlist. We'll notify you if a spot
-              becomes available.
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleConfirmClose} variant="contained">
-            View Event Details
-          </Button>
-        </DialogActions>
-      </Dialog>
+            </VStack>
+          </ModalBody>
+          <ModalFooter justifyContent="center">
+            <Button colorScheme="blue" onClick={handleConfirmClose}>
+              View Event Details
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

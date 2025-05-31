@@ -2,39 +2,44 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  CardBody,
+  Text,
   List,
   ListItem,
-  ListItemText,
-  ListItemIcon,
   Button,
-  Chip,
-  Alert,
-  CircularProgress,
+  Badge,
+  Spinner,
   Stack,
   Divider,
   Avatar,
   IconButton,
   Tooltip,
-  Paper,
-} from '@mui/material';
+  SimpleGrid,
+  Heading,
+  Flex,
+  Icon,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Link as ChakraLink,
+  HStack,
+} from '@chakra-ui/react';
 import {
-  CalendarToday,
-  Event as EventIcon,
-  Group,
-  CheckCircle,
-  Add,
-  Edit,
-  Visibility,
-  ArrowForward,
-  Refresh,
-  Assessment,
-} from '@mui/icons-material';
+  FaCalendarAlt,
+  FaCalendarCheck,
+  FaCheckCircle,
+  FaPlus,
+  FaEdit,
+  FaEye,
+  FaArrowRight,
+  FaSync,
+  FaChartBar,
+} from 'react-icons/fa';
 import { EventService } from '../../services/event.service';
 import type { Event, EventStats } from '../../types/event.types';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   format,
   isToday,
@@ -65,8 +70,7 @@ const AdminEventWidget: React.FC = () => {
       ]);
 
       const events = allEventsResponse.data;
-      // Ensure stats has default values even if API returns null
-      const statsData = statsResponse || {
+      const statsData: EventStats = statsResponse || {
         totalEvents: 0,
         upcomingEvents: 0,
         completedEvents: 0,
@@ -84,7 +88,6 @@ const AdminEventWidget: React.FC = () => {
         },
       };
 
-      // Separate recent and upcoming events
       const recent = events
         .filter((event) => isPast(new Date(event.endDate)))
         .sort(
@@ -119,35 +122,30 @@ const AdminEventWidget: React.FC = () => {
 
   const getEventDate = (event: Event) => {
     const startDate = new Date(event.startDate);
-
     if (isToday(startDate)) return 'Today';
     if (isTomorrow(startDate)) return 'Tomorrow';
-
     const daysUntil = differenceInDays(startDate, new Date());
-    if (daysUntil <= 7) return `In ${daysUntil} days`;
-
+    if (daysUntil <= 7 && daysUntil > 0) return `In ${daysUntil} days`;
+    if (daysUntil === 0) return 'Today'; // Should be caught by isToday, but as a fallback
+    if (daysUntil < 0 && daysUntil >= -7)
+      return `${Math.abs(daysUntil)} days ago`;
     return format(startDate, 'MMM dd');
   };
 
-  const getStatusColor = (
-    event: Event
-  ): 'error' | 'warning' | 'default' | 'info' | 'success' => {
-    if (event.status === 'cancelled') return 'error';
-    if (event.status === 'draft') return 'warning';
-    if (isPast(new Date(event.endDate))) return 'default';
-    if (isPast(new Date(event.startDate))) return 'info';
-    return 'success';
+  const getStatusColorScheme = (event: Event): string => {
+    if (event.status === 'cancelled') return 'red';
+    if (event.status === 'draft') return 'yellow';
+    if (isPast(new Date(event.endDate))) return 'gray';
+    if (isPast(new Date(event.startDate))) return 'orange'; // Ongoing
+    return 'green'; // Upcoming
   };
 
-  const getAttendanceRate = (event: Event) => {
-    if (!event.registrations || !event.attendees) return 0;
-    const registrations = event.registrations.filter(
-      (r) => r.status === 'confirmed'
-    ).length;
-    const attendees = event.attendees.length; // EventAttendance entries indicate attendance
-    return registrations > 0
-      ? Math.round((attendees / registrations) * 100)
-      : 0;
+  const getStatusLabel = (event: Event): string => {
+    if (event.status === 'cancelled') return 'Cancelled';
+    if (event.status === 'draft') return 'Draft';
+    if (isPast(new Date(event.endDate))) return 'Completed';
+    if (isPast(new Date(event.startDate))) return 'Ongoing';
+    return 'Upcoming';
   };
 
   const handleCreateEvent = () => {
@@ -168,360 +166,247 @@ const AdminEventWidget: React.FC = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
-            <CircularProgress />
-          </Box>
-        </CardContent>
+      <Card variant="outline">
+        <CardBody>
+          <Flex justify="center" align="center" minH="200px">
+            <Spinner size="xl" />
+          </Flex>
+        </CardBody>
       </Card>
     );
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={6}>
       {/* Stats Overview */}
       {stats && (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(4, 1fr)',
-            },
-            gap: 2,
-          }}
-        >
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="primary">
-              {stats.totalEvents || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Events
-            </Typography>
-          </Paper>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="success.main">
-              {stats.totalRegistrations || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Registrations
-            </Typography>
-          </Paper>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="info.main">
-              {stats.totalAttendees || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Attendees
-            </Typography>
-          </Paper>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="warning.main">
-              {stats.upcomingEvents || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Upcoming Events
-            </Typography>
-          </Paper>
-        </Box>
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={4}>
+          <Card variant="outline" textAlign="center">
+            <CardBody>
+              <Heading size="xl" color="blue.500">
+                {stats.totalEvents || 0}
+              </Heading>
+              <Text color="gray.500">Total Events</Text>
+            </CardBody>
+          </Card>
+          <Card variant="outline" textAlign="center">
+            <CardBody>
+              <Heading size="xl" color="green.500">
+                {stats.totalRegistrations || 0}
+              </Heading>
+              <Text color="gray.500">Total Registrations</Text>
+            </CardBody>
+          </Card>
+          <Card variant="outline" textAlign="center">
+            <CardBody>
+              <Heading size="xl" color="purple.500">
+                {stats.totalAttendees || 0}
+              </Heading>
+              <Text color="gray.500">Total Attendees</Text>
+            </CardBody>
+          </Card>
+          <Card variant="outline" textAlign="center">
+            <CardBody>
+              <Heading size="xl" color="orange.500">
+                {stats.upcomingEvents || 0}
+              </Heading>
+              <Text color="gray.500">Upcoming Events</Text>
+            </CardBody>
+          </Card>
+        </SimpleGrid>
       )}
 
       {/* Upcoming Events */}
-      <Card>
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <CalendarToday color="primary" />
+      <Card variant="outline">
+        <CardBody>
+          <Flex justify="space-between" align="center" mb={4}>
+            <Heading size="md" display="flex" alignItems="center" gap={2}>
+              <Icon as={FaCalendarAlt} color="blue.500" />
               Upcoming Events
-            </Typography>
-            <Box>
-              <Tooltip title="Refresh">
-                <IconButton size="small" onClick={loadDashboardData}>
-                  <Refresh />
-                </IconButton>
+            </Heading>
+            <HStack>
+              <Tooltip label="Refresh">
+                <IconButton
+                  aria-label="Refresh data"
+                  icon={<Icon as={FaSync} />}
+                  size="sm"
+                  onClick={loadDashboardData}
+                  variant="ghost"
+                />
               </Tooltip>
               <Button
-                size="small"
-                variant="contained"
-                startIcon={<Add />}
+                size="sm"
+                colorScheme="blue"
+                leftIcon={<Icon as={FaPlus} />}
                 onClick={handleCreateEvent}
-                sx={{ mr: 1 }}
+                mr={2}
               >
                 Create Event
               </Button>
               <Button
-                size="small"
-                endIcon={<ArrowForward />}
+                size="sm"
+                variant="outline"
+                rightIcon={<Icon as={FaArrowRight} />}
                 onClick={handleViewAllEvents}
               >
                 View All
               </Button>
-            </Box>
-          </Box>
+            </HStack>
+          </Flex>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+            <Alert status="error" mb={4}>
+              <AlertIcon />
+              <AlertTitle>Error loading data!</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {upcomingEvents.length === 0 ? (
-            <Box textAlign="center" py={3}>
-              <Typography variant="body2" color="text.secondary">
-                No upcoming events
-              </Typography>
+          {upcomingEvents.length === 0 && !loading && (
+            <Box textAlign="center" py={6}>
+              <Text color="gray.500" mb={2}>
+                No upcoming events.
+              </Text>
               <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Add />}
+                variant="solid"
+                colorScheme="blue"
+                size="sm"
+                leftIcon={<Icon as={FaPlus} />}
                 onClick={handleCreateEvent}
-                sx={{ mt: 1 }}
               >
                 Create First Event
               </Button>
             </Box>
-          ) : (
-            <List disablePadding>
-              {upcomingEvents.map((event, index) => (
+          )}
+
+          {upcomingEvents.length > 0 && (
+            <List spacing={3}>
+              {upcomingEvents.map((event) => (
                 <React.Fragment key={event._id}>
-                  {index > 0 && <Divider />}
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemIcon>
+                  <ListItem p={0}>
+                    <Flex align="center" w="full">
                       <Avatar
-                        sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}
+                        icon={<Icon as={FaCalendarCheck} fontSize="1.5rem" />}
+                        bg={getStatusColorScheme(event) + '.100'}
+                        color={getStatusColorScheme(event) + '.500'}
+                        size="md"
+                        mr={3}
+                      />
+                      <Box flex="1">
+                        <ChakraLink
+                          as={RouterLink}
+                          to={`/admin/events/${event._id}`}
+                          fontWeight="bold"
+                        >
+                          {event.title}
+                        </ChakraLink>
+                        <Text fontSize="sm" color="gray.500">
+                          {format(new Date(event.startDate), 'MMM dd, yyyy')} -{' '}
+                          {getEventDate(event)}
+                        </Text>
+                      </Box>
+                      <Badge
+                        colorScheme={getStatusColorScheme(event)}
+                        variant="subtle"
+                        mr={3}
                       >
-                        <EventIcon />
-                      </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Box
-                          display="flex"
-                          justifyContent="space-between"
-                          alignItems="center"
-                        >
-                          <Typography variant="subtitle2" noWrap>
-                            {event.title}
-                          </Typography>
-                          <Box display="flex" gap={1}>
-                            <Chip
-                              label={getEventDate(event)}
-                              size="small"
-                              color={
-                                isToday(new Date(event.startDate)) ||
-                                isTomorrow(new Date(event.startDate))
-                                  ? 'error'
-                                  : 'default'
-                              }
-                            />
-                            <Chip
-                              label={event.status}
-                              size="small"
-                              color={getStatusColor(event)}
-                            />
-                          </Box>
-                        </Box>
-                      }
-                      secondary={
-                        <Box
-                          display="flex"
-                          justifyContent="space-between"
-                          alignItems="center"
-                        >
-                          <Typography variant="caption">
-                            {format(new Date(event.startDate), 'h:mm a')} •{' '}
-                            {event.location.virtual
-                              ? 'Virtual'
-                              : event.location.name}
-                          </Typography>
-                          <Box display="flex" gap={1}>
-                            <Tooltip title="View Event">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleViewEvent(event._id)}
-                              >
-                                <Visibility fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Edit Event">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEditEvent(event._id)}
-                              >
-                                <Edit fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </Box>
-                      }
-                    />
+                        {getStatusLabel(event)}
+                      </Badge>
+                      <HStack spacing={1}>
+                        <Tooltip label="View Details">
+                          <IconButton
+                            aria-label="View event"
+                            icon={<Icon as={FaEye} />}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleViewEvent(event._id)}
+                          />
+                        </Tooltip>
+                        <Tooltip label="Edit Event">
+                          <IconButton
+                            aria-label="Edit event"
+                            icon={<Icon as={FaEdit} />}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditEvent(event._id)}
+                          />
+                        </Tooltip>
+                      </HStack>
+                    </Flex>
                   </ListItem>
+                  <Divider />
                 </React.Fragment>
               ))}
             </List>
           )}
-        </CardContent>
+        </CardBody>
       </Card>
 
       {/* Recent Events */}
-      <Card>
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography variant="h6" display="flex" alignItems="center" gap={1}>
-              <CheckCircle color="success" />
-              Recent Events
-            </Typography>
+      <Card variant="outline">
+        <CardBody>
+          <Flex justify="space-between" align="center" mb={4}>
+            <Heading size="md" display="flex" alignItems="center" gap={2}>
+              <Icon as={FaChartBar} color="blue.500" />
+              Recently Completed
+            </Heading>
             <Button
-              size="small"
-              endIcon={<ArrowForward />}
-              onClick={() => navigate('/admin/events?status=completed')}
+              size="sm"
+              variant="outline"
+              rightIcon={<Icon as={FaArrowRight} />}
+              onClick={handleViewAllEvents} // Assuming this navigates to a list where they can filter by completed
             >
-              View All
+              View All Events
             </Button>
-          </Box>
-
-          {recentEvents.length === 0 ? (
-            <Box textAlign="center" py={3}>
-              <Typography variant="body2" color="text.secondary">
-                No recent events
-              </Typography>
+          </Flex>
+          {recentEvents.length === 0 && !loading && (
+            <Box textAlign="center" py={6}>
+              <Text color="gray.500">No recently completed events.</Text>
             </Box>
-          ) : (
-            <List disablePadding>
-              {recentEvents.map((event, index) => {
-                const attendanceRate = getAttendanceRate(event);
-                return (
-                  <React.Fragment key={event._id}>
-                    {index > 0 && <Divider />}
-                    <ListItem
-                      onClick={() => handleViewEvent(event._id)}
-                      sx={{
-                        px: 0,
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: 'action.hover' },
-                      }}
-                    >
-                      <ListItemIcon>
-                        <Avatar
-                          sx={{
-                            width: 40,
-                            height: 40,
-                            bgcolor: 'success.main',
-                          }}
-                        >
-                          <CheckCircle />
-                        </Avatar>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Box
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                          >
-                            <Typography variant="subtitle2" noWrap>
-                              {event.title}
-                            </Typography>
-                            <Box display="flex" gap={1}>
-                              {attendanceRate > 0 && (
-                                <Chip
-                                  label={`${attendanceRate}% attendance`}
-                                  size="small"
-                                  color={
-                                    attendanceRate >= 80
-                                      ? 'success'
-                                      : attendanceRate >= 60
-                                      ? 'warning'
-                                      : 'error'
-                                  }
-                                />
-                              )}
-                              <Chip
-                                label={event.eventType}
-                                size="small"
-                                variant="outlined"
-                              />
-                            </Box>
-                          </Box>
-                        }
-                        secondary={
-                          <Typography variant="caption">
-                            Completed on{' '}
-                            {format(new Date(event.endDate), 'MMM dd, yyyy')} •{' '}
-                            {event.registrations?.filter(
-                              (r) => r.status === 'confirmed'
-                            ).length || 0}{' '}
-                            registrations
-                          </Typography>
-                        }
+          )}
+          {recentEvents.length > 0 && (
+            <List spacing={3}>
+              {recentEvents.map((event) => (
+                <React.Fragment key={event._id}>
+                  <ListItem p={0}>
+                    <Flex align="center" w="full">
+                      <Avatar
+                        icon={<Icon as={FaCheckCircle} fontSize="1.5rem" />}
+                        bg="gray.100"
+                        color="gray.500"
+                        size="md"
+                        mr={3}
                       />
-                    </ListItem>
-                  </React.Fragment>
-                );
-              })}
+                      <Box flex="1">
+                        <ChakraLink
+                          as={RouterLink}
+                          to={`/admin/events/${event._id}`}
+                          fontWeight="medium"
+                        >
+                          {event.title}
+                        </ChakraLink>
+                        <Text fontSize="sm" color="gray.500">
+                          Completed:{' '}
+                          {format(new Date(event.endDate), 'MMM dd, yyyy')}
+                        </Text>
+                      </Box>
+                      <Text fontSize="sm" color="gray.600" mr={3}>
+                        {event.registrations?.filter(
+                          (r) => r.status === 'confirmed'
+                        ).length || 0}{' '}
+                        Registered / {event.attendees?.length || 0} Attended
+                      </Text>
+                      <Badge colorScheme="gray" variant="solid">
+                        Completed
+                      </Badge>
+                    </Flex>
+                  </ListItem>
+                  <Divider />
+                </React.Fragment>
+              ))}
             </List>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Quick Actions
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Add />}
-              onClick={handleCreateEvent}
-            >
-              Create Event
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<EventIcon />}
-              onClick={handleViewAllEvents}
-            >
-              Manage Events
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Group />}
-              onClick={() => navigate('/admin/events/registrations')}
-            >
-              View Registrations
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Assessment />}
-              onClick={() => navigate('/admin/events/analytics')}
-            >
-              Event Analytics
-            </Button>
-          </Stack>
-        </CardContent>
+        </CardBody>
       </Card>
     </Stack>
   );

@@ -2,38 +2,44 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
-  Grid,
-  Chip,
+  CardBody,
+  Text,
+  SimpleGrid,
+  Badge,
   Button,
-  CircularProgress,
+  Spinner,
   Alert,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
   List,
   ListItem,
-  ListItemIcon,
-  ListItemText,
-  Breadcrumbs,
-  Link,
-  CardMedia,
+  ListIcon,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Image,
   IconButton,
   Tooltip,
-} from '@mui/material';
+  Flex,
+  Heading,
+  VStack,
+  HStack,
+  Icon,
+  useToast,
+  Link as ChakraLink,
+  Divider,
+} from '@chakra-ui/react';
 import {
-  LocationOn,
-  CheckCircle,
-  Info,
-  Share,
-  Schedule,
-  ArrowBack,
-  Favorite,
-  FavoriteBorder,
-} from '@mui/icons-material';
+  FaMapMarkerAlt,
+  FaCheckCircle,
+  FaInfoCircle,
+  FaShareAlt,
+  FaCalendarAlt,
+  FaArrowLeft,
+  FaHeart,
+  FaRegHeart,
+} from 'react-icons/fa';
 import { EventService } from '../../services/event.service';
 import type {
   Event,
@@ -59,6 +65,7 @@ const MemberEventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [userRegistration, setUserRegistration] =
@@ -66,7 +73,6 @@ const MemberEventDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [favorite, setFavorite] = useState(false);
 
   const loadEventDetails = useCallback(async () => {
@@ -98,15 +104,16 @@ const MemberEventDetails: React.FC = () => {
     loadEventDetails();
   }, [loadEventDetails]);
 
-  const handleRegister = async () => {
+  const handleDirectRegister = async () => {
     if (!event || !user) return;
 
     try {
       setRegistering(true);
+      setError(null);
 
       const registrationData = {
         eventId: event._id,
-        notes: '',
+        notes: '', // Add any default notes if necessary
       };
 
       const registration = await EventService.registerForEvent(
@@ -114,33 +121,59 @@ const MemberEventDetails: React.FC = () => {
         registrationData
       );
       setUserRegistration(registration);
-      setShowRegisterDialog(false);
-
-      // Reload event to get updated registration count
-      loadEventDetails();
+      toast({
+        title: 'Registration Successful',
+        description: `You have successfully registered for ${event.title}.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      loadEventDetails(); // Refresh event details
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to register for event');
+      const errorMessage =
+        error.response?.data?.message || 'Failed to register for event';
+      setError(errorMessage);
+      toast({
+        title: 'Registration Failed',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setRegistering(false);
     }
   };
 
   const handleUnregister = async () => {
-    if (!event) return;
+    if (!event || !userRegistration) return; // Ensure there's a registration to cancel
 
     try {
       setRegistering(true);
+      setError(null); // Clear previous errors
       await EventService.unregisterFromEvent(event._id);
       setUserRegistration(null);
-
-      // Reload event to get updated registration count
-      loadEventDetails();
+      toast({
+        title: 'Unregistration Successful',
+        description: `You have successfully unregistered from ${event.title}.`,
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+      });
+      loadEventDetails(); // Refresh event details
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(
-        error.response?.data?.message || 'Failed to unregister from event'
-      );
+      const errorMessage =
+        error.response?.data?.message || 'Failed to unregister from event';
+      setError(errorMessage);
+      toast({
+        title: 'Unregistration Failed',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setRegistering(false);
     }
@@ -148,23 +181,50 @@ const MemberEventDetails: React.FC = () => {
 
   const toggleFavorite = () => {
     setFavorite(!favorite);
+    toast({
+      title: favorite ? 'Removed from favorites' : 'Added to favorites',
+      status: 'info',
+      duration: 2000,
+      isClosable: true,
+    });
     // TODO: Implement favorite API call
   };
 
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: event?.title,
-        text: event?.description,
-        url: window.location.href,
-      });
+    if (navigator.share && event) {
+      navigator
+        .share({
+          title: event.title,
+          text: event.description,
+          url: window.location.href,
+        })
+        .then(() => {
+          toast({
+            title: 'Event Shared!',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        })
+        .catch((error) => {
+          // If sharing fails, or is cancelled by user, it might throw an error or just not resolve.
+          // We can choose to show a toast or not, depending on desired UX.
+          // For now, let's assume if it fails, it's often user cancellation, so no error toast.
+          console.error('Error sharing:', error);
+        });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      // TODO: Show toast notification
+      toast({
+        title: 'Link Copied!',
+        description: 'Event link copied to clipboard.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
-  const getEventStatus = () => {
+  const getEventStatusLabel = () => {
     if (!event) return '';
     if (event.status === 'cancelled') return 'Cancelled';
     if (isPast(new Date(event.endDate))) return 'Completed';
@@ -172,19 +232,12 @@ const MemberEventDetails: React.FC = () => {
     return 'Upcoming';
   };
 
-  const getStatusColor = ():
-    | 'default'
-    | 'primary'
-    | 'secondary'
-    | 'error'
-    | 'info'
-    | 'success'
-    | 'warning' => {
-    if (!event) return 'default';
-    if (event.status === 'cancelled') return 'error';
-    if (isPast(new Date(event.endDate))) return 'default';
-    if (isPast(new Date(event.startDate))) return 'warning';
-    return 'success';
+  const getStatusColorScheme = (): string => {
+    if (!event) return 'gray';
+    if (event.status === 'cancelled') return 'red';
+    if (isPast(new Date(event.endDate))) return 'gray';
+    if (isPast(new Date(event.startDate))) return 'orange';
+    return 'green';
   };
 
   const canRegister = () => {
@@ -208,63 +261,54 @@ const MemberEventDetails: React.FC = () => {
     return registeredCount >= event.capacity;
   };
 
-  const getRegistrationStatus = () => {
+  const getRegistrationStatusInfo = () => {
     if (!userRegistration) return null;
 
-    const statusLabels = {
+    const statusLabels: Record<string, string> = {
       pending: 'Registration Pending',
       confirmed: 'Registered',
+      registered: 'Registered', // Adding 'registered' as a possible backend status
       waitlist: 'On Waitlist',
       cancelled: 'Registration Cancelled',
     };
 
-    const statusColors: Record<
-      string,
-      | 'default'
-      | 'primary'
-      | 'secondary'
-      | 'error'
-      | 'info'
-      | 'success'
-      | 'warning'
-    > = {
-      pending: 'warning',
-      confirmed: 'success',
-      waitlist: 'info',
-      cancelled: 'error',
+    const statusColors: Record<string, string> = {
+      pending: 'yellow',
+      confirmed: 'green',
+      registered: 'green',
+      waitlist: 'blue',
+      cancelled: 'red',
     };
 
     return {
       label:
-        statusLabels[userRegistration.status as keyof typeof statusLabels] ||
+        statusLabels[userRegistration.status.toLowerCase()] ||
         userRegistration.status,
-      color: statusColors[userRegistration.status] || 'default',
+      colorScheme:
+        statusColors[userRegistration.status.toLowerCase()] || 'gray',
     };
   };
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
+      <Flex justify="center" align="center" minH="400px">
+        <Spinner size="xl" />
+      </Flex>
     );
   }
 
-  if (error || !event) {
+  if (error && !event) {
     return (
-      <Box>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error || 'Event not found'}
+      <Box p={4}>
+        <Alert status="error" mb={3}>
+          <AlertIcon />
+          <AlertTitle>Error Loading Event!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
         <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
+          leftIcon={<Icon as={FaArrowLeft} />}
           onClick={() => navigate('/member/events')}
+          variant="outline"
         >
           Back to Events
         </Button>
@@ -272,352 +316,372 @@ const MemberEventDetails: React.FC = () => {
     );
   }
 
-  const registrationStatus = getRegistrationStatus();
+  if (!event) {
+    return (
+      <Box p={4}>
+        <Alert status="info" mb={3}>
+          <AlertIcon />
+          <AlertDescription>
+            Event not found or could not be loaded.
+          </AlertDescription>
+        </Alert>
+        <Button
+          leftIcon={<Icon as={FaArrowLeft} />}
+          onClick={() => navigate('/member/events')}
+          variant="outline"
+        >
+          Back to Events
+        </Button>
+      </Box>
+    );
+  }
+
+  const registrationStatusInfo = getRegistrationStatusInfo();
 
   return (
-    <Box>
-      {/* Breadcrumbs */}
-      <Breadcrumbs sx={{ mb: 3 }}>
-        <Link component={RouterLink} to="/member/events" underline="hover">
-          Events
-        </Link>
-        <Typography color="text.primary">{event.title}</Typography>
-      </Breadcrumbs>
+    <Box p={{ base: 2, md: 4 }}>
+      <Breadcrumb mb={4} separator="/">
+        <BreadcrumbItem>
+          <BreadcrumbLink as={RouterLink} to="/member/events">
+            Events
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbItem isCurrentPage>
+          <BreadcrumbLink>{event.title}</BreadcrumbLink>
+        </BreadcrumbItem>
+      </Breadcrumb>
 
-      {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
-        <IconButton onClick={() => navigate('/member/events')}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant="h4" component="h1" flexGrow={1}>
+      <Flex align="center" gap={2} mb={4}>
+        <IconButton
+          aria-label="Back to events"
+          icon={<Icon as={FaArrowLeft} />}
+          onClick={() => navigate('/member/events')}
+          variant="ghost"
+        />
+        <Heading size="lg" flexGrow={1}>
           {event.title}
-        </Typography>
+        </Heading>
         <Tooltip
-          title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+          label={favorite ? 'Remove from favorites' : 'Add to favorites'}
         >
           <IconButton
+            aria-label="Toggle favorite"
+            icon={
+              favorite ? (
+                <Icon as={FaHeart} color="red.500" />
+              ) : (
+                <Icon as={FaRegHeart} />
+              )
+            }
             onClick={toggleFavorite}
-            color={favorite ? 'error' : 'default'}
-          >
-            {favorite ? <Favorite /> : <FavoriteBorder />}
-          </IconButton>
+            variant="ghost"
+          />
         </Tooltip>
-        <Tooltip title="Share event">
-          <IconButton onClick={handleShare}>
-            <Share />
-          </IconButton>
+        <Tooltip label="Share event">
+          <IconButton
+            aria-label="Share event"
+            icon={<Icon as={FaShareAlt} />}
+            onClick={handleShare}
+            variant="ghost"
+          />
         </Tooltip>
-      </Box>
+      </Flex>
 
-      <Grid container spacing={3}>
+      <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6}>
         {/* Main Content */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          {/* Event Image */}
+        <Box gridColumn={{ base: 'auto', lg: 'span 2' }}>
           {event.imageUrl && (
-            <Card sx={{ mb: 3 }}>
-              <CardMedia
-                component="img"
-                height="300"
-                image={event.imageUrl}
+            <Card mb={6} variant="outline">
+              <Image
+                src={event.imageUrl}
                 alt={event.title}
+                objectFit="cover"
+                maxH="400px"
+                w="100%"
               />
             </Card>
           )}
 
-          {/* Event Description */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card mb={6} variant="outline">
+            <CardBody>
+              <Heading size="md" mb={2}>
                 About This Event
-              </Typography>
-              <Typography variant="body1" paragraph>
+              </Heading>
+              <Text color="gray.600" mb={4} whiteSpace="pre-wrap">
                 {event.description}
-              </Typography>
+              </Text>
 
               {event.tags && event.tags.length > 0 && (
-                <Box mt={2}>
-                  <Typography variant="subtitle2" gutterBottom>
+                <Box mt={4}>
+                  <Heading size="sm" mb={2}>
                     Tags:
-                  </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                  </Heading>
+                  <HStack spacing={2} wrap="wrap">
                     {event.tags.map((tag, index) => (
-                      <Chip key={index} label={tag} size="small" />
+                      <Badge key={index} colorScheme="blue" variant="subtle">
+                        {tag}
+                      </Badge>
                     ))}
-                  </Stack>
+                  </HStack>
                 </Box>
               )}
-            </CardContent>
+            </CardBody>
           </Card>
 
-          {/* Event Agenda/Schedule */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Event Schedule
-              </Typography>
-              <List>
+          <Card variant="outline">
+            <CardBody>
+              <Heading size="md" mb={4}>
+                Event Schedule & Location
+              </Heading>
+              <List spacing={3}>
                 <ListItem>
-                  <ListItemIcon>
-                    <Schedule />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Start"
-                    secondary={format(
+                  <ListIcon as={FaCalendarAlt} color="blue.500" />
+                  <Text display="inline" fontWeight="bold">
+                    Start:
+                  </Text>
+                  <Text ml={2} display="inline">
+                    {format(
                       new Date(event.startDate),
                       'EEEE, MMMM dd, yyyy • h:mm a'
                     )}
-                  />
+                  </Text>
                 </ListItem>
                 <ListItem>
-                  <ListItemIcon>
-                    <Schedule />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="End"
-                    secondary={format(
+                  <ListIcon as={FaCalendarAlt} color="blue.500" />
+                  <Text display="inline" fontWeight="bold">
+                    End:
+                  </Text>
+                  <Text ml={2} display="inline">
+                    {format(
                       new Date(event.endDate),
                       'EEEE, MMMM dd, yyyy • h:mm a'
                     )}
-                  />
+                  </Text>
                 </ListItem>
                 <ListItem>
-                  <ListItemIcon>
-                    <LocationOn />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Location"
-                    secondary={
-                      event.location.virtual
-                        ? 'Virtual Event'
-                        : `${event.location.name}, ${event.location.address}, ${event.location.city}, ${event.location.state}`
-                    }
-                  />
+                  <ListIcon as={FaMapMarkerAlt} color="blue.500" />
+                  <Text display="inline" fontWeight="bold">
+                    Location:
+                  </Text>
+                  <Text ml={2} display="inline">
+                    {event.location.virtual
+                      ? 'Virtual Event'
+                      : `${event.location.name}, ${
+                          event.location.address || ''
+                        }, ${event.location.city}, ${event.location.state}`}
+                  </Text>
                 </ListItem>
                 {event.location.virtual && event.location.meetingLink && (
                   <ListItem>
-                    <ListItemIcon>
-                      <Info />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Meeting Link"
-                      secondary="Link will be shared with registered participants"
-                    />
+                    <ListIcon as={FaInfoCircle} color="blue.500" />
+                    <Text display="inline" fontWeight="bold">
+                      Meeting Link:
+                    </Text>
+                    <Text ml={2} display="inline">
+                      Link will be shared with registered participants.
+                    </Text>
                   </ListItem>
                 )}
               </List>
-            </CardContent>
+            </CardBody>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Sidebar */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          {/* Registration Status */}
-          {registrationStatus && (
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <CheckCircle color="success" />
-                  <Typography variant="h6">Registration Status</Typography>
-                </Box>
-                <Chip
-                  label={registrationStatus.label}
-                  color={registrationStatus.color}
-                  sx={{ mb: 2 }}
-                />
+        <VStack spacing={6} align="stretch">
+          {registrationStatusInfo && (
+            <Card variant="outline">
+              <CardBody>
+                <HStack mb={2} align="center">
+                  <Icon
+                    as={FaCheckCircle}
+                    color={`${registrationStatusInfo.colorScheme}.500`}
+                  />
+                  <Heading size="sm">Registration Status</Heading>
+                </HStack>
+                <Badge
+                  colorScheme={registrationStatusInfo.colorScheme}
+                  variant="solid"
+                  mb={3}
+                  p={2}
+                  borderRadius="md"
+                  w="full"
+                  textAlign="center"
+                >
+                  {registrationStatusInfo.label}
+                </Badge>
                 {userRegistration?.paymentStatus === 'pending' &&
                   event.registrationFee && (
-                    <Alert severity="warning">
-                      Payment pending: ₦{event.registrationFee.toLocaleString()}
+                    <Alert status="warning" variant="subtle" mb={3}>
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Payment Pending</AlertTitle>
+                        <AlertDescription>
+                          ₦{event.registrationFee.toLocaleString()}
+                        </AlertDescription>
+                      </Box>
                     </Alert>
                   )}
-                {userRegistration?.status === 'confirmed' && (
+                {(userRegistration?.status.toLowerCase() === 'confirmed' ||
+                  userRegistration?.status.toLowerCase() === 'registered') && (
                   <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
+                    colorScheme="red"
+                    variant="outline"
+                    size="sm"
                     onClick={handleUnregister}
-                    disabled={registering}
-                    fullWidth
+                    isLoading={registering}
+                    loadingText="Unregistering"
+                    w="full"
                   >
                     Unregister
                   </Button>
                 )}
-              </CardContent>
+              </CardBody>
             </Card>
           )}
 
-          {/* Event Info */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card variant="outline">
+            <CardBody>
+              <Heading size="sm" mb={3}>
                 Event Information
-              </Typography>
-
-              <Stack spacing={2}>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+              </Heading>
+              <VStack spacing={3} align="stretch">
+                <Flex justify="space-between">
+                  <Text fontWeight="medium" color="gray.600">
                     Type
-                  </Typography>
-                  <Chip
-                    label={eventTypeLabels[event.eventType]}
-                    size="small"
-                    color="primary"
-                  />
-                </Box>
-
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  </Text>
+                  <Badge colorScheme="teal" variant="subtle">
+                    {eventTypeLabels[event.eventType] || event.eventType}
+                  </Badge>
+                </Flex>
+                <Divider />
+                <Flex justify="space-between">
+                  <Text fontWeight="medium" color="gray.600">
                     Status
-                  </Typography>
-                  <Chip
-                    label={getEventStatus()}
-                    size="small"
-                    color={getStatusColor()}
-                  />
-                </Box>
-
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
+                  </Text>
+                  <Badge colorScheme={getStatusColorScheme()} variant="solid">
+                    {getEventStatusLabel()}
+                  </Badge>
+                </Flex>
+                <Divider />
+                <Flex justify="space-between">
+                  <Text fontWeight="medium" color="gray.600">
                     Organizer
-                  </Typography>
-                  <Typography variant="body2">{event.organizer}</Typography>
-                </Box>
-
-                {event.registrationFee && (
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Registration Fee
-                    </Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      ₦{event.registrationFee.toLocaleString()}
-                    </Typography>
-                  </Box>
+                  </Text>
+                  <Text textAlign="right">{event.organizer}</Text>
+                </Flex>
+                <Divider />
+                {typeof event.registrationFee === 'number' && (
+                  <>
+                    <Flex justify="space-between">
+                      <Text fontWeight="medium" color="gray.600">
+                        Registration Fee
+                      </Text>
+                      <Text fontWeight="bold" color="blue.600">
+                        ₦{event.registrationFee.toLocaleString()}
+                      </Text>
+                    </Flex>
+                    <Divider />
+                  </>
                 )}
-
-                {event.capacity && (
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Capacity
-                    </Typography>
-                    <Typography variant="body2">
-                      {event.registrations?.filter(
-                        (r) => r.status === 'confirmed'
-                      ).length || 0}{' '}
-                      / {event.capacity}
-                    </Typography>
-                  </Box>
+                {typeof event.capacity === 'number' && (
+                  <>
+                    <Flex justify="space-between">
+                      <Text fontWeight="medium" color="gray.600">
+                        Capacity
+                      </Text>
+                      <Text>
+                        {(
+                          event.registrations?.filter(
+                            (r) =>
+                              r.status.toLowerCase() === 'confirmed' ||
+                              r.status.toLowerCase() === 'registered'
+                          ).length || 0
+                        ).toString()}{' '}
+                        / {event.capacity}
+                      </Text>
+                    </Flex>
+                    <Divider />
+                  </>
                 )}
-
                 {event.registrationDeadline && (
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Registration Deadline
-                    </Typography>
-                    <Typography variant="body2">
-                      {format(
-                        new Date(event.registrationDeadline),
-                        'MMM dd, yyyy'
-                      )}
-                    </Typography>
-                  </Box>
+                  <>
+                    <Flex justify="space-between">
+                      <Text fontWeight="medium" color="gray.600">
+                        Reg. Deadline
+                      </Text>
+                      <Text>
+                        {format(
+                          new Date(event.registrationDeadline),
+                          'MMM dd, yyyy'
+                        )}
+                      </Text>
+                    </Flex>
+                    <Divider />
+                  </>
                 )}
-
                 {event.isAttendanceRequired && (
-                  <Alert severity="info">
-                    <Typography variant="caption">
-                      Attendance tracking is enabled for this event
-                    </Typography>
+                  <Alert status="info" variant="subtle" borderRadius="md">
+                    <AlertIcon />
+                    <AlertDescription fontSize="sm">
+                      Attendance tracking is enabled for this event.
+                    </AlertDescription>
                   </Alert>
                 )}
-              </Stack>
-            </CardContent>
+              </VStack>
+            </CardBody>
           </Card>
 
-          {/* Registration Action */}
           {canRegister() && (
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+            <Card variant="outline">
+              <CardBody>
+                <Heading size="sm" mb={3}>
                   Register for Event
-                </Typography>
-
+                </Heading>
                 {isRegistrationFull() ? (
-                  <Alert severity="warning" sx={{ mb: 2 }}>
-                    Event is full. You can join the waitlist.
+                  <Alert
+                    status="warning"
+                    variant="subtle"
+                    mb={3}
+                    borderRadius="md"
+                  >
+                    <AlertIcon />
+                    <AlertDescription>
+                      Event is full. You can join the waitlist.
+                    </AlertDescription>
                   </Alert>
                 ) : (
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    Secure your spot for this event
-                  </Typography>
+                  <Text color="gray.600" mb={3}>
+                    Secure your spot for this event.
+                  </Text>
                 )}
-
                 <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  onClick={() => setShowRegisterDialog(true)}
-                  disabled={registering}
-                  startIcon={<CheckCircle />}
+                  colorScheme="blue"
+                  onClick={handleDirectRegister} // Changed to handleDirectRegister
+                  isLoading={registering}
+                  loadingText="Registering..."
+                  isDisabled={isRegistrationFull() || !canRegister()}
+                  w="full"
                 >
-                  {isRegistrationFull() ? 'Join Waitlist' : 'Register Now'}
+                  {isRegistrationFull() ? 'Event Full' : 'Register for Event'}
                 </Button>
-
-                {event.registrationFee && (
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    mt={1}
-                  >
-                    Registration fee: ₦{event.registrationFee.toLocaleString()}
-                  </Typography>
-                )}
-              </CardContent>
+                {typeof event.registrationFee === 'number' &&
+                  event.registrationFee > 0 && (
+                    <Text
+                      fontSize="sm"
+                      color="gray.500"
+                      mt={2}
+                      textAlign="center"
+                    >
+                      Registration fee: ₦
+                      {event.registrationFee.toLocaleString()}
+                    </Text>
+                  )}
+              </CardBody>
             </Card>
           )}
-        </Grid>
-      </Grid>
-
-      {/* Registration Confirmation Dialog */}
-      <Dialog
-        open={showRegisterDialog}
-        onClose={() => setShowRegisterDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Confirm Registration</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" gutterBottom>
-            Are you sure you want to register for "{event.title}"?
-          </Typography>
-
-          {event.registrationFee && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Registration fee: ₦{event.registrationFee.toLocaleString()}
-            </Alert>
-          )}
-
-          {isRegistrationFull() && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              This event is full. You will be added to the waitlist.
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowRegisterDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleRegister}
-            variant="contained"
-            disabled={registering}
-          >
-            {registering ? (
-              <CircularProgress size={20} />
-            ) : (
-              'Confirm Registration'
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </VStack>
+      </SimpleGrid>
     </Box>
   );
 };

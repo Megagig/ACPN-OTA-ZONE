@@ -1,6 +1,27 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
-import { muiTheme, muiDarkTheme } from '../theme/mui-theme';
+import React, { createContext, useContext, useEffect } from 'react';
+import {
+  ChakraProvider,
+  extendTheme,
+  useColorMode,
+  ColorModeScript,
+} from '@chakra-ui/react';
+
+// 1. Define your Chakra UI theme (can be customized further)
+const chakraCustomTheme = extendTheme({
+  config: {
+    initialColorMode: 'system', // Use system preference initially
+    useSystemColorMode: true, // Follow system color mode changes automatically
+  },
+  // Add any custom theme overrides here if needed
+  // styles: {
+  //   global: (props: { colorMode: string }) => ({
+  //     body: {
+  //       bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
+  //       color: props.colorMode === 'dark' ? 'white' : 'gray.800',
+  //     },
+  //   }),
+  // },
+});
 
 type Theme = 'light' | 'dark';
 
@@ -11,56 +32,45 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Check local storage for saved theme preference
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    // Check system preference if no saved theme
-    if (!savedTheme) {
-      const systemPreference = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light';
-      return systemPreference;
-    }
-    return savedTheme;
-  });
+// Wrapper component that includes ChakraProvider and our custom ThemeContext Provider
+function InternalThemeProvider({ children }: { children: React.ReactNode }) {
+  const { colorMode, toggleColorMode } = useColorMode();
 
-  // Effect to update document when theme changes
+  // Synchronize Chakra's colorMode with our simplified `theme` state
+  const currentTheme = colorMode as Theme;
+
+  // Effect to update documentElement class if still needed for non-Chakra components
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
+    if (colorMode === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-    // Save theme preference to local storage
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+    // Persist the theme preference if needed by other parts of the app, though Chakra handles its own.
+    localStorage.setItem('app-theme', colorMode);
+  }, [colorMode]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <MuiThemeProvider theme={theme === 'dark' ? muiDarkTheme : muiTheme}>
-        {children}
-      </MuiThemeProvider>
+    <ThemeContext.Provider
+      value={{ theme: currentTheme, toggleTheme: toggleColorMode }}
+    >
+      {children}
     </ThemeContext.Provider>
+  );
+}
+
+// This is the main ThemeProvider to be used in App.tsx or similar root component
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <ChakraProvider theme={chakraCustomTheme}>
+      {/* ColorModeScript should ideally be in your index.html or root App component for SSR compatibility */}
+      {/* and to prevent FOUC. Including it here for completeness if not elsewhere. */}
+      <ColorModeScript
+        initialColorMode={chakraCustomTheme.config.initialColorMode}
+      />
+      <InternalThemeProvider>{children}</InternalThemeProvider>
+    </ChakraProvider>
   );
 }
 

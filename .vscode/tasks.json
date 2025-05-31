@@ -2,16 +2,15 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start Backend Server",
+      "label": "Start Frontend Server",
       "type": "shell",
       "command": "npm",
-      "args": ["start"],
+      "args": ["run", "dev"],
       "options": {
-        "cwd": "${workspaceFolder}/backend"
+        "cwd": "${workspaceFolder}/frontend"
       },
       "group": "build",
-      "isBackground": true,
-      "problemMatcher": []
+      "isBackground": true
     }
   ]
 }

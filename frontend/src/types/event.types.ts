@@ -179,6 +179,7 @@ export interface EventFilters {
   search?: string;
   organizer?: string;
   requiresRegistration?: boolean;
+  dateRange?: string;
 }
 
 export interface AttendanceMarkingData {

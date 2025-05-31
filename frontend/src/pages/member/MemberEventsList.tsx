@@ -1,46 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
-  Grid,
-  Chip,
+  CardBody,
+  Text,
+  SimpleGrid,
+  Badge,
   Button,
-  TextField,
-  MenuItem,
+  Input,
   Select,
   FormControl,
-  InputLabel,
-  Pagination,
-  CircularProgress,
+  FormLabel,
+  Spinner,
   Alert,
-  Stack,
-  Avatar,
-  CardMedia,
+  AlertIcon,
+  VStack,
+  HStack,
+  Image,
   IconButton,
   Tooltip,
-} from '@mui/material';
+  Flex,
+  Center,
+} from '@chakra-ui/react';
 import {
-  CalendarToday,
-  LocationOn,
-  Person,
-  AttachMoney,
-  CheckCircle,
-  Cancel,
-  Info,
-  Favorite,
-  FavoriteBorder,
-  Share,
-} from '@mui/icons-material';
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaUser,
+  FaDollarSign,
+  FaCheckCircle,
+  FaInfo,
+  FaHeart,
+  FaRegHeart,
+  FaShare,
+} from 'react-icons/fa';
 import { EventService } from '../../services/event.service';
-import type {
-  Event,
-  EventType,
-  EventStatus,
-  EventFilters,
-} from '../../types/event.types';
-import { useAuth } from '../../hooks/useAuth';
+import type { Event, EventType, EventFilters } from '../../types/event.types';
 import { useNavigate } from 'react-router-dom';
 import { format, isPast, isFuture } from 'date-fns';
 
@@ -55,22 +49,18 @@ const eventTypeLabels: Record<EventType, string> = {
   other: 'Other',
 };
 
-const eventTypeColors: Record<
-  EventType,
-  'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'
-> = {
-  conference: 'primary',
-  workshop: 'info',
-  seminar: 'secondary',
-  training: 'success',
-  meetings: 'error',
-  state_events: 'warning',
-  social: 'primary',
-  other: 'secondary',
+const eventTypeColors: Record<EventType, string> = {
+  conference: 'blue',
+  workshop: 'cyan',
+  seminar: 'purple',
+  training: 'green',
+  meetings: 'red',
+  state_events: 'orange',
+  social: 'pink',
+  other: 'gray',
 };
 
 const MemberEventsList: React.FC = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -78,7 +68,6 @@ const MemberEventsList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalEvents, setTotalEvents] = useState(0);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const [filters, setFilters] = useState<EventFilters>({
@@ -87,7 +76,7 @@ const MemberEventsList: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -100,19 +89,22 @@ const MemberEventsList: React.FC = () => {
       const response = await EventService.getAllEvents(searchFilters, page, 12);
       setEvents(response.data);
       setTotalPages(response.totalPages);
-      setTotalEvents(response.total);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load events');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load events');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, page, searchTerm]);
 
   useEffect(() => {
     loadEvents();
-  }, [page, filters, searchTerm]);
+  }, [loadEvents]);
 
-  const handleFilterChange = (field: keyof EventFilters, value: any) => {
+  const handleFilterChange = (
+    field: keyof EventFilters,
+    value: string | boolean
+  ) => {
     setFilters((prev) => ({
       ...prev,
       [field]: value || undefined,
@@ -152,11 +144,11 @@ const MemberEventsList: React.FC = () => {
     return 'Upcoming';
   };
 
-  const getStatusColor = (event: Event) => {
-    if (event.status === 'cancelled') return 'error';
-    if (isPast(new Date(event.endDate))) return 'default';
-    if (isPast(new Date(event.startDate))) return 'warning';
-    return 'success';
+  const getStatusColor = (event: Event): string => {
+    if (event.status === 'cancelled') return 'red';
+    if (isPast(new Date(event.endDate))) return 'gray';
+    if (isPast(new Date(event.startDate))) return 'orange';
+    return 'green';
   };
 
   const canRegister = (event: Event) => {
@@ -180,328 +172,328 @@ const MemberEventsList: React.FC = () => {
 
   if (loading && events.length === 0) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
+      <Center minH="400px">
+        <Spinner size="xl" color="blue.500" />
+      </Center>
     );
   }
 
   return (
     <Box>
       {/* Header */}
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
+      <Box mb={6}>
+        <Text fontSize="3xl" fontWeight="bold" mb={2}>
           Events
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Discover and register for upcoming events
-        </Typography>
+        </Text>
+        <Text color="gray.600">Discover and register for upcoming events</Text>
       </Box>
 
       {/* Filters and Search */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Search events..."
+      <Card mb={6}>
+        <CardBody>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
+            <FormControl>
+              <FormLabel>Search events</FormLabel>
+              <Input
+                placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                size="small"
               />
-            </Grid>
+            </FormControl>
 
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Event Type</InputLabel>
-                <Select
-                  value={filters.eventType || ''}
-                  onChange={(e) =>
-                    handleFilterChange('eventType', e.target.value)
-                  }
-                  label="Event Type"
-                >
-                  <MenuItem value="">All Types</MenuItem>
-                  {Object.entries(eventTypeLabels).map(([value, label]) => (
-                    <MenuItem key={value} value={value}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+            <FormControl>
+              <FormLabel>Event Type</FormLabel>
+              <Select
+                value={filters.eventType || ''}
+                onChange={(e) =>
+                  handleFilterChange('eventType', e.target.value)
+                }
+                placeholder="All Types"
+              >
+                {Object.entries(eventTypeLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
 
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Date Range</InputLabel>
-                <Select
-                  value={filters.dateRange || ''}
-                  onChange={(e) =>
-                    handleFilterChange('dateRange', e.target.value)
-                  }
-                  label="Date Range"
-                >
-                  <MenuItem value="">All Dates</MenuItem>
-                  <MenuItem value="upcoming">Upcoming</MenuItem>
-                  <MenuItem value="this-month">This Month</MenuItem>
-                  <MenuItem value="next-month">Next Month</MenuItem>
-                  <MenuItem value="past">Past Events</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+            <FormControl>
+              <FormLabel>Date Range</FormLabel>
+              <Select
+                value={filters.dateRange || ''}
+                onChange={(e) =>
+                  handleFilterChange('dateRange', e.target.value)
+                }
+                placeholder="All Dates"
+              >
+                <option value="upcoming">Upcoming</option>
+                <option value="this-month">This Month</option>
+                <option value="next-month">Next Month</option>
+                <option value="past">Past Events</option>
+              </Select>
+            </FormControl>
 
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Registration</InputLabel>
-                <Select
-                  value={filters.requiresRegistration?.toString() || ''}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      'requiresRegistration',
-                      e.target.value === 'true'
-                    )
-                  }
-                  label="Registration"
-                >
-                  <MenuItem value="">All Events</MenuItem>
-                  <MenuItem value="true">Registration Required</MenuItem>
-                  <MenuItem value="false">No Registration</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </CardContent>
+            <FormControl>
+              <FormLabel>Registration</FormLabel>
+              <Select
+                value={filters.requiresRegistration?.toString() || ''}
+                onChange={(e) =>
+                  handleFilterChange(
+                    'requiresRegistration',
+                    e.target.value === 'true'
+                  )
+                }
+                placeholder="All Events"
+              >
+                <option value="true">Registration Required</option>
+                <option value="false">No Registration</option>
+              </Select>
+            </FormControl>
+          </SimpleGrid>
+        </CardBody>
       </Card>
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert status="error" mb={6}>
+          <AlertIcon />
           {error}
         </Alert>
       )}
 
       {/* Events Grid */}
-      <Grid container spacing={3}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {events.map((event) => (
-          <Grid item xs={12} md={6} lg={4} key={event._id}>
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4,
-                },
-              }}
-            >
-              {/* Event Image */}
-              {event.imageUrl && (
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={event.imageUrl}
-                  alt={event.title}
-                />
+          <Card
+            key={event._id}
+            h="100%"
+            cursor="pointer"
+            transition="transform 0.2s"
+            _hover={{
+              transform: 'translateY(-4px)',
+              shadow: 'lg',
+            }}
+          >
+            {/* Event Image */}
+            {event.imageUrl && (
+              <Image
+                src={event.imageUrl}
+                alt={event.title}
+                h="200px"
+                w="100%"
+                objectFit="cover"
+                borderTopRadius="md"
+              />
+            )}
+
+            <CardBody>
+              {/* Header */}
+              <Flex justify="space-between" align="flex-start" mb={3}>
+                <Box flex="1">
+                  <Text
+                    fontSize="lg"
+                    fontWeight="semibold"
+                    mb={2}
+                    noOfLines={2}
+                  >
+                    {event.title}
+                  </Text>
+                  <HStack spacing={2} mb={2}>
+                    <Badge colorScheme={eventTypeColors[event.eventType]}>
+                      {eventTypeLabels[event.eventType]}
+                    </Badge>
+                    <Badge colorScheme={getStatusColor(event)}>
+                      {getEventStatus(event)}
+                    </Badge>
+                  </HStack>
+                </Box>
+                <VStack spacing={1}>
+                  <Tooltip
+                    label={
+                      favorites.has(event._id)
+                        ? 'Remove from favorites'
+                        : 'Add to favorites'
+                    }
+                  >
+                    <IconButton
+                      aria-label="Toggle favorite"
+                      icon={
+                        favorites.has(event._id) ? <FaHeart /> : <FaRegHeart />
+                      }
+                      size="sm"
+                      variant="ghost"
+                      colorScheme={favorites.has(event._id) ? 'red' : 'gray'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(event._id);
+                      }}
+                    />
+                  </Tooltip>
+                  <Tooltip label="Share event">
+                    <IconButton
+                      aria-label="Share event"
+                      icon={<FaShare />}
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Add share functionality
+                      }}
+                    />
+                  </Tooltip>
+                </VStack>
+              </Flex>
+
+              {/* Description */}
+              <Text fontSize="sm" color="gray.600" mb={3} noOfLines={3}>
+                {event.description}
+              </Text>
+
+              {/* Event Details */}
+              <VStack spacing={2} align="stretch" mb={3}>
+                <HStack>
+                  <FaCalendarAlt color="gray" />
+                  <Text fontSize="sm">
+                    {format(new Date(event.startDate), 'MMM dd, yyyy • h:mm a')}
+                    {event.startDate !== event.endDate && (
+                      <>
+                        {' '}
+                        -{' '}
+                        {format(
+                          new Date(event.endDate),
+                          'MMM dd, yyyy • h:mm a'
+                        )}
+                      </>
+                    )}
+                  </Text>
+                </HStack>
+
+                <HStack>
+                  <FaMapMarkerAlt color="gray" />
+                  <Text fontSize="sm">
+                    {event.location?.virtual
+                      ? 'Virtual Event'
+                      : `${event.location?.name || 'TBD'}, ${
+                          event.location?.city || ''
+                        }`}
+                  </Text>
+                </HStack>
+
+                <HStack>
+                  <FaUser color="gray" />
+                  <Text fontSize="sm">{event.organizer}</Text>
+                </HStack>
+
+                {event.registrationFee && (
+                  <HStack>
+                    <FaDollarSign color="gray" />
+                    <Text fontSize="sm">
+                      ₦{event.registrationFee.toLocaleString()}
+                    </Text>
+                  </HStack>
+                )}
+              </VStack>
+
+              {/* Registration Info */}
+              {event.requiresRegistration && (
+                <Box mb={3}>
+                  {isRegistrationFull(event) && (
+                    <Alert status="warning" size="sm" mb={2}>
+                      <AlertIcon />
+                      Registration full
+                    </Alert>
+                  )}
+                  {event.registrationDeadline &&
+                    isFuture(new Date(event.registrationDeadline)) && (
+                      <Text fontSize="xs" color="gray.500">
+                        Registration ends:{' '}
+                        {format(
+                          new Date(event.registrationDeadline),
+                          'MMM dd, yyyy'
+                        )}
+                      </Text>
+                    )}
+                </Box>
               )}
 
-              <CardContent
-                sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
-              >
-                {/* Header */}
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  mb={2}
+              {/* Actions */}
+              <HStack spacing={2}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<FaInfo />}
+                  onClick={() => handleViewEvent(event._id)}
+                  flex="1"
                 >
-                  <Box flexGrow={1}>
-                    <Typography variant="h6" component="h3" gutterBottom>
-                      {event.title}
-                    </Typography>
-                    <Box display="flex" gap={1} mb={1}>
-                      <Chip
-                        label={eventTypeLabels[event.eventType]}
-                        color={eventTypeColors[event.eventType]}
-                        size="small"
-                      />
-                      <Chip
-                        label={getEventStatus(event)}
-                        color={getStatusColor(event) as any}
-                        size="small"
-                      />
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Tooltip
-                      title={
-                        favorites.has(event._id)
-                          ? 'Remove from favorites'
-                          : 'Add to favorites'
-                      }
-                    >
-                      <IconButton
-                        size="small"
-                        onClick={() => toggleFavorite(event._id)}
-                        color={favorites.has(event._id) ? 'error' : 'default'}
-                      >
-                        {favorites.has(event._id) ? (
-                          <Favorite />
-                        ) : (
-                          <FavoriteBorder />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Share event">
-                      <IconButton size="small">
-                        <Share />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-
-                {/* Description */}
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    mb: 2,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  {event.description}
-                </Typography>
-
-                {/* Event Details */}
-                <Stack spacing={1} mb={2}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <CalendarToday fontSize="small" color="action" />
-                    <Typography variant="body2">
-                      {format(
-                        new Date(event.startDate),
-                        'MMM dd, yyyy • h:mm a'
-                      )}
-                      {event.startDate !== event.endDate && (
-                        <>
-                          {' '}
-                          -{' '}
-                          {format(
-                            new Date(event.endDate),
-                            'MMM dd, yyyy • h:mm a'
-                          )}
-                        </>
-                      )}
-                    </Typography>
-                  </Box>
-
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <LocationOn fontSize="small" color="action" />
-                    <Typography variant="body2">
-                      {event.location.virtual
-                        ? 'Virtual Event'
-                        : `${event.location.name}, ${event.location.city}`}
-                    </Typography>
-                  </Box>
-
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Person fontSize="small" color="action" />
-                    <Typography variant="body2">{event.organizer}</Typography>
-                  </Box>
-
-                  {event.registrationFee && (
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <AttachMoney fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        ₦{event.registrationFee.toLocaleString()}
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-
-                {/* Registration Info */}
-                {event.requiresRegistration && (
-                  <Box mb={2}>
-                    {isRegistrationFull(event) && (
-                      <Alert severity="warning" size="small">
-                        Registration full
-                      </Alert>
-                    )}
-                    {event.registrationDeadline &&
-                      isFuture(new Date(event.registrationDeadline)) && (
-                        <Typography variant="caption" color="text.secondary">
-                          Registration ends:{' '}
-                          {format(
-                            new Date(event.registrationDeadline),
-                            'MMM dd, yyyy'
-                          )}
-                        </Typography>
-                      )}
-                  </Box>
-                )}
-
-                {/* Actions */}
-                <Box mt="auto" display="flex" gap={1}>
+                  View Details
+                </Button>
+                {canRegister(event) && !isRegistrationFull(event) && (
                   <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleViewEvent(event._id)}
-                    startIcon={<Info />}
-                    fullWidth
+                    colorScheme="blue"
+                    size="sm"
+                    leftIcon={<FaCheckCircle />}
+                    onClick={() => handleRegister(event._id)}
+                    flex="1"
                   >
-                    View Details
+                    Register
                   </Button>
-                  {canRegister(event) && !isRegistrationFull(event) && (
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => handleRegister(event._id)}
-                      startIcon={<CheckCircle />}
-                      fullWidth
-                    >
-                      Register
-                    </Button>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                )}
+              </HStack>
+            </CardBody>
+          </Card>
         ))}
-      </Grid>
+      </SimpleGrid>
 
       {/* Empty State */}
       {!loading && events.length === 0 && (
-        <Box textAlign="center" py={8}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No events found
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Try adjusting your search filters
-          </Typography>
-        </Box>
+        <Center py={12}>
+          <VStack spacing={3}>
+            <Text fontSize="lg" color="gray.500" fontWeight="medium">
+              No events found
+            </Text>
+            <Text color="gray.400">Try adjusting your search filters</Text>
+          </VStack>
+        </Center>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mt={4}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(_, newPage) => setPage(newPage)}
-            color="primary"
-            size="large"
-          />
-        </Box>
+        <Center mt={8}>
+          <HStack spacing={2}>
+            <Button
+              variant="outline"
+              size="sm"
+              isDisabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (pageNum) => (
+                <Button
+                  key={pageNum}
+                  size="sm"
+                  variant={pageNum === page ? 'solid' : 'outline'}
+                  colorScheme={pageNum === page ? 'blue' : 'gray'}
+                  onClick={() => setPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              )
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              isDisabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </HStack>
+        </Center>
       )}
 
       {/* Loading Overlay */}
@@ -512,13 +504,13 @@ const MemberEventsList: React.FC = () => {
           left={0}
           right={0}
           bottom={0}
-          bgcolor="rgba(255, 255, 255, 0.7)"
+          bg="rgba(255, 255, 255, 0.8)"
           display="flex"
           alignItems="center"
           justifyContent="center"
           zIndex={1000}
         >
-          <CircularProgress />
+          <Spinner size="xl" color="blue.500" />
         </Box>
       )}
     </Box>
