@@ -72,6 +72,9 @@ import electionRoutes from './routes/election.routes';
 import pollRoutes from './routes/poll.routes';
 import communicationRoutes from './routes/communication.routes';
 import financialRecordRoutes from './routes/financialRecord.routes';
+import permissionRoutes from './routes/permission.routes';
+import roleRoutes from './routes/role.routes';
+import userManagementRoutes from './routes/userManagement.routes';
 
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
@@ -102,6 +105,9 @@ app.use('/api/elections', electionRoutes);
 app.use('/api/polls', pollRoutes);
 app.use('/api/communications', communicationRoutes);
 app.use('/api/financial-records', financialRecordRoutes);
+app.use('/api/permissions', permissionRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/user-management', userManagementRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';
