@@ -49,6 +49,11 @@ const eventSchema = new Schema<IEvent>(
       type: String,
       required: [true, 'Description is required'],
     },
+    eventType: {
+      type: String,
+      enum: Object.values(EventType),
+      required: [true, 'Event type is required'],
+    },
     startDate: {
       type: Date,
       required: [true, 'Start date is required'],
@@ -61,17 +66,24 @@ const eventSchema = new Schema<IEvent>(
       type: String,
       required: [true, 'Location is required'],
     },
-    requiresPayment: {
+    imageUrl: {
+      type: String,
+    },
+    organizer: {
+      type: String,
+      required: [true, 'Organizer is required'],
+    },
+    requiresRegistration: {
       type: Boolean,
       default: false,
     },
-    amount: {
+    registrationFee: {
       type: Number,
       required: function (this: IEvent) {
-        return this.requiresPayment === true;
+        return this.requiresRegistration === true;
       },
     },
-    maxAttendees: {
+    capacity: {
       type: Number,
     },
     createdBy: {
@@ -84,6 +96,13 @@ const eventSchema = new Schema<IEvent>(
       enum: Object.values(EventStatus),
       default: EventStatus.UPCOMING,
     },
+    registrationDeadline: {
+      type: Date,
+    },
+    isAttendanceRequired: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
@@ -92,9 +111,17 @@ const eventSchema = new Schema<IEvent>(
   }
 );
 
-// Virtual populate for attendees
-eventSchema.virtual('attendees', {
-  ref: 'EventAttendee',
+// Virtual populate for registrations
+eventSchema.virtual('registrations', {
+  ref: 'EventRegistration',
+  localField: '_id',
+  foreignField: 'eventId',
+  justOne: false,
+});
+
+// Virtual populate for attendance
+eventSchema.virtual('attendance', {
+  ref: 'EventAttendance',
   localField: '_id',
   foreignField: 'eventId',
   justOne: false,
