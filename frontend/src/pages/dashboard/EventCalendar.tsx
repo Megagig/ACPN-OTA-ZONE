@@ -236,7 +236,7 @@ const EventCalendar: React.FC = () => {
               {/* Weekdays header */}
               <div className="grid grid-cols-7 gap-1 mb-1">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
-                  (day, index) => (
+                  (day) => (
                     <div
                       key={day}
                       className="text-center text-sm font-medium text-muted-foreground py-2"
@@ -346,11 +346,11 @@ const EventCalendar: React.FC = () => {
                         </h4>
                         <span
                           className={`text-xs ${getEventTypeBadgeClass(
-                            event.type
+                            event.eventType
                           )} px-2 py-0.5 rounded-full`}
                         >
-                          {event.type.charAt(0).toUpperCase() +
-                            event.type.slice(1)}
+                          {event.eventType?.charAt(0).toUpperCase() +
+                            event.eventType?.slice(1)}
                         </span>
                       </div>
                     </div>

@@ -856,6 +856,84 @@ export const getUserRegistrations = asyncHandler(
   }
 );
 
+// @desc    Get event registrations
+// @route   GET /api/events/:id/registrations
+// @access  Private
+export const getEventRegistrations = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const eventId = req.params.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    // Check if event exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      res.status(404).json({
+        success: false,
+        message: 'Event not found',
+      });
+      return;
+    }
+
+    // Build query
+    const query: any = { eventId: eventId };
+
+    // Filter by registration status if provided
+    if (req.query.status) {
+      query.status = req.query.status;
+    }
+
+    // Get total count for pagination
+    const total = await EventRegistration.countDocuments(query);
+
+    // Get registrations with pagination
+    const registrations = await EventRegistration.find(query)
+      .populate('userId', 'firstName lastName email profileImage phoneNumber')
+      .populate('eventId', 'title eventType startDate endDate')
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    // Get attendance data for registered users
+    const registrationsWithAttendance = await Promise.all(
+      registrations.map(async (registration) => {
+        const attendance = await EventAttendance.findOne({
+          eventId: eventId,
+          userId: registration.userId,
+        });
+
+        return {
+          ...registration.toObject(),
+          attendance: attendance
+            ? {
+                present: attendance.attended,
+                checkedInAt: attendance.markedAt,
+                notes: attendance.notes,
+              }
+            : null,
+        };
+      })
+    );
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      success: true,
+      count: registrations.length,
+      total,
+      page,
+      totalPages,
+      hasNextPage,
+      hasPrevPage,
+      data: registrationsWithAttendance,
+    });
+  }
+);
+
 // Helper function to send notifications to all users
 async function sendEventNotifications(eventId: string) {
   try {

@@ -16,6 +16,7 @@ import {
   getAllPenaltyConfigs,
   getUserPenalties,
   getUserRegistrations,
+  getEventRegistrations,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -41,6 +42,14 @@ router.route('/:id').get(getEvent);
 // Event registration routes
 router.route('/:id/register').post(registerForEvent);
 router.route('/:id/register').delete(cancelRegistration);
+
+// Get event registrations (Admin/Secretary only)
+router
+  .route('/:id/registrations')
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    getEventRegistrations
+  );
 
 // Event notification routes
 router.route('/:id/acknowledge').post(acknowledgeEvent);
