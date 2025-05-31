@@ -7,17 +7,33 @@ export enum EventStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum EventType {
+  CONFERENCE = 'conference',
+  WORKSHOP = 'workshop',
+  SEMINAR = 'seminar',
+  TRAINING = 'training',
+  MEETING = 'meeting',
+  STATE_EVENT = 'state_event',
+  SOCIAL = 'social',
+  OTHER = 'other',
+}
+
 export interface IEvent extends Document {
   title: string;
   description: string;
+  eventType: EventType;
   startDate: Date;
   endDate: Date;
   location: string;
-  requiresPayment: boolean;
-  amount?: number;
-  maxAttendees?: number;
+  imageUrl?: string;
+  organizer: string;
+  requiresRegistration: boolean;
+  registrationFee?: number;
+  capacity?: number;
   createdBy: mongoose.Types.ObjectId;
   status: EventStatus;
+  registrationDeadline?: Date;
+  isAttendanceRequired: boolean; // Track attendance for all events
   createdAt: Date;
   updatedAt: Date;
 }
