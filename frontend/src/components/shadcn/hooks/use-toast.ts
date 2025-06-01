@@ -1,19 +1,21 @@
 import * as React from 'react';
 
-// Toast Context
-export type ToastType = 'info' | 'success' | 'warning' | 'error';
+// Toast types and interfaces
+export type ToastVariant = 'default' | 'destructive';
 
-export interface Toast {
-  id: string;
-  message: string;
+export interface ToastProps {
+  title?: string;
   description?: string;
-  type: ToastType;
-  duration?: number;
+  variant?: ToastVariant;
+}
+
+export interface Toast extends ToastProps {
+  id: string;
 }
 
 export interface ToastContextType {
   toasts: Toast[];
-  addToast: (toast: Omit<Toast, 'id'>) => void;
+  addToast: (toast: ToastProps) => void;
   removeToast: (id: string) => void;
 }
 
@@ -21,30 +23,18 @@ export const ToastContext = React.createContext<ToastContextType | undefined>(
   undefined
 );
 
-export function useToast(): ToastContextType {
+export function useToast() {
   const context = React.useContext(ToastContext);
   if (context === undefined) {
     throw new Error('useToast must be used within a ToastProvider');
   }
-  return context;
-}
 
-// Hook for toast utility functions that is safe to use in components
-export function useToastUtils() {
-  const { addToast } = useToast();
-  
-  return React.useMemo(() => ({
-    info: (message: string, description?: string) => {
-      addToast({ message, description, type: 'info' });
+  const toast = React.useCallback(
+    (props: ToastProps) => {
+      context.addToast(props);
     },
-    success: (message: string, description?: string) => {
-      addToast({ message, description, type: 'success' });
-    },
-    warning: (message: string, description?: string) => {
-      addToast({ message, description, type: 'warning' });
-    },
-    error: (message: string, description?: string) => {
-      addToast({ message, description, type: 'error' });
-    },
-  }), [addToast]);
+    [context]
+  );
+
+  return { toast };
 }

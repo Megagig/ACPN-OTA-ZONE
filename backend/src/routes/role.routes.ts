@@ -5,7 +5,7 @@ import {
   createRole,
   updateRole,
   deleteRole,
-  initializeDefaultRoles,
+  initializeRoles,
   addPermissionToRole,
   removePermissionFromRole,
   getUsersWithRole,
@@ -24,16 +24,16 @@ router
   .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getRoles)
   .post(authorize(UserRole.SUPERADMIN), createRole);
 
+// Route to initialize default roles (must come before /:id route)
+router
+  .route('/initialize/default')
+  .post(authorize(UserRole.SUPERADMIN), initializeRoles);
+
 router
   .route('/:id')
   .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getRoleById)
   .put(authorize(UserRole.SUPERADMIN), updateRole)
   .delete(authorize(UserRole.SUPERADMIN), deleteRole);
-
-// Route to initialize default roles
-router
-  .route('/initialize/default')
-  .post(authorize(UserRole.SUPERADMIN), initializeDefaultRoles);
 
 // Routes for managing permissions in a role
 router

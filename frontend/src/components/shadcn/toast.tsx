@@ -1,202 +1,145 @@
 import * as React from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { cn } from '../../lib/utils/cn';
-import type { Toast } from './hooks/use-toast';
-import { ToastContext, useToast } from './hooks/use-toast';
 
-interface ToastProviderProps {
-  children: React.ReactNode;
+export interface ToastProps {
+  id: string;
+  title?: string;
+  description?: string;
+  variant?: 'default' | 'destructive' | 'success' | 'warning';
+  duration?: number;
 }
 
-export function ToastProvider({ children }: ToastProviderProps) {
-  const [toasts, setToasts] = React.useState<Toast[]>([]);
+interface ToastContextType {
+  toasts: ToastProps[];
+  addToast: (toast: Omit<ToastProps, 'id'>) => void;
+  removeToast: (id: string) => void;
+}
 
-  const addToast = React.useCallback(
-    ({ message, type, description, duration = 5000 }: Omit<Toast, 'id'>) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      setToasts((prevToasts) => [
-        ...prevToasts,
-        { id, message, type, description, duration },
-      ]);
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-      // Auto-remove toast after duration
-      if (duration !== Infinity) {
-        setTimeout(() => {
-          setToasts((prevToasts) =>
-            prevToasts.filter((toast) => toast.id !== id)
-          );
-        }, duration);
-      }
-    },
-    []
-  );
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within a ToastProvider');
+  }
+  return {
+    toast: context.addToast,
+    dismiss: context.removeToast,
+    toasts: context.toasts,
+  };
+};
 
-  const removeToast = React.useCallback((id: string) => {
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [toasts, setToasts] = useState<ToastProps[]>([]);
+
+  const addToast = useCallback((toast: Omit<ToastProps, 'id'>) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const newToast: ToastProps = {
+      ...toast,
+      id,
+      duration: toast.duration || 5000,
+    };
+
+    setToasts((prevToasts) => [...prevToasts, newToast]);
+
+    // Auto remove toast after duration
+    setTimeout(() => {
+      setToasts((prevToasts) => prevToasts.filter((t) => t.id !== id));
+    }, newToast.duration);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
     setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
   }, []);
 
-  const value = React.useMemo(
-    () => ({ toasts, addToast, removeToast }),
-    [toasts, addToast, removeToast]
-  );
+  const contextValue: ToastContextType = {
+    toasts,
+    addToast,
+    removeToast,
+  };
 
   return (
-    <ToastContext.Provider value={value}>
+    <ToastContext.Provider value={contextValue}>
       {children}
-      <ToastContainer />
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </ToastContext.Provider>
   );
-}
+};
 
-// Toast Container
-function ToastContainer() {
-  const { toasts, removeToast } = useToast();
+const ToastContainer: React.FC<{
+  toasts: ToastProps[];
+  removeToast: (id: string) => void;
+}> = ({ toasts, removeToast }) => {
+  if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-0 right-0 z-50 p-4 space-y-4 max-w-md">
+    <div className="fixed top-0 right-0 z-50 p-4 space-y-2">
       {toasts.map((toast) => (
-        <ToastItem
+        <Toast
           key={toast.id}
-          toast={toast}
+          {...toast}
           onClose={() => removeToast(toast.id)}
         />
       ))}
     </div>
   );
-}
+};
 
-// Toast Component
-interface ToastProps {
-  toast: Toast;
-  onClose: () => void;
-}
-
-function ToastItem({ toast, onClose }: ToastProps) {
-  const { type, message, description } = toast;
-
-  // Type-based styling
-  const getTypeStyles = (): string => {
-    switch (type) {
+const Toast: React.FC<ToastProps & { onClose: () => void }> = ({
+  title,
+  description,
+  variant = 'default',
+  onClose,
+}) => {
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'destructive':
+        return 'bg-red-600 text-white border-red-700';
       case 'success':
-        return 'bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-600 text-green-800 dark:text-green-300';
-      case 'error':
-        return 'bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-600 text-red-800 dark:text-red-300';
+        return 'bg-green-600 text-white border-green-700';
       case 'warning':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-300';
-      case 'info':
+        return 'bg-yellow-600 text-white border-yellow-700';
       default:
-        return 'bg-blue-100 dark:bg-blue-900/30 border-blue-400 dark:border-blue-600 text-blue-800 dark:text-blue-300';
-    }
-  };
-
-  // Icon based on type
-  const getIcon = (): React.ReactNode => {
-    switch (type) {
-      case 'success':
-        return (
-          <svg
-            className="w-5 h-5 text-green-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        );
-      case 'error':
-        return (
-          <svg
-            className="w-5 h-5 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        );
-      case 'warning':
-        return (
-          <svg
-            className="w-5 h-5 text-yellow-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-        );
-      case 'info':
-      default:
-        return (
-          <svg
-            className="w-5 h-5 text-blue-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        );
+        return 'bg-white text-gray-900 border-gray-200 shadow-lg';
     }
   };
 
   return (
     <div
       className={cn(
-        'rounded-lg border p-4 shadow-md transform transition-all duration-300 ease-in-out',
-        'animate-in slide-in-from-right',
-        getTypeStyles()
+        'flex items-start gap-3 rounded-lg border p-4 max-w-sm transition-all duration-300 ease-in-out',
+        getVariantClasses()
       )}
-      role="alert"
     >
-      <div className="flex items-start">
-        <div className="flex-shrink-0">{getIcon()}</div>
-        <div className="ml-3 w-full">
-          <div className="flex justify-between items-start">
-            <p className="text-sm font-medium">{message}</p>
-            <button
-              type="button"
-              className="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
-              onClick={onClose}
-            >
-              <span className="sr-only">Close</span>
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          {description && <p className="mt-1 text-sm">{description}</p>}
-        </div>
+      <div className="flex-1">
+        {title && <div className="font-semibold text-sm">{title}</div>}
+        {description && (
+          <div className={cn('text-sm', title && 'mt-1')}>{description}</div>
+        )}
       </div>
+      <button
+        onClick={onClose}
+        className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
     </div>
   );
-}
+};
+
+export { Toast };

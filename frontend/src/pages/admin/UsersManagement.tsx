@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import userService from '../../services/user.service';
 import userManagementService from '../../services/userManagement.service';
 import type { User } from '../../types/auth.types';
+import BulkOperationsToolbar from '../../components/user/BulkOperationsToolbar';
+import { useToast } from '../../hooks/useToast';
 
 // UI Components
 import {
@@ -29,7 +31,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  toast,
 } from '../../components/ui';
 
 const statusColors: Record<string, string> = {
@@ -41,6 +42,8 @@ const statusColors: Record<string, string> = {
 };
 
 const UsersManagement: React.FC = () => {
+  const { toast } = useToast();
+
   // State variables
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,10 +55,10 @@ const UsersManagement: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
-  const [showBulkActionDialog, setShowBulkActionDialog] =
-    useState<boolean>(false);
   const [bulkActionType, setBulkActionType] = useState<string>('');
   const [bulkActionValue, setBulkActionValue] = useState<string>('');
+  const [showBulkActionDialog, setShowBulkActionDialog] =
+    useState<boolean>(false);
 
   // Fetch users on component mount and when filters change
   useEffect(() => {
@@ -138,7 +141,6 @@ const UsersManagement: React.FC = () => {
 
   const handleBulkAction = (actionType: string) => {
     setBulkActionType(actionType);
-    setShowBulkActionDialog(true);
   };
 
   const executeBulkAction = async () => {
@@ -167,7 +169,7 @@ const UsersManagement: React.FC = () => {
       fetchUsers();
       // Clear selection
       setSelectedUsers([]);
-      setShowBulkActionDialog(false);
+      // Reset values
       setBulkActionValue('');
     } catch (error) {
       console.error('Error executing bulk action:', error);
@@ -251,28 +253,21 @@ const UsersManagement: React.FC = () => {
 
             {/* Bulk Actions */}
             {selectedUsers.length > 0 && (
-              <div className="bg-muted p-2 rounded-md flex items-center justify-between">
-                <span>
-                  {selectedUsers.length} user
-                  {selectedUsers.length !== 1 ? 's' : ''} selected
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleBulkAction('status')}
-                  >
-                    Update Status
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleBulkAction('role')}
-                  >
-                    Assign Role
-                  </Button>
-                </div>
-              </div>
+              <BulkOperationsToolbar
+                selectedCount={selectedUsers.length}
+                onClearSelection={() => setSelectedUsers([])}
+                onBulkStatusChange={(status) => {
+                  setBulkActionType('status');
+                  setBulkActionValue(status);
+                  executeBulkAction();
+                }}
+                onBulkRoleAssign={(roleId) => {
+                  setBulkActionType('role');
+                  setBulkActionValue(roleId);
+                  executeBulkAction();
+                }}
+                roles={roles}
+              />
             )}
 
             {/* Users Table */}

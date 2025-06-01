@@ -22,13 +22,23 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string; // Added
-  pcnLicense: string; // Added
+  phone?: string;
+  pcnLicense?: string;
+  pcnNumber?: string; // Added for PCN number
+  address?: string; // Added for address
   role: string;
   profilePicture?: string;
   isEmailVerified: boolean;
   isApproved: boolean;
   status: string;
+  createdAt?: string; // Added for creation date
+  updatedAt?: string; // Added for update date
+  pharmacy?: {
+    _id: string;
+    name: string;
+    registrationNumber?: string;
+    address?: string;
+  }; // Added for pharmacy association
 }
 
 export interface AuthResponse {

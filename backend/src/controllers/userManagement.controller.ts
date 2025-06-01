@@ -5,7 +5,7 @@ import User, { UserRole, UserStatus, IUser } from '../models/user.model';
 import Role from '../models/role.model';
 import AuditTrail from '../models/auditTrail.model';
 import ErrorResponse from '../utils/errorResponse';
-import cloudinary from '../config/cloudinary/cloudinary';
+import cloudinary from '../config/cloudinary';
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -112,11 +112,10 @@ export const uploadProfilePicture = asyncHandler(
 
     try {
       // Upload to cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'profile_pictures',
-        public_id: `user_${user._id}`,
-        overwrite: true,
-      });
+      const result = await cloudinary.uploadToCloudinary(
+        req.file.path,
+        'profile_pictures'
+      );
 
       // Update user profile picture
       user.profilePicture = result.secure_url;
@@ -448,7 +447,7 @@ export const bulkUpdateUserStatus = asyncHandler(
 
     // Map to easily access by ID
     const userStatusMap = new Map();
-    usersBeforeUpdate.forEach((user) => {
+    usersBeforeUpdate.forEach((user: any) => {
       userStatusMap.set(user._id.toString(), user.status);
     });
 
@@ -557,7 +556,7 @@ export const bulkUpdateUserRole = asyncHandler(
 
     // Map to easily access by ID
     const userRoleMap = new Map();
-    usersBeforeUpdate.forEach((user) => {
+    usersBeforeUpdate.forEach((user: any) => {
       userRoleMap.set(user._id.toString(), user.role);
     });
 
@@ -685,6 +684,90 @@ export const checkUserPermission = asyncHandler(
   }
 );
 
+// @desc    Get user audit trail
+// @route   GET /api/users/:id/audit
+// @access  Private (Admin, SuperAdmin)
+export const getUserAuditTrail = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    // Check if user exists
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Get all audit trails for this user as the target
+    const auditTrails = await AuditTrail.find({
+      resourceId: user._id,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: auditTrails.length,
+      data: auditTrails,
+    });
+  }
+);
+
+// @desc    Get filtered users
+// @route   GET /api/users/filter
+// @access  Private (Admin, SuperAdmin)
+export const getFilteredUsers = asyncHandler(
+  async (req: Request, res: Response) => {
+    // Create filter object from query parameters
+    const filter: any = {};
+
+    if (req.query.role) {
+      filter.role = req.query.role;
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search as string, 'i');
+      filter.$or = [
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { email: searchRegex },
+        { pcnLicense: searchRegex },
+      ];
+    }
+
+    // Pagination
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    // Get filtered users
+    const total = await User.countDocuments(filter);
+    const users = await User.find(filter)
+      .select(
+        '-password -refreshToken -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire'
+      )
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      total,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      data: users,
+    });
+  }
+);
+
 export default {
   getUserProfile,
   updateUserProfile,
@@ -697,4 +780,11 @@ export default {
   bulkUpdateUserRole,
   getUserPermissions,
   checkUserPermission,
+  getUserAuditTrail,
+  getFilteredUsers,
+  // Add aliases for functions imported in routes
+  getUsersByStatus: getAllUsers,
+  assignUserRole: updateUserRole,
+  bulkAssignUserRole: bulkUpdateUserRole,
+  checkPermission: checkUserPermission,
 };

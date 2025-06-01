@@ -1,22 +1,24 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import {
+import userManagementController from '../controllers/userManagement.controller';
+import { protect, authorize } from '../middleware/auth.middleware';
+import { UserRole } from '../models/user.model';
+
+const {
   getUserProfile,
   updateUserProfile,
   uploadProfilePicture,
   getUserPermissions,
-  getUsersByStatus,
   updateUserStatus,
   bulkUpdateUserStatus,
-  assignUserRole,
-  bulkAssignUserRole,
+  getAllUsers: getUsersByStatus,
+  updateUserRole: assignUserRole,
+  bulkUpdateUserRole: bulkAssignUserRole,
   getUserAuditTrail,
-  checkPermission,
+  checkUserPermission: checkPermission,
   getFilteredUsers,
-} from '../controllers/userManagement.controller';
-import { protect, authorize } from '../middleware/auth.middleware';
-import { UserRole } from '../models/user.model';
+} = userManagementController;
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({

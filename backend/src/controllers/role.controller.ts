@@ -2,7 +2,10 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import asyncHandler from '../middleware/async.middleware';
 import Role from '../models/role.model';
-import Permission from '../models/permission.model';
+import Permission, {
+  ResourceType,
+  ActionType,
+} from '../models/permission.model';
 import User, { UserRole } from '../models/user.model';
 import AuditTrail from '../models/auditTrail.model';
 
@@ -89,8 +92,8 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
   // Add audit trail
   await AuditTrail.create({
     userId: req.user.id,
-    action: 'CREATE',
-    resourceType: 'ROLE',
+    action: ActionType.CREATE,
+    resourceType: ResourceType.ROLE,
     resourceId: role._id,
     details: { role: role.toObject() },
     ipAddress: req.ip,
@@ -160,8 +163,8 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   // Add audit trail
   await AuditTrail.create({
     userId: req.user.id,
-    action: 'UPDATE',
-    resourceType: 'ROLE',
+    action: ActionType.UPDATE,
+    resourceType: ResourceType.ROLE,
     resourceId: role._id,
     details: {
       old: oldRole,
@@ -215,8 +218,8 @@ export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
   // Add audit trail
   await AuditTrail.create({
     userId: req.user.id,
-    action: 'DELETE',
-    resourceType: 'ROLE',
+    action: ActionType.DELETE,
+    resourceType: ResourceType.ROLE,
     resourceId: role._id,
     details: { role: deletedRole },
     ipAddress: req.ip,
@@ -246,7 +249,7 @@ export const initializeRoles = asyncHandler(
 
     const permissionIds = permissions.map((p) => p._id);
     const readPermissions = permissions
-      .filter((p) => p.action === 'READ')
+      .filter((p) => p.action === ActionType.READ)
       .map((p) => p._id);
 
     // Define default roles with their permissions
@@ -263,8 +266,9 @@ export const initializeRoles = asyncHandler(
         permissions: permissions
           .filter(
             (p) =>
-              p.action !== 'DELETE' ||
-              (p.resource !== 'ROLE' && p.resource !== 'PERMISSION')
+              p.action !== ActionType.DELETE ||
+              (p.resource !== ResourceType.ROLE &&
+                p.resource !== ResourceType.PERMISSION)
           )
           .map((p) => p._id),
         isDefault: true,
@@ -275,10 +279,10 @@ export const initializeRoles = asyncHandler(
         permissions: permissions
           .filter(
             (p) =>
-              p.resource === 'DOCUMENT' ||
-              p.resource === 'COMMUNICATION' ||
-              p.resource === 'EVENT' ||
-              p.action === 'READ'
+              p.resource === ResourceType.DOCUMENT ||
+              p.resource === ResourceType.COMMUNICATION ||
+              p.resource === ResourceType.EVENT ||
+              p.action === ActionType.READ
           )
           .map((p) => p._id),
         isDefault: true,
@@ -289,9 +293,9 @@ export const initializeRoles = asyncHandler(
         permissions: permissions
           .filter(
             (p) =>
-              p.resource === 'FINANCIAL_RECORD' ||
-              p.resource === 'DONATION' ||
-              p.action === 'READ'
+              p.resource === ResourceType.FINANCIAL_RECORD ||
+              p.resource === ResourceType.DONATION ||
+              p.action === ActionType.READ
           )
           .map((p) => p._id),
         isDefault: true,
@@ -302,10 +306,10 @@ export const initializeRoles = asyncHandler(
         permissions: permissions
           .filter(
             (p) =>
-              p.resource === 'FINANCIAL_RECORD' ||
-              p.resource === 'DUE' ||
-              p.resource === 'DONATION' ||
-              p.action === 'READ'
+              p.resource === ResourceType.FINANCIAL_RECORD ||
+              p.resource === ResourceType.DUE ||
+              p.resource === ResourceType.DONATION ||
+              p.action === ActionType.READ
           )
           .map((p) => p._id),
         isDefault: true,
@@ -333,7 +337,9 @@ export const initializeRoles = asyncHandler(
         createdRoles.push(role);
       } else {
         // Update permissions for existing role
-        existing.permissions = roleData.permissions;
+        existing.permissions = roleData.permissions.map(
+          (id) => new mongoose.Types.ObjectId(String(id))
+        );
         existing.description = roleData.description;
         await existing.save();
         createdRoles.push(existing);
@@ -343,8 +349,8 @@ export const initializeRoles = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'CREATE',
-      resourceType: 'ROLE',
+      action: ActionType.CREATE,
+      resourceType: ResourceType.ROLE,
       details: { message: 'Default roles initialized' },
       ipAddress: req.ip,
     });
@@ -358,11 +364,155 @@ export const initializeRoles = asyncHandler(
   }
 );
 
-export default {
-  getRoles,
-  getRoleById,
-  createRole,
-  updateRole,
-  deleteRole,
-  initializeRoles,
-};
+// @desc    Add permission to a role
+// @route   POST /api/roles/:id/permissions/:permissionId
+// @access  Private (SuperAdmin only)
+export const addPermissionToRole = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id, permissionId } = req.params;
+
+    // Find role
+    const role = await Role.findById(id);
+    if (!role) {
+      return res.status(404).json({
+        success: false,
+        message: 'Role not found',
+      });
+    }
+
+    // Find permission
+    const permission = await Permission.findById(permissionId);
+    if (!permission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Permission not found',
+      });
+    }
+
+    // Check if permission already exists in role
+    const permissionExists = role.permissions.some(
+      (p) => p.toString() === permissionId
+    );
+    if (permissionExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Permission already assigned to this role',
+      });
+    }
+
+    // Add permission to role
+    role.permissions.push(new mongoose.Types.ObjectId(permissionId));
+    await role.save();
+
+    // Add audit trail
+    await AuditTrail.create({
+      userId: req.user.id,
+      action: ActionType.UPDATE,
+      resourceType: ResourceType.ROLE,
+      resourceId: role._id,
+      details: {
+        message: `Permission ${permission.name} added to role ${role.name}`,
+        permissionId,
+      },
+      ipAddress: req.ip,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: role,
+      message: 'Permission added to role successfully',
+    });
+  }
+);
+
+// @desc    Remove permission from a role
+// @route   DELETE /api/roles/:id/permissions/:permissionId
+// @access  Private (SuperAdmin only)
+export const removePermissionFromRole = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id, permissionId } = req.params;
+
+    // Find role
+    const role = await Role.findById(id);
+    if (!role) {
+      return res.status(404).json({
+        success: false,
+        message: 'Role not found',
+      });
+    }
+
+    // Find permission
+    const permission = await Permission.findById(permissionId);
+    if (!permission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Permission not found',
+      });
+    }
+
+    // Check if permission exists in role
+    const permissionExists = role.permissions.some(
+      (p) => p.toString() === permissionId
+    );
+    if (!permissionExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Permission not assigned to this role',
+      });
+    }
+
+    // Remove permission from role
+    role.permissions = role.permissions.filter(
+      (p) => p.toString() !== permissionId
+    );
+    await role.save();
+
+    // Add audit trail
+    await AuditTrail.create({
+      userId: req.user.id,
+      action: ActionType.UPDATE,
+      resourceType: ResourceType.ROLE,
+      resourceId: role._id,
+      details: {
+        message: `Permission ${permission.name} removed from role ${role.name}`,
+        permissionId,
+      },
+      ipAddress: req.ip,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: role,
+      message: 'Permission removed from role successfully',
+    });
+  }
+);
+
+// @desc    Get users with a specific role
+// @route   GET /api/roles/:id/users
+// @access  Private (Admin, SuperAdmin)
+export const getUsersWithRole = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    // Find role
+    const role = await Role.findById(id);
+    if (!role) {
+      return res.status(404).json({
+        success: false,
+        message: 'Role not found',
+      });
+    }
+
+    // Find users with this role
+    const users = await User.find({ role: role.name }).select(
+      '-password -refreshToken -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire'
+    );
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users,
+    });
+  }
+);

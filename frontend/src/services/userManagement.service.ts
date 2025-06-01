@@ -293,3 +293,4 @@ class UserManagementService {
 }
 
 export default new UserManagementService();
+export type { AuditTrailEntry };
