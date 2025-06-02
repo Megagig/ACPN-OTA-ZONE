@@ -171,7 +171,8 @@ export const getDuePayments = async (params?: {
   status?: string;
 }): Promise<DuePayment[]> => {
   try {
-    const response = await api.get('/payments', { params });
+    // Use the admin/all endpoint which is properly defined in the backend
+    const response = await api.get('/payments/admin/all', { params });
     return response.data.data;
   } catch (error) {
     console.error('Error fetching due payments:', error);
@@ -181,6 +182,7 @@ export const getDuePayments = async (params?: {
 
 export const getDuePaymentById = async (id: string): Promise<DuePayment> => {
   try {
+    // Use a properly defined endpoint format
     const response = await api.get(`/payments/${id}`);
     return response.data.data;
   } catch (error) {
@@ -193,7 +195,8 @@ export const createDuePayment = async (
   data: Partial<DuePayment>
 ): Promise<DuePayment> => {
   try {
-    const response = await api.post('/payments', data);
+    // Use the submit endpoint which is properly defined in the backend
+    const response = await api.post('/payments/submit', data);
     return response.data.data;
   } catch (error) {
     console.error('Error creating due payment:', error);
@@ -206,7 +209,9 @@ export const updateDuePayment = async (
   data: Partial<DuePayment>
 ): Promise<DuePayment> => {
   try {
-    const response = await api.put(`/payments/${id}`, data);
+    // Use the review endpoint which is properly defined in the backend
+    // The backend has separate endpoints for approval/rejection, so we'll use review
+    const response = await api.post(`/payments/${id}/review`, data);
     return response.data.data;
   } catch (error) {
     console.error(`Error updating due payment with id ${id}:`, error);
@@ -216,6 +221,7 @@ export const updateDuePayment = async (
 
 export const deleteDuePayment = async (id: string): Promise<void> => {
   try {
+    // Use the delete endpoint which is properly defined in the backend
     await api.delete(`/payments/${id}`);
   } catch (error) {
     console.error(`Error deleting due payment with id ${id}:`, error);

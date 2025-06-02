@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
+import api from '../../services/api';
 import type { Due, DuePayment } from '../../types/financial.types';
 
 const DuesManagement = () => {
@@ -57,7 +58,18 @@ const DuesManagement = () => {
     newStatus: 'pending' | 'approved' | 'rejected'
   ) => {
     try {
-      await financialService.updateDuePayment(paymentId, { status: newStatus });
+      // For approved/rejected, use the specific endpoints
+      if (newStatus === 'approved') {
+        await api.post(`/payments/${paymentId}/approve`, {});
+      } else if (newStatus === 'rejected') {
+        await api.post(`/payments/${paymentId}/reject`, {});
+      } else {
+        // For 'pending' or any other status, use the review endpoint
+        await financialService.updateDuePayment(paymentId, {
+          status: newStatus,
+        });
+      }
+
       // Update local state
       setPayments(
         payments.map((payment) =>
@@ -368,36 +380,80 @@ const DuesManagement = () => {
                       className="hover:bg-muted/50 transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {typeof payment.due === 'string'
-                          ? payment.due
-                          : payment.due.title}
+                        {/* Handle all possible formats of due data */}
+                        {(() => {
+                          // If due is a string, show it directly
+                          if (typeof payment.due === 'string') {
+                            return payment.due;
+                          }
+
+                          // If due is an object with title
+                          if (
+                            payment.due &&
+                            typeof payment.due === 'object' &&
+                            payment.due.title
+                          ) {
+                            return payment.due.title;
+                          }
+
+                          // If dueId is populated from backend
+                          if (
+                            payment.dueId &&
+                            typeof payment.dueId === 'object' &&
+                            payment.dueId.title
+                          ) {
+                            return payment.dueId.title;
+                          }
+
+                          // Fallback
+                          return 'Unknown Due';
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {payment.user}
+                        {payment.user ||
+                          (payment.submittedBy &&
+                          typeof payment.submittedBy === 'object'
+                            ? `${payment.submittedBy.firstName || ''} ${
+                                payment.submittedBy.lastName || ''
+                              }`.trim()
+                            : payment.submittedBy || 'Unknown User')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency(payment.amount || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {formatDate(payment.paymentDate)}
+                        {payment.paymentDate
+                          ? formatDate(payment.paymentDate)
+                          : payment.submittedAt
+                          ? formatDate(payment.submittedAt)
+                          : 'Unknown date'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
-                        {payment.paymentMethod.replace(/_/g, ' ')}
+                        {payment.paymentMethod
+                          ? payment.paymentMethod.replace(/_/g, ' ')
+                          : 'Unknown'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            payment.status === 'approved'
+                            payment.status === 'approved' ||
+                            payment.approvalStatus === 'approved'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                              : payment.status === 'pending'
+                              : payment.status === 'pending' ||
+                                payment.approvalStatus === 'pending'
                               ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                           }`}
                         >
-                          {payment.status && typeof payment.status === 'string'
-                            ? payment.status.charAt(0).toUpperCase() +
-                              payment.status.slice(1)
-                            : 'Unknown'}
+                          {(() => {
+                            const status =
+                              payment.status ||
+                              payment.approvalStatus ||
+                              'unknown';
+                            return typeof status === 'string'
+                              ? status.charAt(0).toUpperCase() + status.slice(1)
+                              : 'Unknown';
+                          })()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -409,7 +465,8 @@ const DuesManagement = () => {
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        {payment.status === 'pending' && (
+                        {(payment.status === 'pending' ||
+                          payment.approvalStatus === 'pending') && (
                           <>
                             <button
                               className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 mr-3 transition-colors"
