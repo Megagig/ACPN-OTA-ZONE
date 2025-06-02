@@ -69,17 +69,55 @@ export interface Due {
 
 export interface DuePayment {
   _id: string;
-  due: string | Due;
-  user: string;
+  due?: string | Due;
+  dueId?:
+    | string
+    | Due
+    | {
+        _id: string;
+        title: string;
+        amount?: number;
+        [key: string]: any;
+      };
+  user?:
+    | string
+    | {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        [key: string]: any;
+      };
+  submittedBy?:
+    | string
+    | {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        [key: string]: any;
+      };
   pharmacy?: string;
+  pharmacyId?:
+    | string
+    | {
+        _id: string;
+        name?: string;
+        registrationNumber?: string;
+        [key: string]: any;
+      };
   amount: number;
-  paymentDate: string;
-  paymentMethod: PaymentMethod;
-  status: 'pending' | 'approved' | 'rejected';
+  paymentDate?: string;
+  submittedAt?: string;
+  paymentMethod: PaymentMethod | { [key: string]: any };
+  status?: 'pending' | 'approved' | 'rejected';
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
   receipt?: string;
   comments?: string;
   createdAt?: string;
   updatedAt?: string;
+  paymentReference?: string;
+  [key: string]: any; // Allow for additional properties
 }
 
 // Types for donations
