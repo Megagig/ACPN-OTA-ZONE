@@ -50,7 +50,7 @@ interface VotingStatistics {
 const ElectionResults: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const toast = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,7 +65,7 @@ const ElectionResults: React.FC = () => {
           setElection(data);
 
           // If election is completed, fetch voting statistics
-          if (data.status === 'active') {
+          if (data.status === 'ongoing') {
             toast({
               title: 'Election is still active',
               description:
@@ -338,7 +338,7 @@ const ElectionResults: React.FC = () => {
     );
   }
 
-  if (election.status !== 'completed') {
+  if (election.status !== 'ended') {
     return (
       <DashboardLayout>
         <Box className="p-5">
@@ -374,13 +374,19 @@ const ElectionResults: React.FC = () => {
 
         <Tabs onChange={(index) => setActiveTab(index)}>
           <TabList>
-            <Tab isSelected={activeTab === 0} onClick={() => setActiveTab(0)}>
+            <Tab
+              _selected={{ bg: 'blue.500', color: 'white' }}
+              onClick={() => setActiveTab(0)}
+            >
               <HStack>
                 <FaMedal />
                 <Text>Results by Position</Text>
               </HStack>
             </Tab>
-            <Tab isSelected={activeTab === 1} onClick={() => setActiveTab(1)}>
+            <Tab
+              _selected={{ bg: 'blue.500', color: 'white' }}
+              onClick={() => setActiveTab(1)}
+            >
               <HStack>
                 <FaChartBar />
                 <Text>Voting Statistics</Text>
@@ -389,7 +395,7 @@ const ElectionResults: React.FC = () => {
           </TabList>
 
           <TabPanels>
-            <TabPanel isSelected={activeTab === 0} className="px-0">
+            <TabPanel className="px-0">
               <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
                 {election.positions.map((position) => (
                   <Card key={position._id}>
@@ -404,9 +410,7 @@ const ElectionResults: React.FC = () => {
               </SimpleGrid>
             </TabPanel>
 
-            <TabPanel isSelected={activeTab === 1} className="px-0">
-              {renderStatistics()}
-            </TabPanel>
+            <TabPanel className="px-0">{renderStatistics()}</TabPanel>
           </TabPanels>
         </Tabs>
       </Box>

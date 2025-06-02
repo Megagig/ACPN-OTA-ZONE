@@ -35,10 +35,6 @@ const PaymentReports: React.FC = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-  useEffect(() => {
-    fetchPaymentData();
-  }, [fetchPaymentData]);
-
   const fetchPaymentData = useCallback(async () => {
     try {
       setLoading(true);
@@ -182,6 +178,10 @@ const PaymentReports: React.FC = () => {
     a.click();
     window.URL.revokeObjectURL(url);
   };
+
+  useEffect(() => {
+    fetchPaymentData();
+  }, []);
 
   if (loading) {
     return (

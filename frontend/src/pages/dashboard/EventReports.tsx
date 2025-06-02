@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
 import eventService from '../../services/event.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import type { Event, EventAttendee } from '../../types/event.types';
 
 const EventReports: React.FC = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [attendees, setAttendees] = useState<EventAttendee[]>([]);
   const [isLoading, setIsLoading] = useState(true);

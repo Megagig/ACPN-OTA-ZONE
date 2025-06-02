@@ -57,6 +57,7 @@ export interface Pharmacy extends PharmacyFormData {
   // Override photo types to be strings only for API responses
   superintendentPhoto: string;
   directorPhoto: string;
+  businessName?: string; // Added to support legacy references
 }
 
 export interface PharmacyDue {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import financialService from '../../services/financial.service';
-import type { PaymentSubmission, Pharmacy } from '../../types/pharmacy.types';
-import { useTheme } from '../../context/ThemeContext';
+import type { Pharmacy } from '../../types/pharmacy.types';
+import type { PaymentSubmission } from '../../types/financial.types';
 
 interface PaymentFilters {
   status: string;
@@ -14,7 +14,6 @@ interface PaymentFilters {
 }
 
 const PaymentHistory: React.FC = () => {
-  const { theme } = useTheme();
   const [payments, setPayments] = useState<PaymentSubmission[]>([]);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<PaymentSubmission[]>(
@@ -53,7 +52,7 @@ const PaymentHistory: React.FC = () => {
         financialService.getAllPharmacies(),
       ]);
 
-      setPayments(paymentsRes.data || []);
+      setPayments(paymentsRes.payments || []);
       setPharmacies(pharmaciesRes);
     } catch (err) {
       setError('Failed to load payment history');

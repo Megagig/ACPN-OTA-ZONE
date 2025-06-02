@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import electionService from '../../services/election.service';
 import type { Election, ElectionStatus } from '../../types/election.types';
-import { useTheme } from '../../context/ThemeContext';
 
 const ElectionsList = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const [elections, setElections] = useState<Election[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({

@@ -75,7 +75,8 @@ const FinancialAnalytics: React.FC = () => {
         financialService.getDueAnalytics(),
       ]);
 
-      const paymentsData = payments.data || [];
+      const paymentsData = payments.payments || [];
+      // We'll use today's date for calculations
       const currentDate = new Date();
       const periodMonths =
         selectedPeriod === '12months'
@@ -111,7 +112,7 @@ const FinancialAnalytics: React.FC = () => {
         (sum: number, p: PaymentSubmission) => sum + p.amount,
         0
       );
-      const totalOutstanding = dueAnalytics.totalOutstanding || 0;
+      const totalOutstanding = dueAnalytics.outstandingAmount || 0;
       const averagePayment =
         approvedPayments.length > 0
           ? totalCollected / approvedPayments.length
@@ -136,9 +137,9 @@ const FinancialAnalytics: React.FC = () => {
 
   const processAnalyticsData = (
     payments: PaymentSubmission[],
-    dues: any[],
+    _dues: any[],
     pharmacies: any[],
-    dueAnalytics: any
+    _dueAnalytics: any
   ): AnalyticsData => {
     // Monthly collections
     const monthlyData = new Map();

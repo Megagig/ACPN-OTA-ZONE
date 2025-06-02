@@ -4,6 +4,7 @@ export interface Event {
   title: string;
   description: string;
   eventType: EventType;
+  type?: EventType; // Added type as some components use this instead of eventType
   startDate: string;
   endDate: string;
   location: {
@@ -16,9 +17,11 @@ export interface Event {
   };
   status: EventStatus;
   requiresRegistration: boolean;
+  registrationRequired?: boolean; // Added registrationRequired as some components use this
   registrationDeadline?: string;
   registrationFee?: number;
   capacity?: number;
+  maxAttendees?: number; // Added maxAttendees as some components use this
   isAttendanceRequired: boolean;
   organizer: string;
   organizerId?: string; // Reference to user ID

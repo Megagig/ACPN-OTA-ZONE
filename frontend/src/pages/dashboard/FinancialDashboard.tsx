@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
 import financialService from '../../services/financial.service';
@@ -11,7 +10,6 @@ import type {
 
 const FinancialDashboard = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<

@@ -18,8 +18,10 @@ export type VoteStatus = 'pending' | 'confirmed' | 'rejected';
 export interface Position {
   _id: string;
   name: string;
+  title?: string; // Added title as some components use this
   description: string;
   maxCandidates: number;
+  candidates?: Candidate[]; // Added candidates array
   order: number; // For ordering positions in election ballots
 }
 
@@ -30,10 +32,12 @@ export interface Candidate {
   positionName: string;
   user: string; // Reference to user ID
   fullName: string;
+  name?: string; // Added name as some components use this
   photoUrl?: string;
   manifesto: string;
   status: CandidateStatus;
   votes: number; // Total votes received
+  voteCount?: number; // Added voteCount as some components use this
   createdAt?: string;
   updatedAt?: string;
 }

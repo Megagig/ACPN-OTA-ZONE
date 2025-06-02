@@ -155,7 +155,7 @@ const ElectionForm = () => {
 
         // Update positions separately
         // In a real app, this would be handled by the backend
-        const election = await electionService.getElectionById(id);
+        await electionService.getElectionById(id);
         const positionsToUse = availablePositions.filter((pos) =>
           selectedPositions.includes(pos._id)
         );

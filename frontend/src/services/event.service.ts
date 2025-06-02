@@ -14,6 +14,7 @@ import type {
   UserEventHistory,
   PenaltyInfo,
   RegistrationStatus,
+  EventSummary,
 } from '../types/event.types';
 
 export class EventService {
@@ -240,6 +241,32 @@ export class EventService {
 
   static async removeEvent(id: string): Promise<void> {
     return this.deleteEvent(id);
+  }
+
+  // Alias for getEventAttendance for backward compatibility
+  static async getEventAttendees(
+    eventId: string,
+    page = 1,
+    limit = 10
+  ): Promise<PaginatedResponse<EventAttendance>> {
+    return this.getEventAttendance(eventId, page, limit);
+  }
+
+  // Check in an attendee at an event
+  static async checkInAttendee(
+    eventId: string,
+    attendeeId: string
+  ): Promise<EventAttendance> {
+    const response = await apiClient.post(
+      `/events/${eventId}/check-in/${attendeeId}`
+    );
+    return response.data.data;
+  }
+
+  // Get event summary data
+  static async getEventSummary(): Promise<EventSummary> {
+    const response = await apiClient.get('/events/summary');
+    return response.data.data;
   }
 }
 

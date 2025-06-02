@@ -16,6 +16,14 @@ import {
   Heading,
   Divider,
   useToast,
+  Box,
+  Flex,
+  VStack,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from '@chakra-ui/react';
 import type {
   Election,
@@ -385,7 +393,7 @@ const ElectionDetail: React.FC = () => {
                 <Text fontSize="lg" mb={4}>
                   Results will be available once the election is completed.
                 </Text>
-                {election.status === 'active' && (
+                {election.status === 'ongoing' && (
                   <Button
                     colorScheme="blue"
                     onClick={() => navigate(`/elections/${id}/vote`)}

@@ -27,9 +27,10 @@ import {
   CardBody,
   useToast,
 } from '@chakra-ui/react';
-import type { Election, Position, Candidate } from '../../types/election.types';
+import type { Election, Position } from '../../types/election.types';
 import electionService from '../../services/election.service';
 import ChartComponent from '../../components/common/ChartComponent';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 interface VotingStatistics {
   totalEligibleVoters: number;
@@ -48,7 +49,7 @@ interface VotingStatistics {
 const ElectionResults: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -64,12 +65,14 @@ const ElectionResults: React.FC = () => {
 
           // If election is completed, fetch voting statistics
           if (data.status === 'ongoing') {
-            showToast(
-              'Election is still active',
-              'Results will be available after the election closes',
-              'info',
-              5000
-            );
+            toast({
+              title: 'Election is still active',
+              description:
+                'Results will be available after the election closes',
+              status: 'info',
+              duration: 5000,
+              isClosable: true,
+            });
             navigate(`/elections/${id}`);
             return;
           }
@@ -96,18 +99,20 @@ const ElectionResults: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching election results:', error);
-        showToast(
-          'Error fetching election results',
-          'Unable to load election results',
-          'error'
-        );
+        toast({
+          title: 'Error fetching election results',
+          description: 'Unable to load election results',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElectionResults();
-  }, [id, navigate, showToast]);
+  }, [id, navigate, toast]);
 
   const renderPositionResults = (position: Position) => {
     if (!position.candidates || position.candidates.length === 0) {
@@ -328,7 +333,7 @@ const ElectionResults: React.FC = () => {
     );
   }
 
-  if (election.status !== 'completed') {
+  if (election.status !== 'ended') {
     return (
       <DashboardLayout>
         <Box className="p-5">
@@ -363,13 +368,19 @@ const ElectionResults: React.FC = () => {
 
       <Tabs onChange={(index) => setActiveTab(index)}>
         <TabList>
-          <Tab isSelected={activeTab === 0} onClick={() => setActiveTab(0)}>
+          <Tab
+            _selected={{ bg: 'blue.500', color: 'white' }}
+            onClick={() => setActiveTab(0)}
+          >
             <HStack>
               <FaMedal />
               <Text>Results by Position</Text>
             </HStack>
           </Tab>
-          <Tab isSelected={activeTab === 1} onClick={() => setActiveTab(1)}>
+          <Tab
+            _selected={{ bg: 'blue.500', color: 'white' }}
+            onClick={() => setActiveTab(1)}
+          >
             <HStack>
               <FaChartBar />
               <Text>Voting Statistics</Text>
@@ -378,7 +389,7 @@ const ElectionResults: React.FC = () => {
         </TabList>
 
         <TabPanels>
-          <TabPanel isSelected={activeTab === 0} className="px-0">
+          <TabPanel className="px-0">
             <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
               {election.positions.map((position) => (
                 <Card key={position._id}>
@@ -393,9 +404,7 @@ const ElectionResults: React.FC = () => {
             </SimpleGrid>
           </TabPanel>
 
-          <TabPanel isSelected={activeTab === 1} className="px-0">
-            {renderStatistics()}
-          </TabPanel>
+          <TabPanel className="px-0">{renderStatistics()}</TabPanel>
         </TabPanels>
       </Tabs>
     </Box>

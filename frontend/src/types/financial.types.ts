@@ -251,3 +251,22 @@ export interface CertificateData {
   issueDate?: string;
   issuedBy?: string;
 }
+
+// Payment Submission type that combines both Payment and DuePayment
+export interface PaymentSubmission {
+  _id: string;
+  dueId?: string | object;
+  pharmacyId: string;
+  amount: number;
+  paymentDate?: string;
+  submittedAt?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  paymentMethod?: string;
+  receipt?: string;
+  transactionReference?: string;
+  description?: string;
+  comments?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

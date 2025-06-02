@@ -50,7 +50,7 @@ import pollService from '../../services/poll.service';
 
 const PollsList: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const toast = useToast();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [filteredPolls, setFilteredPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
