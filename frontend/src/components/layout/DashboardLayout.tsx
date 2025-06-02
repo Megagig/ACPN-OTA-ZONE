@@ -196,13 +196,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   {user?.role || 'Member'}
                 </p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="ml-auto text-muted-foreground hover:text-destructive"
-                title="Logout"
-              >
-                <i className="fas fa-sign-out-alt"></i>
-              </button>
+              <div className="ml-auto flex items-center space-x-2">
+                <Link
+                  to="/profile"
+                  className="text-muted-foreground hover:text-primary"
+                  title="Profile"
+                >
+                  <i className="fas fa-user-circle"></i>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Logout"
+                >
+                  <i className="fas fa-sign-out-alt"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>

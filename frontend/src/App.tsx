@@ -22,6 +22,7 @@ import NotFound from './pages/auth/NotFound';
 // Dashboard Pages
 import DashboardHome from './pages/dashboard/DashboardHome';
 import UserProfile from './pages/dashboard/UserProfile';
+import Profile from './pages/dashboard/Profile';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -146,7 +147,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<DashboardHome />} />
-                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/profile" element={<Profile />} />
 
                   {/* Admin Routes - Add more protected routes as needed */}
                   <Route
