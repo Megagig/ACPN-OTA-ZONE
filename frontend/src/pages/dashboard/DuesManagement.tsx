@@ -11,10 +11,8 @@ const DuesManagement = () => {
   const [payments, setPayments] = useState<DuePayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -39,11 +37,10 @@ const DuesManagement = () => {
           setPayments([]);
         }
       }
-    } catch (err: any) {
-      console.error(`Error fetching ${activeTab}:`, err);
-      setError(
-        `Failed to load ${activeTab} data: ${err?.message || 'Unknown error'}`
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Error fetching ${activeTab}:`, error);
+      setError(`Failed to load ${activeTab} data: ${message}`);
       if (activeTab === 'dues') {
         setDues([]);
       } else {
@@ -54,52 +51,36 @@ const DuesManagement = () => {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, [activeTab, currentPage]);
+
+  // Pagination calculation
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = (activeTab === 'dues' ? dues : payments).slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(
+    (activeTab === 'dues' ? dues.length : payments.length) / itemsPerPage
+  );
+
   const handleDueStatusChange = async (
     dueId: string,
-    newStatus: 'active' | 'inactive'
+    newStatus: 'pending' | 'paid' | 'overdue' | 'partially_paid'
   ) => {
     try {
-      await financialService.updateDue(dueId, { status: newStatus });
-      // Update local state
+      await financialService.updateDue(dueId, { paymentStatus: newStatus });
       setDues(
         dues.map((due) =>
-          due._id === dueId ? { ...due, status: newStatus } : due
+          due._id === dueId ? { ...due, paymentStatus: newStatus } : due
         )
       );
-    } catch (err) {
-      console.error('Error updating due status:', err);
-      setError('Failed to update due status. Please try again.');
-    }
-  };
-
-  const handlePaymentStatusChange = async (
-    paymentId: string,
-    newStatus: 'pending' | 'approved' | 'rejected'
-  ) => {
-    try {
-      // For approved/rejected, use the specific endpoints
-      if (newStatus === 'approved') {
-        await api.post(`/payments/${paymentId}/approve`, {});
-      } else if (newStatus === 'rejected') {
-        await api.post(`/payments/${paymentId}/reject`, {});
-      } else {
-        // For 'pending' or any other status, use the review endpoint
-        await financialService.updateDuePayment(paymentId, {
-          status: newStatus,
-        });
-      }
-
-      // Update local state
-      setPayments(
-        payments.map((payment) =>
-          payment._id === paymentId
-            ? { ...payment, status: newStatus }
-            : payment
-        )
-      );
-    } catch (err) {
-      console.error('Error updating payment status:', err);
-      setError('Failed to update payment status. Please try again.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error updating due status:', error);
+      setError(`Failed to update due status: ${message}`);
     }
   };
 
@@ -110,48 +91,46 @@ const DuesManagement = () => {
 
     try {
       await financialService.deleteDue(dueId);
-      // Update local state
       setDues(dues.filter((due) => due._id !== dueId));
-    } catch (err) {
-      console.error('Error deleting due:', err);
-      setError('Failed to delete due. Please try again.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error deleting due:', error);
+      setError(`Failed to delete due: ${message}`);
     }
   };
 
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!window.confirm('Are you sure you want to delete this payment?')) {
-      return;
-    }
-
+  const handlePaymentStatusChange = async (
+    paymentId: string,
+    newStatus: 'pending' | 'approved' | 'rejected'
+  ) => {
     try {
-      await financialService.deleteDuePayment(paymentId);
-      // Update local state
-      setPayments(payments.filter((payment) => payment._id !== paymentId));
-    } catch (err) {
-      console.error('Error deleting payment:', err);
-      setError('Failed to delete payment. Please try again.');
-    }
-  };
-
-  const formatCurrency = (amount: number | undefined | null) => {
-    try {
-      if (amount === undefined || amount === null || isNaN(Number(amount))) {
-        return 'N/A';
+      if (newStatus === 'approved') {
+        await financialService.approvePayment(paymentId);
+      } else if (newStatus === 'rejected') {
+        // Note: rejectionReason should be provided for rejections
+        await financialService.reviewPayment(paymentId, {
+          status: newStatus,
+          rejectionReason: 'Payment rejected',
+        });
       }
-      return new Intl.NumberFormat('en-NG', {
-        style: 'currency',
-        currency: 'NGN',
-      }).format(Number(amount));
-    } catch (error) {
-      console.error('Error formatting currency:', error);
-      return 'N/A';
+
+      setPayments(
+        payments.map((payment) =>
+          payment._id === paymentId
+            ? { ...payment, approvalStatus: newStatus, status: newStatus }
+            : payment
+        )
+      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error updating payment status:', error);
+      setError(`Failed to update payment status: ${message}`);
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
-      // Check if date is valid
       if (isNaN(date.getTime())) {
         return 'Invalid date';
       }
@@ -160,10 +139,43 @@ const DuesManagement = () => {
         month: 'short',
         day: 'numeric',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error formatting date:', error);
       return 'Invalid date';
     }
+  };
+
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'paid':
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+      case 'pending':
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
+      case 'rejected':
+      case 'overdue':
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
+      case 'partially_paid':
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+      default:
+        return 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300';
+    }
+  };
+
+  const formatStatus = (status: string): string => {
+    return status
+      .toLowerCase()
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (
@@ -193,7 +205,6 @@ const DuesManagement = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-border mb-6">
         <nav className="-mb-px flex">
           <button
@@ -225,7 +236,6 @@ const DuesManagement = () => {
         </div>
       )}
 
-      {/* Content based on active tab */}
       <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
         {isLoading ? (
           <div className="p-4">
@@ -233,26 +243,21 @@ const DuesManagement = () => {
               <div className="h-4 bg-muted rounded w-1/4"></div>
               <div className="h-10 bg-muted rounded"></div>
               <div className="h-10 bg-muted rounded"></div>
-              <div className="h-10 bg-muted rounded"></div>
             </div>
           </div>
-        ) : activeTab === 'dues' ? (
-          // Dues Table
+        ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Title
+                    {activeTab === 'dues' ? 'Title' : 'Due'}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Frequency
+                    {activeTab === 'dues' ? 'Due Date' : 'Payment Date'}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
@@ -263,19 +268,19 @@ const DuesManagement = () => {
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {dues.length === 0 ? (
+                {currentItems.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={5}
                       className="px-6 py-4 text-center text-sm text-muted-foreground"
                     >
-                      No dues found
+                      No {activeTab} found
                     </td>
                   </tr>
-                ) : (
-                  dues
-                    .filter((due) => due && due._id)
-                    .map((due) => (
+                ) : activeTab === 'dues' ? (
+                  currentItems.map((item) => {
+                    const due = item as Due;
+                    return (
                       <tr
                         key={due._id}
                         className="hover:bg-muted/50 transition-colors"
@@ -300,30 +305,17 @@ const DuesManagement = () => {
                           <div className="text-sm text-foreground">
                             {formatCurrency(due.amount)}
                           </div>
-                          {due.lateAmount && (
-                            <div className="text-xs text-muted-foreground">
-                              Late: {formatCurrency(due.lateAmount)}
-                            </div>
-                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                           {formatDate(due.dueDate)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
-                          {due.frequency}
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              due.status === 'active'
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                                : 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300'
-                            }`}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(
+                              due.paymentStatus
+                            )}`}
                           >
-                            {due.status && typeof due.status === 'string'
-                              ? due.status.charAt(0).toUpperCase() +
-                                due.status.slice(1)
-                              : 'Unknown'}
+                            {formatStatus(due.paymentStatus || 'pending')}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -344,25 +336,6 @@ const DuesManagement = () => {
                             <i className="fas fa-edit"></i>
                           </button>
                           <button
-                            className={`mr-3 transition-colors ${
-                              due.status === 'active'
-                                ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300'
-                                : 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300'
-                            }`}
-                            onClick={() =>
-                              handleDueStatusChange(
-                                due._id,
-                                due.status === 'active' ? 'inactive' : 'active'
-                              )
-                            }
-                          >
-                            {due.status === 'active' ? (
-                              <i className="fas fa-ban"></i>
-                            ) : (
-                              <i className="fas fa-check"></i>
-                            )}
-                          </button>
-                          <button
                             className="text-destructive hover:text-destructive/80 transition-colors"
                             onClick={() => handleDeleteDue(due._id)}
                           >
@@ -370,306 +343,160 @@ const DuesManagement = () => {
                           </button>
                         </td>
                       </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          // Payments Table
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Due
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Member
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Payment Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Method
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
-                {payments.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-4 text-center text-sm text-muted-foreground"
-                    >
-                      No payments found
-                    </td>
-                  </tr>
+                    );
+                  })
                 ) : (
-                  payments
-                    .filter((payment) => payment && payment._id)
-                    .map((payment) => (
+                  currentItems.map((item) => {
+                    const payment = item as DuePayment;
+                    return (
                       <tr
                         key={payment._id}
                         className="hover:bg-muted/50 transition-colors"
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {/* Handle all possible formats of due data */}
-                          {(() => {
-                            // If due is a string, show it directly
-                            if (typeof payment.due === 'string') {
-                              return payment.due;
-                            }
-
-                            // If due is an object with title
-                            if (
-                              payment.due &&
-                              typeof payment.due === 'object' &&
-                              payment.due.title
-                            ) {
-                              return payment.due.title;
-                            }
-
-                            // If dueId is populated from backend
-                            if (
-                              payment.dueId &&
-                              typeof payment.dueId === 'object' &&
-                              'title' in payment.dueId
-                            ) {
-                              return payment.dueId.title;
-                            }
-
-                            // If dueId is a string, show it directly
-                            if (typeof payment.dueId === 'string') {
-                              return payment.dueId;
-                            }
-
-                            // Fallback
-                            return 'Unknown Due';
-                          })()}
+                          {payment.dueId &&
+                          typeof payment.dueId === 'object' &&
+                          'title' in payment.dueId
+                            ? payment.dueId.title
+                            : 'Unknown Due'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {(() => {
-                            // If payment.user is available
-                            if (payment.user) {
-                              if (typeof payment.user === 'string') {
-                                return payment.user;
-                              }
-
-                              if (typeof payment.user === 'object') {
-                                const firstName = payment.user.firstName || '';
-                                const lastName = payment.user.lastName || '';
-                                return (
-                                  `${firstName} ${lastName}`.trim() ||
-                                  payment.user.email ||
-                                  'Unknown User'
-                                );
-                              }
-                            }
-
-                            // If submittedBy is available
-                            if (payment.submittedBy) {
-                              if (typeof payment.submittedBy === 'object') {
-                                const firstName =
-                                  payment.submittedBy.firstName || '';
-                                const lastName =
-                                  payment.submittedBy.lastName || '';
-                                return (
-                                  `${firstName} ${lastName}`.trim() ||
-                                  payment.submittedBy.email ||
-                                  'Unknown User'
-                                );
-                              }
-                              return payment.submittedBy;
-                            }
-
-                            // If pharmacyId and it has a name
-                            if (
-                              payment.pharmacyId &&
-                              typeof payment.pharmacyId === 'object' &&
-                              payment.pharmacyId.name
-                            ) {
-                              return payment.pharmacyId.name;
-                            }
-
-                            return 'Unknown User';
-                          })()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {formatCurrency(payment.amount || 0)}
+                          {formatCurrency(payment.amount)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                          {(() => {
-                            // Check for valid date strings in multiple properties
-                            if (payment.paymentDate) {
-                              try {
-                                return formatDate(payment.paymentDate);
-                              } catch (e) {
-                                console.error(
-                                  'Invalid date format:',
-                                  payment.paymentDate
-                                );
-                              }
-                            }
-
-                            if (payment.submittedAt) {
-                              try {
-                                return formatDate(payment.submittedAt);
-                              } catch (e) {
-                                console.error(
-                                  'Invalid date format:',
-                                  payment.submittedAt
-                                );
-                              }
-                            }
-
-                            if (payment.createdAt) {
-                              try {
-                                return formatDate(payment.createdAt);
-                              } catch (e) {
-                                console.error(
-                                  'Invalid date format:',
-                                  payment.createdAt
-                                );
-                              }
-                            }
-
-                            return 'Unknown date';
-                          })()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
-                          {(() => {
-                            if (!payment.paymentMethod) {
-                              return 'Unknown';
-                            }
-
-                            if (typeof payment.paymentMethod === 'string') {
-                              return payment.paymentMethod.replace(/_/g, ' ');
-                            }
-
-                            // Handle cases where paymentMethod might be an object
-                            if (
-                              typeof payment.paymentMethod === 'object' &&
-                              payment.paymentMethod !== null
-                            ) {
-                              if ('name' in payment.paymentMethod) {
-                                return payment.paymentMethod.name;
-                              }
-                              if ('type' in payment.paymentMethod) {
-                                return payment.paymentMethod.type;
-                              }
-                              return JSON.stringify(payment.paymentMethod);
-                            }
-
-                            return 'Unknown';
-                          })()}
+                          {formatDate(payment.paymentDate || payment.createdAt)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              payment.status === 'approved' ||
-                              payment.approvalStatus === 'approved'
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                                : payment.status === 'pending' ||
-                                  payment.approvalStatus === 'pending'
-                                ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                                : payment.status === 'rejected' ||
-                                  payment.approvalStatus === 'rejected'
-                                ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                                : 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300'
-                            }`}
-                          >
-                            {(() => {
-                              // Try to get the status from various properties
-                              const status =
-                                payment.status ||
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(
+                              payment.status ||
                                 payment.approvalStatus ||
-                                (payment.status === false
-                                  ? 'rejected'
-                                  : null) ||
-                                (payment.approvalStatus === false
-                                  ? 'rejected'
-                                  : null) ||
-                                'unknown';
-
-                              if (typeof status === 'string') {
-                                return (
-                                  status.charAt(0).toUpperCase() +
-                                  status.slice(1)
-                                );
-                              } else if (typeof status === 'boolean') {
-                                return status ? 'Approved' : 'Rejected';
-                              }
-
-                              return 'Unknown';
-                            })()}
+                                'pending'
+                            )}`}
+                          >
+                            {formatStatus(
+                              payment.status ||
+                                payment.approvalStatus ||
+                                'pending'
+                            )}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           {payment._id && (
-                            <button
-                              className="text-primary hover:text-primary/80 mr-3 transition-colors"
-                              onClick={() =>
-                                navigate(`/finances/payments/${payment._id}`)
-                              }
-                            >
-                              <i className="fas fa-eye"></i>
-                            </button>
-                          )}
-                          {(payment.status === 'pending' ||
-                            payment.approvalStatus === 'pending') &&
-                            payment._id && (
-                              <>
-                                <button
-                                  className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 mr-3 transition-colors"
-                                  onClick={() =>
-                                    handlePaymentStatusChange(
-                                      payment._id,
-                                      'approved'
-                                    )
-                                  }
-                                  title="Approve"
-                                >
-                                  <i className="fas fa-check"></i>
-                                </button>
-                                <button
-                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 mr-3 transition-colors"
-                                  onClick={() =>
-                                    handlePaymentStatusChange(
-                                      payment._id,
-                                      'rejected'
-                                    )
-                                  }
-                                  title="Reject"
-                                >
-                                  <i className="fas fa-times"></i>
-                                </button>
-                              </>
-                            )}
-                          {payment._id && (
-                            <button
-                              className="text-destructive hover:text-destructive/80 transition-colors"
-                              onClick={() => handleDeletePayment(payment._id)}
-                              title="Delete"
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
+                            <>
+                              <button
+                                className="text-primary hover:text-primary/80 mr-3 transition-colors"
+                                onClick={() =>
+                                  navigate(`/finances/payments/${payment._id}`)
+                                }
+                              >
+                                <i className="fas fa-eye"></i>
+                              </button>
+                              {(payment.status === 'pending' ||
+                                payment.approvalStatus === 'pending') && (
+                                <>
+                                  <button
+                                    className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 mr-3 transition-colors"
+                                    onClick={() =>
+                                      handlePaymentStatusChange(
+                                        payment._id,
+                                        'approved'
+                                      )
+                                    }
+                                    title="Approve"
+                                  >
+                                    <i className="fas fa-check"></i>
+                                  </button>
+                                  <button
+                                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 mr-3 transition-colors"
+                                    onClick={() =>
+                                      handlePaymentStatusChange(
+                                        payment._id,
+                                        'rejected'
+                                      )
+                                    }
+                                    title="Reject"
+                                  >
+                                    <i className="fas fa-times"></i>
+                                  </button>
+                                </>
+                              )}
+                            </>
                           )}
                         </td>
                       </tr>
-                    ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && !isLoading && (
+          <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Showing{' '}
+                    <span className="font-medium text-foreground">
+                      {indexOfFirstItem + 1}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-medium text-foreground">
+                      {Math.min(
+                        indexOfLastItem,
+                        (activeTab === 'dues' ? dues : payments).length
+                      )}
+                    </span>{' '}
+                    of{' '}
+                    <span className="font-medium text-foreground">
+                      {(activeTab === 'dues' ? dues : payments).length}
+                    </span>{' '}
+                    results
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? 'z-10 bg-primary/10 border-primary text-primary'
+                              : 'bg-card border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+                  </nav>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
