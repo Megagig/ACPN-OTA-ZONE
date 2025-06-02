@@ -510,12 +510,40 @@ export const getPharmacyPaymentHistory = async (
 
 // Payment Management API
 export const submitPayment = async (data: FormData): Promise<Payment> => {
-  const response = await api.post(`${BASE_URL}/payments/submit`, data, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-  return response.data.data;
+  try {
+    // Create a new FormData object to ensure proper format
+    const cleanFormData = new FormData();
+
+    // Add text fields first
+    for (const [key, value] of Array.from(data.entries())) {
+      if (key !== 'receipt' && typeof value === 'string') {
+        cleanFormData.append(key, value);
+      }
+    }
+
+    // Add the file last - this helps prevent "Unexpected end of form" errors
+    const receiptFile = data.get('receipt') as File;
+    if (receiptFile instanceof File) {
+      cleanFormData.append('receipt', receiptFile);
+    }
+
+    // Use a longer timeout for file uploads
+    const response = await api.post(
+      `${BASE_URL}/payments/submit`,
+      cleanFormData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000, // 30 seconds timeout for file uploads
+      }
+    );
+
+    return response.data.data;
+  } catch (error) {
+    console.error('Error submitting payment:', error);
+    throw error;
+  }
 };
 
 export const getPaymentsByDue = async (dueId: string): Promise<Payment[]> => {

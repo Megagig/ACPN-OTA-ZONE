@@ -237,7 +237,10 @@ const PharmacyDues: React.FC = () => {
         receiptSize: paymentData.receipt?.size,
       });
 
+      // Create a fresh FormData for better reliability
       const formData = new FormData();
+
+      // Add all text fields first
       formData.append('dueId', selectedDue._id);
       formData.append('pharmacyId', pharmacy._id);
       formData.append('amount', paymentData.amount.toString());
@@ -248,11 +251,9 @@ const PharmacyDues: React.FC = () => {
 
       // Ensure receipt is properly added to FormData
       if (paymentData.receipt instanceof File) {
-        formData.append(
-          'receipt',
-          paymentData.receipt,
-          paymentData.receipt.name
-        );
+        // Add the file as the last field in the FormData to ensure it's properly terminated
+        formData.append('receipt', paymentData.receipt);
+
         console.log(
           'Added receipt file to form data:',
           paymentData.receipt.name,
@@ -292,6 +293,29 @@ const PharmacyDues: React.FC = () => {
 
       // Extract the most helpful error message
       let errorMessage = 'Failed to submit payment';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+
+        // Check for specific network errors
+        if (
+          errorMessage.includes('Network Error') ||
+          errorMessage.includes('timeout')
+        ) {
+          errorMessage =
+            'Network timeout occurred. Your file may be too large or your connection is slow. Please try again with a smaller file or better connection.';
+        } else if (errorMessage.includes('Unexpected end of form')) {
+          errorMessage =
+            'There was a problem with the file upload. Please try again.';
+        }
+      } else if (typeof err === 'object' && err !== null) {
+        const errorObj = err as any;
+        if (errorObj.response?.data?.error) {
+          errorMessage = errorObj.response.data.error;
+        } else if (errorObj.message) {
+          errorMessage = errorObj.message;
+        }
+      }
 
       if (err instanceof Error) {
         errorMessage = err.message;
