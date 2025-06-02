@@ -206,6 +206,8 @@ function App() {
                       path="/dashboard/assign-dues"
                       element={<DueAssignment />}
                     />
+                    <Route path="/finances/dues" element={<DuesManagement />} />
+                    <Route path="/finances/dues/new" element={<DueForm />} />
                     <Route
                       path="/dashboard/manage-penalties"
                       element={<PenaltyManagement />}

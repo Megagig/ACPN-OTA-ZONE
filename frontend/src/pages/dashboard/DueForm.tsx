@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
-import { DueType } from '../../types/pharmacy.types';
+import type { DueType } from '../../types/pharmacy.types';
 
 interface FormData {
   title: string;
