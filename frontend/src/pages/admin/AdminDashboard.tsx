@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import PendingApprovals from '../../components/admin/PendingApprovals';
 import ApprovedUsers from '../../components/admin/ApprovedUsers';
 import AdminEventWidget from '../../components/admin/AdminEventWidget';
-import { useTheme } from '../../context/ThemeContext';
+import AdminOverview from '../../components/admin/AdminOverview';
+import UserManagement from '../../components/admin/UserManagement';
+import AdminSettings from '../../components/admin/AdminSettings';
 
 // Admin dashboard tabs - using string literal union type
 type AdminTab =
@@ -14,11 +16,12 @@ type AdminTab =
   | 'settings';
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('approvals');
-  const { theme } = useTheme();
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'overview':
+        return <AdminOverview />;
       case 'approvals':
         return <PendingApprovals />;
       case 'approved_users':
@@ -26,18 +29,11 @@ const AdminDashboard: React.FC = () => {
       case 'events':
         return <AdminEventWidget />;
       case 'users':
-        return (
-          <div className="text-foreground">User Management (Coming Soon)</div>
-        );
+        return <UserManagement />;
       case 'settings':
-        return (
-          <div className="text-foreground">Admin Settings (Coming Soon)</div>
-        );
-      case 'overview':
+        return <AdminSettings />;
       default:
-        return (
-          <div className="text-foreground">Admin Overview (Coming Soon)</div>
-        );
+        return <AdminOverview />;
     }
   };
 

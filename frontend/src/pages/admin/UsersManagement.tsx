@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import userService from '../../services/user.service';
 import userManagementService from '../../services/userManagement.service';
 import type { User } from '../../types/auth.types';
+import type { Role } from '../../services/userManagement.service';
 import BulkOperationsToolbar from '../../components/user/BulkOperationsToolbar';
 import { useToast } from '../../hooks/useToast';
 
@@ -54,22 +55,22 @@ const UsersManagement: React.FC = () => {
   const [limit, setLimit] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [roles, setRoles] = useState<any[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [bulkActionType, setBulkActionType] = useState<string>('');
   const [bulkActionValue, setBulkActionValue] = useState<string>('');
   const [showBulkActionDialog, setShowBulkActionDialog] =
     useState<boolean>(false);
 
   // Fetch users on component mount and when filters change
-  useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-  }, [page, limit, statusFilter, roleFilter]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: {
+        page: number;
+        limit: number;
+        status?: string;
+        role?: string;
+      } = {
         page,
         limit,
       };
@@ -90,7 +91,12 @@ const UsersManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, statusFilter, roleFilter, toast]);
+
+  useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+  }, [fetchUsers, page, limit, statusFilter, roleFilter]);
 
   const fetchRoles = async () => {
     try {
@@ -115,14 +121,6 @@ const UsersManagement: React.FC = () => {
     );
   });
 
-  const handleStatusChange = (userId: string, newStatus: string) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user._id === userId ? { ...user, status: newStatus } : user
-      )
-    );
-  };
-
   const handleUserSelection = (userId: string) => {
     setSelectedUsers((prev) =>
       prev.includes(userId)
@@ -137,10 +135,6 @@ const UsersManagement: React.FC = () => {
     } else {
       setSelectedUsers(filteredUsers.map((user) => user._id));
     }
-  };
-
-  const handleBulkAction = (actionType: string) => {
-    setBulkActionType(actionType);
   };
 
   const executeBulkAction = async () => {
@@ -325,7 +319,15 @@ const UsersManagement: React.FC = () => {
                           <span className="capitalize">{user.role}</span>
                         </td>
                         <td className="p-2">
-                          <Badge variant={statusColors[user.status] as any}>
+                          <Badge
+                            variant={
+                              statusColors[user.status] as
+                                | 'success'
+                                | 'warning'
+                                | 'destructive'
+                                | 'secondary'
+                            }
+                          >
                             {user.status}
                           </Badge>
                         </td>

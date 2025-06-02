@@ -75,6 +75,7 @@ import financialRecordRoutes from './routes/financialRecord.routes';
 import permissionRoutes from './routes/permission.routes';
 import roleRoutes from './routes/role.routes';
 import userManagementRoutes from './routes/userManagement.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
@@ -108,6 +109,7 @@ app.use('/api/financial-records', financialRecordRoutes);
 app.use('/api/permissions', permissionRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/user-management', userManagementRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';
