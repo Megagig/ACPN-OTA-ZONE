@@ -255,7 +255,7 @@ exports.getAllPayments = (0, async_middleware_1.default)((req, res) => __awaiter
             page,
             limit,
             total,
-            pages: Math.ceil(total / limit),
+            totalPages: Math.ceil(total / limit),
         },
     });
 }));

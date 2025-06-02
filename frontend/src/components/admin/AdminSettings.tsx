@@ -100,9 +100,18 @@ const AdminSettings: React.FC = () => {
     value: string | number | boolean
   ) => {
     if (!settings) return;
+
+    // Initialize emailSettings if it doesn't exist
+    const currentEmailSettings = settings.emailSettings || {
+      smtpHost: '',
+      smtpPort: 587,
+      smtpUser: '',
+      smtpSecure: false,
+    };
+
     setSettings({
       ...settings,
-      emailSettings: { ...settings.emailSettings, [key]: value },
+      emailSettings: { ...currentEmailSettings, [key]: value },
     });
   };
 
@@ -401,7 +410,7 @@ const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={settings.emailSettings.smtpHost}
+                  value={settings.emailSettings?.smtpHost || ''}
                   onChange={(e) =>
                     updateEmailSetting('smtpHost', e.target.value)
                   }
@@ -414,7 +423,7 @@ const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  value={settings.emailSettings.smtpPort}
+                  value={settings.emailSettings?.smtpPort || ''}
                   onChange={(e) =>
                     updateEmailSetting('smtpPort', parseInt(e.target.value))
                   }
@@ -427,7 +436,7 @@ const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={settings.emailSettings.smtpUser}
+                  value={settings.emailSettings?.smtpUser || ''}
                   onChange={(e) =>
                     updateEmailSetting('smtpUser', e.target.value)
                   }
@@ -445,7 +454,7 @@ const AdminSettings: React.FC = () => {
                 </div>
                 <input
                   type="checkbox"
-                  checked={settings.emailSettings.smtpSecure}
+                  checked={settings.emailSettings?.smtpSecure || false}
                   onChange={(e) =>
                     updateEmailSetting('smtpSecure', e.target.checked)
                   }

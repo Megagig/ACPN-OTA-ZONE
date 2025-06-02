@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CategoryType = exports.RecordType = void 0;
+exports.StatusType = exports.PaymentMethodType = exports.CategoryType = exports.RecordType = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var RecordType;
 (function (RecordType) {
@@ -47,10 +47,31 @@ var CategoryType;
     CategoryType["REGISTRATION"] = "registration";
     CategoryType["EVENT"] = "event";
     CategoryType["OPERATIONAL"] = "operational";
+    CategoryType["ADMINISTRATIVE"] = "administrative";
     CategoryType["SALARY"] = "salary";
     CategoryType["UTILITY"] = "utility";
+    CategoryType["RENT"] = "rent";
+    CategoryType["MISCELLANEOUS"] = "miscellaneous";
+    CategoryType["REFUND"] = "refund";
+    CategoryType["INVESTMENT"] = "investment";
     CategoryType["OTHER"] = "other";
 })(CategoryType || (exports.CategoryType = CategoryType = {}));
+var PaymentMethodType;
+(function (PaymentMethodType) {
+    PaymentMethodType["CASH"] = "cash";
+    PaymentMethodType["BANK_TRANSFER"] = "bank_transfer";
+    PaymentMethodType["CHECK"] = "check";
+    PaymentMethodType["CARD"] = "card";
+    PaymentMethodType["MOBILE_MONEY"] = "mobile_money";
+    PaymentMethodType["ONLINE_PAYMENT"] = "online_payment";
+    PaymentMethodType["OTHER"] = "other";
+})(PaymentMethodType || (exports.PaymentMethodType = PaymentMethodType = {}));
+var StatusType;
+(function (StatusType) {
+    StatusType["PENDING"] = "pending";
+    StatusType["APPROVED"] = "approved";
+    StatusType["REJECTED"] = "rejected";
+})(StatusType || (exports.StatusType = StatusType = {}));
 const financialRecordSchema = new mongoose_1.Schema({
     type: {
         type: String,
@@ -65,6 +86,9 @@ const financialRecordSchema = new mongoose_1.Schema({
         type: String,
         enum: Object.values(CategoryType),
         required: true,
+    },
+    title: {
+        type: String,
     },
     description: {
         type: String,
@@ -81,6 +105,29 @@ const financialRecordSchema = new mongoose_1.Schema({
     },
     attachmentUrl: {
         type: String,
+    },
+    attachments: [
+        {
+            type: String,
+        },
+    ],
+    paymentMethod: {
+        type: String,
+        enum: Object.values(PaymentMethodType),
+        default: PaymentMethodType.BANK_TRANSFER,
+    },
+    status: {
+        type: String,
+        enum: Object.values(StatusType),
+        default: StatusType.PENDING,
+    },
+    pharmacy: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'Pharmacy',
+    },
+    user: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
     },
 }, {
     timestamps: true,

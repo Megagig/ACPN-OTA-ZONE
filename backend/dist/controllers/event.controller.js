@@ -45,16 +45,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEventStats = exports.getEventAttendees = exports.updatePaymentStatus = exports.markAttendance = exports.unregisterFromEvent = exports.registerForEvent = exports.cancelEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
+exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
 const event_model_1 = __importStar(require("../models/event.model"));
-const eventAttendee_model_1 = __importStar(require("../models/eventAttendee.model"));
+const eventRegistration_model_1 = __importStar(require("../models/eventRegistration.model"));
+const eventAttendance_model_1 = __importDefault(require("../models/eventAttendance.model"));
+const eventNotification_model_1 = __importDefault(require("../models/eventNotification.model"));
+const meetingPenaltyConfig_model_1 = __importDefault(require("../models/meetingPenaltyConfig.model"));
+const user_model_1 = __importDefault(require("../models/user.model"));
+const due_model_1 = __importDefault(require("../models/due.model"));
 const async_middleware_1 = __importDefault(require("../middleware/async.middleware"));
 const errorResponse_1 = __importDefault(require("../utils/errorResponse"));
+const email_service_1 = __importDefault(require("../services/email.service"));
+const cloudinary_1 = require("cloudinary");
 // @desc    Get all events
 // @route   GET /api/events
 // @access  Private
 exports.getAllEvents = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // Implement pagination, filtering and sorting
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const startIndex = (page - 1) * limit;
@@ -64,6 +70,10 @@ exports.getAllEvents = (0, async_middleware_1.default)((req, res) => __awaiter(v
     if (req.query.status) {
         query.status = req.query.status;
     }
+    // Filter by event type if provided
+    if (req.query.eventType) {
+        query.eventType = req.query.eventType;
+    }
     // Filter by date range if provided
     if (req.query.startDate) {
         query.startDate = { $gte: new Date(req.query.startDate) };
@@ -71,37 +81,37 @@ exports.getAllEvents = (0, async_middleware_1.default)((req, res) => __awaiter(v
     if (req.query.endDate) {
         query.endDate = { $lte: new Date(req.query.endDate) };
     }
-    // Search by title or description
+    // Search by title, description, or location
     if (req.query.search) {
         const searchRegex = new RegExp(req.query.search, 'i');
         query.$or = [
             { title: searchRegex },
             { description: searchRegex },
             { location: searchRegex },
+            { organizer: searchRegex },
         ];
     }
+    const total = yield event_model_1.default.countDocuments(query);
     const events = yield event_model_1.default.find(query)
         .populate({
         path: 'createdBy',
         select: 'firstName lastName email',
     })
-        .populate({
-        path: 'attendees',
-        select: 'userId attendanceStatus paymentStatus',
-        options: { limit: 5 }, // Just get a sample of attendees
-    })
+        .sort({ startDate: 1 })
         .skip(startIndex)
-        .limit(limit)
-        .sort({ startDate: -1 });
-    // Get total count
-    const total = yield event_model_1.default.countDocuments(query);
-    // For each event, get the attendee count
+        .limit(limit);
+    // For each event, get registration and attendance counts
     const eventsWithCounts = yield Promise.all(events.map((event) => __awaiter(void 0, void 0, void 0, function* () {
-        const attendeeCount = yield eventAttendee_model_1.default.countDocuments({
+        const registrationCount = yield eventRegistration_model_1.default.countDocuments({
             eventId: event._id,
         });
+        const attendanceCount = yield eventAttendance_model_1.default.countDocuments({
+            eventId: event._id,
+            attended: true,
+        });
         const eventObj = event.toObject();
-        return Object.assign(Object.assign({}, eventObj), { attendeeCount });
+        return Object.assign(Object.assign({}, eventObj), { registrationCount,
+            attendanceCount });
     })));
     res.status(200).json({
         success: true,
@@ -119,87 +129,99 @@ exports.getAllEvents = (0, async_middleware_1.default)((req, res) => __awaiter(v
 // @route   GET /api/events/:id
 // @access  Private
 exports.getEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const event = yield event_model_1.default.findById(req.params.id)
-        .populate({
+    const event = yield event_model_1.default.findById(req.params.id).populate({
         path: 'createdBy',
         select: 'firstName lastName email',
-    })
-        .populate({
-        path: 'attendees',
-        select: 'userId attendanceStatus paymentStatus registrationDate',
-        populate: {
-            path: 'userId',
-            select: 'firstName lastName email phone',
-        },
     });
     if (!event) {
         return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
     }
-    // Get attendee count
-    const attendeeCount = yield eventAttendee_model_1.default.countDocuments({
-        eventId: event._id,
-    });
-    // Check if the user is registered for this event
-    const isRegistered = yield eventAttendee_model_1.default.findOne({
-        eventId: event._id,
-        userId: req.user._id,
-    });
+    // Get registrations and attendance
+    const registrations = yield eventRegistration_model_1.default.find({ eventId: event._id })
+        .populate('userId', 'firstName lastName email phone')
+        .sort({ registrationDate: -1 });
+    const attendance = yield eventAttendance_model_1.default.find({ eventId: event._id })
+        .populate('userId', 'firstName lastName email phone')
+        .populate('markedBy', 'firstName lastName')
+        .sort({ markedAt: -1 });
+    // Mark as seen for current user
+    const userId = req.user.id;
+    yield eventNotification_model_1.default.findOneAndUpdate({ eventId: event._id, userId }, { seen: true, seenAt: new Date() }, { upsert: true });
     const eventObj = event.toObject();
     res.status(200).json({
         success: true,
-        data: Object.assign(Object.assign({}, eventObj), { attendeeCount, isUserRegistered: !!isRegistered, userRegistration: isRegistered || null }),
+        data: Object.assign(Object.assign({}, eventObj), { registrations,
+            attendance, registrationCount: registrations.length, attendanceCount: attendance.filter((a) => a.attended).length }),
     });
 }));
 // @desc    Create new event
 // @route   POST /api/events
-// @access  Private/Admin/Secretary
-exports.createEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    // Only admin and secretary can create events
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'secretary') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to create events`, 403));
+// @access  Private (Admin only)
+exports.createEvent = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    // Handle image upload if provided
+    let imageUrl = '';
+    if (req.body.image) {
+        try {
+            const uploadResponse = yield cloudinary_1.v2.uploader.upload(req.body.image, {
+                folder: 'events',
+                resource_type: 'image',
+                quality: 'auto:best',
+                format: 'webp',
+            });
+            imageUrl = uploadResponse.secure_url;
+        }
+        catch (error) {
+            console.error('Image upload error:', error);
+        }
     }
-    // Add user to req.body
-    req.body.createdBy = req.user._id;
-    // Validate dates
-    const startDate = new Date(req.body.startDate);
-    const endDate = new Date(req.body.endDate);
-    if (startDate > endDate) {
-        return next(new errorResponse_1.default('End date must be after start date', 400));
-    }
-    const event = yield event_model_1.default.create(req.body);
+    const eventData = Object.assign(Object.assign({}, req.body), { createdBy: userId, imageUrl: imageUrl || undefined, 
+        // Make sure these fields are set correctly
+        eventType: req.body.eventType || event_model_1.EventType.OTHER, organizer: req.body.organizer || 'ACPN', status: req.body.status || event_model_1.EventStatus.DRAFT });
+    const event = yield event_model_1.default.create(eventData);
+    // Send notifications to all users
+    yield sendEventNotifications(event._id.toString());
+    const populatedEvent = yield event_model_1.default.findById(event._id).populate('createdBy', 'firstName lastName email');
     res.status(201).json({
         success: true,
-        data: event,
+        data: populatedEvent,
     });
 }));
 // @desc    Update event
 // @route   PUT /api/events/:id
-// @access  Private/Admin/Secretary
+// @access  Private (Admin only)
 exports.updateEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     let event = yield event_model_1.default.findById(req.params.id);
     if (!event) {
         return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
     }
-    // Check if user is admin or the secretary
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'secretary') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to update events`, 403));
-    }
-    // Validate dates if they are being updated
-    if (req.body.startDate && req.body.endDate) {
-        const startDate = new Date(req.body.startDate);
-        const endDate = new Date(req.body.endDate);
-        if (startDate > endDate) {
-            return next(new errorResponse_1.default('End date must be after start date', 400));
+    // Handle image upload if provided
+    if (req.body.image) {
+        try {
+            // Delete old image if exists
+            if (event.imageUrl) {
+                const publicId = (_a = event.imageUrl.split('/').pop()) === null || _a === void 0 ? void 0 : _a.split('.')[0];
+                if (publicId) {
+                    yield cloudinary_1.v2.uploader.destroy(`events/${publicId}`);
+                }
+            }
+            const uploadResponse = yield cloudinary_1.v2.uploader.upload(req.body.image, {
+                folder: 'events',
+                resource_type: 'image',
+                quality: 'auto:best',
+                format: 'webp',
+            });
+            req.body.imageUrl = uploadResponse.secure_url;
+        }
+        catch (error) {
+            console.error('Image upload error:', error);
         }
     }
     event = yield event_model_1.default.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true,
-    });
+    }).populate('createdBy', 'firstName lastName email');
     res.status(200).json({
         success: true,
         data: event,
@@ -207,325 +229,712 @@ exports.updateEvent = (0, async_middleware_1.default)((req, res, next) => __awai
 }));
 // @desc    Delete event
 // @route   DELETE /api/events/:id
-// @access  Private/Admin/Secretary
+// @access  Private (Admin only)
 exports.deleteEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const event = yield event_model_1.default.findById(req.params.id);
     if (!event) {
         return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
     }
-    // Check if user is admin or the secretary
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'secretary') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to delete events`, 403));
+    // Delete associated records
+    yield eventRegistration_model_1.default.deleteMany({ eventId: event._id });
+    yield eventAttendance_model_1.default.deleteMany({ eventId: event._id });
+    yield eventNotification_model_1.default.deleteMany({ eventId: event._id });
+    // Delete image if exists
+    if (event.imageUrl) {
+        try {
+            const publicId = (_a = event.imageUrl.split('/').pop()) === null || _a === void 0 ? void 0 : _a.split('.')[0];
+            if (publicId) {
+                yield cloudinary_1.v2.uploader.destroy(`events/${publicId}`);
+            }
+        }
+        catch (error) {
+            console.error('Image deletion error:', error);
+        }
     }
-    // Check if there are attendees
-    const attendeeCount = yield eventAttendee_model_1.default.countDocuments({
-        eventId: event._id,
-    });
-    if (attendeeCount > 0 && event.status !== event_model_1.EventStatus.CANCELLED) {
-        return next(new errorResponse_1.default(`Cannot delete an event with registered attendees. Consider cancelling it instead.`, 400));
-    }
-    // Remove all attendees if any
-    yield eventAttendee_model_1.default.deleteMany({ eventId: event._id });
-    // Then delete the event
     yield event.deleteOne();
     res.status(200).json({
         success: true,
         data: {},
     });
 }));
-// @desc    Cancel event
-// @route   PUT /api/events/:id/cancel
-// @access  Private/Admin/Secretary
-exports.cancelEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    let event = yield event_model_1.default.findById(req.params.id);
-    if (!event) {
-        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
-    }
-    // Check if user is admin or the secretary
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'secretary') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to cancel events`, 403));
-    }
-    // Set status to cancelled
-    event = yield event_model_1.default.findByIdAndUpdate(req.params.id, { status: event_model_1.EventStatus.CANCELLED }, {
-        new: true,
-        runValidators: true,
-    });
-    res.status(200).json({
-        success: true,
-        data: event,
-    });
-}));
 // @desc    Register for event
 // @route   POST /api/events/:id/register
 // @access  Private
 exports.registerForEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const event = yield event_model_1.default.findById(req.params.id);
+    const eventId = req.params.id;
+    const userId = req.user.id;
+    const event = yield event_model_1.default.findById(eventId);
     if (!event) {
-        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
+        return next(new errorResponse_1.default(`Event not found with id of ${eventId}`, 404));
     }
-    if (event.status === event_model_1.EventStatus.CANCELLED) {
-        return next(new errorResponse_1.default(`Cannot register for a cancelled event`, 400));
+    // Check if registration is required
+    if (!event.requiresRegistration) {
+        return next(new errorResponse_1.default('This event does not require registration', 400));
     }
-    if (event.status === event_model_1.EventStatus.COMPLETED) {
-        return next(new errorResponse_1.default(`Cannot register for a completed event`, 400));
+    // Check if registration deadline has passed
+    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
+        return next(new errorResponse_1.default('Registration deadline has passed', 400));
     }
-    // Check if event has maximum attendees limit and if it's reached
-    if (event.maxAttendees) {
-        const currentAttendees = yield eventAttendee_model_1.default.countDocuments({
-            eventId: event._id,
-        });
-        if (currentAttendees >= event.maxAttendees) {
-            return next(new errorResponse_1.default(`Event has reached maximum capacity`, 400));
-        }
-    }
-    // Check if user is already registered
-    const existingRegistration = yield eventAttendee_model_1.default.findOne({
-        eventId: event._id,
-        userId: req.user._id,
+    // Check if already registered
+    const existingRegistration = yield eventRegistration_model_1.default.findOne({
+        eventId,
+        userId,
     });
     if (existingRegistration) {
-        return next(new errorResponse_1.default(`You are already registered for this event`, 400));
+        return next(new errorResponse_1.default('You are already registered for this event', 400));
     }
-    // Set payment status based on whether the event requires payment
-    const paymentStatus = event.requiresPayment
-        ? eventAttendee_model_1.PaymentStatus.PENDING
-        : eventAttendee_model_1.PaymentStatus.NOT_REQUIRED;
-    // Create attendee record
-    const attendee = yield eventAttendee_model_1.default.create({
-        eventId: event._id,
-        userId: req.user._id,
-        paymentStatus,
-        attendanceStatus: eventAttendee_model_1.AttendanceStatus.REGISTERED,
-    });
+    // Check capacity
+    if (event.capacity) {
+        const currentRegistrations = yield eventRegistration_model_1.default.countDocuments({
+            eventId,
+            status: {
+                $in: [eventRegistration_model_1.RegistrationStatus.REGISTERED, eventRegistration_model_1.RegistrationStatus.CONFIRMED],
+            },
+        });
+        if (currentRegistrations >= event.capacity) {
+            // Add to waitlist
+            yield eventRegistration_model_1.default.create({
+                eventId,
+                userId,
+                status: eventRegistration_model_1.RegistrationStatus.WAITLIST,
+                paymentStatus: event.registrationFee ? 'pending' : 'waived',
+            });
+            res.status(200).json({
+                success: true,
+                message: 'Added to waitlist',
+                data: { status: 'waitlist' },
+            });
+            return;
+        }
+    }
+    // Create registration
+    const registration = yield eventRegistration_model_1.default.create(Object.assign({ eventId,
+        userId, status: eventRegistration_model_1.RegistrationStatus.REGISTERED, paymentStatus: event.registrationFee ? 'pending' : 'waived' }, req.body));
+    const populatedRegistration = yield eventRegistration_model_1.default.findById(registration._id)
+        .populate('eventId', 'title startDate location')
+        .populate('userId', 'firstName lastName email');
     res.status(201).json({
         success: true,
-        data: attendee,
+        data: populatedRegistration,
     });
 }));
-// @desc    Unregister from event
+// @desc    Cancel event registration
 // @route   DELETE /api/events/:id/register
 // @access  Private
-exports.unregisterFromEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const event = yield event_model_1.default.findById(req.params.id);
-    if (!event) {
-        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
-    }
-    if (event.status === event_model_1.EventStatus.COMPLETED) {
-        return next(new errorResponse_1.default(`Cannot unregister from a completed event`, 400));
-    }
-    const registration = yield eventAttendee_model_1.default.findOne({
-        eventId: event._id,
-        userId: req.user._id,
+exports.cancelRegistration = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+    const registration = yield eventRegistration_model_1.default.findOne({
+        eventId,
+        userId,
     });
     if (!registration) {
-        return next(new errorResponse_1.default(`You are not registered for this event`, 404));
-    }
-    // Only allow unregistering if payment status is not 'paid'
-    if (event.requiresPayment &&
-        registration.paymentStatus === eventAttendee_model_1.PaymentStatus.PAID) {
-        return next(new errorResponse_1.default(`Cannot unregister from an event you've already paid for. Please contact the administrator.`, 400));
+        return next(new errorResponse_1.default('Registration not found', 404));
     }
     yield registration.deleteOne();
+    // If there's a waitlist, promote the next person
+    const waitlistRegistration = yield eventRegistration_model_1.default.findOne({
+        eventId,
+        status: eventRegistration_model_1.RegistrationStatus.WAITLIST,
+    }).sort({ registrationDate: 1 });
+    if (waitlistRegistration) {
+        waitlistRegistration.status = eventRegistration_model_1.RegistrationStatus.REGISTERED;
+        yield waitlistRegistration.save();
+        // Send notification to promoted user
+        // Implementation depends on notification system
+    }
     res.status(200).json({
         success: true,
         data: {},
     });
 }));
-// @desc    Mark attendance
-// @route   PUT /api/events/:id/attendance/:userId
-// @access  Private/Admin/Secretary
+// @desc    Mark attendance for event
+// @route   POST /api/events/:id/attendance
+// @access  Private (Admin only)
 exports.markAttendance = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const event = yield event_model_1.default.findById(req.params.id);
+    const eventId = req.params.id;
+    const adminId = req.user.id;
+    const { attendanceList } = req.body; // Array of { userId, attended, notes? }
+    const event = yield event_model_1.default.findById(eventId);
     if (!event) {
-        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
+        return next(new errorResponse_1.default(`Event not found with id of ${eventId}`, 404));
     }
-    // Check if user is admin or the secretary
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'secretary') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to mark attendance`, 403));
+    // Check if event is ongoing (for meetings, only during meetings)
+    if (event.eventType === event_model_1.EventType.MEETING) {
+        const now = new Date();
+        if (now < event.startDate || now > event.endDate) {
+            return next(new errorResponse_1.default('Attendance can only be marked during the meeting', 400));
+        }
     }
-    let registration = yield eventAttendee_model_1.default.findOne({
-        eventId: event._id,
-        userId: req.params.userId,
-    });
-    if (!registration) {
-        return next(new errorResponse_1.default(`User is not registered for this event`, 404));
+    const attendanceRecords = [];
+    for (const attendance of attendanceList) {
+        const existingAttendance = yield eventAttendance_model_1.default.findOne({
+            eventId,
+            userId: attendance.userId,
+        });
+        if (existingAttendance) {
+            // Update existing record
+            existingAttendance.attended = attendance.attended;
+            existingAttendance.markedBy = adminId;
+            existingAttendance.markedAt = new Date();
+            if (attendance.notes) {
+                existingAttendance.notes = attendance.notes;
+            }
+            yield existingAttendance.save();
+            attendanceRecords.push(existingAttendance);
+        }
+        else {
+            // Create new record
+            const newAttendance = yield eventAttendance_model_1.default.create({
+                eventId,
+                userId: attendance.userId,
+                attended: attendance.attended,
+                markedBy: adminId,
+                notes: attendance.notes,
+            });
+            attendanceRecords.push(newAttendance);
+        }
     }
-    // Update attendance status
-    const { attendanceStatus } = req.body;
-    if (!attendanceStatus ||
-        !Object.values(eventAttendee_model_1.AttendanceStatus).includes(attendanceStatus)) {
-        return next(new errorResponse_1.default(`Invalid attendance status. Must be one of: ${Object.values(eventAttendee_model_1.AttendanceStatus).join(', ')}`, 400));
+    // If this is a meeting, calculate penalties after attendance is marked
+    if (event.eventType === event_model_1.EventType.MEETING) {
+        yield calculateMeetingPenalties(new Date().getFullYear());
     }
-    registration = yield eventAttendee_model_1.default.findOneAndUpdate({
-        eventId: event._id,
-        userId: req.params.userId,
-    }, { attendanceStatus }, {
-        new: true,
-        runValidators: true,
-    });
-    res.status(200).json({
-        success: true,
-        data: registration,
-    });
-}));
-// @desc    Update payment status
-// @route   PUT /api/events/:id/payment/:userId
-// @access  Private/Admin/Treasurer
-exports.updatePaymentStatus = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const event = yield event_model_1.default.findById(req.params.id);
-    if (!event) {
-        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
-    }
-    // Check if user is admin or treasurer
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'treasurer') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to update payment status`, 403));
-    }
-    if (!event.requiresPayment) {
-        return next(new errorResponse_1.default(`This event does not require payment`, 400));
-    }
-    let registration = yield eventAttendee_model_1.default.findOne({
-        eventId: event._id,
-        userId: req.params.userId,
-    });
-    if (!registration) {
-        return next(new errorResponse_1.default(`User is not registered for this event`, 404));
-    }
-    // Update payment status
-    const { paymentStatus, paymentReference } = req.body;
-    if (!paymentStatus ||
-        !Object.values(eventAttendee_model_1.PaymentStatus).includes(paymentStatus)) {
-        return next(new errorResponse_1.default(`Invalid payment status. Must be one of: ${Object.values(eventAttendee_model_1.PaymentStatus).join(', ')}`, 400));
-    }
-    registration = yield eventAttendee_model_1.default.findOneAndUpdate({
-        eventId: event._id,
-        userId: req.params.userId,
-    }, { paymentStatus, paymentReference }, {
-        new: true,
-        runValidators: true,
-    });
-    res.status(200).json({
-        success: true,
-        data: registration,
-    });
-}));
-// @desc    Get event attendees
-// @route   GET /api/events/:id/attendees
-// @access  Private/Admin/Secretary
-exports.getEventAttendees = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const event = yield event_model_1.default.findById(req.params.id);
-    if (!event) {
-        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
-    }
-    // Check if user is admin or secretary
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'secretary') {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to view attendees`, 403));
-    }
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const startIndex = (page - 1) * limit;
-    // Build query
-    const query = { eventId: event._id };
-    // Filter by attendance status if provided
-    if (req.query.attendanceStatus) {
-        query.attendanceStatus = req.query.attendanceStatus;
-    }
-    // Filter by payment status if provided
-    if (req.query.paymentStatus) {
-        query.paymentStatus = req.query.paymentStatus;
-    }
-    const attendees = yield eventAttendee_model_1.default.find(query)
-        .populate({
-        path: 'userId',
-        select: 'firstName lastName email phone',
-        populate: {
-            path: 'pharmacy',
-            select: 'name registrationNumber',
-        },
+    const populatedRecords = yield eventAttendance_model_1.default.find({
+        _id: { $in: attendanceRecords.map((r) => r._id) },
     })
-        .skip(startIndex)
-        .limit(limit)
-        .sort({ registrationDate: -1 });
-    // Get total count
-    const total = yield eventAttendee_model_1.default.countDocuments(query);
+        .populate('userId', 'firstName lastName email')
+        .populate('markedBy', 'firstName lastName');
     res.status(200).json({
         success: true,
-        count: attendees.length,
+        data: populatedRecords,
+    });
+}));
+// @desc    Get user's events (for member dashboard)
+// @route   GET /api/events/my-events
+// @access  Private
+exports.getMyEvents = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    // Get all events
+    const eventsQuery = {};
+    // Filter by status if provided
+    if (req.query.status) {
+        eventsQuery.status = req.query.status;
+    }
+    // Filter by event type if provided
+    if (req.query.eventType) {
+        eventsQuery.eventType = req.query.eventType;
+    }
+    // Filter for upcoming events only by default
+    if (req.query.includeAll !== 'true') {
+        eventsQuery.endDate = { $gte: new Date() };
+    }
+    const total = yield event_model_1.default.countDocuments(eventsQuery);
+    const events = yield event_model_1.default.find(eventsQuery)
+        .populate('createdBy', 'firstName lastName email')
+        .sort({ startDate: 1 })
+        .skip(startIndex)
+        .limit(limit);
+    // For each event, get user's registration and attendance status
+    const eventsWithUserStatus = yield Promise.all(events.map((event) => __awaiter(void 0, void 0, void 0, function* () {
+        const registration = yield eventRegistration_model_1.default.findOne({
+            eventId: event._id,
+            userId,
+        });
+        const attendance = yield eventAttendance_model_1.default.findOne({
+            eventId: event._id,
+            userId,
+        });
+        const notification = yield eventNotification_model_1.default.findOne({
+            eventId: event._id,
+            userId,
+        });
+        return Object.assign(Object.assign({}, event.toObject()), { userRegistration: registration, userAttendance: attendance, notification: notification || { seen: false, acknowledged: false } });
+    })));
+    res.status(200).json({
+        success: true,
+        count: events.length,
         pagination: {
             page,
             limit,
             totalPages: Math.ceil(total / limit),
             total,
         },
-        data: attendees,
+        data: eventsWithUserStatus,
+    });
+}));
+// @desc    Acknowledge event notification
+// @route   POST /api/events/:id/acknowledge
+// @access  Private
+exports.acknowledgeEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+    yield eventNotification_model_1.default.findOneAndUpdate({ eventId, userId }, {
+        acknowledged: true,
+        acknowledgedAt: new Date(),
+        seen: true,
+        seenAt: new Date(),
+    }, { upsert: true });
+    res.status(200).json({
+        success: true,
+        data: {},
     });
 }));
 // @desc    Get event statistics
 // @route   GET /api/events/stats
-// @access  Private/Admin
+// @access  Private (Admin only)
 exports.getEventStats = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // Only admin can view event statistics
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+    if (req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin') {
         throw new errorResponse_1.default(`User ${req.user._id} is not authorized to view event statistics`, 403);
     }
-    // Count events by status
-    const eventsByStatus = yield event_model_1.default.aggregate([
-        { $group: { _id: '$status', count: { $sum: 1 } } },
+    // Get total events count
+    const totalEvents = yield event_model_1.default.countDocuments();
+    // Get upcoming events count
+    const upcomingEvents = yield event_model_1.default.countDocuments({
+        startDate: { $gt: new Date() },
+        status: { $in: [event_model_1.EventStatus.DRAFT, event_model_1.EventStatus.PUBLISHED] },
+    });
+    // Get completed events count
+    const completedEvents = yield event_model_1.default.countDocuments({
+        status: event_model_1.EventStatus.COMPLETED,
+    });
+    // Get total registrations count
+    const totalRegistrations = yield eventRegistration_model_1.default.countDocuments();
+    // Get total attendees count (people who actually attended)
+    const totalAttendees = yield eventAttendance_model_1.default.countDocuments({
+        attended: true,
+    });
+    // Get events count by type
+    const eventsByTypeData = yield event_model_1.default.aggregate([
+        { $group: { _id: '$eventType', count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
     ]);
-    // Count registration by attendance status
-    const byAttendanceStatus = yield eventAttendee_model_1.default.aggregate([
-        { $group: { _id: '$attendanceStatus', count: { $sum: 1 } } },
-        { $sort: { _id: 1 } },
-    ]);
-    // Count registration by payment status
-    const byPaymentStatus = yield eventAttendee_model_1.default.aggregate([
-        { $group: { _id: '$paymentStatus', count: { $sum: 1 } } },
-        { $sort: { _id: 1 } },
-    ]);
-    // Get monthly events count (for current year)
-    const currentYear = new Date().getFullYear();
-    const monthlyEvents = yield event_model_1.default.aggregate([
-        {
-            $match: {
-                startDate: {
-                    $gte: new Date(`${currentYear}-01-01`),
-                    $lte: new Date(`${currentYear}-12-31`),
-                },
-            },
-        },
-        {
-            $group: {
-                _id: { $month: '$startDate' },
-                count: { $sum: 1 },
-            },
-        },
-        { $sort: { _id: 1 } },
-    ]);
-    // Get upcoming events
-    const upcomingEvents = yield event_model_1.default.find({
-        status: event_model_1.EventStatus.UPCOMING,
-    })
-        .select('title startDate location')
-        .sort({ startDate: 1 })
-        .limit(5);
+    // Convert to the expected format
+    const eventsByType = {};
+    eventsByTypeData.forEach((item) => {
+        eventsByType[item._id] = item.count;
+    });
     res.status(200).json({
         success: true,
         data: {
-            eventsByStatus,
-            byAttendanceStatus,
-            byPaymentStatus,
-            monthlyEvents,
+            totalEvents,
             upcomingEvents,
+            completedEvents,
+            totalRegistrations,
+            totalAttendees,
+            eventsByType,
         },
+    });
+}));
+// @desc    Get user's penalties (for user dashboard)
+// @route   GET /api/events/my-penalties
+// @access  Private
+exports.getUserPenalties = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    // Get penalty configuration for the year
+    const penaltyConfig = yield meetingPenaltyConfig_model_1.default.findOne({
+        year,
+        isActive: true,
+    });
+    if (!penaltyConfig) {
+        res.status(200).json({
+            success: true,
+            data: {
+                year,
+                meetingsAttended: 0,
+                missedMeetings: 0,
+                penaltyAmount: 0,
+                totalPenalty: 0,
+                penaltyType: 'none',
+                isPaid: false,
+            },
+        });
+        return;
+    }
+    // Get all meeting events for the year
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31);
+    const meetings = yield event_model_1.default.find({
+        eventType: event_model_1.EventType.MEETING,
+        startDate: { $gte: startOfYear, $lte: endOfYear },
+        status: { $in: [event_model_1.EventStatus.COMPLETED, event_model_1.EventStatus.PUBLISHED] },
+    });
+    // Count user's meeting attendance for the year
+    const attendedMeetings = yield eventAttendance_model_1.default.countDocuments({
+        eventId: { $in: meetings.map((m) => m._id) },
+        userId,
+        attended: true,
+    });
+    const totalMeetings = meetings.length;
+    const missedMeetings = totalMeetings - attendedMeetings;
+    // Find applicable penalty rule
+    let applicablePenalty = penaltyConfig.defaultPenalty;
+    let penaltyDescription = 'Default penalty';
+    for (const rule of penaltyConfig.penaltyRules) {
+        if (attendedMeetings >= rule.minAttendance &&
+            attendedMeetings <= rule.maxAttendance) {
+            applicablePenalty = {
+                penaltyType: rule.penaltyType,
+                penaltyValue: rule.penaltyValue,
+            };
+            penaltyDescription = rule.description;
+            break;
+        }
+    }
+    // Calculate penalty amount
+    let penaltyAmount = 0;
+    if (applicablePenalty.penaltyType === 'multiplier') {
+        // Get user's annual dues
+        const userAnnualDue = yield due_model_1.default.findOne({
+            assignedTo: userId,
+            dueTypeId: { $exists: true },
+            year,
+        }).populate('dueTypeId');
+        if (userAnnualDue) {
+            penaltyAmount = userAnnualDue.amount * applicablePenalty.penaltyValue;
+        }
+    }
+    else {
+        penaltyAmount = applicablePenalty.penaltyValue;
+    }
+    // Check if penalty has been paid
+    const penaltyDue = yield due_model_1.default.findOne({
+        assignedTo: userId,
+        title: `Meeting Attendance Penalty ${year}`,
+        year,
+        isPenalty: true,
+    });
+    const isPaid = penaltyDue ? penaltyDue.paymentStatus === 'paid' : false;
+    res.status(200).json({
+        success: true,
+        data: {
+            year,
+            meetingsAttended: attendedMeetings,
+            totalMeetings,
+            missedMeetings,
+            penaltyAmount,
+            totalPenalty: penaltyAmount,
+            penaltyType: applicablePenalty.penaltyType,
+            penaltyDescription,
+            isPaid,
+            penaltyDue: penaltyDue || null,
+        },
+    });
+}));
+// @desc    Get user's event registrations (for user dashboard)
+// @route   GET /api/events/my-registrations
+// @access  Private
+exports.getUserRegistrations = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    // Build query
+    const query = { userId };
+    // Filter by status if provided
+    if (req.query.status) {
+        query.status = req.query.status;
+    }
+    // Filter by date range if provided
+    if (req.query.startDate || req.query.endDate) {
+        const eventQuery = {};
+        if (req.query.startDate) {
+            eventQuery.startDate = {
+                $gte: new Date(req.query.startDate),
+            };
+        }
+        if (req.query.endDate) {
+            eventQuery.endDate = { $lte: new Date(req.query.endDate) };
+        }
+        // Get event IDs that match the date criteria
+        const matchingEvents = yield event_model_1.default.find(eventQuery).select('_id');
+        query.eventId = { $in: matchingEvents.map((e) => e._id) };
+    }
+    const total = yield eventRegistration_model_1.default.countDocuments(query);
+    const registrations = yield eventRegistration_model_1.default.find(query)
+        .populate({
+        path: 'eventId',
+        select: 'title description startDate endDate location eventType status requiresRegistration registrationFee',
+        populate: {
+            path: 'createdBy',
+            select: 'firstName lastName email',
+        },
+    })
+        .populate('userId', 'firstName lastName email')
+        .sort({ registrationDate: -1 })
+        .skip(startIndex)
+        .limit(limit);
+    // For each registration, check if user attended
+    const registrationsWithAttendance = yield Promise.all(registrations.map((registration) => __awaiter(void 0, void 0, void 0, function* () {
+        const attendance = yield eventAttendance_model_1.default.findOne({
+            eventId: registration.eventId,
+            userId: registration.userId,
+        });
+        return Object.assign(Object.assign({}, registration.toObject()), { attended: attendance ? attendance.attended : false, attendanceMarkedAt: attendance ? attendance.markedAt : null });
+    })));
+    res.status(200).json({
+        success: true,
+        count: registrations.length,
+        pagination: {
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            total,
+        },
+        data: registrationsWithAttendance,
+    });
+}));
+// @desc    Get event registrations
+// @route   GET /api/events/:id/registrations
+// @access  Private
+exports.getEventRegistrations = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const eventId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    // Check if event exists
+    const event = yield event_model_1.default.findById(eventId);
+    if (!event) {
+        res.status(404).json({
+            success: false,
+            message: 'Event not found',
+        });
+        return;
+    }
+    // Build query
+    const query = { eventId: eventId };
+    // Filter by registration status if provided
+    if (req.query.status) {
+        query.status = req.query.status;
+    }
+    // Get total count for pagination
+    const total = yield eventRegistration_model_1.default.countDocuments(query);
+    // Get registrations with pagination
+    const registrations = yield eventRegistration_model_1.default.find(query)
+        .populate('userId', 'firstName lastName email profileImage phoneNumber')
+        .populate('eventId', 'title eventType startDate endDate')
+        .sort({ createdAt: -1 })
+        .skip(startIndex)
+        .limit(limit);
+    // Get attendance data for registered users
+    const registrationsWithAttendance = yield Promise.all(registrations.map((registration) => __awaiter(void 0, void 0, void 0, function* () {
+        const attendance = yield eventAttendance_model_1.default.findOne({
+            eventId: eventId,
+            userId: registration.userId,
+        });
+        return Object.assign(Object.assign({}, registration.toObject()), { attendance: attendance
+                ? {
+                    present: attendance.attended,
+                    checkedInAt: attendance.markedAt,
+                    notes: attendance.notes,
+                }
+                : null });
+    })));
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+    res.status(200).json({
+        success: true,
+        count: registrations.length,
+        total,
+        page,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        data: registrationsWithAttendance,
+    });
+}));
+// Helper function to send notifications to all users
+function sendEventNotifications(eventId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        try {
+            const event = yield event_model_1.default.findById(eventId).populate('createdBy', 'firstName lastName');
+            if (!event)
+                return;
+            const users = yield user_model_1.default.find({
+                role: { $in: ['member', 'pharmacy'] },
+                isActive: true,
+            });
+            // Create notification records for all users
+            const notifications = users.map((user) => ({
+                eventId: event._id,
+                userId: user._id,
+                seen: false,
+                acknowledged: false,
+                emailSent: false,
+            }));
+            yield eventNotification_model_1.default.insertMany(notifications);
+            // Send email notifications
+            for (const user of users) {
+                try {
+                    yield email_service_1.default.sendEmail({
+                        to: user.email,
+                        subject: `New Event: ${event.title}`,
+                        template: 'event-notification',
+                        context: {
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                            eventTitle: event.title,
+                            eventDescription: event.description,
+                            eventType: event.eventType.toUpperCase(),
+                            eventDate: event.startDate.toLocaleDateString(),
+                            eventTime: event.startDate.toLocaleTimeString(),
+                            eventLocation: event.location,
+                            organizer: event.organizer,
+                            requiresRegistration: event.requiresRegistration,
+                            registrationDeadline: (_a = event.registrationDeadline) === null || _a === void 0 ? void 0 : _a.toLocaleDateString(),
+                            registrationFee: event.registrationFee,
+                            isMeeting: event.eventType === event_model_1.EventType.MEETING,
+                            dashboardUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+                        },
+                    });
+                    // Mark email as sent
+                    yield eventNotification_model_1.default.findOneAndUpdate({ eventId: event._id, userId: user._id }, { emailSent: true, emailSentAt: new Date() });
+                }
+                catch (emailError) {
+                    console.error(`Failed to send email to ${user.email}:`, emailError);
+                }
+            }
+        }
+        catch (error) {
+            console.error('Error sending event notifications:', error);
+        }
+    });
+}
+// Helper function to calculate meeting penalties
+function calculateMeetingPenalties(year) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const penaltyConfig = yield meetingPenaltyConfig_model_1.default.findOne({
+                year,
+                isActive: true,
+            });
+            if (!penaltyConfig) {
+                console.warn(`No penalty configuration found for year ${year}`);
+                return;
+            }
+            // Get all meeting events for the year
+            const startOfYear = new Date(year, 0, 1);
+            const endOfYear = new Date(year, 11, 31);
+            const meetings = yield event_model_1.default.find({
+                eventType: event_model_1.EventType.MEETING,
+                startDate: { $gte: startOfYear, $lte: endOfYear },
+                status: { $in: [event_model_1.EventStatus.COMPLETED, event_model_1.EventStatus.PUBLISHED] },
+            });
+            if (meetings.length === 0)
+                return;
+            // Get all users
+            const users = yield user_model_1.default.find({
+                role: { $in: ['member', 'pharmacy'] },
+                isActive: true,
+            });
+            for (const user of users) {
+                // Count user's meeting attendance for the year
+                const attendanceCount = yield eventAttendance_model_1.default.countDocuments({
+                    eventId: { $in: meetings.map((m) => m._id) },
+                    userId: user._id,
+                    attended: true,
+                });
+                // Find applicable penalty rule
+                let applicablePenalty = penaltyConfig.defaultPenalty;
+                for (const rule of penaltyConfig.penaltyRules) {
+                    if (attendanceCount >= rule.minAttendance &&
+                        attendanceCount <= rule.maxAttendance) {
+                        applicablePenalty = {
+                            penaltyType: rule.penaltyType,
+                            penaltyValue: rule.penaltyValue,
+                        };
+                        break;
+                    }
+                }
+                // Calculate penalty amount
+                let penaltyAmount = 0;
+                if (applicablePenalty.penaltyType === 'multiplier') {
+                    // Get user's annual dues
+                    const userAnnualDue = yield due_model_1.default.findOne({
+                        assignedTo: user._id,
+                        dueTypeId: { $exists: true }, // Assuming annual dues have a specific type
+                        year,
+                    }).populate('dueTypeId');
+                    if (userAnnualDue) {
+                        penaltyAmount = userAnnualDue.amount * applicablePenalty.penaltyValue;
+                    }
+                }
+                else {
+                    penaltyAmount = applicablePenalty.penaltyValue;
+                }
+                // Create or update penalty due if amount > 0
+                if (penaltyAmount > 0) {
+                    yield due_model_1.default.findOneAndUpdate({
+                        assignedTo: user._id,
+                        title: `Meeting Attendance Penalty ${year}`,
+                        year,
+                    }, {
+                        assignedTo: user._id,
+                        title: `Meeting Attendance Penalty ${year}`,
+                        description: `Penalty for attending ${attendanceCount} meetings in ${year}`,
+                        amount: penaltyAmount,
+                        dueDate: new Date(year + 1, 2, 31), // March 31st of next year
+                        status: 'pending',
+                        year,
+                        isPenalty: true,
+                    }, { upsert: true });
+                }
+            }
+        }
+        catch (error) {
+            console.error('Error calculating meeting penalties:', error);
+        }
+    });
+}
+// Meeting Penalty Configuration Controllers
+// @desc    Get penalty configuration for a year
+// @route   GET /api/events/penalty-config/:year
+// @access  Private (Admin only)
+exports.getPenaltyConfig = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const year = parseInt(req.params.year);
+    const config = yield meetingPenaltyConfig_model_1.default.findOne({ year }).populate('createdBy', 'firstName lastName email');
+    if (!config) {
+        return next(new errorResponse_1.default(`Penalty configuration not found for year ${year}`, 404));
+    }
+    res.status(200).json({
+        success: true,
+        data: config,
+    });
+}));
+// @desc    Create or update penalty configuration
+// @route   POST /api/events/penalty-config
+// @access  Private (Admin only)
+exports.createPenaltyConfig = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const config = yield meetingPenaltyConfig_model_1.default.findOneAndUpdate({ year: req.body.year }, Object.assign(Object.assign({}, req.body), { createdBy: userId }), {
+        new: true,
+        upsert: true,
+        runValidators: true,
+    }).populate('createdBy', 'firstName lastName email');
+    res.status(200).json({
+        success: true,
+        data: config,
+    });
+}));
+// @desc    Get all penalty configurations
+// @route   GET /api/events/penalty-configs
+// @access  Private (Admin only)
+exports.getAllPenaltyConfigs = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const configs = yield meetingPenaltyConfig_model_1.default.find()
+        .populate('createdBy', 'firstName lastName email')
+        .sort({ year: -1 });
+    res.status(200).json({
+        success: true,
+        count: configs.length,
+        data: configs,
     });
 }));

@@ -152,20 +152,32 @@ exports.getDonation = (0, async_middleware_1.default)((req, res, next) => __awai
     });
 }));
 // @desc    Create a donation
-// @route   POST /api/pharmacies/:pharmacyId/donations
-// @access  Private
+// @route   POST /api/donations
+// @access  Private/Admin/Treasurer
 exports.createDonation = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    req.body.pharmacyId = req.params.pharmacyId;
-    const pharmacy = yield pharmacy_model_1.default.findById(req.params.pharmacyId);
-    if (!pharmacy) {
-        return next(new errorResponse_1.default(`Pharmacy not found with id of ${req.params.pharmacyId}`, 404));
+    // If the donation is coming from a pharmacy and pharmacyId is provided
+    if (req.params.pharmacyId) {
+        req.body.pharmacyId = req.params.pharmacyId;
+        const pharmacy = yield pharmacy_model_1.default.findById(req.params.pharmacyId);
+        if (!pharmacy) {
+            return next(new errorResponse_1.default(`Pharmacy not found with id of ${req.params.pharmacyId}`, 404));
+        }
+        // Check if user is the pharmacy owner or admin/treasurer
+        if (req.user.role !== 'admin' &&
+            req.user.role !== 'superadmin' &&
+            req.user.role !== 'treasurer' &&
+            pharmacy.userId.toString() !== req.user._id.toString()) {
+            return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to create donations for this pharmacy`, 403));
+        }
     }
-    // Check if user is the pharmacy owner or admin/treasurer
-    if (req.user.role !== 'admin' &&
-        req.user.role !== 'superadmin' &&
-        req.user.role !== 'treasurer' &&
-        pharmacy.userId.toString() !== req.user._id.toString()) {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to create donations for this pharmacy`, 403));
+    else {
+        // For direct donations not associated with a pharmacy
+        // Only admins and treasurers can create these
+        if (req.user.role !== 'admin' &&
+            req.user.role !== 'superadmin' &&
+            req.user.role !== 'treasurer') {
+            return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to create donations`, 403));
+        }
     }
     const donation = yield donation_model_1.default.create(req.body);
     res.status(201).json({

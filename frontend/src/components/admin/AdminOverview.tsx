@@ -86,7 +86,11 @@ const ActivityCard: React.FC<{ activity: ActivityItem }> = ({ activity }) => {
       <div className="flex-shrink-0 mt-1">{getStatusIcon(activity.status)}</div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground">{activity.title}</p>
-        <p className="text-sm text-muted-foreground">{activity.description}</p>
+        <p className="text-sm text-muted-foreground">
+          {typeof activity.description === 'object'
+            ? JSON.stringify(activity.description)
+            : activity.description}
+        </p>
         <p className="text-xs text-muted-foreground mt-1">
           {new Date(activity.timestamp).toLocaleString()}
         </p>

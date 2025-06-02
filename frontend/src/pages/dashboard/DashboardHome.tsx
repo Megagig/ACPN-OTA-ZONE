@@ -408,7 +408,26 @@ const DashboardHome: React.FC = () => {
                   <div className="mt-2 sm:flex sm:justify-between">
                     <div className="sm:flex">
                       <p className="flex items-center text-sm text-muted-foreground">
-                        {activity.description}
+                        {(() => {
+                          try {
+                            if (
+                              typeof activity.description === 'object' &&
+                              activity.description !== null
+                            ) {
+                              return JSON.stringify(activity.description);
+                            }
+                            return (
+                              activity.description?.toString() ||
+                              'No description'
+                            );
+                          } catch (error) {
+                            console.error(
+                              'Error rendering activity description:',
+                              error
+                            );
+                            return 'Activity description unavailable';
+                          }
+                        })()}
                       </p>
                     </div>
                     <div className="mt-2 flex items-center text-sm text-muted-foreground sm:mt-0">

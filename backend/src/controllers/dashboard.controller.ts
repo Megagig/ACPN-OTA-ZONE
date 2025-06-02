@@ -177,7 +177,21 @@ export const getOverviewStats = asyncHandler(
               break;
             default:
               title = 'System activity';
-              description = audit.details || 'System activity recorded';
+              // Convert details to string if it's an object
+              if (typeof audit.details === 'object' && audit.details !== null) {
+                if (audit.details.oldStatus && audit.details.newStatus) {
+                  description = `Status changed from ${audit.details.oldStatus} to ${audit.details.newStatus}`;
+                } else {
+                  try {
+                    description = JSON.stringify(audit.details);
+                  } catch (e) {
+                    description = 'System activity details';
+                  }
+                }
+              } else {
+                description =
+                  audit.details?.toString() || 'System activity recorded';
+              }
               type = 'user_registration';
               status = 'success';
           }

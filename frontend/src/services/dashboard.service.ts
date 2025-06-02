@@ -23,7 +23,7 @@ export interface ActivityItem {
     | 'poll'
     | 'pharmacy_approval';
   title: string;
-  description: string;
+  description: string | Record<string, any>;
   timestamp: string;
   status?: 'success' | 'pending' | 'warning' | 'error';
 }

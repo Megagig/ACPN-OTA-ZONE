@@ -33,62 +33,43 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActionType = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-var ActionType;
-(function (ActionType) {
-    ActionType["CREATE"] = "create";
-    ActionType["READ"] = "read";
-    ActionType["UPDATE"] = "update";
-    ActionType["DELETE"] = "delete";
-    ActionType["LOGIN"] = "login";
-    ActionType["LOGOUT"] = "logout";
-    ActionType["PAYMENT"] = "payment";
-    ActionType["APPROVAL"] = "approval";
-    ActionType["REJECTION"] = "rejection";
-    ActionType["ACTIVATION"] = "activation";
-    ActionType["DEACTIVATION"] = "deactivation";
-    ActionType["SUSPENSION"] = "suspension";
-    ActionType["ROLE_ASSIGNMENT"] = "role_assignment";
-    ActionType["PERMISSION_ASSIGNMENT"] = "permission_assignment";
-    ActionType["BULK_ACTION"] = "bulk_action";
-    ActionType["OTHER"] = "other";
-})(ActionType || (exports.ActionType = ActionType = {}));
-const auditTrailSchema = new mongoose_1.Schema({
+const eventNotificationSchema = new mongoose_1.Schema({
+    eventId: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'Event',
+        required: true,
+    },
     userId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
     },
-    action: {
-        type: String,
-        enum: Object.values(ActionType),
-        required: true,
+    seen: {
+        type: Boolean,
+        default: false,
     },
-    resourceType: {
-        type: String,
-        required: true,
-    },
-    resourceId: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-    },
-    details: {
-        type: mongoose_1.Schema.Types.Mixed,
-        default: {},
-    },
-    timestamp: {
+    seenAt: {
         type: Date,
-        default: Date.now,
     },
-    ipAddress: {
-        type: String,
-        required: true,
+    acknowledged: {
+        type: Boolean,
+        default: false,
+    },
+    acknowledgedAt: {
+        type: Date,
+    },
+    emailSent: {
+        type: Boolean,
+        default: false,
+    },
+    emailSentAt: {
+        type: Date,
     },
 }, {
     timestamps: true,
 });
-// Index for faster queries
-auditTrailSchema.index({ userId: 1, timestamp: -1 });
-auditTrailSchema.index({ resourceType: 1, resourceId: 1 });
-const AuditTrail = mongoose_1.default.model('AuditTrail', auditTrailSchema);
-exports.default = AuditTrail;
+// Compound index to ensure one notification record per user per event
+eventNotificationSchema.index({ eventId: 1, userId: 1 }, { unique: true });
+const EventNotification = mongoose_1.default.model('EventNotification', eventNotificationSchema);
+exports.default = EventNotification;

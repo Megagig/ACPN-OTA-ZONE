@@ -33,15 +33,26 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventStatus = void 0;
+exports.EventType = exports.EventStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var EventStatus;
 (function (EventStatus) {
-    EventStatus["UPCOMING"] = "upcoming";
-    EventStatus["ONGOING"] = "ongoing";
+    EventStatus["DRAFT"] = "draft";
+    EventStatus["PUBLISHED"] = "published";
     EventStatus["COMPLETED"] = "completed";
     EventStatus["CANCELLED"] = "cancelled";
 })(EventStatus || (exports.EventStatus = EventStatus = {}));
+var EventType;
+(function (EventType) {
+    EventType["CONFERENCE"] = "conference";
+    EventType["WORKSHOP"] = "workshop";
+    EventType["SEMINAR"] = "seminar";
+    EventType["TRAINING"] = "training";
+    EventType["MEETING"] = "meetings";
+    EventType["STATE_EVENT"] = "state_events";
+    EventType["SOCIAL"] = "social";
+    EventType["OTHER"] = "other";
+})(EventType || (exports.EventType = EventType = {}));
 const eventSchema = new mongoose_1.Schema({
     title: {
         type: String,
@@ -52,6 +63,11 @@ const eventSchema = new mongoose_1.Schema({
         type: String,
         required: [true, 'Description is required'],
     },
+    eventType: {
+        type: String,
+        enum: Object.values(EventType),
+        required: [true, 'Event type is required'],
+    },
     startDate: {
         type: Date,
         required: [true, 'Start date is required'],
@@ -61,20 +77,27 @@ const eventSchema = new mongoose_1.Schema({
         required: [true, 'End date is required'],
     },
     location: {
-        type: String,
+        type: mongoose_1.default.Schema.Types.Mixed,
         required: [true, 'Location is required'],
     },
-    requiresPayment: {
+    imageUrl: {
+        type: String,
+    },
+    organizer: {
+        type: String,
+        required: [true, 'Organizer is required'],
+    },
+    requiresRegistration: {
         type: Boolean,
         default: false,
     },
-    amount: {
+    registrationFee: {
         type: Number,
         required: function () {
-            return this.requiresPayment === true;
+            return this.requiresRegistration === true;
         },
     },
-    maxAttendees: {
+    capacity: {
         type: Number,
     },
     createdBy: {
@@ -85,31 +108,46 @@ const eventSchema = new mongoose_1.Schema({
     status: {
         type: String,
         enum: Object.values(EventStatus),
-        default: EventStatus.UPCOMING,
+        default: EventStatus.DRAFT,
+    },
+    registrationDeadline: {
+        type: Date,
+    },
+    isAttendanceRequired: {
+        type: Boolean,
+        default: true,
     },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
 });
-// Virtual populate for attendees
-eventSchema.virtual('attendees', {
-    ref: 'EventAttendee',
+// Virtual populate for registrations
+eventSchema.virtual('registrations', {
+    ref: 'EventRegistration',
+    localField: '_id',
+    foreignField: 'eventId',
+    justOne: false,
+});
+// Virtual populate for attendance
+eventSchema.virtual('attendance', {
+    ref: 'EventAttendance',
     localField: '_id',
     foreignField: 'eventId',
     justOne: false,
 });
 // Update event status automatically based on dates
 eventSchema.pre('save', function (next) {
-    const now = new Date();
-    if (this.startDate <= now && this.endDate >= now) {
-        this.status = EventStatus.ONGOING;
-    }
-    else if (this.endDate < now) {
-        this.status = EventStatus.COMPLETED;
-    }
-    else {
-        this.status = EventStatus.UPCOMING;
+    // Only auto-update status if it's not being explicitly set
+    if (!this.isModified('status')) {
+        const now = new Date();
+        if (this.startDate <= now && this.endDate >= now) {
+            this.status = EventStatus.PUBLISHED;
+        }
+        else if (this.endDate < now) {
+            this.status = EventStatus.COMPLETED;
+        }
+        // Don't change if it's a future event (leave as DRAFT or PUBLISHED)
     }
     next();
 });

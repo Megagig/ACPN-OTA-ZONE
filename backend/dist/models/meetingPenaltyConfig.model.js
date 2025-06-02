@@ -33,62 +33,59 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActionType = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-var ActionType;
-(function (ActionType) {
-    ActionType["CREATE"] = "create";
-    ActionType["READ"] = "read";
-    ActionType["UPDATE"] = "update";
-    ActionType["DELETE"] = "delete";
-    ActionType["LOGIN"] = "login";
-    ActionType["LOGOUT"] = "logout";
-    ActionType["PAYMENT"] = "payment";
-    ActionType["APPROVAL"] = "approval";
-    ActionType["REJECTION"] = "rejection";
-    ActionType["ACTIVATION"] = "activation";
-    ActionType["DEACTIVATION"] = "deactivation";
-    ActionType["SUSPENSION"] = "suspension";
-    ActionType["ROLE_ASSIGNMENT"] = "role_assignment";
-    ActionType["PERMISSION_ASSIGNMENT"] = "permission_assignment";
-    ActionType["BULK_ACTION"] = "bulk_action";
-    ActionType["OTHER"] = "other";
-})(ActionType || (exports.ActionType = ActionType = {}));
-const auditTrailSchema = new mongoose_1.Schema({
-    userId: {
+const penaltyRuleSchema = new mongoose_1.Schema({
+    minAttendance: {
+        type: Number,
+        required: true,
+    },
+    maxAttendance: {
+        type: Number,
+        required: true,
+    },
+    penaltyType: {
+        type: String,
+        enum: ['multiplier', 'fixed'],
+        required: true,
+    },
+    penaltyValue: {
+        type: Number,
+        required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+});
+const meetingPenaltyConfigSchema = new mongoose_1.Schema({
+    year: {
+        type: Number,
+        required: true,
+        unique: true,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+    penaltyRules: [penaltyRuleSchema],
+    defaultPenalty: {
+        penaltyType: {
+            type: String,
+            enum: ['multiplier', 'fixed'],
+            required: true,
+        },
+        penaltyValue: {
+            type: Number,
+            required: true,
+        },
+    },
+    createdBy: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-    },
-    action: {
-        type: String,
-        enum: Object.values(ActionType),
-        required: true,
-    },
-    resourceType: {
-        type: String,
-        required: true,
-    },
-    resourceId: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-    },
-    details: {
-        type: mongoose_1.Schema.Types.Mixed,
-        default: {},
-    },
-    timestamp: {
-        type: Date,
-        default: Date.now,
-    },
-    ipAddress: {
-        type: String,
         required: true,
     },
 }, {
     timestamps: true,
 });
-// Index for faster queries
-auditTrailSchema.index({ userId: 1, timestamp: -1 });
-auditTrailSchema.index({ resourceType: 1, resourceId: 1 });
-const AuditTrail = mongoose_1.default.model('AuditTrail', auditTrailSchema);
-exports.default = AuditTrail;
+const MeetingPenaltyConfig = mongoose_1.default.model('MeetingPenaltyConfig', meetingPenaltyConfigSchema);
+exports.default = MeetingPenaltyConfig;

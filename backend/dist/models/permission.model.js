@@ -33,62 +33,63 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ActionType = void 0;
+exports.ActionType = exports.ResourceType = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+var ResourceType;
+(function (ResourceType) {
+    ResourceType["USER"] = "user";
+    ResourceType["PHARMACY"] = "pharmacy";
+    ResourceType["FINANCIAL_RECORD"] = "financial_record";
+    ResourceType["EVENT"] = "event";
+    ResourceType["DOCUMENT"] = "document";
+    ResourceType["COMMUNICATION"] = "communication";
+    ResourceType["ELECTION"] = "election";
+    ResourceType["POLL"] = "poll";
+    ResourceType["DONATION"] = "donation";
+    ResourceType["DUE"] = "due";
+    ResourceType["ROLE"] = "role";
+    ResourceType["PERMISSION"] = "permission";
+    ResourceType["AUDIT_TRAIL"] = "audit_trail";
+})(ResourceType || (exports.ResourceType = ResourceType = {}));
 var ActionType;
 (function (ActionType) {
     ActionType["CREATE"] = "create";
     ActionType["READ"] = "read";
     ActionType["UPDATE"] = "update";
     ActionType["DELETE"] = "delete";
-    ActionType["LOGIN"] = "login";
-    ActionType["LOGOUT"] = "logout";
-    ActionType["PAYMENT"] = "payment";
-    ActionType["APPROVAL"] = "approval";
-    ActionType["REJECTION"] = "rejection";
-    ActionType["ACTIVATION"] = "activation";
-    ActionType["DEACTIVATION"] = "deactivation";
-    ActionType["SUSPENSION"] = "suspension";
-    ActionType["ROLE_ASSIGNMENT"] = "role_assignment";
-    ActionType["PERMISSION_ASSIGNMENT"] = "permission_assignment";
-    ActionType["BULK_ACTION"] = "bulk_action";
-    ActionType["OTHER"] = "other";
+    ActionType["APPROVE"] = "approve";
+    ActionType["REJECT"] = "reject";
+    ActionType["ASSIGN"] = "assign";
+    ActionType["MANAGE"] = "manage";
+    ActionType["EXPORT"] = "export";
+    ActionType["IMPORT"] = "import";
 })(ActionType || (exports.ActionType = ActionType = {}));
-const auditTrailSchema = new mongoose_1.Schema({
-    userId: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+const permissionSchema = new mongoose_1.Schema({
+    name: {
+        type: String,
+        required: [true, 'Permission name is required'],
+        unique: true,
+        trim: true,
+    },
+    description: {
+        type: String,
+        required: [true, 'Permission description is required'],
+        trim: true,
+    },
+    resource: {
+        type: String,
+        enum: Object.values(ResourceType),
+        required: [true, 'Resource type is required'],
     },
     action: {
         type: String,
         enum: Object.values(ActionType),
-        required: true,
-    },
-    resourceType: {
-        type: String,
-        required: true,
-    },
-    resourceId: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-    },
-    details: {
-        type: mongoose_1.Schema.Types.Mixed,
-        default: {},
-    },
-    timestamp: {
-        type: Date,
-        default: Date.now,
-    },
-    ipAddress: {
-        type: String,
-        required: true,
+        required: [true, 'Action type is required'],
     },
 }, {
     timestamps: true,
 });
-// Index for faster queries
-auditTrailSchema.index({ userId: 1, timestamp: -1 });
-auditTrailSchema.index({ resourceType: 1, resourceId: 1 });
-const AuditTrail = mongoose_1.default.model('AuditTrail', auditTrailSchema);
-exports.default = AuditTrail;
+// Create a compound index to ensure uniqueness of resource-action combinations
+permissionSchema.index({ resource: 1, action: 1 }, { unique: true });
+const Permission = mongoose_1.default.model('Permission', permissionSchema);
+exports.default = Permission;

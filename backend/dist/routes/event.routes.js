@@ -10,17 +10,26 @@ const user_model_1 = require("../models/user.model");
 const router = express_1.default.Router();
 // Protect all routes
 router.use(auth_middleware_1.protect);
-// Public routes (still protected but available to all logged-in users)
+// Public routes (available to all logged-in users)
 router.route('/').get(event_controller_1.getAllEvents);
-router.route('/:id').get(event_controller_1.getEvent);
-router
-    .route('/:id/register')
-    .post(event_controller_1.registerForEvent)
-    .delete(event_controller_1.unregisterFromEvent);
-// Admin/Secretary routes
+router.route('/my-events').get(event_controller_1.getMyEvents);
+router.route('/my-penalties').get(event_controller_1.getUserPenalties);
+router.route('/my-registrations').get(event_controller_1.getUserRegistrations);
+// Stats route (must come before /:id to avoid conflict)
 router
     .route('/stats')
     .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.getEventStats);
+router.route('/:id').get(event_controller_1.getEvent);
+// Event registration routes
+router.route('/:id/register').post(event_controller_1.registerForEvent);
+router.route('/:id/register').delete(event_controller_1.cancelRegistration);
+// Get event registrations (Admin/Secretary only)
+router
+    .route('/:id/registrations')
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.getEventRegistrations);
+// Event notification routes
+router.route('/:id/acknowledge').post(event_controller_1.acknowledgeEvent);
+// Admin/Secretary routes - Event management
 router
     .route('/')
     .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.createEvent);
@@ -28,17 +37,18 @@ router
     .route('/:id')
     .put((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.updateEvent)
     .delete((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.deleteEvent);
+// Admin/Secretary routes - Attendance management
 router
-    .route('/:id/cancel')
-    .put((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.cancelEvent);
+    .route('/:id/attendance')
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.markAttendance);
+// Admin routes - Penalty configuration
 router
-    .route('/:id/attendees')
-    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.getEventAttendees);
+    .route('/penalty-config/:year')
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.getPenaltyConfig);
 router
-    .route('/:id/attendance/:userId')
-    .put((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.markAttendance);
-// Admin/Treasurer routes
+    .route('/penalty-config')
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.createPenaltyConfig);
 router
-    .route('/:id/payment/:userId')
-    .put((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.TREASURER), event_controller_1.updatePaymentStatus);
+    .route('/penalty-configs')
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.getAllPenaltyConfigs);
 exports.default = router;
