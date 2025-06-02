@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy, PharmacyStats } from '../../types/pharmacy.types';
 import type { AxiosError } from 'axios';
-import { useTheme } from '../../context/ThemeContext';
 
 interface ErrorResponse {
   message?: string;
+}
+
+interface PharmacyFilters {
+  status?: 'active' | 'pending' | 'expired' | 'suspended';
+  search?: string;
 }
 
 const initialStats: PharmacyStats = {
@@ -18,56 +22,80 @@ const initialStats: PharmacyStats = {
   duesOutstanding: 0,
 };
 
+const StatsCardSkeleton = () => (
+  <div className="bg-card overflow-hidden shadow rounded-lg animate-pulse">
+    <div className="p-5">
+      <div className="flex items-center">
+        <div className="flex-shrink-0 h-12 w-12 rounded-md bg-muted"></div>
+        <div className="ml-5 w-0 flex-1">
+          <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+          <div className="h-6 bg-muted rounded w-1/4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const TableRowSkeleton = () => (
+  <tr>
+    <td className="whitespace-nowrap px-3 py-4">
+      <div className="h-4 bg-muted rounded w-3/4"></div>
+    </td>
+    <td className="whitespace-nowrap px-3 py-4">
+      <div className="h-4 bg-muted rounded w-1/2"></div>
+    </td>
+    <td className="whitespace-nowrap px-3 py-4">
+      <div className="h-4 bg-muted rounded w-1/3"></div>
+    </td>
+    <td className="whitespace-nowrap px-3 py-4">
+      <div className="h-4 bg-muted rounded w-1/4"></div>
+    </td>
+    <td className="whitespace-nowrap px-3 py-4">
+      <div className="h-4 bg-muted rounded w-1/2"></div>
+    </td>
+  </tr>
+);
+
 const PharmaciesManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [stats, setStats] = useState<PharmacyStats>(initialStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [filterStatus, setFilterStatus] = useState<
-    'all' | 'approved' | 'pending'
-  >('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const { theme } = useTheme();
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'active' | 'pending' | 'expired' | 'suspended'
+  >('all');
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const navigate = useNavigate();
-  const limit = 10;
-
-  type Filter = {
-    isApproved?: boolean;
-    search?: string;
-    registrationStatus?: string;
-    townArea?: string;
-    userId?: string;
-  };
+  const itemsPerPage = 10;
 
   const fetchPharmacies = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const filters: Filter = {};
 
-      if (filterStatus === 'approved') {
-        filters.isApproved = true;
-      } else if (filterStatus === 'pending') {
-        filters.isApproved = false;
+      const filters: PharmacyFilters = {};
+      if (filterStatus !== 'all') {
+        filters.status = filterStatus;
       }
-
       if (searchQuery) {
         filters.search = searchQuery;
       }
 
       const response = await pharmacyService.getPharmacies(
         currentPage,
-        limit,
+        itemsPerPage,
         filters
       );
       const pharmacyData = response?.pharmacies ?? [];
       const total = response?.total ?? 0;
 
       setPharmacies(pharmacyData);
-      setTotalPages(Math.ceil(total / limit));
+      setTotalPages(Math.ceil(total / itemsPerPage));
     } catch (err) {
       const error = err as AxiosError<ErrorResponse>;
       setError(
@@ -85,7 +113,6 @@ const PharmaciesManagement: React.FC = () => {
     try {
       const statsData = await pharmacyService.getPharmacyStats();
       if (statsData) {
-        // Ensure all required properties are present
         setStats({
           totalPharmacies: statsData.totalPharmacies ?? 0,
           activePharmacies: statsData.activePharmacies ?? 0,
@@ -100,7 +127,6 @@ const PharmaciesManagement: React.FC = () => {
     } catch (err) {
       const error = err as AxiosError<ErrorResponse>;
       console.error('Failed to fetch pharmacy stats:', error.message);
-      // Don't show this error to the user, just use initial stats
       setStats(initialStats);
     }
   }, []);
@@ -134,7 +160,34 @@ const PharmaciesManagement: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPage(1);
     fetchPharmacies();
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+
+    // Sort pharmacies locally
+    const sortedPharmacies = [...pharmacies].sort((a, b) => {
+      let aValue = (a as any)[field];
+      let bValue = (b as any)[field];
+
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setPharmacies(sortedPharmacies);
   };
 
   return (
@@ -148,119 +201,98 @@ const PharmaciesManagement: React.FC = () => {
             View and manage all registered pharmacies in the system
           </p>
         </div>
+        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+          <button
+            onClick={() => navigate('/admin/pharmacies/add')}
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:w-auto"
+          >
+            Add Pharmacy
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      {stats && (
+      {loading ? (
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="bg-card overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-primary rounded-md p-3">
-                  <i className="fas fa-hospital text-primary-foreground text-xl"></i>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-muted-foreground truncate">
-                      Total Pharmacies
-                    </dt>
-                    <dd className="text-lg font-medium text-foreground">
-                      {stats.totalPharmacies}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-md p-3">
-                  <i className="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-muted-foreground truncate">
-                      Active Pharmacies
-                    </dt>
-                    <dd className="text-lg font-medium text-foreground">
-                      {stats.activePharmacies}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-md p-3">
-                  <i className="fas fa-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-muted-foreground truncate">
-                      Pending Approval
-                    </dt>
-                    <dd className="text-lg font-medium text-foreground">
-                      {stats.pendingApproval}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
+          <StatsCardSkeleton />
         </div>
+      ) : (
+        stats && (
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-card overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-primary rounded-md p-3">
+                    <i className="fas fa-hospital text-primary-foreground text-xl" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-muted-foreground truncate">
+                        Total Pharmacies
+                      </dt>
+                      <dd className="text-lg font-medium text-foreground">
+                        {stats.totalPharmacies}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-md p-3">
+                    <i className="fas fa-check-circle text-green-600 dark:text-green-400 text-xl" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-muted-foreground truncate">
+                        Active Pharmacies
+                      </dt>
+                      <dd className="text-lg font-medium text-foreground">
+                        {stats.activePharmacies}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-md p-3">
+                    <i className="fas fa-clock text-yellow-600 dark:text-yellow-400 text-xl" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-muted-foreground truncate">
+                        Pending Approval
+                      </dt>
+                      <dd className="text-lg font-medium text-foreground">
+                        {stats.pendingApproval}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
       )}
 
-      {/* Search and Filter */}
-      <div className="mt-8 flex flex-col sm:flex-row gap-4">
-        <form onSubmit={handleSearch} className="flex-1">
-          <div className="flex rounded-md shadow-sm">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search pharmacies..."
-              className="flex-1 rounded-l-md border-input bg-background text-foreground focus:border-ring focus:ring-ring px-3 py-2"
-            />
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-r-md border border-l-0 border-input bg-muted px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80"
-            >
-              Search
-            </button>
-          </div>
-        </form>
-
-        <select
-          value={filterStatus}
-          onChange={(e) =>
-            setFilterStatus(e.target.value as 'all' | 'approved' | 'pending')
-          }
-          className="rounded-md border-input bg-background text-foreground focus:border-ring focus:ring-ring px-3 py-2"
-        >
-          <option value="all">All Status</option>
-          <option value="approved">Approved</option>
-          <option value="pending">Pending</option>
-        </select>
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="mt-6 flex justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      )}
-
-      {/* Error State */}
+      {/* Error Alert */}
       {error && (
-        <div className="mt-4 bg-destructive/10 border-l-4 border-destructive p-4">
+        <div className="mt-6 rounded-md bg-destructive/10 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <i className="fas fa-exclamation-circle text-destructive"></i>
+              <i
+                className="fas fa-exclamation-circle text-destructive"
+                aria-hidden="true"
+              />
             </div>
             <div className="ml-3">
               <p className="text-sm text-destructive">{error}</p>
@@ -273,7 +305,7 @@ const PharmaciesManagement: React.FC = () => {
       {!loading && !error && pharmacies.length === 0 && (
         <div className="mt-6 text-center">
           <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-            <i className="fas fa-store text-4xl text-muted-foreground"></i>
+            <i className="fas fa-store text-4xl text-muted-foreground" />
           </div>
           <h3 className="mt-2 text-sm font-medium text-foreground">
             No pharmacies found
@@ -288,26 +320,110 @@ const PharmaciesManagement: React.FC = () => {
         </div>
       )}
 
+      {/* Search and Filter */}
+      <div className="mt-8 grid grid-cols-1 sm:flex sm:flex-wrap gap-4">
+        <form onSubmit={handleSearch} className="flex-1 min-w-[250px]">
+          <div className="flex rounded-md shadow-sm">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search pharmacies..."
+              className="block w-full rounded-l-md border-input bg-background py-2 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm"
+            />
+            <button
+              type="submit"
+              className="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-sm font-semibold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <i className="fas fa-search"></i>
+              <span className="sr-only">Search</span>
+            </button>
+          </div>
+        </form>
+
+        <div className="w-full sm:w-auto">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as any)}
+            className="block w-full rounded-md border-input bg-background py-2 px-3 text-foreground shadow-sm focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="suspended">Suspended</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
+      </div>
+
       {/* Pharmacies List */}
-      {!loading && !error && pharmacies.length > 0 && (
+      {!error && pharmacies.length > 0 && (
         <div className="mt-8 flex flex-col">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+            <div className="inline-block min-w-full py-2 align-middle">
               <div className="overflow-hidden shadow ring-1 ring-border md:rounded-lg">
                 <table className="min-w-full divide-y divide-border">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">
-                        Name
+                      <th
+                        onClick={() => handleSort('name')}
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
+                      >
+                        <div className="flex items-center gap-1">
+                          Name
+                          {sortField === 'name' && (
+                            <i
+                              className={`fas fa-sort-${
+                                sortDirection === 'asc' ? 'up' : 'down'
+                              } ml-1`}
+                            ></i>
+                          )}
+                        </div>
                       </th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">
-                        Location
+                      <th
+                        onClick={() => handleSort('address')}
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
+                      >
+                        <div className="flex items-center gap-1">
+                          Location
+                          {sortField === 'address' && (
+                            <i
+                              className={`fas fa-sort-${
+                                sortDirection === 'asc' ? 'up' : 'down'
+                              } ml-1`}
+                            ></i>
+                          )}
+                        </div>
                       </th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">
-                        Registration
+                      <th
+                        onClick={() => handleSort('pcnLicense')}
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
+                      >
+                        <div className="flex items-center gap-1">
+                          Registration
+                          {sortField === 'pcnLicense' && (
+                            <i
+                              className={`fas fa-sort-${
+                                sortDirection === 'asc' ? 'up' : 'down'
+                              } ml-1`}
+                            ></i>
+                          )}
+                        </div>
                       </th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">
-                        Status
+                      <th
+                        onClick={() => handleSort('registrationStatus')}
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
+                      >
+                        <div className="flex items-center gap-1">
+                          Status
+                          {sortField === 'registrationStatus' && (
+                            <i
+                              className={`fas fa-sort-${
+                                sortDirection === 'asc' ? 'up' : 'down'
+                              } ml-1`}
+                            ></i>
+                          )}
+                        </div>
                       </th>
                       <th className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">
                         Actions
@@ -315,46 +431,58 @@ const PharmaciesManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-card">
-                    {pharmacies.map((pharmacy) => (
-                      <tr key={pharmacy._id}>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-foreground">
-                          {pharmacy.name}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
-                          {pharmacy.address}, {pharmacy.townArea}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
-                          PCN: {pharmacy.pcnLicense}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm">
-                          {pharmacy.registrationStatus === 'active' ? (
-                            <span className="inline-flex rounded-full bg-green-100 dark:bg-green-900/30 px-2 text-xs font-semibold leading-5 text-green-800 dark:text-green-300">
-                              Approved
-                            </span>
-                          ) : (
-                            <span className="inline-flex rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-2 text-xs font-semibold leading-5 text-yellow-800 dark:text-yellow-300">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
-                          <button
-                            onClick={() => handleViewDetails(pharmacy._id)}
-                            className="text-primary hover:text-primary/80 mr-4"
-                          >
-                            View Details
-                          </button>
-                          {pharmacy.registrationStatus !== 'active' && (
-                            <button
-                              onClick={() => handleApprove(pharmacy._id)}
-                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                    {loading ? (
+                      <>
+                        <TableRowSkeleton />
+                        <TableRowSkeleton />
+                        <TableRowSkeleton />
+                        <TableRowSkeleton />
+                        <TableRowSkeleton />
+                      </>
+                    ) : (
+                      pharmacies.map((pharmacy) => (
+                        <tr key={pharmacy._id}>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-foreground">
+                            {pharmacy.name}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
+                            {pharmacy.address}, {pharmacy.townArea}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
+                            PCN: {pharmacy.pcnLicense}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                            <span
+                              className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                                pharmacy.registrationStatus === 'active'
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                  : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                              }`}
                             >
-                              Approve
+                              {pharmacy.registrationStatus === 'active'
+                                ? 'Active'
+                                : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
+                            <button
+                              onClick={() => handleViewDetails(pharmacy._id)}
+                              className="text-primary hover:text-primary/80 mr-4"
+                            >
+                              View Details
                             </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                            {pharmacy.registrationStatus !== 'active' && (
+                              <button
+                                onClick={() => handleApprove(pharmacy._id)}
+                                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                              >
+                                Approve
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

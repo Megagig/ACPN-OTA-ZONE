@@ -171,7 +171,7 @@ function App() {
                     />
                     <Route
                       path="/pharmacies"
-                      element={<div>Pharmacies Management (Coming Soon)</div>}
+                      element={<PharmaciesManagement />}
                     />
                     <Route
                       path="/admin/pharmacies"
