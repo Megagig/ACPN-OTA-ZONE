@@ -4,7 +4,9 @@ import Permission, {
   ResourceType,
   ActionType,
 } from '../models/permission.model';
-import AuditTrail from '../models/auditTrail.model';
+import AuditTrail, {
+  ActionType as AuditActionType,
+} from '../models/auditTrail.model';
 
 // @desc    Get all permissions
 // @route   GET /api/permissions
@@ -72,7 +74,7 @@ export const createPermission = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'CREATE',
+      action: AuditActionType.CREATE,
       resourceType: 'PERMISSION',
       resourceId: permission._id,
       details: { permission: permission.toObject() },
@@ -116,7 +118,7 @@ export const updatePermission = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'UPDATE',
+      action: AuditActionType.UPDATE,
       resourceType: 'PERMISSION',
       resourceId: permission._id,
       details: {
@@ -155,7 +157,7 @@ export const deletePermission = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'DELETE',
+      action: AuditActionType.DELETE,
       resourceType: 'PERMISSION',
       resourceId: permission._id,
       details: { permission: deletedPermission },
@@ -200,7 +202,7 @@ export const initializePermissions = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'CREATE',
+      action: AuditActionType.CREATE,
       resourceType: 'PERMISSION',
       details: { message: 'Default permissions initialized' },
       ipAddress: req.ip,

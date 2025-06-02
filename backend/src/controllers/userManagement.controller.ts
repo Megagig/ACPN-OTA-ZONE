@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import asyncHandler from '../middleware/async.middleware';
 import User, { UserRole, UserStatus, IUser } from '../models/user.model';
 import Role from '../models/role.model';
-import AuditTrail from '../models/auditTrail.model';
+import AuditTrail, { ActionType } from '../models/auditTrail.model';
 import ErrorResponse from '../utils/errorResponse';
 import cloudinary from '../config/cloudinary';
 
@@ -59,7 +59,7 @@ export const updateUserProfile = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'UPDATE',
+      action: ActionType.UPDATE,
       resourceType: 'USER',
       resourceId: user._id,
       details: {
@@ -124,7 +124,7 @@ export const uploadProfilePicture = asyncHandler(
       // Add audit trail
       await AuditTrail.create({
         userId: req.user.id,
-        action: 'UPDATE',
+        action: ActionType.UPDATE,
         resourceType: 'USER',
         resourceId: user._id,
         details: {
@@ -268,7 +268,7 @@ export const updateUserRole = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'ROLE_ASSIGNMENT',
+      action: ActionType.ROLE_ASSIGNMENT,
       resourceType: 'USER',
       resourceId: user._id,
       details: {
@@ -345,22 +345,22 @@ export const updateUserStatus = asyncHandler(
     await user.save();
 
     // Determine action type for audit trail
-    let actionType;
+    let actionType: ActionType;
     switch (status) {
       case UserStatus.ACTIVE:
-        actionType = 'ACTIVATION';
+        actionType = ActionType.ACTIVATION;
         break;
       case UserStatus.INACTIVE:
-        actionType = 'DEACTIVATION';
+        actionType = ActionType.DEACTIVATION;
         break;
       case UserStatus.SUSPENDED:
-        actionType = 'SUSPENSION';
+        actionType = ActionType.SUSPENSION;
         break;
       case UserStatus.REJECTED:
-        actionType = 'REJECTION';
+        actionType = ActionType.REJECTION;
         break;
       default:
-        actionType = 'UPDATE';
+        actionType = ActionType.UPDATE;
     }
 
     // Add audit trail
@@ -465,28 +465,28 @@ export const bulkUpdateUserStatus = asyncHandler(
     );
 
     // Determine action type for audit trail
-    let actionType;
+    let actionType: ActionType;
     switch (status) {
       case UserStatus.ACTIVE:
-        actionType = 'ACTIVATION';
+        actionType = ActionType.ACTIVATION;
         break;
       case UserStatus.INACTIVE:
-        actionType = 'DEACTIVATION';
+        actionType = ActionType.DEACTIVATION;
         break;
       case UserStatus.SUSPENDED:
-        actionType = 'SUSPENSION';
+        actionType = ActionType.SUSPENSION;
         break;
       case UserStatus.REJECTED:
-        actionType = 'REJECTION';
+        actionType = ActionType.REJECTION;
         break;
       default:
-        actionType = 'UPDATE';
+        actionType = ActionType.UPDATE;
     }
 
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'BULK_ACTION',
+      action: ActionType.BULK_ACTION,
       resourceType: 'USER',
       details: {
         action: actionType,
@@ -569,10 +569,10 @@ export const bulkUpdateUserRole = asyncHandler(
     // Add audit trail
     await AuditTrail.create({
       userId: req.user.id,
-      action: 'BULK_ACTION',
+      action: ActionType.BULK_ACTION,
       resourceType: 'USER',
       details: {
-        action: 'ROLE_ASSIGNMENT',
+        action: ActionType.ROLE_ASSIGNMENT,
         affectedUserIds: validIds,
         newRole: role,
         modifiedCount: result.modifiedCount,
