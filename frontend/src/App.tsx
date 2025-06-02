@@ -115,6 +115,7 @@ import ComponentPreview from './pages/dashboard/ComponentPreview';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
+import DueForm from './pages/dashboard/DueForm';
 
 function App() {
   return (
@@ -262,6 +263,7 @@ function App() {
                       element={<TransactionForm />}
                     />
                     <Route path="/finances/dues" element={<DuesManagement />} />
+                    <Route path="/finances/dues/new" element={<DueForm />} />
                     <Route
                       path="/finances/donations"
                       element={<DonationsManagement />}
