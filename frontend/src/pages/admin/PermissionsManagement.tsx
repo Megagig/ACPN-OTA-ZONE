@@ -464,9 +464,8 @@ const PermissionsManagement: React.FC = () => {
                     onValueChange={(value) =>
                       handleSelectChange('resource', value)
                     }
-                    disabled={dialogMode === 'edit'}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger disabled={dialogMode === 'edit'}>
                       <SelectValue placeholder="Select resource" />
                     </SelectTrigger>
                     <SelectContent>
@@ -485,9 +484,8 @@ const PermissionsManagement: React.FC = () => {
                     onValueChange={(value) =>
                       handleSelectChange('action', value)
                     }
-                    disabled={dialogMode === 'edit'}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger disabled={dialogMode === 'edit'}>
                       <SelectValue placeholder="Select action" />
                     </SelectTrigger>
                     <SelectContent>
