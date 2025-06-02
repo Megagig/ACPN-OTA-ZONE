@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
-import type { DueType } from '../../types/pharmacy.types';
+import type { DueType, Pharmacy } from '../../types/pharmacy.types';
 
 interface FormData {
   title: string;
@@ -9,8 +9,13 @@ interface FormData {
   amount: number;
   dueDate: string;
   dueTypeId: string;
+  pharmacyId: string;
   frequency: 'one-time' | 'monthly' | 'quarterly' | 'annually';
   isRecurring: boolean;
+  year?: number;
+  assignmentType?: 'individual' | 'bulk';
+  assignedBy?: string;
+  assignedAt?: Date;
 }
 
 const DueForm: React.FC = () => {
@@ -18,6 +23,7 @@ const DueForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dueTypes, setDueTypes] = useState<DueType[]>([]);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -25,12 +31,14 @@ const DueForm: React.FC = () => {
     amount: 0,
     dueDate: '',
     dueTypeId: '',
+    pharmacyId: '',
     frequency: 'one-time',
     isRecurring: false,
   });
 
   useEffect(() => {
     fetchDueTypes();
+    fetchPharmacies();
   }, []);
 
   const fetchDueTypes = async () => {
@@ -40,6 +48,16 @@ const DueForm: React.FC = () => {
     } catch (err) {
       console.error('Failed to fetch due types:', err);
       setError('Failed to load due types');
+    }
+  };
+
+  const fetchPharmacies = async () => {
+    try {
+      const response = await financialService.getAllPharmacies();
+      setPharmacies(response);
+    } catch (err) {
+      console.error('Failed to fetch pharmacies:', err);
+      setError('Failed to load pharmacies');
     }
   };
 
@@ -66,7 +84,22 @@ const DueForm: React.FC = () => {
     setError(null);
 
     try {
-      const response = await financialService.createDue(formData);
+      // Set year from due date
+      const dueYear = new Date(formData.dueDate).getFullYear();
+
+      const dueData = {
+        ...formData,
+        year: dueYear,
+        assignmentType: 'individual' as const,
+        assignedAt: new Date(),
+        // Convert amount to number
+        amount: Number(formData.amount),
+      };
+
+      const response = await financialService.assignDue(
+        formData.pharmacyId,
+        dueData
+      );
 
       if (response) {
         navigate('/finances/dues');
@@ -102,6 +135,27 @@ const DueForm: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Pharmacy Selection */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Pharmacy *
+            </label>
+            <select
+              name="pharmacyId"
+              value={formData.pharmacyId}
+              onChange={handleInputChange}
+              required
+              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+            >
+              <option value="">Select a pharmacy</option>
+              {pharmacies.map((pharmacy) => (
+                <option key={pharmacy._id} value={pharmacy._id}>
+                  {pharmacy.name} ({pharmacy.registrationNumber})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Due Type Selection */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
