@@ -21,7 +21,6 @@ import NotFound from './pages/auth/NotFound';
 
 // Dashboard Pages
 import DashboardHome from './pages/dashboard/DashboardHome';
-import UserProfile from './pages/dashboard/UserProfile';
 import Profile from './pages/dashboard/Profile';
 
 // Admin Pages
@@ -69,6 +68,7 @@ import AttendeeManagement from './pages/dashboard/AttendeeManagement';
 // New Event Management Pages
 import AdminEventsList from './pages/admin/AdminEventsList';
 import AdminEventForm from './pages/admin/AdminEventForm';
+import AdminEventDetail from './pages/admin/AdminEventDetail';
 import AdminAttendanceMarking from './pages/admin/AdminAttendanceMarking';
 import AttendanceManagement from './pages/dashboard/AttendanceManagement';
 import MemberEventsList from './pages/member/MemberEventsList';
@@ -336,6 +336,10 @@ function App() {
                     <Route
                       path="/admin/events/create"
                       element={<AdminEventForm />}
+                    />
+                    <Route
+                      path="/admin/events/:id"
+                      element={<AdminEventDetail />}
                     />
                     <Route
                       path="/admin/events/:id/edit"
