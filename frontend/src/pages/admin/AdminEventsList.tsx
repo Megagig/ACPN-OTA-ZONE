@@ -138,6 +138,50 @@ const AdminEventsList: React.FC = () => {
     }
   };
 
+  const handlePublishEvent = async (eventId: string, eventTitle: string) => {
+    try {
+      await eventService.publishEvent(eventId);
+      toast({
+        title: 'Success',
+        description: `"${eventTitle}" has been published successfully`,
+      });
+      loadEvents();
+    } catch (error: unknown) {
+      console.error('Failed to publish event:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to publish the event',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCancelEvent = async (eventId: string, eventTitle: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to cancel "${eventTitle}"? This will notify all registered attendees.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await eventService.cancelEvent(eventId);
+      toast({
+        title: 'Success',
+        description: `"${eventTitle}" has been cancelled`,
+      });
+      loadEvents();
+    } catch (error: unknown) {
+      console.error('Failed to cancel event:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel the event',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-NG', {
       day: 'numeric',
@@ -246,23 +290,52 @@ const AdminEventsList: React.FC = () => {
 
       {/* Events Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Events</CardTitle>
+          <div className="text-sm text-gray-500">
+            {events.length} event{events.length !== 1 && 's'} found
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-gray-500">Loading events...</p>
             </div>
           ) : events.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No events found</p>
-              <Button
-                onClick={() => navigate('/admin/events/create')}
-                className="mt-4"
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                Create First Event
-              </Button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="mt-2 text-gray-500">No events found</p>
+              {!searchTerm && !selectedType && !selectedStatus ? (
+                <Button
+                  onClick={() => navigate('/admin/events/create')}
+                  className="mt-4 flex items-center gap-2"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Create First Event
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="mt-4"
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -270,26 +343,43 @@ const AdminEventsList: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Event</TableHead>
-                    <TableHead>Type</TableHead>
+                    <TableHead className="hidden md:table-cell">Type</TableHead>
                     <TableHead>Date & Time</TableHead>
-                    <TableHead>Location</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Location
+                    </TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Registration</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Registration
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {events.map((event) => (
-                    <TableRow key={event._id}>
+                    <TableRow
+                      key={event._id}
+                      className="relative hover:bg-gray-50"
+                    >
                       <TableCell>
                         <div>
                           <div className="font-medium">{event.title}</div>
                           <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {event.description}
+                            {event.description?.length > 60
+                              ? `${event.description.substring(0, 60)}...`
+                              : event.description}
+                          </div>
+                          {/* Mobile-only type badge */}
+                          <div className="md:hidden mt-1">
+                            <Badge
+                              className={getEventTypeColor(event.eventType)}
+                            >
+                              {eventTypeLabels[event.eventType]}
+                            </Badge>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Badge className={getEventTypeColor(event.eventType)}>
                           {eventTypeLabels[event.eventType]}
                         </Badge>
@@ -305,7 +395,7 @@ const AdminEventsList: React.FC = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div>
                           <div className="font-medium">
                             {event.location.name}
@@ -318,92 +408,235 @@ const AdminEventsList: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusColors[event.status]}>
-                          {event.status.charAt(0).toUpperCase() +
-                            event.status.slice(1)}
-                        </Badge>
+                        <div className="flex flex-col gap-2">
+                          <Badge className={statusColors[event.status]}>
+                            {event.status.charAt(0).toUpperCase() +
+                              event.status.slice(1)}
+                          </Badge>
+
+                          {event.status === 'draft' && (
+                            <button
+                              onClick={() =>
+                                handlePublishEvent(event._id, event.title)
+                              }
+                              className="text-xs font-medium text-green-600 hover:text-green-800 flex items-center"
+                            >
+                              <svg
+                                className="w-3 h-3 mr-1"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M12 19V5" />
+                                <path d="M5 12l7-7 7 7" />
+                              </svg>
+                              Publish
+                            </button>
+                          )}
+                        </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div className="text-sm">
                           {event.requiresRegistration ? (
                             <>
-                              <div>Required</div>
-                              {event.registrationFee && (
-                                <div className="text-gray-500">
+                              <div className="flex items-center">
+                                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                <span>Required</span>
+                              </div>
+                              {event.registrationFee ? (
+                                <div className="text-gray-500 mt-1">
                                   ₦{event.registrationFee.toLocaleString()}
                                 </div>
+                              ) : (
+                                <div className="text-gray-500 mt-1">Free</div>
                               )}
                               {event.capacity && (
-                                <div className="text-gray-500">
-                                  Max: {event.capacity}
+                                <div className="text-gray-500 mt-1 flex items-center">
+                                  <UsersIcon className="w-3 h-3 mr-1" />
+                                  <span>Max: {event.capacity}</span>
                                 </div>
                               )}
                             </>
                           ) : (
-                            <div className="text-gray-500">Not required</div>
+                            <div className="flex items-center text-gray-500">
+                              <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
+                              <span>Not required</span>
+                            </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button variant="ghost" size="sm">
-                              <MoreVerticalIcon className="w-4 h-4" />
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownContent align="end">
-                            <DropdownItem
-                              onClick={() =>
-                                navigate(`/admin/events/${event._id}`)
-                              }
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hidden md:inline-flex"
+                            onClick={() =>
+                              navigate(`/admin/events/${event._id}`)
+                            }
+                          >
+                            <EyeIcon className="w-4 h-4" />
+                            <span className="sr-only md:not-sr-only md:ml-2">
+                              View
+                            </span>
+                          </Button>
+                          <Dropdown>
+                            <DropdownTrigger>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full hover:bg-gray-100 transition-colors duration-200"
+                              >
+                                <MoreVerticalIcon className="w-4 h-4" />
+                              </Button>
+                            </DropdownTrigger>
+                            <DropdownContent
+                              align="end"
+                              className="w-52 p-1 shadow-lg border border-gray-100 rounded-lg"
                             >
-                              <EyeIcon className="w-4 h-4 mr-2" />
-                              View Details
-                            </DropdownItem>
-                            <DropdownItem
-                              onClick={() =>
-                                navigate(`/admin/events/${event._id}/edit`)
-                              }
-                            >
-                              <EditIcon className="w-4 h-4 mr-2" />
-                              Edit Event
-                            </DropdownItem>
-                            <DropdownItem
-                              onClick={() => {
-                                // Navigate to event detail with attendees tab active
-                                navigate(`/admin/events/${event._id}`);
-                                // We'll use an approach to activate the attendees tab via URL param
-                                // For now we'll add this to localStorage and handle in the detail component
-                                localStorage.setItem(
-                                  'activeEventTab',
-                                  'attendees'
-                                );
-                              }}
-                            >
-                              <UsersIcon className="w-4 h-4 mr-2" />
-                              Manage Attendees
-                            </DropdownItem>
-                            <DropdownItem
-                              onClick={() =>
-                                navigate(
-                                  `/admin/events/${event._id}/attendance`
-                                )
-                              }
-                            >
-                              <ClipboardListIcon className="w-4 h-4 mr-2" />
-                              Mark Attendance
-                            </DropdownItem>
-                            <DropdownItem
-                              onClick={() =>
-                                handleDeleteEvent(event._id, event.title)
-                              }
-                              className="text-red-600"
-                            >
-                              <TrashIcon className="w-4 h-4 mr-2" />
-                              Delete Event
-                            </DropdownItem>
-                          </DropdownContent>
-                        </Dropdown>
+                              {/* View & Edit Actions - Primary actions */}
+                              <div className="space-y-0.5 mb-1">
+                                <DropdownItem
+                                  onClick={() =>
+                                    navigate(`/admin/events/${event._id}`)
+                                  }
+                                  className="flex items-center px-3 py-2 hover:bg-blue-50 rounded-md transition-colors duration-150"
+                                >
+                                  <EyeIcon className="w-4 h-4 mr-2 text-blue-600" />
+                                  <span className="font-medium">
+                                    View Details
+                                  </span>
+                                </DropdownItem>
+                                <DropdownItem
+                                  onClick={() =>
+                                    navigate(`/admin/events/${event._id}/edit`)
+                                  }
+                                  className="flex items-center px-3 py-2 hover:bg-blue-50 rounded-md transition-colors duration-150"
+                                >
+                                  <EditIcon className="w-4 h-4 mr-2 text-blue-600" />
+                                  <span className="font-medium">
+                                    Edit Event
+                                  </span>
+                                </DropdownItem>
+                              </div>
+
+                              {/* Status Actions - Contextual */}
+                              {(event.status === 'draft' ||
+                                event.status === 'published') && (
+                                <div className="pt-1 pb-1 border-t border-gray-100">
+                                  {event.status === 'draft' && (
+                                    <DropdownItem
+                                      onClick={() =>
+                                        handlePublishEvent(
+                                          event._id,
+                                          event.title
+                                        )
+                                      }
+                                      className="flex items-center px-3 py-2 hover:bg-green-50 rounded-md transition-colors duration-150"
+                                    >
+                                      <svg
+                                        className="w-4 h-4 mr-2 text-green-600"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <path d="M12 19V5" />
+                                        <path d="M5 12l7-7 7 7" />
+                                      </svg>
+                                      <span className="text-green-600 font-medium">
+                                        Publish Event
+                                      </span>
+                                    </DropdownItem>
+                                  )}
+                                  {event.status === 'published' && (
+                                    <DropdownItem
+                                      onClick={() =>
+                                        handleCancelEvent(
+                                          event._id,
+                                          event.title
+                                        )
+                                      }
+                                      className="flex items-center px-3 py-2 hover:bg-amber-50 rounded-md transition-colors duration-150"
+                                    >
+                                      <svg
+                                        className="w-4 h-4 mr-2 text-amber-600"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="15" y1="9" x2="9" y2="15" />
+                                        <line x1="9" y1="9" x2="15" y2="15" />
+                                      </svg>
+                                      <span className="text-amber-600 font-medium">
+                                        Cancel Event
+                                      </span>
+                                    </DropdownItem>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Management Actions */}
+                              <div className="pt-1 pb-1 border-t border-gray-100">
+                                <DropdownItem
+                                  onClick={() => {
+                                    navigate(`/admin/events/${event._id}`);
+                                    localStorage.setItem(
+                                      'activeEventTab',
+                                      'attendees'
+                                    );
+                                  }}
+                                  className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-md transition-colors duration-150"
+                                >
+                                  <UsersIcon className="w-4 h-4 mr-2 text-gray-600" />
+                                  <span className="font-medium">
+                                    Manage Attendees
+                                  </span>
+                                </DropdownItem>
+                                <DropdownItem
+                                  onClick={() =>
+                                    navigate(
+                                      `/admin/events/${event._id}/attendance`
+                                    )
+                                  }
+                                  className="flex items-center px-3 py-2 hover:bg-gray-50 rounded-md transition-colors duration-150"
+                                >
+                                  <ClipboardListIcon className="w-4 h-4 mr-2 text-gray-600" />
+                                  <span className="font-medium">
+                                    Mark Attendance
+                                  </span>
+                                </DropdownItem>
+                              </div>
+
+                              {/* Destructive Actions */}
+                              <div className="pt-1 border-t border-gray-100">
+                                <DropdownItem
+                                  onClick={() =>
+                                    handleDeleteEvent(event._id, event.title)
+                                  }
+                                  className="flex items-center px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-150"
+                                >
+                                  <TrashIcon className="w-4 h-4 mr-2" />
+                                  <span className="font-medium">
+                                    Delete Event
+                                  </span>
+                                </DropdownItem>
+                              </div>
+                            </DropdownContent>
+                          </Dropdown>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

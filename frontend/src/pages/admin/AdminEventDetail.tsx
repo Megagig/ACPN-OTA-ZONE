@@ -7,6 +7,7 @@ import type {
   RegistrationStatus,
 } from '../../types/event.types';
 import type { User } from '../../types/auth.types';
+import { useToast } from '../../hooks/useToast';
 
 // Interface for populated EventRegistration from backend
 interface UIEventRegistration extends Omit<EventRegistration, 'userId'> {
@@ -21,9 +22,11 @@ interface UIEventRegistration extends Omit<EventRegistration, 'userId'> {
 const AdminEventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<UIEventRegistration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'attendees'>(() => {
     // Check if we have a stored tab preference
     const storedTab = localStorage.getItem('activeEventTab');
@@ -52,9 +55,17 @@ const AdminEventDetail = () => {
         try {
           eventData = await eventService.getEventById(id);
           setEvent(eventData);
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error fetching event details:', error);
-          if (error?.response?.status === 404) {
+          if (
+            error &&
+            typeof error === 'object' &&
+            'response' in error &&
+            error.response &&
+            typeof error.response === 'object' &&
+            'status' in error.response &&
+            error.response.status === 404
+          ) {
             navigate('/admin/events');
           }
           throw error;
@@ -66,14 +77,19 @@ const AdminEventDetail = () => {
           setAttendees(
             (attendanceData.data || []) as unknown as UIEventRegistration[]
           );
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error fetching event registrations:', error);
           // Don't throw here, just continue with empty attendees
           setAttendees([]);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error fetching event data:', error);
-        if (error?.code === 'ECONNABORTED') {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'ECONNABORTED'
+        ) {
           console.error('Connection timeout when loading event data');
         }
       } finally {
@@ -82,7 +98,7 @@ const AdminEventDetail = () => {
     };
 
     fetchEventData();
-  }, [id]);
+  }, [id, navigate]);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -133,13 +149,23 @@ const AdminEventDetail = () => {
         // Fallback to alert
         alert(`Registration Updated: ${attendeeName} is now ${status}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating registration status:', error);
 
       let errorMessage = 'Failed to update registration status';
-      if (error?.response?.data?.message) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data
+      ) {
         errorMessage += `: ${error.response.data.message}`;
-      } else if (error?.message) {
+      } else if (error && typeof error === 'object' && 'message' in error) {
         errorMessage += `: ${error.message}`;
       }
 
@@ -195,17 +221,115 @@ const AdminEventDetail = () => {
         // Fallback to alert
         alert(`Success: ${attendeeName} has been checked in successfully`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking in attendee:', error);
 
       let errorMessage = 'Failed to check in attendee';
-      if (error?.response?.data?.message) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data
+      ) {
         errorMessage += `: ${error.response.data.message}`;
-      } else if (error?.message) {
+      } else if (error && typeof error === 'object' && 'message' in error) {
         errorMessage += `: ${error.message}`;
       }
 
       alert(errorMessage);
+    }
+  };
+
+  // Handle publishing the event
+  const handlePublishEvent = async () => {
+    if (!id) return;
+    setIsPublishing(true);
+    try {
+      const updatedEvent = await eventService.publishEvent(id);
+
+      // Update the event status in the state
+      setEvent(updatedEvent);
+
+      toast({
+        title: 'Success',
+        description: 'Event published successfully',
+      });
+    } catch (error: unknown) {
+      console.error('Error publishing event:', error);
+
+      let errorMessage = 'Failed to publish event';
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data
+      ) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage += `: ${error.message}`;
+      }
+
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Handle unpublishing the event
+  const handleCancelEvent = async () => {
+    if (!id) return;
+    setIsPublishing(true);
+    try {
+      const updatedEvent = await eventService.cancelEvent(id);
+
+      // Update the event status in the state
+      setEvent(updatedEvent);
+
+      toast({
+        title: 'Success',
+        description: 'Event cancelled successfully',
+      });
+    } catch (error: unknown) {
+      console.error('Error cancelling event:', error);
+
+      let errorMessage = 'Failed to cancel event';
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data
+      ) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage += `: ${error.message}`;
+      }
+
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -313,6 +437,26 @@ const AdminEventDetail = () => {
             <i className="fas fa-edit mr-2"></i>
             Edit Event
           </button>
+          {event.status === 'draft' && (
+            <button
+              className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-background"
+              onClick={handlePublishEvent}
+              disabled={isPublishing}
+            >
+              <i className="fas fa-upload mr-2"></i>
+              {isPublishing ? 'Publishing...' : 'Publish Event'}
+            </button>
+          )}
+          {event.status === 'published' && (
+            <button
+              className="bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 dark:hover:bg-amber-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-background"
+              onClick={handleCancelEvent}
+              disabled={isPublishing}
+            >
+              <i className="fas fa-ban mr-2"></i>
+              {isPublishing ? 'Cancelling...' : 'Cancel Event'}
+            </button>
+          )}
           <button
             className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-background"
             onClick={() => navigate(`/admin/events/${id}/attendance`)}

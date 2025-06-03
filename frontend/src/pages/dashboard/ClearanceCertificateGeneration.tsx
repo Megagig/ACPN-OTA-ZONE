@@ -61,20 +61,23 @@ const ClearanceCertificateGeneration: React.FC = () => {
         financialService.getAllPayments({ status: 'all' }),
       ]);
 
-      setPharmacies(pharmaciesRes);
+      setPharmacies(pharmaciesRes || []);
 
       // Find pharmacies eligible for clearance certificates
       // (those with all dues paid for the current year)
-      const eligible = pharmaciesRes.filter((pharmacy: Pharmacy) => {
-        const pharmacyPayments = paymentsRes.payments.filter(
-          (payment: Payment) =>
-            payment.pharmacyId === pharmacy._id &&
-            (payment.status === 'approved' ||
-              payment.approvalStatus === 'approved') &&
-            new Date(payment.paymentDate).getFullYear() === currentYear
-        );
-        return pharmacyPayments.length > 0; // Has approved payments for current year
-      });
+      const eligible = pharmaciesRes
+        ? pharmaciesRes.filter((pharmacy: Pharmacy) => {
+            const pharmacyPayments =
+              paymentsRes?.payments?.filter?.(
+                (payment: Payment) =>
+                  payment.pharmacyId === pharmacy._id &&
+                  (payment.status === 'approved' ||
+                    payment.approvalStatus === 'approved') &&
+                  new Date(payment.paymentDate).getFullYear() === currentYear
+              ) || [];
+            return pharmacyPayments.length > 0; // Has approved payments for current year
+          })
+        : [];
 
       setEligiblePharmacies(eligible);
     } catch (err: unknown) {

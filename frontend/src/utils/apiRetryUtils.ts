@@ -1,5 +1,6 @@
 // Utility functions for API retries and error handling
-import { AxiosError, AxiosResponse, AxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import type { AxiosResponse } from 'axios';
 import apiClient from './apiClient';
 
 /**
@@ -62,7 +63,7 @@ export async function retryApiCall<T>(
  */
 export async function getWithRetry<T>(
   url: string,
-  config?: AxiosRequestConfig
+  config?: object
 ): Promise<T> {
   const response = await retryApiCall(() => apiClient.get<T>(url, config));
   return response.data;
@@ -74,7 +75,7 @@ export async function getWithRetry<T>(
 export async function postWithRetry<T>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: object
 ): Promise<T> {
   const response = await retryApiCall(() =>
     apiClient.post<T>(url, data, config)
@@ -88,7 +89,7 @@ export async function postWithRetry<T>(
 export async function putWithRetry<T>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: object
 ): Promise<T> {
   const response = await retryApiCall(() =>
     apiClient.put<T>(url, data, config)
@@ -102,7 +103,7 @@ export async function putWithRetry<T>(
 export async function patchWithRetry<T>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: object
 ): Promise<T> {
   const response = await retryApiCall(() =>
     apiClient.patch<T>(url, data, config)
@@ -115,7 +116,7 @@ export async function patchWithRetry<T>(
  */
 export async function deleteWithRetry<T>(
   url: string,
-  config?: AxiosRequestConfig
+  config?: object
 ): Promise<T> {
   const response = await retryApiCall(() => apiClient.delete<T>(url, config));
   return response.data;

@@ -20,6 +20,8 @@ import {
   getEventRegistrations,
   calculatePenalties,
   sendAttendanceWarningsForYear,
+  publishEvent,
+  cancelEvent,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -112,6 +114,21 @@ router
   .post(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN),
     sendAttendanceWarningsForYear
+  );
+
+// Publish and Cancel event routes (Admin/Secretary only)
+router
+  .route('/:id/publish')
+  .patch(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    publishEvent
+  );
+
+router
+  .route('/:id/cancel')
+  .patch(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    cancelEvent
   );
 
 export default router;

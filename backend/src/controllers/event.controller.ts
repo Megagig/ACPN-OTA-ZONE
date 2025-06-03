@@ -1392,3 +1392,76 @@ export const sendAttendanceWarningsForYear = asyncHandler(
     });
   }
 );
+
+// @desc    Publish an event (change status from draft to published)
+// @route   PATCH /api/events/:id/publish
+// @access  Private (Admin, Superadmin, Secretary)
+export const publishEvent = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return next(
+        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    console.log(
+      `Attempting to publish event ${req.params.id} with current status: ${event.status}`
+    );
+
+    // Allow publishing from draft or completed states
+    // Only don't allow re-publishing already published events
+    if (event.status === EventStatus.PUBLISHED) {
+      return next(
+        new ErrorResponse(
+          `This event is already published. Current status: ${event.status}`,
+          400
+        )
+      );
+    }
+
+    // Update event status to published
+    event.status = EventStatus.PUBLISHED;
+    await event.save();
+
+    res.status(200).json({
+      success: true,
+      data: event,
+    });
+  }
+);
+
+// @desc    Cancel an event (change status to cancelled)
+// @route   PATCH /api/events/:id/cancel
+// @access  Private (Admin, Superadmin, Secretary)
+export const cancelEvent = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return next(
+        new ErrorResponse(`Event not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    // Only published or draft events can be cancelled
+    if (![EventStatus.PUBLISHED, EventStatus.DRAFT].includes(event.status)) {
+      return next(
+        new ErrorResponse(
+          `Only published or draft events can be cancelled. Current status: ${event.status}`,
+          400
+        )
+      );
+    }
+
+    // Update event status to cancelled
+    event.status = EventStatus.CANCELLED;
+    await event.save();
+
+    res.status(200).json({
+      success: true,
+      data: event,
+    });
+  }
+);
