@@ -51,4 +51,12 @@ router
 router
     .route('/penalty-configs')
     .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.getAllPenaltyConfigs);
+// Calculate penalties route
+router
+    .route('/calculate-penalties/:year')
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.calculatePenalties);
+// Send attendance warnings route
+router
+    .route('/send-warnings/:year')
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.sendAttendanceWarningsForYear);
 exports.default = router;

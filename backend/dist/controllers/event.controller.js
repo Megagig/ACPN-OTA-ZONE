@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
+exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
 const event_model_1 = __importStar(require("../models/event.model"));
 const eventRegistration_model_1 = __importStar(require("../models/eventRegistration.model"));
 const eventAttendance_model_1 = __importDefault(require("../models/eventAttendance.model"));
@@ -396,9 +396,18 @@ exports.markAttendance = (0, async_middleware_1.default)((req, res, next) => __a
             attendanceRecords.push(newAttendance);
         }
     }
-    // If this is a meeting, calculate penalties after attendance is marked
+    // If this is a meeting, calculate penalties and send warnings after attendance is marked
     if (event.eventType === event_model_1.EventType.MEETING) {
-        yield calculateMeetingPenalties(new Date().getFullYear());
+        const currentYear = new Date().getFullYear();
+        yield calculateMeetingPenalties(currentYear);
+        // Also send attendance warnings to help members avoid future penalties
+        try {
+            yield sendAttendanceWarnings(currentYear);
+        }
+        catch (warningError) {
+            console.error('Error sending attendance warnings:', warningError);
+            // Don't fail the main operation if warnings fail
+        }
     }
     const populatedRecords = yield eventAttendance_model_1.default.find({
         _id: { $in: attendanceRecords.map((r) => r._id) },
@@ -809,91 +818,9 @@ function sendEventNotifications(eventId) {
         }
     });
 }
-// Helper function to calculate meeting penalties
-function calculateMeetingPenalties(year) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const penaltyConfig = yield meetingPenaltyConfig_model_1.default.findOne({
-                year,
-                isActive: true,
-            });
-            if (!penaltyConfig) {
-                console.warn(`No penalty configuration found for year ${year}`);
-                return;
-            }
-            // Get all meeting events for the year
-            const startOfYear = new Date(year, 0, 1);
-            const endOfYear = new Date(year, 11, 31);
-            const meetings = yield event_model_1.default.find({
-                eventType: event_model_1.EventType.MEETING,
-                startDate: { $gte: startOfYear, $lte: endOfYear },
-                status: { $in: [event_model_1.EventStatus.COMPLETED, event_model_1.EventStatus.PUBLISHED] },
-            });
-            if (meetings.length === 0)
-                return;
-            // Get all users
-            const users = yield user_model_1.default.find({
-                role: { $in: ['member', 'pharmacy'] },
-                isActive: true,
-            });
-            for (const user of users) {
-                // Count user's meeting attendance for the year
-                const attendanceCount = yield eventAttendance_model_1.default.countDocuments({
-                    eventId: { $in: meetings.map((m) => m._id) },
-                    userId: user._id,
-                    attended: true,
-                });
-                // Find applicable penalty rule
-                let applicablePenalty = penaltyConfig.defaultPenalty;
-                for (const rule of penaltyConfig.penaltyRules) {
-                    if (attendanceCount >= rule.minAttendance &&
-                        attendanceCount <= rule.maxAttendance) {
-                        applicablePenalty = {
-                            penaltyType: rule.penaltyType,
-                            penaltyValue: rule.penaltyValue,
-                        };
-                        break;
-                    }
-                }
-                // Calculate penalty amount
-                let penaltyAmount = 0;
-                if (applicablePenalty.penaltyType === 'multiplier') {
-                    // Get user's annual dues
-                    const userAnnualDue = yield due_model_1.default.findOne({
-                        assignedTo: user._id,
-                        dueTypeId: { $exists: true }, // Assuming annual dues have a specific type
-                        year,
-                    }).populate('dueTypeId');
-                    if (userAnnualDue) {
-                        penaltyAmount = userAnnualDue.amount * applicablePenalty.penaltyValue;
-                    }
-                }
-                else {
-                    penaltyAmount = applicablePenalty.penaltyValue;
-                }
-                // Create or update penalty due if amount > 0
-                if (penaltyAmount > 0) {
-                    yield due_model_1.default.findOneAndUpdate({
-                        assignedTo: user._id,
-                        title: `Meeting Attendance Penalty ${year}`,
-                        year,
-                    }, {
-                        assignedTo: user._id,
-                        title: `Meeting Attendance Penalty ${year}`,
-                        description: `Penalty for attending ${attendanceCount} meetings in ${year}`,
-                        amount: penaltyAmount,
-                        dueDate: new Date(year + 1, 2, 31), // March 31st of next year
-                        status: 'pending',
-                        year,
-                        isPenalty: true,
-                    }, { upsert: true });
-                }
-            }
-        }
-        catch (error) {
-            console.error('Error calculating meeting penalties:', error);
-        }
-    });
+try { }
+catch (error) {
+    console.error('Error calculating meeting penalties:', error);
 }
 // Meeting Penalty Configuration Controllers
 // @desc    Get penalty configuration for a year
@@ -936,5 +863,194 @@ exports.getAllPenaltyConfigs = (0, async_middleware_1.default)((req, res) => __a
         success: true,
         count: configs.length,
         data: configs,
+    });
+}));
+// Helper function to send attendance warning notifications
+function sendAttendanceWarnings(year) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // Get all meeting events for the year
+            const startOfYear = new Date(year, 0, 1);
+            const endOfYear = new Date(year, 11, 31);
+            const meetings = yield event_model_1.default.find({
+                eventType: event_model_1.EventType.MEETING,
+                startDate: { $gte: startOfYear, $lte: endOfYear },
+                status: { $in: [event_model_1.EventStatus.COMPLETED, event_model_1.EventStatus.PUBLISHED] },
+            });
+            // Get remaining meetings for the year
+            const now = new Date();
+            const remainingMeetings = yield event_model_1.default.find({
+                eventType: event_model_1.EventType.MEETING,
+                startDate: { $gte: now, $lte: endOfYear },
+                status: { $in: [event_model_1.EventStatus.PUBLISHED, event_model_1.EventStatus.DRAFT] },
+            });
+            if (meetings.length === 0) {
+                console.log(`No meetings found for ${year}. Skipping attendance warnings.`);
+                return;
+            }
+            const totalMeetings = meetings.length;
+            const attendanceThreshold = 0.5; // 50% threshold
+            // Get all active members
+            const users = yield user_model_1.default.find({
+                role: { $in: ['member', 'pharmacy'] },
+                isActive: true,
+            });
+            console.log(`Checking attendance for ${users.length} users to send warnings for ${year}`);
+            for (const user of users) {
+                // Count user's meeting attendance for the year
+                const attendanceRecords = yield eventAttendance_model_1.default.find({
+                    eventId: { $in: meetings.map((m) => m._id) },
+                    userId: user._id,
+                });
+                const attendedMeetings = attendanceRecords.filter(record => record.attended).length;
+                const attendancePercentage = totalMeetings > 0 ? attendedMeetings / totalMeetings : 0;
+                // Send warning if attendance is below 50% and there are still meetings left in the year
+                if (attendancePercentage < attendanceThreshold && remainingMeetings.length > 0) {
+                    const missedMeetings = totalMeetings - attendedMeetings;
+                    try {
+                        yield email_service_1.default.sendEmail({
+                            to: user.email,
+                            subject: `⚠️ Meeting Attendance Warning - ACPN OTA Zone`,
+                            template: 'attendance-warning',
+                            context: {
+                                firstName: user.firstName,
+                                lastName: user.lastName,
+                                year,
+                                nextYear: year + 1,
+                                totalMeetings,
+                                attendedMeetings,
+                                missedMeetings,
+                                attendancePercentage: Math.round(attendancePercentage * 100),
+                                remainingMeetings: remainingMeetings.length,
+                                dashboardUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+                            },
+                        });
+                        console.log(`Sent attendance warning to ${user.email} (${Math.round(attendancePercentage * 100)}% attendance)`);
+                    }
+                    catch (emailError) {
+                        console.error(`Failed to send attendance warning to ${user.email}:`, emailError);
+                    }
+                }
+            }
+            console.log(`Attendance warning notifications for ${year} completed successfully`);
+        }
+        catch (error) {
+            console.error('Error sending attendance warnings:', error);
+            throw error;
+        }
+    });
+}
+// Helper function to calculate meeting penalties based on 50% threshold
+function calculateMeetingPenalties(year) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // Get all meeting events for the year
+            const startOfYear = new Date(year, 0, 1);
+            const endOfYear = new Date(year, 11, 31);
+            const meetings = yield event_model_1.default.find({
+                eventType: event_model_1.EventType.MEETING,
+                startDate: { $gte: startOfYear, $lte: endOfYear },
+                status: { $in: [event_model_1.EventStatus.COMPLETED, event_model_1.EventStatus.PUBLISHED] },
+            });
+            if (meetings.length === 0) {
+                console.log(`No meetings found for ${year}. Skipping penalty calculation.`);
+                return;
+            }
+            const totalMeetings = meetings.length;
+            const attendanceThreshold = 0.5; // 50% threshold
+            // Get all active members
+            const users = yield user_model_1.default.find({
+                role: { $in: ['member', 'pharmacy'] },
+                isActive: true,
+            });
+            console.log(`Calculating penalties for ${users.length} users based on ${totalMeetings} meetings in ${year}`);
+            for (const user of users) {
+                // Count user's meeting attendance for the year
+                const attendanceRecords = yield eventAttendance_model_1.default.find({
+                    eventId: { $in: meetings.map((m) => m._id) },
+                    userId: user._id,
+                });
+                const attendedMeetings = attendanceRecords.filter(record => record.attended).length;
+                const attendancePercentage = totalMeetings > 0 ? attendedMeetings / totalMeetings : 0;
+                // Only apply penalty if attendance is below 50%
+                if (attendancePercentage < attendanceThreshold) {
+                    // Get user's annual dues
+                    const userAnnualDues = yield due_model_1.default.find({
+                        assignedTo: user._id,
+                        year,
+                        isPenalty: false, // Exclude existing penalties
+                    });
+                    // Calculate total annual dues
+                    const totalAnnualDues = userAnnualDues.reduce((sum, due) => sum + due.amount, 0);
+                    // Penalty is half of the annual dues
+                    const penaltyAmount = totalAnnualDues * 0.5;
+                    if (penaltyAmount > 0) {
+                        // Create or update penalty due
+                        yield due_model_1.default.findOneAndUpdate({
+                            assignedTo: user._id,
+                            title: `Meeting Attendance Penalty ${year}`,
+                            year,
+                            isPenalty: true,
+                        }, {
+                            assignedTo: user._id,
+                            title: `Meeting Attendance Penalty ${year}`,
+                            description: `Penalty for attending only ${attendedMeetings} out of ${totalMeetings} meetings (${Math.round(attendancePercentage * 100)}%) in ${year}`,
+                            amount: penaltyAmount,
+                            dueDate: new Date(year + 1, 2, 31), // March 31st of next year
+                            status: 'pending',
+                            year,
+                            isPenalty: true,
+                        }, { upsert: true });
+                        console.log(`Applied penalty of ${penaltyAmount} to user ${user.email} (${Math.round(attendancePercentage * 100)}% attendance)`);
+                    }
+                }
+                else {
+                    // Remove any existing penalty if the user now meets the threshold
+                    const existingPenalty = yield due_model_1.default.findOne({
+                        assignedTo: user._id,
+                        title: `Meeting Attendance Penalty ${year}`,
+                        year,
+                        isPenalty: true,
+                    });
+                    if (existingPenalty) {
+                        yield due_model_1.default.findByIdAndDelete(existingPenalty._id);
+                        console.log(`Removed penalty for user ${user.email} as they now meet the attendance threshold`);
+                    }
+                }
+            }
+            console.log(`Penalty calculation for ${year} completed successfully`);
+        }
+        catch (error) {
+            console.error('Error calculating meeting penalties:', error);
+            throw error;
+        }
+    });
+}
+// @desc    Calculate meeting penalties for a year
+// @route   POST /api/events/calculate-penalties/:year
+// @access  Private (Admin only)
+exports.calculatePenalties = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const year = parseInt(req.params.year);
+    if (!year || isNaN(year)) {
+        throw new errorResponse_1.default('Invalid year provided', 400);
+    }
+    yield calculateMeetingPenalties(year);
+    res.status(200).json({
+        success: true,
+        message: `Penalties for ${year} have been calculated successfully.`,
+    });
+}));
+// @desc    Send attendance warnings for a year
+// @route   POST /api/events/send-warnings/:year
+// @access  Private (Admin only)
+exports.sendAttendanceWarningsForYear = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const year = parseInt(req.params.year);
+    if (!year || isNaN(year)) {
+        throw new errorResponse_1.default('Invalid year provided', 400);
+    }
+    yield sendAttendanceWarnings(year);
+    res.status(200).json({
+        success: true,
+        message: `Attendance warnings for ${year} have been sent successfully.`,
     });
 }));

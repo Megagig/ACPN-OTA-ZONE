@@ -42,6 +42,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       { name: 'Permissions', path: '/admin/permissions', icon: 'shield-alt' },
       { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
       { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },
+      {
+        name: 'Attendance Management',
+        path: '/dashboard/attendance-management',
+        icon: 'clipboard-check',
+      },
       { name: 'Elections', path: '/elections', icon: 'vote-yea' },
       { name: 'Polls', path: '/polls', icon: 'poll' },
       { name: 'Communications', path: '/communications', icon: 'envelope' },
@@ -60,6 +65,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       { name: 'My Documents', path: '/my-documents', icon: 'file-alt' },
       { name: 'Dues & Payments', path: '/payments', icon: 'money-bill' },
       { name: 'Events', path: '/member/events', icon: 'calendar' },
+      {
+        name: 'My Attendance',
+        path: '/dashboard/attendance-status',
+        icon: 'clipboard-check',
+      },
       { name: 'Elections', path: '/elections', icon: 'vote-yea' },
       { name: 'Messages', path: '/messages', icon: 'envelope' },
     ];

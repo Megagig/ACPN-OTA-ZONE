@@ -128,7 +128,8 @@ exports.getOverviewStats = (0, async_middleware_1.default)((req, res) => __await
                         }
                     }
                     else {
-                        description = ((_c = audit.details) === null || _c === void 0 ? void 0 : _c.toString()) || 'System activity recorded';
+                        description =
+                            ((_c = audit.details) === null || _c === void 0 ? void 0 : _c.toString()) || 'System activity recorded';
                     }
                     type = 'user_registration';
                     status = 'success';

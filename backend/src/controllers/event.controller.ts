@@ -418,6 +418,61 @@ export const cancelRegistration = asyncHandler(
   }
 );
 
+// @desc    Get event attendance
+// @route   GET /api/events/:id/attendance
+// @access  Private (Admin, Superadmin, Secretary)
+export const getEventAttendance = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const eventId = req.params.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    // Check if event exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return next(
+        new ErrorResponse(`Event not found with id of ${eventId}`, 404)
+      );
+    }
+
+    // Build query for attendance records
+    const query: any = { eventId };
+
+    // Filter by attendance status if provided
+    if (req.query.attended !== undefined) {
+      query.attended = req.query.attended === 'true';
+    }
+
+    // Get total count for pagination
+    const total = await EventAttendance.countDocuments(query);
+
+    // Get attendance records with pagination
+    const attendanceRecords = await EventAttendance.find(query)
+      .populate('userId', 'firstName lastName email phoneNumber profileImage')
+      .populate('markedBy', 'firstName lastName email')
+      .sort({ markedAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      success: true,
+      count: attendanceRecords.length,
+      total,
+      page,
+      totalPages,
+      hasNextPage,
+      hasPrevPage,
+      data: attendanceRecords,
+    });
+  }
+);
+
 // @desc    Mark attendance for event
 // @route   POST /api/events/:id/attendance
 // @access  Private (Admin only)
@@ -478,9 +533,18 @@ export const markAttendance = asyncHandler(
       }
     }
 
-    // If this is a meeting, calculate penalties after attendance is marked
+    // If this is a meeting, calculate penalties and send warnings after attendance is marked
     if (event.eventType === EventType.MEETING) {
-      await calculateMeetingPenalties(new Date().getFullYear());
+      const currentYear = new Date().getFullYear();
+      await calculateMeetingPenalties(currentYear);
+
+      // Also send attendance warnings to help members avoid future penalties
+      try {
+        await sendAttendanceWarnings(currentYear);
+      } catch (warningError) {
+        console.error('Error sending attendance warnings:', warningError);
+        // Don't fail the main operation if warnings fail
+      }
     }
 
     const populatedRecords = await EventAttendance.find({
@@ -999,105 +1063,6 @@ async function sendEventNotifications(eventId: string) {
   }
 }
 
-// Helper function to calculate meeting penalties
-async function calculateMeetingPenalties(year: number) {
-  try {
-    const penaltyConfig = await MeetingPenaltyConfig.findOne({
-      year,
-      isActive: true,
-    });
-
-    if (!penaltyConfig) {
-      console.warn(`No penalty configuration found for year ${year}`);
-      return;
-    }
-
-    // Get all meeting events for the year
-    const startOfYear = new Date(year, 0, 1);
-    const endOfYear = new Date(year, 11, 31);
-
-    const meetings = await Event.find({
-      eventType: EventType.MEETING,
-      startDate: { $gte: startOfYear, $lte: endOfYear },
-      status: { $in: [EventStatus.COMPLETED, EventStatus.PUBLISHED] },
-    });
-
-    if (meetings.length === 0) return;
-
-    // Get all users
-    const users = await User.find({
-      role: { $in: ['member', 'pharmacy'] },
-      isActive: true,
-    });
-
-    for (const user of users) {
-      // Count user's meeting attendance for the year
-      const attendanceCount = await EventAttendance.countDocuments({
-        eventId: { $in: meetings.map((m) => m._id) },
-        userId: user._id,
-        attended: true,
-      });
-
-      // Find applicable penalty rule
-      let applicablePenalty = penaltyConfig.defaultPenalty;
-
-      for (const rule of penaltyConfig.penaltyRules) {
-        if (
-          attendanceCount >= rule.minAttendance &&
-          attendanceCount <= rule.maxAttendance
-        ) {
-          applicablePenalty = {
-            penaltyType: rule.penaltyType,
-            penaltyValue: rule.penaltyValue,
-          };
-          break;
-        }
-      }
-
-      // Calculate penalty amount
-      let penaltyAmount = 0;
-      if (applicablePenalty.penaltyType === 'multiplier') {
-        // Get user's annual dues
-        const userAnnualDue = await Due.findOne({
-          assignedTo: user._id,
-          dueTypeId: { $exists: true }, // Assuming annual dues have a specific type
-          year,
-        }).populate('dueTypeId');
-
-        if (userAnnualDue) {
-          penaltyAmount = userAnnualDue.amount * applicablePenalty.penaltyValue;
-        }
-      } else {
-        penaltyAmount = applicablePenalty.penaltyValue;
-      }
-
-      // Create or update penalty due if amount > 0
-      if (penaltyAmount > 0) {
-        await Due.findOneAndUpdate(
-          {
-            assignedTo: user._id,
-            title: `Meeting Attendance Penalty ${year}`,
-            year,
-          },
-          {
-            assignedTo: user._id,
-            title: `Meeting Attendance Penalty ${year}`,
-            description: `Penalty for attending ${attendanceCount} meetings in ${year}`,
-            amount: penaltyAmount,
-            dueDate: new Date(year + 1, 2, 31), // March 31st of next year
-            status: 'pending',
-            year,
-            isPenalty: true,
-          },
-          { upsert: true }
-        );
-      }
-    }
-  } catch (error) {
-    console.error('Error calculating meeting penalties:', error);
-  }
-}
-
 // Meeting Penalty Configuration Controllers
 
 // @desc    Get penalty configuration for a year
@@ -1168,6 +1133,262 @@ export const getAllPenaltyConfigs = asyncHandler(
       success: true,
       count: configs.length,
       data: configs,
+    });
+  }
+);
+
+// Helper function to send attendance warning notifications
+async function sendAttendanceWarnings(year: number) {
+  try {
+    // Get all meeting events for the year
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31);
+
+    const meetings = await Event.find({
+      eventType: EventType.MEETING,
+      startDate: { $gte: startOfYear, $lte: endOfYear },
+      status: { $in: [EventStatus.COMPLETED, EventStatus.PUBLISHED] },
+    });
+
+    // Get remaining meetings for the year
+    const now = new Date();
+    const remainingMeetings = await Event.find({
+      eventType: EventType.MEETING,
+      startDate: { $gte: now, $lte: endOfYear },
+      status: { $in: [EventStatus.PUBLISHED, EventStatus.DRAFT] },
+    });
+
+    if (meetings.length === 0) {
+      console.log(
+        `No meetings found for ${year}. Skipping attendance warnings.`
+      );
+      return;
+    }
+
+    const totalMeetings = meetings.length;
+    const attendanceThreshold = 0.5; // 50% threshold
+
+    // Get all active members
+    const users = await User.find({
+      role: { $in: ['member', 'pharmacy'] },
+      isActive: true,
+    });
+
+    console.log(
+      `Checking attendance for ${users.length} users to send warnings for ${year}`
+    );
+
+    for (const user of users) {
+      // Count user's meeting attendance for the year
+      const attendanceRecords = await EventAttendance.find({
+        eventId: { $in: meetings.map((m) => m._id) },
+        userId: user._id,
+      });
+
+      const attendedMeetings = attendanceRecords.filter(
+        (record) => record.attended
+      ).length;
+      const attendancePercentage =
+        totalMeetings > 0 ? attendedMeetings / totalMeetings : 0;
+
+      // Send warning if attendance is below 50% and there are still meetings left in the year
+      if (
+        attendancePercentage < attendanceThreshold &&
+        remainingMeetings.length > 0
+      ) {
+        const missedMeetings = totalMeetings - attendedMeetings;
+
+        try {
+          await emailService.sendEmail({
+            to: user.email,
+            subject: `⚠️ Meeting Attendance Warning - ACPN OTA Zone`,
+            template: 'attendance-warning',
+            context: {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              year,
+              nextYear: year + 1,
+              totalMeetings,
+              attendedMeetings,
+              missedMeetings,
+              attendancePercentage: Math.round(attendancePercentage * 100),
+              remainingMeetings: remainingMeetings.length,
+              dashboardUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+            },
+          });
+
+          console.log(
+            `Sent attendance warning to ${user.email} (${Math.round(attendancePercentage * 100)}% attendance)`
+          );
+        } catch (emailError) {
+          console.error(
+            `Failed to send attendance warning to ${user.email}:`,
+            emailError
+          );
+        }
+      }
+    }
+
+    console.log(
+      `Attendance warning notifications for ${year} completed successfully`
+    );
+  } catch (error) {
+    console.error('Error sending attendance warnings:', error);
+    throw error;
+  }
+}
+
+// Helper function to calculate meeting penalties based on 50% threshold
+async function calculateMeetingPenalties(year: number) {
+  try {
+    // Get all meeting events for the year
+    const startOfYear = new Date(year, 0, 1);
+    const endOfYear = new Date(year, 11, 31);
+
+    const meetings = await Event.find({
+      eventType: EventType.MEETING,
+      startDate: { $gte: startOfYear, $lte: endOfYear },
+      status: { $in: [EventStatus.COMPLETED, EventStatus.PUBLISHED] },
+    });
+
+    if (meetings.length === 0) {
+      console.log(
+        `No meetings found for ${year}. Skipping penalty calculation.`
+      );
+      return;
+    }
+
+    const totalMeetings = meetings.length;
+    const attendanceThreshold = 0.5; // 50% threshold
+
+    // Get all active members
+    const users = await User.find({
+      role: { $in: ['member', 'pharmacy'] },
+      isActive: true,
+    });
+
+    console.log(
+      `Calculating penalties for ${users.length} users based on ${totalMeetings} meetings in ${year}`
+    );
+
+    for (const user of users) {
+      // Count user's meeting attendance for the year
+      const attendanceRecords = await EventAttendance.find({
+        eventId: { $in: meetings.map((m) => m._id) },
+        userId: user._id,
+      });
+
+      const attendedMeetings = attendanceRecords.filter(
+        (record) => record.attended
+      ).length;
+      const attendancePercentage =
+        totalMeetings > 0 ? attendedMeetings / totalMeetings : 0;
+
+      // Only apply penalty if attendance is below 50%
+      if (attendancePercentage < attendanceThreshold) {
+        // Get user's annual dues
+        const userAnnualDues = await Due.find({
+          assignedTo: user._id,
+          year,
+          isPenalty: false, // Exclude existing penalties
+        });
+
+        // Calculate total annual dues
+        const totalAnnualDues = userAnnualDues.reduce(
+          (sum, due) => sum + due.amount,
+          0
+        );
+
+        // Penalty is half of the annual dues
+        const penaltyAmount = totalAnnualDues * 0.5;
+
+        if (penaltyAmount > 0) {
+          // Create or update penalty due
+          await Due.findOneAndUpdate(
+            {
+              assignedTo: user._id,
+              title: `Meeting Attendance Penalty ${year}`,
+              year,
+              isPenalty: true,
+            },
+            {
+              assignedTo: user._id,
+              title: `Meeting Attendance Penalty ${year}`,
+              description: `Penalty for attending only ${attendedMeetings} out of ${totalMeetings} meetings (${Math.round(attendancePercentage * 100)}%) in ${year}`,
+              amount: penaltyAmount,
+              dueDate: new Date(year + 1, 2, 31), // March 31st of next year
+              status: 'pending',
+              year,
+              isPenalty: true,
+            },
+            { upsert: true }
+          );
+
+          console.log(
+            `Applied penalty of ${penaltyAmount} to user ${user.email} (${Math.round(attendancePercentage * 100)}% attendance)`
+          );
+        }
+      } else {
+        // Remove any existing penalty if the user now meets the threshold
+        const existingPenalty = await Due.findOne({
+          assignedTo: user._id,
+          title: `Meeting Attendance Penalty ${year}`,
+          year,
+          isPenalty: true,
+        });
+
+        if (existingPenalty) {
+          await Due.findByIdAndDelete(existingPenalty._id);
+          console.log(
+            `Removed penalty for user ${user.email} as they now meet the attendance threshold`
+          );
+        }
+      }
+    }
+
+    console.log(`Penalty calculation for ${year} completed successfully`);
+  } catch (error) {
+    console.error('Error calculating meeting penalties:', error);
+    throw error;
+  }
+}
+
+// @desc    Calculate meeting penalties for a year
+// @route   POST /api/events/calculate-penalties/:year
+// @access  Private (Admin only)
+export const calculatePenalties = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const year = parseInt(req.params.year);
+
+    if (!year || isNaN(year)) {
+      throw new ErrorResponse('Invalid year provided', 400);
+    }
+
+    await calculateMeetingPenalties(year);
+
+    res.status(200).json({
+      success: true,
+      message: `Penalties for ${year} have been calculated successfully.`,
+    });
+  }
+);
+
+// @desc    Send attendance warnings for a year
+// @route   POST /api/events/send-warnings/:year
+// @access  Private (Admin only)
+export const sendAttendanceWarningsForYear = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const year = parseInt(req.params.year);
+
+    if (!year || isNaN(year)) {
+      throw new ErrorResponse('Invalid year provided', 400);
+    }
+
+    await sendAttendanceWarnings(year);
+
+    res.status(200).json({
+      success: true,
+      message: `Attendance warnings for ${year} have been sent successfully.`,
     });
   }
 );

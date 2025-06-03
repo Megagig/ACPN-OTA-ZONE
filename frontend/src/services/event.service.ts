@@ -204,6 +204,20 @@ export class EventService {
     return response.data.data;
   }
 
+  // Calculate meeting penalties for a specific year
+  static async calculateMeetingPenalties(year: number): Promise<void> {
+    const response = await apiClient.post(
+      `/events/calculate-penalties/${year}`
+    );
+    return response.data.data;
+  }
+
+  // Send attendance warnings for a specific year
+  static async sendAttendanceWarnings(year: number): Promise<void> {
+    const response = await apiClient.post(`/events/send-warnings/${year}`);
+    return response.data.data;
+  }
+
   // Image Upload
   static async uploadEventImage(file: File): Promise<string> {
     const formData = new FormData();

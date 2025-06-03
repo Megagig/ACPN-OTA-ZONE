@@ -70,9 +70,11 @@ import AttendeeManagement from './pages/dashboard/AttendeeManagement';
 import AdminEventsList from './pages/admin/AdminEventsList';
 import AdminEventForm from './pages/admin/AdminEventForm';
 import AdminAttendanceMarking from './pages/admin/AdminAttendanceMarking';
+import AttendanceManagement from './pages/dashboard/AttendanceManagement';
 import MemberEventsList from './pages/member/MemberEventsList';
 import MemberEventDetails from './pages/member/MemberEventDetails';
 import MemberEventRegistration from './pages/member/MemberEventRegistration';
+import MemberAttendanceStatus from './pages/dashboard/MemberAttendanceStatus';
 
 // Communication Pages
 import CommunicationsDashboard from './pages/dashboard/CommunicationsDashboard';
@@ -344,6 +346,12 @@ function App() {
                       element={<AdminAttendanceMarking />}
                     />
 
+                    {/* Attendance Management Routes */}
+                    <Route
+                      path="/dashboard/attendance-management"
+                      element={<AttendanceManagement />}
+                    />
+
                     {/* Legacy event routes (keeping for backward compatibility) */}
                     <Route path="/events" element={<EventList />} />
                     <Route
@@ -429,6 +437,12 @@ function App() {
                   <Route path="/my-pharmacy/edit" element={<PharmacyForm />} />
                   <Route path="/payments" element={<PharmacyDues />} />
                   <Route path="/my-documents" element={<DocumentsList />} />
+
+                  {/* Member Attendance Route */}
+                  <Route
+                    path="/dashboard/attendance-status"
+                    element={<MemberAttendanceStatus />}
+                  />
 
                   {/* Member Event Routes */}
                   <Route path="/member/events" element={<MemberEventsList />} />

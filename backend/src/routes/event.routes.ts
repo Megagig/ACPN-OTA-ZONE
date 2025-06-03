@@ -8,6 +8,7 @@ import {
   registerForEvent,
   cancelRegistration,
   markAttendance,
+  getEventAttendance,
   getMyEvents,
   acknowledgeEvent,
   getEventStats,
@@ -17,6 +18,8 @@ import {
   getUserPenalties,
   getUserRegistrations,
   getEventRegistrations,
+  calculatePenalties,
+  sendAttendanceWarningsForYear,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -76,6 +79,10 @@ router
 // Admin/Secretary routes - Attendance management
 router
   .route('/:id/attendance')
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    getEventAttendance
+  )
   .post(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
     markAttendance
@@ -93,5 +100,18 @@ router
 router
   .route('/penalty-configs')
   .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getAllPenaltyConfigs);
+
+// Calculate penalties route
+router
+  .route('/calculate-penalties/:year')
+  .post(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), calculatePenalties);
+
+// Send attendance warnings route
+router
+  .route('/send-warnings/:year')
+  .post(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN),
+    sendAttendanceWarningsForYear
+  );
 
 export default router;
