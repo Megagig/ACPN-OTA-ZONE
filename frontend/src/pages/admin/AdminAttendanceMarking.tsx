@@ -45,6 +45,30 @@ import type {
   AttendanceMarkingData,
 } from '../../types/event.types';
 
+// Type for user data populated in registration
+interface PopulatedUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  pharmacy?: {
+    name: string;
+    registrationNumber: string;
+  };
+}
+
+// Type for registration with populated user and attendance data
+interface PopulatedRegistration extends Omit<EventRegistration, 'userId'> {
+  userId: PopulatedUser;
+  attendance?: {
+    present: boolean;
+    checkedInAt: string;
+    notes?: string;
+  } | null;
+}
+
+// Type for our component's attendee data
 interface AttendanceUser {
   _id: string;
   firstName: string;
@@ -79,60 +103,124 @@ const AdminAttendanceMarking: React.FC = () => {
     try {
       setLoading(true);
 
-      // Load event details
-      const eventData = await EventService.getEventById(id!);
-      setEvent(eventData);
+      // Check if ID is valid first
+      if (!id || id === 'new') {
+        navigate('/admin/events');
+        toast({
+          title: 'Error',
+          description: 'Invalid event ID',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-      // Load registered users/attendees (this would typically come from your user service)
-      // For now, we'll mock this data since we need user information
-      const mockUsers: AttendanceUser[] = [
-        {
-          _id: 'user1',
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john.doe@email.com',
-          phone: '+234 901 234 5678',
-          pharmacy: {
-            name: 'HealthPlus Pharmacy',
-            registrationNumber: 'PCN001',
-          },
-        },
-        {
-          _id: 'user2',
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'jane.smith@email.com',
-          phone: '+234 902 345 6789',
-          pharmacy: {
-            name: 'MedCare Pharmacy',
-            registrationNumber: 'PCN002',
-          },
-        },
-        {
-          _id: 'user3',
-          firstName: 'Robert',
-          lastName: 'Johnson',
-          email: 'robert.johnson@email.com',
-          phone: '+234 903 456 7890',
-          pharmacy: {
-            name: 'City Pharmacy',
-            registrationNumber: 'PCN003',
-          },
-        },
-      ];
+      try {
+        // Load event details
+        const eventData = await EventService.getEventById(id);
+        setEvent(eventData);
+      } catch (error: any) {
+        console.error('Error fetching event details:', error);
+        if (error?.response?.status === 404) {
+          navigate('/admin/events');
+          toast({
+            title: 'Error',
+            description: 'Event not found',
+            variant: 'destructive',
+          });
+          return;
+        } else {
+          throw error; // Re-throw to be caught by the outer catch
+        }
+      }
 
-      setUsers(mockUsers);
-    } catch (error) {
+      try {
+        // Load event registrations with attendance data
+        const registrationsData = await EventService.getEventRegistrations(
+          id,
+          1,
+          100
+        );
+
+        // Transform registration data to match our component's expected format
+        const populatedRegistrations =
+          registrationsData.data as unknown as PopulatedRegistration[];
+
+        const attendeeUsers: AttendanceUser[] = populatedRegistrations.map(
+          (registration) => {
+            const user = registration.userId;
+            return {
+              _id: user._id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              phone: user.phoneNumber,
+              pharmacy: user.pharmacy
+                ? {
+                    name: user.pharmacy.name || 'N/A',
+                    registrationNumber:
+                      user.pharmacy.registrationNumber || 'N/A',
+                  }
+                : undefined,
+              registration: {
+                ...registration,
+                userId: user._id, // Convert back to string ID for the registration object
+              },
+              attendance: registration.attendance
+                ? {
+                    _id: registration._id, // Using registration ID as attendance ID
+                    userId: user._id,
+                    eventId: id,
+                    attendedAt: registration.attendance.checkedInAt,
+                    markedBy: '',
+                    notes: registration.attendance.notes || '',
+                  }
+                : undefined,
+            };
+          }
+        );
+
+        setUsers(attendeeUsers);
+
+        // Show success message if this was a manual refresh (not the initial load)
+        if (!loading) {
+          toast({
+            title: 'Success',
+            description: `Loaded ${attendeeUsers.length} registered members for this event`,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching event registrations:', error);
+        setUsers([]);
+        toast({
+          title: 'Warning',
+          description:
+            'Failed to load registrations. The event may not have any registrations yet.',
+          variant: 'warning',
+        });
+      }
+    } catch (error: any) {
       console.error('Failed to load event and attendees:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load event details',
+        description: error?.message || 'Failed to load event details',
         variant: 'destructive',
       });
+
+      // Navigate back to events list if we can't load this event
+      if (error?.code === 'ECONNABORTED') {
+        toast({
+          title: 'Connection Timeout',
+          description:
+            'The server took too long to respond. Please try again later.',
+          variant: 'destructive',
+        });
+      }
+
+      navigate('/admin/events');
     } finally {
       setLoading(false);
     }
-  }, [id, toast]);
+  }, [id, toast, loading, navigate]);
 
   useEffect(() => {
     if (id) {
@@ -275,11 +363,19 @@ const AdminAttendanceMarking: React.FC = () => {
 
       {/* Event Info */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5" />
             {event.title}
           </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadEventAndAttendees}
+            disabled={loading}
+          >
+            {loading ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

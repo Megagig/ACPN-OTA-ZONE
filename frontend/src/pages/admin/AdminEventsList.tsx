@@ -180,7 +180,7 @@ const AdminEventsList: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Event Management</h1>
         <Button
-          onClick={() => navigate('/admin/events/new')}
+          onClick={() => navigate('/admin/events/create')}
           className="flex items-center gap-2"
         >
           <PlusIcon className="w-4 h-4" />
@@ -258,7 +258,7 @@ const AdminEventsList: React.FC = () => {
             <div className="text-center py-12">
               <p className="text-gray-500">No events found</p>
               <Button
-                onClick={() => navigate('/admin/events/new')}
+                onClick={() => navigate('/admin/events/create')}
                 className="mt-4"
               >
                 Create First Event
