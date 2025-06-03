@@ -91,13 +91,31 @@ export class EventService {
     page = 1,
     limit = 10
   ): Promise<PaginatedResponse<EventRegistration>> {
-    // Import the retry utility here to avoid circular dependencies
-    const { getWithRetry } = await import('../utils/apiRetryUtils');
+    try {
+      // Import the retry utility here to avoid circular dependencies
+      const { getWithRetry } = await import('../utils/apiRetryUtils');
 
-    // Use the retry utility for this request
-    return getWithRetry<PaginatedResponse<EventRegistration>>(
-      `/events/${eventId}/registrations?page=${page}&limit=${limit}`
-    );
+      // Use the retry utility with a shorter timeout for this request
+      return getWithRetry<PaginatedResponse<EventRegistration>>(
+        `/events/${eventId}/registrations?page=${page}&limit=${limit}`,
+        { timeout: 10000 } // 10 second timeout
+      );
+    } catch (error) {
+      // Ensure we're not returning malformed data if the request fails
+      console.error('Failed to get event registrations:', error);
+
+      // Return empty data with pagination info
+      return {
+        success: false,
+        count: 0,
+        data: [],
+        total: 0,
+        page: page,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      };
+    }
   }
 
   static async updateRegistrationStatus(

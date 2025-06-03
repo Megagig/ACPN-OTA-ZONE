@@ -65,8 +65,21 @@ export async function getWithRetry<T>(
   url: string,
   config?: object
 ): Promise<T> {
-  const response = await retryApiCall(() => apiClient.get<T>(url, config));
-  return response.data;
+  // Add a default timeout if none was specified
+  const configWithDefaults = {
+    timeout: 30000, // 30 seconds default timeout
+    ...config,
+  };
+
+  try {
+    const response = await retryApiCall(() =>
+      apiClient.get<T>(url, configWithDefaults)
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Failed getWithRetry for ${url}:`, error);
+    throw error;
+  }
 }
 
 /**

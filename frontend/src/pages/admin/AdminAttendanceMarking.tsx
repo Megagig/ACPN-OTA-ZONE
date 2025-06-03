@@ -34,7 +34,6 @@ import {
   SearchIcon,
   CalendarIcon,
   MapPinIcon,
-  AlertTriangleIcon,
 } from 'lucide-react';
 import { EventService } from '../../services/event.service';
 import { useToast } from '../../hooks/useToast';
@@ -44,6 +43,8 @@ import type {
   AttendanceMarkingData,
   PaginatedResponse,
 } from '../../types/event.types';
+import * as financialService from '../../services/financial.service';
+import type { Pharmacy } from '../../types/pharmacy.types';
 
 // Type for user data populated in registration
 interface PopulatedUser {
@@ -166,19 +167,33 @@ const AdminAttendanceMarking: React.FC = () => {
         setLoadingMore(true);
       }
 
-      // Load event registrations with attendance data with retry mechanism
+      console.log(`Loading registrations for event: ${id}, page: ${page}`);
+
+      // First, load all pharmacies regardless of registration status
+      const pharmacies = await loadAllPharmacies();
+
+      // Then load event registrations with attendance data with retry mechanism
       const fetchRegistrations = async (
         retryCount = 0
       ): Promise<PaginatedResponse<EventRegistration>> => {
         try {
-          return await EventService.getEventRegistrations(
+          const data = await EventService.getEventRegistrations(
             id as string,
             page,
             ITEMS_PER_PAGE
           );
+          console.log(
+            `Fetched ${data.data?.length || 0} registrations for event ${id}`
+          );
+          return data;
         } catch (error: unknown) {
-          const axiosError = error as { code?: string };
+          console.error(
+            `Error fetching registrations (attempt ${retryCount + 1}):`,
+            error
+          );
+          const axiosError = error as { code?: string; message?: string };
           if (axiosError?.code === 'ECONNABORTED' && retryCount < 3) {
+            console.log(`Retrying after timeout, attempt ${retryCount + 1}`);
             // Wait 2 seconds before retrying
             await new Promise((resolve) => setTimeout(resolve, 2000));
             return fetchRegistrations(retryCount + 1);
@@ -189,16 +204,38 @@ const AdminAttendanceMarking: React.FC = () => {
 
       const registrationsData = await fetchRegistrations();
 
-      // Update pagination info
-      setTotalPages(registrationsData.totalPages || 1);
+      // Update pagination info - we won't use pagination now since we're showing all pharmacies
+      setTotalPages(1);
 
       // Transform registration data to match our component's expected format
       const populatedRegistrations =
         registrationsData.data as unknown as PopulatedRegistration[];
 
-      const attendeeUsers: AttendanceUser[] = populatedRegistrations.map(
+      // Create attendance users from registrations first
+      const registeredUsers: AttendanceUser[] = populatedRegistrations.map(
         (registration) => {
           const user = registration.userId;
+          if (!user || typeof user !== 'object') {
+            console.error('Invalid user data in registration:', registration);
+            // Create a placeholder user if data is missing
+            return {
+              _id:
+                typeof registration.userId === 'string'
+                  ? registration.userId
+                  : 'unknown',
+              firstName: 'Unknown',
+              lastName: 'User',
+              email: 'missing@email.com',
+              registration: {
+                ...registration,
+                userId:
+                  typeof registration.userId === 'string'
+                    ? registration.userId
+                    : 'unknown',
+              },
+            };
+          }
+
           return {
             _id: user._id,
             firstName: user.firstName,
@@ -229,18 +266,19 @@ const AdminAttendanceMarking: React.FC = () => {
         }
       );
 
-      // Update users based on page
-      if (page === 1) {
-        setUsers(attendeeUsers);
-      } else {
-        setUsers((prev) => [...prev, ...attendeeUsers]);
-      }
+      // Now convert all pharmacies to attendance users
+      const allAttendees: AttendanceUser[] = pharmacies.map((pharmacy) =>
+        convertPharmacyToAttendanceUser(pharmacy, registeredUsers)
+      );
+
+      // Update users with all pharmacies
+      setUsers(allAttendees);
 
       // Show success message for manual refresh
       if (showToast) {
         toast({
           title: 'Success',
-          description: `Loaded ${attendeeUsers.length} registered members for this event`,
+          description: `Loaded ${allAttendees.length} pharmacies for attendance marking`,
         });
       }
 
@@ -252,26 +290,121 @@ const AdminAttendanceMarking: React.FC = () => {
         // Only show error for initial load
         setUsers([]);
 
-        const axiosError = error as { code?: string };
+        // Try to extract more detailed error information
+        let errorMessage = 'Failed to load registrations';
+        const axiosError = error as {
+          code?: string;
+          message?: string;
+          response?: {
+            status?: number;
+            data?: {
+              message?: string;
+              error?: string;
+            };
+          };
+        };
+
+        if (axiosError.response?.data?.message) {
+          errorMessage += `: ${axiosError.response.data.message}`;
+        } else if (axiosError.message) {
+          errorMessage += `: ${axiosError.message}`;
+        }
+
+        console.error(errorMessage);
+
         toast({
           title: 'Warning',
           description:
             axiosError?.code === 'ECONNABORTED'
               ? 'The server took too long to respond. Try loading fewer records at a time.'
-              : 'Failed to load registrations. The event may not have any registrations yet.',
+              : errorMessage,
           variant: 'warning',
         });
       }
       return false;
+    } finally {
+      if (page === 1) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
+  };
+
+  // Load all pharmacies from the system
+  const loadAllPharmacies = async () => {
+    try {
+      console.log('Loading all pharmacies from the system');
+      const pharmacies = await financialService.getAllPharmacies();
+      console.log(`Fetched ${pharmacies.length} pharmacies`);
+      return pharmacies;
+    } catch (error) {
+      console.error('Error fetching all pharmacies:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load pharmacies',
+        variant: 'destructive',
+      });
+      return [];
+    }
+  };
+
+  // Convert pharmacy data to attendance user format
+  const convertPharmacyToAttendanceUser = (
+    pharmacy: Pharmacy,
+    existingUsers: AttendanceUser[] = []
+  ): AttendanceUser => {
+    // Check if this pharmacy already exists in users (has registered for event)
+    const existingUser = existingUsers.find(
+      (user) =>
+        user.pharmacy?.registrationNumber === pharmacy.registrationNumber
+    );
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    // Create a new attendance user from pharmacy data
+    return {
+      _id: pharmacy._id, // Use pharmacy ID as user ID for non-registered pharmacies
+      firstName: pharmacy.superintendentName?.split(' ')[0] || '',
+      lastName:
+        pharmacy.superintendentName?.split(' ').slice(1).join(' ') || '',
+      email: pharmacy.email || '',
+      phone: pharmacy.phone || '',
+      pharmacy: {
+        name: pharmacy.name || pharmacy.businessName || '',
+        registrationNumber: pharmacy.registrationNumber || '',
+      },
+      // No registration or attendance data
+    };
   };
 
   const loadEventAndAttendees = useCallback(async () => {
     try {
+      console.log(`Starting loadEventAndAttendees for event ID: ${id}`);
       setLoading(true);
+
+      // First load the event details
       const eventLoaded = await loadEventDetails();
+      console.log(`Event details loaded: ${eventLoaded}`);
+
       if (eventLoaded) {
-        await loadRegistrations(1);
+        // Then attempt to load registrations
+        console.log('Loading registrations...');
+        const registrationsLoaded = await loadRegistrations(1);
+        console.log(`Registrations loaded: ${registrationsLoaded}`);
+
+        // If we failed to load registrations but event loaded successfully
+        // We should still show the UI rather than infinite loading
+        if (!registrationsLoaded) {
+          toast({
+            title: 'Warning',
+            description:
+              'Failed to load registrations. The list may be empty or there might be a server issue.',
+            variant: 'warning',
+          });
+        }
       }
     } catch (error: unknown) {
       console.error('Failed to load event and attendees:', error);
@@ -285,30 +418,73 @@ const AdminAttendanceMarking: React.FC = () => {
 
       navigate('/admin/events');
     } finally {
+      // Always set loading to false to avoid infinite loading state
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [navigate, toast, loadEventDetails, loadRegistrations]);
+  }, [id, navigate, toast, loadEventDetails, loadRegistrations]);
 
   useEffect(() => {
     if (id) {
       loadEventAndAttendees();
+
+      // Set up a timeout to force exit the loading state after 15 seconds
+      // This prevents the UI from being stuck in loading state indefinitely
+      const loadingTimeout = setTimeout(() => {
+        if (loading) {
+          console.log(
+            'Loading timeout reached - forcing exit of loading state'
+          );
+          setLoading(false);
+
+          // Show a message to the user
+          toast({
+            title: 'Loading timeout',
+            description:
+              'The loading process took too long. Please try refreshing the data.',
+            variant: 'warning',
+          });
+        }
+      }, 15000);
+
+      return () => clearTimeout(loadingTimeout);
     }
-  }, [id, loadEventAndAttendees]);
+  }, [id, loadEventAndAttendees, loading, toast]);
 
   const handleMarkAttendance = async () => {
     if (!selectedUser || !id) return;
 
     try {
       setMarkingAttendance(selectedUser._id);
+      console.log(
+        `Marking attendance for user/pharmacy: ${selectedUser._id} in event: ${id}`
+      );
 
+      // If the user doesn't have registration data but has pharmacy data,
+      // we can still mark attendance using the pharmacy ID
       const attendanceData: AttendanceMarkingData = {
         userId: selectedUser._id,
         eventId: id,
         notes: attendanceNotes.trim() || undefined,
+        // Include pharmacy info if available
+        pharmacyId: selectedUser.pharmacy ? selectedUser._id : undefined,
+        pharmacyName: selectedUser.pharmacy?.name,
+        pharmacyRegNumber: selectedUser.pharmacy?.registrationNumber,
       };
 
-      await EventService.markAttendance(id, [attendanceData]);
+      // Add a flag to indicate the user is present (required by backend)
+      const attendanceWithPresence = {
+        ...attendanceData,
+        attended: true, // Make sure we're marking as present
+      };
+
+      console.log('Sending attendance data:', attendanceWithPresence);
+
+      // Try to mark attendance
+      const response = await EventService.markAttendance(id, [
+        attendanceWithPresence,
+      ]);
+      console.log('Attendance marking response:', response);
 
       // Update local state
       setUsers((prev) =>
@@ -339,11 +515,35 @@ const AdminAttendanceMarking: React.FC = () => {
       setAttendanceNotes('');
     } catch (error: unknown) {
       console.error('Failed to mark attendance:', error);
+
+      // Try to get more detailed error information
+      let errorMessage = 'Failed to mark attendance';
+      const axiosError = error as {
+        response?: {
+          data?: {
+            message?: string;
+            error?: string;
+          };
+          status?: number;
+        };
+        message?: string;
+      };
+
+      if (axiosError?.response?.data?.message) {
+        errorMessage += `: ${axiosError.response.data.message}`;
+      } else if (axiosError?.response?.data?.error) {
+        errorMessage += `: ${axiosError.response.data.error}`;
+      } else if (axiosError?.message) {
+        errorMessage += `: ${axiosError.message}`;
+      }
+
       toast({
         title: 'Error',
-        description: 'Failed to mark attendance',
+        description: errorMessage,
         variant: 'destructive',
       });
+
+      // Don't close the dialog on error so the user can try again
     } finally {
       setMarkingAttendance(null);
     }
@@ -379,36 +579,22 @@ const AdminAttendanceMarking: React.FC = () => {
     });
   };
 
-  const isEventActive = () => {
-    if (!event) return false;
-    const now = new Date();
-    const startTime = new Date(event.startDate);
-    const endTime = new Date(event.endDate);
-    return now >= startTime && now <= endTime;
-  };
-
   const canMarkAttendance = () => {
-    if (!event) return false;
-
-    // For meetings, only allow during event time
-    if (event.eventType === 'meetings') {
-      return isEventActive();
-    }
-
-    // For other events, allow from start time onwards
-    const now = new Date();
-    const startTime = new Date(event.startDate);
-    return now >= startTime;
+    // Always allow attendance marking regardless of event time
+    return !!event; // Only require that the event exists
   };
 
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     return (
+      !searchTerm ||
       user.firstName.toLowerCase().includes(searchLower) ||
       user.lastName.toLowerCase().includes(searchLower) ||
       user.email.toLowerCase().includes(searchLower) ||
       (user.pharmacy?.name &&
-        user.pharmacy.name.toLowerCase().includes(searchLower))
+        user.pharmacy.name.toLowerCase().includes(searchLower)) ||
+      (user.pharmacy?.registrationNumber &&
+        user.pharmacy.registrationNumber.toLowerCase().includes(searchLower))
     );
   });
 
@@ -484,30 +670,16 @@ const AdminAttendanceMarking: React.FC = () => {
             </div>
           </div>
 
-          {/* Attendance Status Alert */}
-          {!canMarkAttendance() && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center gap-2 text-yellow-800">
-                <AlertTriangleIcon className="w-5 h-5" />
-                <span className="font-medium">
-                  {event.eventType === 'meetings'
-                    ? 'Attendance can only be marked during the meeting time'
-                    : 'Attendance marking will be available when the event starts'}
-                </span>
-              </div>
+          {/* Notice about all pharmacies being displayed */}
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-800">
+              <CheckCircleIcon className="w-5 h-5" />
+              <span className="font-medium">
+                Showing all registered pharmacies. Attendance can be marked at
+                any time.
+              </span>
             </div>
-          )}
-
-          {isEventActive() && event.eventType === 'meetings' && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center gap-2 text-green-800">
-                <CheckCircleIcon className="w-5 h-5" />
-                <span className="font-medium">
-                  Meeting is currently active - attendance marking is available
-                </span>
-              </div>
-            </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
@@ -517,7 +689,7 @@ const AdminAttendanceMarking: React.FC = () => {
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search users by name, email, or pharmacy..."
+              placeholder="Search pharmacies by name, registration number, or superintendent..."
               value={searchTerm}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setSearchTerm(e.target.value)
@@ -531,16 +703,44 @@ const AdminAttendanceMarking: React.FC = () => {
       {/* Attendees Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Registered Members</CardTitle>
+          <CardTitle>All Pharmacies</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredUsers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-4">
                 {searchTerm
-                  ? 'No users found matching your search'
-                  : 'No registered users found'}
+                  ? 'No pharmacies found matching your search'
+                  : 'No pharmacies found in the system'}
               </p>
+
+              {!searchTerm && (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-400">
+                    No registered pharmacies were found in the system. Please
+                    make sure pharmacies are properly registered.
+                  </p>
+
+                  <div className="flex justify-center space-x-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleRefresh}
+                      className="flex items-center"
+                    >
+                      <ClockIcon className="w-4 h-4 mr-2" />
+                      Refresh Registrations
+                    </Button>
+
+                    <Button
+                      onClick={() => navigate(`/admin/events/${id}`)}
+                      className="flex items-center"
+                    >
+                      <UsersIcon className="w-4 h-4 mr-2" />
+                      View Event Details
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">

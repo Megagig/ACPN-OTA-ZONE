@@ -189,6 +189,10 @@ export interface AttendanceMarkingData {
   userId: string;
   eventId: string;
   notes?: string;
+  // New fields for pharmacy attendance
+  pharmacyId?: string;
+  pharmacyName?: string;
+  pharmacyRegNumber?: string;
 }
 
 export interface PaginatedResponse<T> {
