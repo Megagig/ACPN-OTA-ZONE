@@ -24,28 +24,58 @@ const AdminEventDetail = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<UIEventRegistration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'details' | 'attendees'>(
-    'details'
-  );
+  const [activeTab, setActiveTab] = useState<'details' | 'attendees'>(() => {
+    // Check if we have a stored tab preference
+    const storedTab = localStorage.getItem('activeEventTab');
+    if (storedTab === 'attendees' || storedTab === 'details') {
+      // Clear the storage after using it
+      localStorage.removeItem('activeEventTab');
+      return storedTab;
+    }
+    return 'details';
+  });
 
   useEffect(() => {
     if (!id) return;
 
+    // Handle invalid URLs - redirect to events list
+    if (id === 'new') {
+      navigate('/admin/events/create');
+      return;
+    }
+
     const fetchEventData = async () => {
       setIsLoading(true);
       try {
-        const [eventData, attendanceData] = await Promise.all([
-          eventService.getEventById(id),
-          eventService.getEventRegistrations(id),
-        ]);
+        // Fetch event details first
+        let eventData;
+        try {
+          eventData = await eventService.getEventById(id);
+          setEvent(eventData);
+        } catch (error: any) {
+          console.error('Error fetching event details:', error);
+          if (error?.response?.status === 404) {
+            navigate('/admin/events');
+          }
+          throw error;
+        }
 
-        setEvent(eventData);
-        // Backend populates userId with User object and adds attendance data
-        setAttendees(
-          (attendanceData.data || []) as unknown as UIEventRegistration[]
-        );
-      } catch (error) {
-        console.error('Error fetching event details:', error);
+        // Then fetch registrations if event was found
+        try {
+          const attendanceData = await eventService.getEventRegistrations(id);
+          setAttendees(
+            (attendanceData.data || []) as unknown as UIEventRegistration[]
+          );
+        } catch (error: any) {
+          console.error('Error fetching event registrations:', error);
+          // Don't throw here, just continue with empty attendees
+          setAttendees([]);
+        }
+      } catch (error: any) {
+        console.error('Error fetching event data:', error);
+        if (error?.code === 'ECONNABORTED') {
+          console.error('Connection timeout when loading event data');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -79,15 +109,41 @@ const AdminEventDetail = () => {
     if (!id) return;
     try {
       await eventService.updateRegistrationStatus(id, registrationId, status);
+
       // Update the attendee status in the state
       setAttendees(
         attendees.map((a) =>
           a._id === registrationId ? { ...a, status: status } : a
         )
       );
-    } catch (error) {
+
+      // Show success message
+      const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+      const attendee = attendees.find((a) => a._id === registrationId);
+      const attendeeName = attendee
+        ? `${attendee.userId.firstName} ${attendee.userId.lastName}`
+        : 'Attendee';
+
+      // Use browser's built-in notification API if available
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`Registration ${statusText}`, {
+          body: `${attendeeName}'s registration is now ${status}`,
+        });
+      } else {
+        // Fallback to alert
+        alert(`Registration Updated: ${attendeeName} is now ${status}`);
+      }
+    } catch (error: any) {
       console.error('Error updating registration status:', error);
-      alert('Failed to update registration status');
+
+      let errorMessage = 'Failed to update registration status';
+      if (error?.response?.data?.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error?.message) {
+        errorMessage += `: ${error.message}`;
+      }
+
+      alert(errorMessage);
     }
   };
 
@@ -95,11 +151,25 @@ const AdminEventDetail = () => {
   const handleCheckIn = async (registrationId: string) => {
     if (!id) return;
     try {
+      // First find the attendee to get their information for notifications
+      const attendee = attendees.find((a) => a._id === registrationId);
+      if (!attendee) {
+        alert('Could not find registration record');
+        return;
+      }
+
+      const attendeeName = `${attendee.userId.firstName} ${attendee.userId.lastName}`;
+
+      // Perform the update
       await eventService.updateRegistrationStatus(
         id,
         registrationId,
         'confirmed' as RegistrationStatus
       );
+
+      // Add a small delay to ensure the backend has time to process before any subsequent requests
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Update the attendee status in the state and add attendance data
       setAttendees(
         attendees.map((a) =>
@@ -115,9 +185,27 @@ const AdminEventDetail = () => {
             : a
         )
       );
-    } catch (error) {
+
+      // Show success message
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Attendee Checked In', {
+          body: `${attendeeName} has been checked in successfully`,
+        });
+      } else {
+        // Fallback to alert
+        alert(`Success: ${attendeeName} has been checked in successfully`);
+      }
+    } catch (error: any) {
       console.error('Error checking in attendee:', error);
-      alert('Failed to check in attendee');
+
+      let errorMessage = 'Failed to check in attendee';
+      if (error?.response?.data?.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error?.message) {
+        errorMessage += `: ${error.message}`;
+      }
+
+      alert(errorMessage);
     }
   };
 

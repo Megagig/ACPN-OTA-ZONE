@@ -91,10 +91,13 @@ export class EventService {
     page = 1,
     limit = 10
   ): Promise<PaginatedResponse<EventRegistration>> {
-    const response = await apiClient.get(
+    // Import the retry utility here to avoid circular dependencies
+    const { getWithRetry } = await import('../utils/apiRetryUtils');
+
+    // Use the retry utility for this request
+    return getWithRetry<PaginatedResponse<EventRegistration>>(
       `/events/${eventId}/registrations?page=${page}&limit=${limit}`
     );
-    return response.data;
   }
 
   static async updateRegistrationStatus(

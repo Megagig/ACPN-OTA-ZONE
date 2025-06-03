@@ -41,8 +41,8 @@ import { useToast } from '../../hooks/useToast';
 import type {
   Event,
   EventRegistration,
-  EventAttendance,
   AttendanceMarkingData,
+  PaginatedResponse,
 } from '../../types/event.types';
 
 // Type for user data populated in registration
@@ -80,7 +80,14 @@ interface AttendanceUser {
     registrationNumber: string;
   };
   registration?: EventRegistration;
-  attendance?: EventAttendance;
+  attendance?: {
+    _id: string;
+    userId: string;
+    eventId: string;
+    attendedAt: string;
+    markedBy: string;
+    notes?: string;
+  };
 }
 
 const AdminAttendanceMarking: React.FC = () => {
@@ -99,10 +106,14 @@ const AdminAttendanceMarking: React.FC = () => {
   const [attendanceNotes, setAttendanceNotes] = useState('');
   const [showMarkDialog, setShowMarkDialog] = useState(false);
 
-  const loadEventAndAttendees = useCallback(async () => {
-    try {
-      setLoading(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const ITEMS_PER_PAGE = 20; // Smaller batch size to reduce load time
 
+  const loadEventDetails = async () => {
+    try {
       // Check if ID is valid first
       if (!id || id === 'new') {
         navigate('/admin/events');
@@ -111,116 +122,173 @@ const AdminAttendanceMarking: React.FC = () => {
           description: 'Invalid event ID',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
 
-      try {
-        // Load event details
-        const eventData = await EventService.getEventById(id);
-        setEvent(eventData);
-      } catch (error: any) {
-        console.error('Error fetching event details:', error);
-        if (error?.response?.status === 404) {
-          navigate('/admin/events');
-          toast({
-            title: 'Error',
-            description: 'Event not found',
-            variant: 'destructive',
-          });
-          return;
-        } else {
-          throw error; // Re-throw to be caught by the outer catch
+      // Load event details
+      const eventData = await EventService.getEventById(id);
+      setEvent(eventData);
+      return true;
+    } catch (error: unknown) {
+      console.error('Error fetching event details:', error);
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
+        navigate('/admin/events');
+        toast({
+          title: 'Error',
+          description: 'Event not found',
+          variant: 'destructive',
+        });
+      } else {
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : 'Failed to load event details';
+        toast({
+          title: 'Error',
+          description: errorMsg,
+          variant: 'destructive',
+        });
+        navigate('/admin/events');
+      }
+      return false;
+    }
+  };
+
+  const loadRegistrations = async (page: number, showToast = false) => {
+    try {
+      // Only set full loading on first page
+      if (page === 1) {
+        if (!hasInitialLoad) {
+          setLoading(true);
         }
+      } else {
+        setLoadingMore(true);
       }
 
-      try {
-        // Load event registrations with attendance data
-        const registrationsData = await EventService.getEventRegistrations(
-          id,
-          1,
-          100
-        );
-
-        // Transform registration data to match our component's expected format
-        const populatedRegistrations =
-          registrationsData.data as unknown as PopulatedRegistration[];
-
-        const attendeeUsers: AttendanceUser[] = populatedRegistrations.map(
-          (registration) => {
-            const user = registration.userId;
-            return {
-              _id: user._id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email,
-              phone: user.phoneNumber,
-              pharmacy: user.pharmacy
-                ? {
-                    name: user.pharmacy.name || 'N/A',
-                    registrationNumber:
-                      user.pharmacy.registrationNumber || 'N/A',
-                  }
-                : undefined,
-              registration: {
-                ...registration,
-                userId: user._id, // Convert back to string ID for the registration object
-              },
-              attendance: registration.attendance
-                ? {
-                    _id: registration._id, // Using registration ID as attendance ID
-                    userId: user._id,
-                    eventId: id,
-                    attendedAt: registration.attendance.checkedInAt,
-                    markedBy: '',
-                    notes: registration.attendance.notes || '',
-                  }
-                : undefined,
-            };
+      // Load event registrations with attendance data with retry mechanism
+      const fetchRegistrations = async (
+        retryCount = 0
+      ): Promise<PaginatedResponse<EventRegistration>> => {
+        try {
+          return await EventService.getEventRegistrations(
+            id as string,
+            page,
+            ITEMS_PER_PAGE
+          );
+        } catch (error: unknown) {
+          const axiosError = error as { code?: string };
+          if (axiosError?.code === 'ECONNABORTED' && retryCount < 3) {
+            // Wait 2 seconds before retrying
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            return fetchRegistrations(retryCount + 1);
           }
-        );
-
-        setUsers(attendeeUsers);
-
-        // Show success message if this was a manual refresh (not the initial load)
-        if (!loading) {
-          toast({
-            title: 'Success',
-            description: `Loaded ${attendeeUsers.length} registered members for this event`,
-          });
+          throw error;
         }
-      } catch (error) {
-        console.error('Error fetching event registrations:', error);
+      };
+
+      const registrationsData = await fetchRegistrations();
+
+      // Update pagination info
+      setTotalPages(registrationsData.totalPages || 1);
+
+      // Transform registration data to match our component's expected format
+      const populatedRegistrations =
+        registrationsData.data as unknown as PopulatedRegistration[];
+
+      const attendeeUsers: AttendanceUser[] = populatedRegistrations.map(
+        (registration) => {
+          const user = registration.userId;
+          return {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phoneNumber,
+            pharmacy: user.pharmacy
+              ? {
+                  name: user.pharmacy.name || 'N/A',
+                  registrationNumber: user.pharmacy.registrationNumber || 'N/A',
+                }
+              : undefined,
+            registration: {
+              ...registration,
+              userId: user._id, // Convert back to string ID for the registration object
+            },
+            attendance: registration.attendance
+              ? {
+                  _id: registration._id, // Using registration ID as attendance ID
+                  userId: user._id,
+                  eventId: id as string, // Force as string since we know it's valid
+                  attendedAt: registration.attendance.checkedInAt,
+                  markedBy: '',
+                  notes: registration.attendance.notes || '',
+                }
+              : undefined,
+          };
+        }
+      );
+
+      // Update users based on page
+      if (page === 1) {
+        setUsers(attendeeUsers);
+      } else {
+        setUsers((prev) => [...prev, ...attendeeUsers]);
+      }
+
+      // Show success message for manual refresh
+      if (showToast) {
+        toast({
+          title: 'Success',
+          description: `Loaded ${attendeeUsers.length} registered members for this event`,
+        });
+      }
+
+      setHasInitialLoad(true);
+      return true;
+    } catch (error: unknown) {
+      console.error('Error fetching event registrations:', error);
+      if (page === 1) {
+        // Only show error for initial load
         setUsers([]);
+
+        const axiosError = error as { code?: string };
         toast({
           title: 'Warning',
           description:
-            'Failed to load registrations. The event may not have any registrations yet.',
+            axiosError?.code === 'ECONNABORTED'
+              ? 'The server took too long to respond. Try loading fewer records at a time.'
+              : 'Failed to load registrations. The event may not have any registrations yet.',
           variant: 'warning',
         });
       }
-    } catch (error: any) {
+      return false;
+    }
+  };
+
+  const loadEventAndAttendees = useCallback(async () => {
+    try {
+      setLoading(true);
+      const eventLoaded = await loadEventDetails();
+      if (eventLoaded) {
+        await loadRegistrations(1);
+      }
+    } catch (error: unknown) {
       console.error('Failed to load event and attendees:', error);
+      const errorMsg =
+        error instanceof Error ? error.message : 'Failed to load event details';
       toast({
         title: 'Error',
-        description: error?.message || 'Failed to load event details',
+        description: errorMsg,
         variant: 'destructive',
       });
-
-      // Navigate back to events list if we can't load this event
-      if (error?.code === 'ECONNABORTED') {
-        toast({
-          title: 'Connection Timeout',
-          description:
-            'The server took too long to respond. Please try again later.',
-          variant: 'destructive',
-        });
-      }
 
       navigate('/admin/events');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [id, toast, loading, navigate]);
+  }, [navigate, toast, loadEventDetails, loadRegistrations]);
 
   useEffect(() => {
     if (id) {
@@ -269,7 +337,7 @@ const AdminAttendanceMarking: React.FC = () => {
       setShowMarkDialog(false);
       setSelectedUser(null);
       setAttendanceNotes('');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to mark attendance:', error);
       toast({
         title: 'Error',
@@ -281,21 +349,25 @@ const AdminAttendanceMarking: React.FC = () => {
     }
   };
 
+  const handleLoadMore = async () => {
+    if (loadingMore || currentPage >= totalPages) return;
+
+    const nextPage = currentPage + 1;
+    const success = await loadRegistrations(nextPage);
+    if (success) {
+      setCurrentPage(nextPage);
+    }
+  };
+
+  const handleRefresh = async () => {
+    await loadRegistrations(1, true);
+  };
+
   const openMarkDialog = (user: AttendanceUser) => {
     setSelectedUser(user);
     setAttendanceNotes('');
     setShowMarkDialog(true);
   };
-
-  const filteredUsers = users.filter((user) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.firstName.toLowerCase().includes(searchLower) ||
-      user.lastName.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower) ||
-      user.pharmacy?.name.toLowerCase().includes(searchLower)
-    );
-  });
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-NG', {
@@ -329,10 +401,25 @@ const AdminAttendanceMarking: React.FC = () => {
     return now >= startTime;
   };
 
+  const filteredUsers = users.filter((user) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.firstName.toLowerCase().includes(searchLower) ||
+      user.lastName.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      (user.pharmacy?.name &&
+        user.pharmacy.name.toLowerCase().includes(searchLower))
+    );
+  });
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">Loading event data and registrations...</p>
+        <p className="text-sm text-gray-500 mt-2">
+          This may take a moment for events with many registrations
+        </p>
       </div>
     );
   }
@@ -371,8 +458,8 @@ const AdminAttendanceMarking: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadEventAndAttendees}
-            disabled={loading}
+            onClick={handleRefresh}
+            disabled={loading || loadingMore}
           >
             {loading ? 'Refreshing...' : 'Refresh Data'}
           </Button>
@@ -559,6 +646,29 @@ const AdminAttendanceMarking: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
+
+              {/* Load More Button */}
+              {users.length > 0 && currentPage < totalPages && (
+                <div className="mt-6 text-center">
+                  <Button
+                    variant="outline"
+                    onClick={handleLoadMore}
+                    disabled={loadingMore}
+                    className="mx-auto"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <ClockIcon className="w-4 h-4 mr-2 animate-spin" />
+                        Loading more...
+                      </>
+                    ) : (
+                      `Load More (${users.length}/${
+                        totalPages * ITEMS_PER_PAGE
+                      })`
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

@@ -369,9 +369,16 @@ const AdminEventsList: React.FC = () => {
                               Edit Event
                             </DropdownItem>
                             <DropdownItem
-                              onClick={() =>
-                                navigate(`/admin/events/${event._id}/attendees`)
-                              }
+                              onClick={() => {
+                                // Navigate to event detail with attendees tab active
+                                navigate(`/admin/events/${event._id}`);
+                                // We'll use an approach to activate the attendees tab via URL param
+                                // For now we'll add this to localStorage and handle in the detail component
+                                localStorage.setItem(
+                                  'activeEventTab',
+                                  'attendees'
+                                );
+                              }}
                             >
                               <UsersIcon className="w-4 h-4 mr-2" />
                               Manage Attendees
