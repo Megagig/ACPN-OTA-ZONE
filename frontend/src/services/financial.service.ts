@@ -556,6 +556,11 @@ export const getPendingPayments = async (): Promise<Payment[]> => {
   return response.data.data;
 };
 
+export const getPaymentById = async (paymentId: string): Promise<Payment> => {
+  const response = await api.get(`${BASE_URL}/payments/${paymentId}`);
+  return response.data.data;
+};
+
 export const approvePayment = async (
   paymentId: string,
   data?: { notes?: string }
@@ -916,6 +921,7 @@ const financialService = {
 
   // Payments
   submitPayment,
+  getPaymentById,
   getPaymentsByDue,
   getPendingPayments,
   approvePayment,

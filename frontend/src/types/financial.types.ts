@@ -176,21 +176,59 @@ export interface FinancialReport {
 
 export interface Payment {
   _id: string;
-  dueId: string | object;
-  pharmacyId: string;
+  dueId:
+    | string
+    | {
+        _id: string;
+        title: string;
+        description?: string;
+        amount: number;
+        totalAmount: number;
+        dueDate: string;
+        dueTypeId?: {
+          _id: string;
+          name: string;
+          description?: string;
+        };
+      };
+  pharmacyId:
+    | string
+    | {
+        _id: string;
+        name: string;
+        registrationNumber?: string;
+      };
   amount: number;
-  paymentDate: string;
-  status: 'pending' | 'approved' | 'rejected';
-  // Backend may use approvalStatus instead of status
-  approvalStatus?: 'pending' | 'approved' | 'rejected';
-  receiptUrl?: string;
   paymentMethod?: string;
   paymentReference?: string;
-  submittedBy: string;
-  reviewedBy?: string;
+  receiptUrl?: string;
+  receiptPublicId?: string;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  approvedBy?:
+    | string
+    | {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+      };
+  approvedAt?: string;
   rejectionReason?: string;
+  submittedBy:
+    | string
+    | {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+      };
+  submittedAt: string;
   createdAt: string;
   updatedAt: string;
+  // Legacy compatibility
+  paymentDate?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  reviewedBy?: string;
   dueInfo?: {
     _id: string;
     title: string;

@@ -13,6 +13,7 @@ import {
 import { UserRole } from '../models/user.model';
 import {
   submitPayment,
+  getPaymentById,
   getDuePayments,
   getAllPayments,
   approvePayment,
@@ -148,6 +149,15 @@ router.get(
   cacheMiddleware('payments-pending', { ttl: 60 }), // Cache for 1 minute (important to stay fresh)
   getPendingPayments
 );
+
+// Single payment route
+router.get(
+  '/:id',
+  authenticateToken,
+  cacheMiddleware('payment-single', { ttl: 120 }), // Cache for 2 minutes
+  getPaymentById
+);
+
 router.post(
   '/:id/approve',
   authenticateToken,

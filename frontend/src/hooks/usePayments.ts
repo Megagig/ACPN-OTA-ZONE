@@ -126,3 +126,19 @@ export const usePharmacyPaymentHistory = (pharmacyId: string) => {
     refetchOnWindowFocus: false,
   });
 };
+
+// Custom hook for fetching a single payment by ID
+export const usePayment = (paymentId?: string) => {
+  return useQuery({
+    queryKey: ['payment', paymentId],
+    queryFn: () => {
+      if (!paymentId) {
+        throw new Error('Payment ID is required');
+      }
+      return financialService.getPaymentById(paymentId);
+    },
+    enabled: !!paymentId,
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false,
+  });
+};

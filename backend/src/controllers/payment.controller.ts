@@ -571,3 +571,51 @@ export const deletePayment = asyncHandler(
     });
   }
 );
+
+// @desc    Get single payment by ID
+// @route   GET /api/payments/:id
+// @access  Private
+export const getPaymentById = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const payment = await Payment.findById(req.params.id)
+      .populate({
+        path: 'dueId',
+        select: 'title amount totalAmount dueDate description',
+        populate: {
+          path: 'dueTypeId',
+          select: 'name description',
+        },
+      })
+      .populate('pharmacyId', 'name registrationNumber')
+      .populate('submittedBy', 'firstName lastName email')
+      .populate('approvedBy', 'firstName lastName email');
+
+    if (!payment) {
+      return next(
+        new ErrorResponse(`Payment not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    // Check authorization - user can only view their own payments or admins can view all
+    const pharmacy = await Pharmacy.findById(payment.pharmacyId);
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.role !== 'treasurer' &&
+      req.user.role !== 'financial_secretary' &&
+      pharmacy?.userId.toString() !== req.user._id.toString()
+    ) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to view this payment`,
+          403
+        )
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      data: payment,
+    });
+  }
+);
