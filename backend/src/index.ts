@@ -5,6 +5,7 @@ import connectDB from './config/db';
 import fileUpload from 'express-fileupload'; // Import express-fileupload
 import path from 'path';
 import ensureAssets from './utils/ensureAssets';
+import './config/redis'; // Import Redis configuration
 
 // Load environment variables
 dotenv.config();
@@ -76,6 +77,7 @@ import permissionRoutes from './routes/permission.routes';
 import roleRoutes from './routes/role.routes';
 import userManagementRoutes from './routes/userManagement.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import cacheRoutes from './routes/cache.routes';
 
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
@@ -110,6 +112,7 @@ app.use('/api/permissions', permissionRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/user-management', userManagementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/cache', cacheRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';

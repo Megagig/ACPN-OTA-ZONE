@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const permission_controller_1 = require("../controllers/permission.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
+const cache_middleware_1 = require("../middleware/cache.middleware");
 const user_model_1 = require("../models/user.model");
 const router = express_1.default.Router();
 // Apply protection to all routes
@@ -13,14 +14,15 @@ router.use(auth_middleware_1.protect);
 // Routes that require SuperAdmin access
 router
     .route('/')
-    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), permission_controller_1.getPermissions)
-    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), permission_controller_1.createPermission);
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), (0, cache_middleware_1.cacheMiddleware)('permissions', { ttl: 600 }), // Cache for 10 minutes
+permission_controller_1.getPermissions)
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), (0, cache_middleware_1.clearCacheMiddleware)('permissions'), permission_controller_1.createPermission);
 router
     .route('/:id')
-    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), permission_controller_1.getPermissionById)
-    .put((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), permission_controller_1.updatePermission)
-    .delete((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), permission_controller_1.deletePermission);
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), (0, cache_middleware_1.cacheMiddleware)('permissions', { ttl: 600 }), permission_controller_1.getPermissionById)
+    .put((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), (0, cache_middleware_1.clearCacheMiddleware)('permissions'), permission_controller_1.updatePermission)
+    .delete((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), (0, cache_middleware_1.clearCacheMiddleware)('permissions'), permission_controller_1.deletePermission);
 router
     .route('/initialize/default')
-    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), permission_controller_1.initializePermissions);
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.SUPERADMIN), (0, cache_middleware_1.clearCacheMiddleware)('permissions'), permission_controller_1.initializePermissions);
 exports.default = router;

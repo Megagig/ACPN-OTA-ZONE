@@ -10,6 +10,7 @@ const db_1 = __importDefault(require("./config/db"));
 const express_fileupload_1 = __importDefault(require("express-fileupload")); // Import express-fileupload
 const path_1 = __importDefault(require("path"));
 const ensureAssets_1 = __importDefault(require("./utils/ensureAssets"));
+require("./config/redis"); // Import Redis configuration
 // Load environment variables
 dotenv_1.default.config();
 // Connect to MongoDB
@@ -69,6 +70,7 @@ const permission_routes_1 = __importDefault(require("./routes/permission.routes"
 const role_routes_1 = __importDefault(require("./routes/role.routes"));
 const userManagement_routes_1 = __importDefault(require("./routes/userManagement.routes"));
 const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"));
+const cache_routes_1 = __importDefault(require("./routes/cache.routes"));
 app.get('/', (req, res) => {
     res.send('ACPN OTA Zone API is running...');
 });
@@ -100,6 +102,7 @@ app.use('/api/permissions', permission_routes_1.default);
 app.use('/api/roles', role_routes_1.default);
 app.use('/api/user-management', userManagement_routes_1.default);
 app.use('/api/dashboard', dashboard_routes_1.default);
+app.use('/api/cache', cache_routes_1.default);
 // Error Handling Middlewares
 const error_middleware_1 = require("./middleware/error.middleware");
 // Global unhandled promise rejection handler

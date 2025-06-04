@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
+exports.cancelEvent = exports.publishEvent = exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.getEventAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
 const event_model_1 = __importStar(require("../models/event.model"));
 const eventRegistration_model_1 = __importStar(require("../models/eventRegistration.model"));
 const eventAttendance_model_1 = __importDefault(require("../models/eventAttendance.model"));
@@ -347,6 +347,49 @@ exports.cancelRegistration = (0, async_middleware_1.default)((req, res, next) =>
     res.status(200).json({
         success: true,
         data: {},
+    });
+}));
+// @desc    Get event attendance
+// @route   GET /api/events/:id/attendance
+// @access  Private (Admin, Superadmin, Secretary)
+exports.getEventAttendance = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const eventId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    // Check if event exists
+    const event = yield event_model_1.default.findById(eventId);
+    if (!event) {
+        return next(new errorResponse_1.default(`Event not found with id of ${eventId}`, 404));
+    }
+    // Build query for attendance records
+    const query = { eventId };
+    // Filter by attendance status if provided
+    if (req.query.attended !== undefined) {
+        query.attended = req.query.attended === 'true';
+    }
+    // Get total count for pagination
+    const total = yield eventAttendance_model_1.default.countDocuments(query);
+    // Get attendance records with pagination
+    const attendanceRecords = yield eventAttendance_model_1.default.find(query)
+        .populate('userId', 'firstName lastName email phoneNumber profileImage')
+        .populate('markedBy', 'firstName lastName email')
+        .sort({ markedAt: -1 })
+        .skip(startIndex)
+        .limit(limit);
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+    res.status(200).json({
+        success: true,
+        count: attendanceRecords.length,
+        total,
+        page,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        data: attendanceRecords,
     });
 }));
 // @desc    Mark attendance for event
@@ -818,10 +861,6 @@ function sendEventNotifications(eventId) {
         }
     });
 }
-try { }
-catch (error) {
-    console.error('Error calculating meeting penalties:', error);
-}
 // Meeting Penalty Configuration Controllers
 // @desc    Get penalty configuration for a year
 // @route   GET /api/events/penalty-config/:year
@@ -902,10 +941,11 @@ function sendAttendanceWarnings(year) {
                     eventId: { $in: meetings.map((m) => m._id) },
                     userId: user._id,
                 });
-                const attendedMeetings = attendanceRecords.filter(record => record.attended).length;
+                const attendedMeetings = attendanceRecords.filter((record) => record.attended).length;
                 const attendancePercentage = totalMeetings > 0 ? attendedMeetings / totalMeetings : 0;
                 // Send warning if attendance is below 50% and there are still meetings left in the year
-                if (attendancePercentage < attendanceThreshold && remainingMeetings.length > 0) {
+                if (attendancePercentage < attendanceThreshold &&
+                    remainingMeetings.length > 0) {
                     const missedMeetings = totalMeetings - attendedMeetings;
                     try {
                         yield email_service_1.default.sendEmail({
@@ -970,7 +1010,7 @@ function calculateMeetingPenalties(year) {
                     eventId: { $in: meetings.map((m) => m._id) },
                     userId: user._id,
                 });
-                const attendedMeetings = attendanceRecords.filter(record => record.attended).length;
+                const attendedMeetings = attendanceRecords.filter((record) => record.attended).length;
                 const attendancePercentage = totalMeetings > 0 ? attendedMeetings / totalMeetings : 0;
                 // Only apply penalty if attendance is below 50%
                 if (attendancePercentage < attendanceThreshold) {
@@ -1052,5 +1092,47 @@ exports.sendAttendanceWarningsForYear = (0, async_middleware_1.default)((req, re
     res.status(200).json({
         success: true,
         message: `Attendance warnings for ${year} have been sent successfully.`,
+    });
+}));
+// @desc    Publish an event (change status from draft to published)
+// @route   PATCH /api/events/:id/publish
+// @access  Private (Admin, Superadmin, Secretary)
+exports.publishEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const event = yield event_model_1.default.findById(req.params.id);
+    if (!event) {
+        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
+    }
+    console.log(`Attempting to publish event ${req.params.id} with current status: ${event.status}`);
+    // Allow publishing from draft or completed states
+    // Only don't allow re-publishing already published events
+    if (event.status === event_model_1.EventStatus.PUBLISHED) {
+        return next(new errorResponse_1.default(`This event is already published. Current status: ${event.status}`, 400));
+    }
+    // Update event status to published
+    event.status = event_model_1.EventStatus.PUBLISHED;
+    yield event.save();
+    res.status(200).json({
+        success: true,
+        data: event,
+    });
+}));
+// @desc    Cancel an event (change status to cancelled)
+// @route   PATCH /api/events/:id/cancel
+// @access  Private (Admin, Superadmin, Secretary)
+exports.cancelEvent = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const event = yield event_model_1.default.findById(req.params.id);
+    if (!event) {
+        return next(new errorResponse_1.default(`Event not found with id of ${req.params.id}`, 404));
+    }
+    // Only published or draft events can be cancelled
+    if (![event_model_1.EventStatus.PUBLISHED, event_model_1.EventStatus.DRAFT].includes(event.status)) {
+        return next(new errorResponse_1.default(`Only published or draft events can be cancelled. Current status: ${event.status}`, 400));
+    }
+    // Update event status to cancelled
+    event.status = event_model_1.EventStatus.CANCELLED;
+    yield event.save();
+    res.status(200).json({
+        success: true,
+        data: event,
     });
 }));

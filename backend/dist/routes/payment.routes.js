@@ -8,6 +8,7 @@ const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
+const cache_middleware_1 = require("../middleware/cache.middleware");
 const user_model_1 = require("../models/user.model");
 const payment_controller_1 = require("../controllers/payment.controller");
 const router = express_1.default.Router();
@@ -93,12 +94,15 @@ const handleUploadErrors = (req, res, next) => {
 };
 router.post('/submit', auth_middleware_1.protect, handleUploadErrors, payment_controller_1.submitPayment);
 // Payment viewing routes
-router.get('/due/:dueId', auth_middleware_1.protect, payment_controller_1.getDuePayments);
+router.get('/due/:dueId', auth_middleware_1.protect, (0, cache_middleware_1.cacheMiddleware)('payments-due', { ttl: 120 }), // Cache for 2 minutes
+payment_controller_1.getDuePayments);
 // Admin routes for payment management
-router.get('/admin/all', auth_middleware_1.protect, requireAdminRole, payment_controller_1.getAllPayments);
-router.get('/admin/pending', auth_middleware_1.protect, requireAdminRole, payment_controller_1.getPendingPayments);
-router.post('/:id/approve', auth_middleware_1.protect, requireAdminRole, payment_controller_1.approvePayment);
-router.post('/:id/reject', auth_middleware_1.protect, requireAdminRole, payment_controller_1.rejectPayment);
-router.post('/:id/review', auth_middleware_1.protect, requireAdminRole, payment_controller_1.reviewPayment);
-router.delete('/:id', auth_middleware_1.protect, requireAdminRole, payment_controller_1.deletePayment);
+router.get('/admin/all', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.cacheMiddleware)('payments-admin', { ttl: 180 }), // Cache for 3 minutes
+payment_controller_1.getAllPayments);
+router.get('/admin/pending', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.cacheMiddleware)('payments-pending', { ttl: 60 }), // Cache for 1 minute (important to stay fresh)
+payment_controller_1.getPendingPayments);
+router.post('/:id/approve', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.approvePayment);
+router.post('/:id/reject', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.rejectPayment);
+router.post('/:id/review', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.reviewPayment);
+router.delete('/:id', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.deletePayment);
 exports.default = router;

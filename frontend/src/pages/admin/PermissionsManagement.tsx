@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { type Permission } from '../../hooks/usePermissions';
 import userManagementService from '../../services/userManagement.service';
-import type { Permission } from '../../services/userManagement.service';
 
 // UI Components
 import {

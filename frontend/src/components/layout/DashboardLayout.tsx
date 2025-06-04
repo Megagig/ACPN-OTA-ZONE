@@ -183,6 +183,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                     <i className="fas fa-palette mr-3 text-muted-foreground"></i>
                     Component Preview
                   </Link>
+                  <Link
+                    to="/admin/cache-monitoring"
+                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      location.pathname === '/admin/cache-monitoring'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+                    }`}
+                  >
+                    <i className="fas fa-memory mr-3 text-muted-foreground"></i>
+                    Cache Monitoring
+                  </Link>
                 </nav>
               </div>
             )}

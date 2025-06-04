@@ -59,6 +59,10 @@ export interface Due {
   description: string;
   amount: number;
   dueDate: string;
+  paymentStatus: 'pending' | 'paid' | 'overdue' | 'partially_paid';
+  amountPaid?: number;
+  balance?: number;
+  totalAmount?: number;
   lateAmount?: number;
   frequency: 'one-time' | 'monthly' | 'quarterly' | 'annually';
   status: 'active' | 'inactive';

@@ -6,6 +6,10 @@ import {
   protect as authenticateToken,
   authorize as requireRole,
 } from '../middleware/auth.middleware';
+import {
+  cacheMiddleware,
+  clearCacheMiddleware,
+} from '../middleware/cache.middleware';
 import { UserRole } from '../models/user.model';
 import {
   submitPayment,
@@ -122,24 +126,55 @@ const handleUploadErrors = (
 router.post('/submit', authenticateToken, handleUploadErrors, submitPayment);
 
 // Payment viewing routes
-router.get('/due/:dueId', authenticateToken, getDuePayments);
+router.get(
+  '/due/:dueId',
+  authenticateToken,
+  cacheMiddleware('payments-due', { ttl: 120 }), // Cache for 2 minutes
+  getDuePayments
+);
 
 // Admin routes for payment management
-router.get('/admin/all', authenticateToken, requireAdminRole, getAllPayments);
+router.get(
+  '/admin/all',
+  authenticateToken,
+  requireAdminRole,
+  cacheMiddleware('payments-admin', { ttl: 180 }), // Cache for 3 minutes
+  getAllPayments
+);
 router.get(
   '/admin/pending',
   authenticateToken,
   requireAdminRole,
+  cacheMiddleware('payments-pending', { ttl: 60 }), // Cache for 1 minute (important to stay fresh)
   getPendingPayments
 );
 router.post(
   '/:id/approve',
   authenticateToken,
   requireAdminRole,
+  clearCacheMiddleware('payments'),
   approvePayment
 );
-router.post('/:id/reject', authenticateToken, requireAdminRole, rejectPayment);
-router.post('/:id/review', authenticateToken, requireAdminRole, reviewPayment);
-router.delete('/:id', authenticateToken, requireAdminRole, deletePayment);
+router.post(
+  '/:id/reject',
+  authenticateToken,
+  requireAdminRole,
+  clearCacheMiddleware('payments'),
+  rejectPayment
+);
+router.post(
+  '/:id/review',
+  authenticateToken,
+  requireAdminRole,
+  clearCacheMiddleware('payments'),
+  reviewPayment
+);
+router.delete(
+  '/:id',
+  authenticateToken,
+  requireAdminRole,
+  clearCacheMiddleware('payments'),
+  deletePayment
+);
 
 export default router;

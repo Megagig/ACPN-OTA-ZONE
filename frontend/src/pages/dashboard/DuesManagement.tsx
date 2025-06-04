@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
-import api from '../../services/api';
 import type { Due, DuePayment } from '../../types/financial.types';
 
 const DuesManagement = () => {
@@ -65,24 +64,6 @@ const DuesManagement = () => {
   const totalPages = Math.ceil(
     (activeTab === 'dues' ? dues.length : payments.length) / itemsPerPage
   );
-
-  const handleDueStatusChange = async (
-    dueId: string,
-    newStatus: 'pending' | 'paid' | 'overdue' | 'partially_paid'
-  ) => {
-    try {
-      await financialService.updateDue(dueId, { paymentStatus: newStatus });
-      setDues(
-        dues.map((due) =>
-          due._id === dueId ? { ...due, paymentStatus: newStatus } : due
-        )
-      );
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error updating due status:', error);
-      setError(`Failed to update due status: ${message}`);
-    }
-  };
 
   const handleDeleteDue = async (dueId: string) => {
     if (!window.confirm('Are you sure you want to delete this due?')) {
@@ -364,7 +345,9 @@ const DuesManagement = () => {
                           {formatCurrency(payment.amount)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                          {formatDate(payment.paymentDate || payment.createdAt)}
+                          {formatDate(
+                            payment.paymentDate || payment.createdAt || ''
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span

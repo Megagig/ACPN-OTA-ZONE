@@ -7,6 +7,7 @@ import {
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/shadcn/toast';
+import { QueryProvider } from './lib/react-query';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -32,6 +33,7 @@ import UserDetail from './pages/admin/UserDetail';
 import UserEdit from './pages/admin/UserEdit';
 import RolesManagement from './pages/admin/RolesManagement';
 import PermissionsManagement from './pages/admin/PermissionsManagement';
+import CacheMonitoring from './pages/admin/CacheMonitoring';
 
 // Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
@@ -46,14 +48,16 @@ import FinancialManagement from './pages/dashboard/FinancialManagement';
 import AdminPaymentReview from './pages/dashboard/AdminPaymentReview';
 import DueAssignment from './pages/dashboard/DueAssignment';
 import PenaltyManagement from './pages/dashboard/PenaltyManagement';
-import DueTypesManagement from './pages/dashboard/DueTypesManagement';
+import DueTypesManagementReactQuery from './pages/dashboard/DueTypesManagement-react-query';
 import BulkDueAssignment from './pages/dashboard/BulkDueAssignment';
-import PaymentHistory from './pages/dashboard/PaymentHistory';
+import PaymentHistoryReactQuery from './pages/dashboard/PaymentHistory-react-query';
 import FinancialAnalytics from './pages/dashboard/FinancialAnalytics';
 import ClearanceCertificateGeneration from './pages/dashboard/ClearanceCertificateGeneration';
 import PaymentReports from './pages/dashboard/PaymentReports';
 import CollectionReports from './pages/dashboard/CollectionReports';
 import OutstandingDues from './pages/dashboard/OutstandingDues';
+// Import the React Query version of DuesManagement
+import DueManagementReactQuery from './pages/dashboard/DueManagement-react-query';
 
 // Event Management Pages (Old - keeping for backward compatibility)
 import EventDashboard from './pages/dashboard/EventDashboard';
@@ -125,402 +129,449 @@ function App() {
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <Router>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/landing" element={<LandingPage />} />
+          <QueryProvider>
+            <Router>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/landing" element={<LandingPage />} />
 
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route
-                path="/reset-password/:token"
-                element={<ResetPassword />}
-              />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify-email/:token" element={<VerifyEmail />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
+                {/* Auth Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route
+                  path="/reset-password/:token"
+                  element={<ResetPassword />}
+                />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/verify-email/:token" element={<VerifyEmail />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
 
-              {/* Redirect root to landing */}
-              <Route path="/" element={<Navigate to="/landing" replace />} />
+                {/* Redirect root to landing */}
+                <Route path="/" element={<Navigate to="/landing" replace />} />
 
-              {/* Protected Dashboard Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<DashboardLayout />}>
-                  <Route path="/dashboard" element={<DashboardHome />} />
-                  <Route path="/profile" element={<Profile />} />
+                {/* Protected Dashboard Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<DashboardLayout />}>
+                    <Route path="/dashboard" element={<DashboardHome />} />
+                    <Route path="/profile" element={<Profile />} />
 
-                  {/* Admin Routes - Add more protected routes as needed */}
-                  <Route
-                    element={
-                      <ProtectedRoute allowedRoles={['admin', 'superadmin']} />
-                    }
-                  >
+                    {/* Admin Routes - Add more protected routes as needed */}
                     <Route
-                      path="/admin/dashboard"
-                      element={<AdminDashboard />}
-                    />
-                    <Route path="/users" element={<UsersManagement />} />
-                    <Route path="/admin/users" element={<UsersManagement />} />
-                    <Route path="/admin/users/:id" element={<UserDetail />} />
-                    <Route
-                      path="/admin/users/:id/edit"
-                      element={<UserEdit />}
-                    />
-                    <Route path="/admin/roles" element={<RolesManagement />} />
-                    <Route
-                      path="/admin/permissions"
-                      element={<PermissionsManagement />}
-                    />
-                    <Route
-                      path="/pharmacies"
-                      element={<PharmaciesManagement />}
-                    />
-                    <Route
-                      path="/admin/pharmacies"
-                      element={<PharmaciesManagement />}
-                    />
-                    <Route
-                      path="/admin/pharmacies/:id"
-                      element={<PharmacyDetail />}
-                    />
-                  </Route>
-
-                  {/* Treasurer Routes */}
-                  <Route
-                    element={
-                      <ProtectedRoute
-                        allowedRoles={[
-                          'admin',
-                          'superadmin',
-                          'treasurer',
-                          'financial_secretary',
-                        ]}
-                      />
-                    }
-                  >
-                    <Route path="/finances" element={<FinancialDashboard />} />
-                    <Route
-                      path="/dashboard/financial-management"
-                      element={<FinancialManagement />}
-                    />
-                    <Route
-                      path="/dashboard/assign-dues"
-                      element={<DueAssignment />}
-                    />
-                    <Route path="/finances/dues" element={<DuesManagement />} />
-                    <Route path="/finances/dues/new" element={<DueForm />} />
-                    <Route
-                      path="/dashboard/manage-penalties"
-                      element={<PenaltyManagement />}
-                    />
-                    <Route
-                      path="/dashboard/due-types"
-                      element={<DueTypesManagement />}
-                    />
-                    <Route
-                      path="/dashboard/bulk-assign-dues"
-                      element={<BulkDueAssignment />}
-                    />
-                    <Route
-                      path="/dashboard/payment-history"
-                      element={<PaymentHistory />}
-                    />
-                    <Route
-                      path="/dashboard/financial-analytics"
-                      element={<FinancialAnalytics />}
-                    />
-                    <Route
-                      path="/dashboard/generate-certificates"
-                      element={<ClearanceCertificateGeneration />}
-                    />
-                    <Route
-                      path="/dashboard/payment-reports"
-                      element={<PaymentReports />}
-                    />
-                    <Route
-                      path="/dashboard/collection-reports"
-                      element={<CollectionReports />}
-                    />
-                    <Route
-                      path="/dashboard/outstanding-dues"
-                      element={<OutstandingDues />}
-                    />
-                    <Route
-                      path="/dashboard/admin-payment-review"
-                      element={<AdminPaymentReview />}
-                    />
-                    <Route
-                      path="/finances/transactions"
-                      element={<TransactionList />}
-                    />
-                    <Route
-                      path="/finances/transactions/new"
-                      element={<TransactionForm />}
-                    />
-                    <Route
-                      path="/finances/transactions/:id"
-                      element={<TransactionDetail />}
-                    />
-                    <Route
-                      path="/finances/transactions/:id/edit"
-                      element={<TransactionForm />}
-                    />
-                    <Route path="/finances/dues" element={<DuesManagement />} />
-                    <Route path="/finances/dues/new" element={<DueForm />} />
-                    <Route
-                      path="/finances/donations"
-                      element={<DonationsManagement />}
-                    />
-                    <Route
-                      path="/finances/donations/new"
-                      element={<DonationFormComponent />}
-                    />
-                    <Route
-                      path="/finances/donations/:id"
-                      element={<DonationFormComponent />}
-                    />
-                    <Route
-                      path="/finances/donations/:id/edit"
-                      element={<DonationFormComponent />}
-                    />
-                    <Route
-                      path="/finances/reports"
-                      element={<FinancialReports />}
-                    />
-                    <Route
-                      path="/donations"
-                      element={<div>Donations Management (Coming Soon)</div>}
-                    />
-                    <Route
-                      path="/finances/bulk-due-assignment"
-                      element={<BulkDueAssignment />}
-                    />
-                    <Route
-                      path="/finances/payment-history"
-                      element={<PaymentHistory />}
-                    />
-                    <Route
-                      path="/finances/financial-analytics"
-                      element={<FinancialAnalytics />}
-                    />
-                    <Route
-                      path="/finances/generate-clearance-certificate"
-                      element={<ClearanceCertificateGeneration />}
-                    />
-                    <Route
-                      path="/finances/payment-reports"
-                      element={<PaymentReports />}
-                    />
-                    <Route
-                      path="/finances/collection-reports"
-                      element={<CollectionReports />}
-                    />
-                    <Route
-                      path="/finances/outstanding-dues"
-                      element={<OutstandingDues />}
-                    />
-                  </Route>
-
-                  {/* Secretary/Admin Routes */}
-                  <Route
-                    element={
-                      <ProtectedRoute
-                        allowedRoles={['admin', 'superadmin', 'secretary']}
-                      />
-                    }
-                  >
-                    {/* New Event Management System */}
-                    <Route path="/admin/events" element={<AdminEventsList />} />
-                    <Route
-                      path="/admin/events/create"
-                      element={<AdminEventForm />}
-                    />
-                    <Route
-                      path="/admin/events/:id"
-                      element={<AdminEventDetail />}
-                    />
-                    <Route
-                      path="/admin/events/:id/edit"
-                      element={<AdminEventForm />}
-                    />
-                    <Route
-                      path="/admin/events/:id/attendance"
-                      element={<AdminAttendanceMarking />}
-                    />
-
-                    {/* Attendance Management Routes */}
-                    <Route
-                      path="/dashboard/attendance-management"
-                      element={<AttendanceManagement />}
-                    />
-
-                    {/* Legacy event routes (keeping for backward compatibility) */}
-                    <Route path="/events" element={<EventList />} />
-                    <Route
-                      path="/events/dashboard"
-                      element={<EventDashboard />}
-                    />
-                    <Route
-                      path="/events/calendar"
-                      element={<EventCalendar />}
-                    />
-                    <Route path="/events/create" element={<EventForm />} />
-                    <Route path="/events/report" element={<EventReports />} />
-                    <Route path="/events/:id" element={<EventDetail />} />
-                    <Route path="/events/:id/edit" element={<EventForm />} />
-                    <Route
-                      path="/events/:id/register"
-                      element={<AttendeeManagement />}
-                    />
-                    <Route
-                      path="/events/:id/check-in"
-                      element={<EventCheckIn />}
-                    />
-                    <Route
-                      path="/events/:id/attendees/:attendeeId"
-                      element={<AttendeeManagement />}
-                    />
-                    <Route
-                      path="/communications/dashboard"
-                      element={<CommunicationsDashboard />}
-                    />
-                    <Route
-                      path="/communications"
                       element={
-                        <Navigate to="/communications/dashboard" replace />
+                        <ProtectedRoute
+                          allowedRoles={['admin', 'superadmin']}
+                        />
                       }
+                    >
+                      <Route
+                        path="/admin/dashboard"
+                        element={<AdminDashboard />}
+                      />
+                      <Route path="/users" element={<UsersManagement />} />
+                      <Route
+                        path="/admin/users"
+                        element={<UsersManagement />}
+                      />
+                      <Route path="/admin/users/:id" element={<UserDetail />} />
+                      <Route
+                        path="/admin/users/:id/edit"
+                        element={<UserEdit />}
+                      />
+                      <Route
+                        path="/admin/roles"
+                        element={<RolesManagement />}
+                      />
+                      <Route
+                        path="/admin/permissions"
+                        element={<PermissionsManagement />}
+                      />
+                      <Route
+                        path="/pharmacies"
+                        element={<PharmaciesManagement />}
+                      />
+                      <Route
+                        path="/admin/pharmacies"
+                        element={<PharmaciesManagement />}
+                      />
+                      <Route
+                        path="/admin/pharmacies/:id"
+                        element={<PharmacyDetail />}
+                      />
+                      <Route
+                        path="/admin/cache-monitoring"
+                        element={<CacheMonitoring />}
+                      />
+                    </Route>
+
+                    {/* Treasurer Routes */}
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          allowedRoles={[
+                            'admin',
+                            'superadmin',
+                            'treasurer',
+                            'financial_secretary',
+                          ]}
+                        />
+                      }
+                    >
+                      <Route
+                        path="/finances"
+                        element={<FinancialDashboard />}
+                      />
+                      <Route
+                        path="/dashboard/financial-management"
+                        element={<FinancialManagement />}
+                      />
+                      <Route
+                        path="/dashboard/assign-dues"
+                        element={<DueAssignment />}
+                      />
+                      <Route
+                        path="/finances/dues"
+                        element={<DuesManagement />}
+                      />
+                      <Route path="/finances/dues/new" element={<DueForm />} />
+                      <Route
+                        path="/dashboard/manage-penalties"
+                        element={<PenaltyManagement />}
+                      />
+                      <Route
+                        path="/dashboard/due-types"
+                        element={<DueTypesManagementReactQuery />}
+                      />
+                      <Route
+                        path="/dashboard/bulk-assign-dues"
+                        element={<BulkDueAssignment />}
+                      />
+                      <Route
+                        path="/dashboard/payment-history"
+                        element={<PaymentHistoryReactQuery />}
+                      />
+                      <Route
+                        path="/dashboard/financial-analytics"
+                        element={<FinancialAnalytics />}
+                      />
+                      <Route
+                        path="/dashboard/generate-certificates"
+                        element={<ClearanceCertificateGeneration />}
+                      />
+                      <Route
+                        path="/dashboard/payment-reports"
+                        element={<PaymentReports />}
+                      />
+                      <Route
+                        path="/dashboard/collection-reports"
+                        element={<CollectionReports />}
+                      />
+                      <Route
+                        path="/dashboard/outstanding-dues"
+                        element={<OutstandingDues />}
+                      />
+                      <Route
+                        path="/dashboard/admin-payment-review"
+                        element={<AdminPaymentReview />}
+                      />
+                      <Route
+                        path="/finances/transactions"
+                        element={<TransactionList />}
+                      />
+                      <Route
+                        path="/finances/transactions/new"
+                        element={<TransactionForm />}
+                      />
+                      <Route
+                        path="/finances/transactions/:id"
+                        element={<TransactionDetail />}
+                      />
+                      <Route
+                        path="/finances/transactions/:id/edit"
+                        element={<TransactionForm />}
+                      />
+                      <Route
+                        path="/finances/dues"
+                        element={<DueManagementReactQuery />}
+                      />
+                      <Route path="/finances/dues/new" element={<DueForm />} />
+                      <Route
+                        path="/finances/donations"
+                        element={<DonationsManagement />}
+                      />
+                      <Route
+                        path="/finances/donations/new"
+                        element={<DonationFormComponent />}
+                      />
+                      <Route
+                        path="/finances/donations/:id"
+                        element={<DonationFormComponent />}
+                      />
+                      <Route
+                        path="/finances/donations/:id/edit"
+                        element={<DonationFormComponent />}
+                      />
+                      <Route
+                        path="/finances/reports"
+                        element={<FinancialReports />}
+                      />
+                      <Route
+                        path="/donations"
+                        element={<div>Donations Management (Coming Soon)</div>}
+                      />
+                      <Route
+                        path="/finances/bulk-due-assignment"
+                        element={<BulkDueAssignment />}
+                      />
+                      <Route
+                        path="/finances/payment-history"
+                        element={<PaymentHistoryReactQuery />}
+                      />
+                      <Route
+                        path="/finances/financial-analytics"
+                        element={<FinancialAnalytics />}
+                      />
+                      <Route
+                        path="/finances/generate-clearance-certificate"
+                        element={<ClearanceCertificateGeneration />}
+                      />
+                      <Route
+                        path="/finances/payment-reports"
+                        element={<PaymentReports />}
+                      />
+                      <Route
+                        path="/finances/collection-reports"
+                        element={<CollectionReports />}
+                      />
+                      <Route
+                        path="/finances/outstanding-dues"
+                        element={<OutstandingDues />}
+                      />
+                    </Route>
+
+                    {/* Secretary/Admin Routes */}
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          allowedRoles={['admin', 'superadmin', 'secretary']}
+                        />
+                      }
+                    >
+                      {/* New Event Management System */}
+                      <Route
+                        path="/admin/events"
+                        element={<AdminEventsList />}
+                      />
+                      <Route
+                        path="/admin/events/create"
+                        element={<AdminEventForm />}
+                      />
+                      <Route
+                        path="/admin/events/:id"
+                        element={<AdminEventDetail />}
+                      />
+                      <Route
+                        path="/admin/events/:id/edit"
+                        element={<AdminEventForm />}
+                      />
+                      <Route
+                        path="/admin/events/:id/attendance"
+                        element={<AdminAttendanceMarking />}
+                      />
+
+                      {/* Attendance Management Routes */}
+                      <Route
+                        path="/dashboard/attendance-management"
+                        element={<AttendanceManagement />}
+                      />
+
+                      {/* Legacy event routes (keeping for backward compatibility) */}
+                      <Route path="/events" element={<EventList />} />
+                      <Route
+                        path="/events/dashboard"
+                        element={<EventDashboard />}
+                      />
+                      <Route
+                        path="/events/calendar"
+                        element={<EventCalendar />}
+                      />
+                      <Route path="/events/create" element={<EventForm />} />
+                      <Route path="/events/report" element={<EventReports />} />
+                      <Route path="/events/:id" element={<EventDetail />} />
+                      <Route path="/events/:id/edit" element={<EventForm />} />
+                      <Route
+                        path="/events/:id/register"
+                        element={<AttendeeManagement />}
+                      />
+                      <Route
+                        path="/events/:id/check-in"
+                        element={<EventCheckIn />}
+                      />
+                      <Route
+                        path="/events/:id/attendees/:attendeeId"
+                        element={<AttendeeManagement />}
+                      />
+                      <Route
+                        path="/communications/dashboard"
+                        element={<CommunicationsDashboard />}
+                      />
+                      <Route
+                        path="/communications"
+                        element={
+                          <Navigate to="/communications/dashboard" replace />
+                        }
+                      />
+                      <Route
+                        path="/communications/list"
+                        element={<CommunicationsList />}
+                      />
+                      <Route
+                        path="/communications/compose"
+                        element={<CommunicationForm />}
+                      />
+                      <Route
+                        path="/communications/:id"
+                        element={<CommunicationDetail />}
+                      />
+                      <Route
+                        path="/communications/:id/edit"
+                        element={<CommunicationForm />}
+                      />
+                      <Route
+                        path="/communications/messages"
+                        element={<MessagingInterface />}
+                      />
+                      <Route
+                        path="/documents/dashboard"
+                        element={<DocumentDashboard />}
+                      />
+                      <Route
+                        path="/documents"
+                        element={<Navigate to="/documents/dashboard" replace />}
+                      />
+                      <Route
+                        path="/documents/list"
+                        element={<DocumentsList />}
+                      />
+                      <Route
+                        path="/documents/upload"
+                        element={<DocumentForm />}
+                      />
+                      <Route
+                        path="/documents/:id"
+                        element={<DocumentDetail />}
+                      />
+                      <Route
+                        path="/documents/:id/upload-version"
+                        element={<VersionUploadForm />}
+                      />
+                    </Route>
+
+                    {/* Member Routes */}
+                    <Route path="/my-pharmacy" element={<PharmacyProfile />} />
+                    <Route
+                      path="/my-pharmacy/create"
+                      element={<PharmacyForm />}
                     />
                     <Route
-                      path="/communications/list"
-                      element={<CommunicationsList />}
+                      path="/my-pharmacy/edit"
+                      element={<PharmacyForm />}
+                    />
+                    <Route path="/payments" element={<PharmacyDues />} />
+                    <Route path="/my-documents" element={<DocumentsList />} />
+
+                    {/* Member Attendance Route */}
+                    <Route
+                      path="/dashboard/attendance-status"
+                      element={<MemberAttendanceStatus />}
+                    />
+
+                    {/* Member Event Routes */}
+                    <Route
+                      path="/member/events"
+                      element={<MemberEventsList />}
                     />
                     <Route
-                      path="/communications/compose"
-                      element={<CommunicationForm />}
+                      path="/member/events/:id"
+                      element={<MemberEventDetails />}
                     />
                     <Route
-                      path="/communications/:id"
-                      element={<CommunicationDetail />}
+                      path="/member/events/:id/register"
+                      element={<MemberEventRegistration />}
+                    />
+
+                    <Route
+                      path="/messages"
+                      element={<div>Messages (Coming Soon)</div>}
                     />
                     <Route
-                      path="/communications/:id/edit"
-                      element={<CommunicationForm />}
+                      path="/elections/dashboard"
+                      element={<ElectionDashboard />}
                     />
                     <Route
-                      path="/communications/messages"
-                      element={<MessagingInterface />}
+                      path="/elections"
+                      element={<Navigate to="/elections/dashboard" replace />}
+                    />
+                    <Route path="/elections/list" element={<ElectionsList />} />
+                    <Route
+                      path="/elections/create"
+                      element={<ElectionForm />}
+                    />
+                    <Route path="/elections/:id" element={<ElectionDetail />} />
+                    <Route
+                      path="/elections/:id/edit"
+                      element={<ElectionForm />}
                     />
                     <Route
-                      path="/documents/dashboard"
-                      element={<DocumentDashboard />}
+                      path="/elections/:id/vote"
+                      element={<VotingInterface />}
                     />
                     <Route
-                      path="/documents"
-                      element={<Navigate to="/documents/dashboard" replace />}
+                      path="/elections/:id/results"
+                      element={<ElectionResults />}
                     />
-                    <Route path="/documents/list" element={<DocumentsList />} />
                     <Route
-                      path="/documents/upload"
-                      element={<DocumentForm />}
+                      path="/elections/:electionId/positions/:positionId/candidates/add"
+                      element={<CandidateForm />}
                     />
-                    <Route path="/documents/:id" element={<DocumentDetail />} />
                     <Route
-                      path="/documents/:id/upload-version"
-                      element={<VersionUploadForm />}
+                      path="/elections/:electionId/positions/:positionId/candidates/:candidateId/edit"
+                      element={<CandidateForm />}
                     />
+
+                    <Route
+                      path="/polls/dashboard"
+                      element={<PollDashboard />}
+                    />
+                    <Route
+                      path="/polls"
+                      element={<Navigate to="/polls/dashboard" replace />}
+                    />
+                    <Route path="/polls/list" element={<PollsList />} />
+                    <Route path="/polls/create" element={<PollForm />} />
+                    <Route path="/polls/:id" element={<PollDetail />} />
+                    <Route path="/polls/:id/edit" element={<PollForm />} />
+                    <Route
+                      path="/polls/:id/respond"
+                      element={<PollResponse />}
+                    />
+
+                    {/* Component Preview */}
+                    <Route
+                      path="/component-preview"
+                      element={<ComponentPreview />}
+                    />
+
+                    {/* API Connection Test */}
+                    {/* <Route path="/test-api" element={<TestApiConnection />} /> */}
                   </Route>
-
-                  {/* Member Routes */}
-                  <Route path="/my-pharmacy" element={<PharmacyProfile />} />
-                  <Route
-                    path="/my-pharmacy/create"
-                    element={<PharmacyForm />}
-                  />
-                  <Route path="/my-pharmacy/edit" element={<PharmacyForm />} />
-                  <Route path="/payments" element={<PharmacyDues />} />
-                  <Route path="/my-documents" element={<DocumentsList />} />
-
-                  {/* Member Attendance Route */}
-                  <Route
-                    path="/dashboard/attendance-status"
-                    element={<MemberAttendanceStatus />}
-                  />
-
-                  {/* Member Event Routes */}
-                  <Route path="/member/events" element={<MemberEventsList />} />
-                  <Route
-                    path="/member/events/:id"
-                    element={<MemberEventDetails />}
-                  />
-                  <Route
-                    path="/member/events/:id/register"
-                    element={<MemberEventRegistration />}
-                  />
-
-                  <Route
-                    path="/messages"
-                    element={<div>Messages (Coming Soon)</div>}
-                  />
-                  <Route
-                    path="/elections/dashboard"
-                    element={<ElectionDashboard />}
-                  />
-                  <Route
-                    path="/elections"
-                    element={<Navigate to="/elections/dashboard" replace />}
-                  />
-                  <Route path="/elections/list" element={<ElectionsList />} />
-                  <Route path="/elections/create" element={<ElectionForm />} />
-                  <Route path="/elections/:id" element={<ElectionDetail />} />
-                  <Route
-                    path="/elections/:id/edit"
-                    element={<ElectionForm />}
-                  />
-                  <Route
-                    path="/elections/:id/vote"
-                    element={<VotingInterface />}
-                  />
-                  <Route
-                    path="/elections/:id/results"
-                    element={<ElectionResults />}
-                  />
-                  <Route
-                    path="/elections/:electionId/positions/:positionId/candidates/add"
-                    element={<CandidateForm />}
-                  />
-                  <Route
-                    path="/elections/:electionId/positions/:positionId/candidates/:candidateId/edit"
-                    element={<CandidateForm />}
-                  />
-
-                  <Route path="/polls/dashboard" element={<PollDashboard />} />
-                  <Route
-                    path="/polls"
-                    element={<Navigate to="/polls/dashboard" replace />}
-                  />
-                  <Route path="/polls/list" element={<PollsList />} />
-                  <Route path="/polls/create" element={<PollForm />} />
-                  <Route path="/polls/:id" element={<PollDetail />} />
-                  <Route path="/polls/:id/edit" element={<PollForm />} />
-                  <Route path="/polls/:id/respond" element={<PollResponse />} />
-
-                  {/* Component Preview */}
-                  <Route
-                    path="/component-preview"
-                    element={<ComponentPreview />}
-                  />
-
-                  {/* API Connection Test */}
-                  {/* <Route path="/test-api" element={<TestApiConnection />} /> */}
                 </Route>
-              </Route>
 
-              {/* 404 Route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
+                {/* 404 Route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
+          </QueryProvider>
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>

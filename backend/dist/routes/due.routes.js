@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const due_controller_1 = require("../controllers/due.controller");
 const fixPaymentStatus_controller_1 = require("../controllers/fixPaymentStatus.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
+const cache_middleware_1 = require("../middleware/cache.middleware");
 const user_model_1 = require("../models/user.model");
 const router = express_1.default.Router({ mergeParams: true });
 // Protect all routes
@@ -20,24 +21,30 @@ router
     // If pharmacyId is present in params (from mergeParams), use getPharmacyDues
     // Otherwise, use getAllDues with admin authorization
     if (req.params.pharmacyId) {
-        (0, due_controller_1.getPharmacyDues)(req, res, next);
+        // Apply cache middleware for pharmacy dues
+        (0, cache_middleware_1.cacheMiddleware)('dues-pharmacy', { ttl: 120 })(req, res, () => {
+            (0, due_controller_1.getPharmacyDues)(req, res, next);
+        });
     }
     else {
         // Check admin authorization for getAllDues
         adminAuthorize(req, res, () => {
-            (0, due_controller_1.getAllDues)(req, res, next);
+            // Apply cache middleware for all dues
+            (0, cache_middleware_1.cacheMiddleware)('dues-all', { ttl: 300 })(req, res, () => {
+                (0, due_controller_1.getAllDues)(req, res, next);
+            });
         });
     }
 })
-    .post(adminAuthorize, due_controller_1.createDue);
+    .post(adminAuthorize, (0, cache_middleware_1.clearCacheMiddleware)('dues'), due_controller_1.createDue);
 // Bulk operations
-router.post('/bulk-assign', adminAuthorize, due_controller_1.bulkAssignDues);
-router.post('/assign/:pharmacyId', adminAuthorize, due_controller_1.assignDueToPharmacy);
+router.post('/bulk-assign', adminAuthorize, (0, cache_middleware_1.clearCacheMiddleware)('dues'), due_controller_1.bulkAssignDues);
+router.post('/assign/:pharmacyId', adminAuthorize, (0, cache_middleware_1.clearCacheMiddleware)('dues'), due_controller_1.assignDueToPharmacy);
 // Analytics routes
-router.get('/analytics/all', adminAuthorize, due_controller_1.getDueAnalytics);
-router.get('/analytics/pharmacy/:pharmacyId', due_controller_1.getPharmacyDueAnalytics);
+router.get('/analytics/all', adminAuthorize, (0, cache_middleware_1.cacheMiddleware)('dues-analytics', { ttl: 600 }), due_controller_1.getDueAnalytics);
+router.get('/analytics/pharmacy/:pharmacyId', (0, cache_middleware_1.cacheMiddleware)('dues-analytics-pharmacy', { ttl: 300 }), due_controller_1.getPharmacyDueAnalytics);
 // Filtered views
-router.get('/type/:typeId', adminAuthorize, due_controller_1.getDuesByType);
+router.get('/type/:typeId', adminAuthorize, (0, cache_middleware_1.cacheMiddleware)('dues-by-type', { ttl: 300 }), due_controller_1.getDuesByType);
 router.get('/overdue', adminAuthorize, due_controller_1.getOverdueDues);
 router.get('/pharmacy/:pharmacyId/history', due_controller_1.getPharmacyPaymentHistory);
 // Individual due routes

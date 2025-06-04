@@ -24,6 +24,10 @@ import {
   cancelEvent,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
+import {
+  cacheMiddleware,
+  clearCacheMiddleware,
+} from '../middleware/cache.middleware';
 import { UserRole } from '../models/user.model';
 
 const router = express.Router();
@@ -32,17 +36,30 @@ const router = express.Router();
 router.use(protect);
 
 // Public routes (available to all logged-in users)
-router.route('/').get(getAllEvents);
-router.route('/my-events').get(getMyEvents);
-router.route('/my-penalties').get(getUserPenalties);
-router.route('/my-registrations').get(getUserRegistrations);
+router.route('/').get(cacheMiddleware('events', { ttl: 120 }), getAllEvents);
+router
+  .route('/my-events')
+  .get(cacheMiddleware('events-user', { ttl: 60 }), getMyEvents);
+router
+  .route('/my-penalties')
+  .get(cacheMiddleware('penalties-user', { ttl: 300 }), getUserPenalties);
+router
+  .route('/my-registrations')
+  .get(
+    cacheMiddleware('registrations-user', { ttl: 60 }),
+    getUserRegistrations
+  );
 
 // Stats route (must come before /:id to avoid conflict)
 router
   .route('/stats')
-  .get(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), getEventStats);
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN),
+    cacheMiddleware('events-stats', { ttl: 300 }),
+    getEventStats
+  );
 
-router.route('/:id').get(getEvent);
+router.route('/:id').get(cacheMiddleware('events', { ttl: 180 }), getEvent);
 
 // Event registration routes
 router.route('/:id/register').post(registerForEvent);
@@ -64,6 +81,7 @@ router
   .route('/')
   .post(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    clearCacheMiddleware('events'),
     createEvent
   );
 
@@ -71,10 +89,12 @@ router
   .route('/:id')
   .put(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    clearCacheMiddleware('events'),
     updateEvent
   )
   .delete(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    clearCacheMiddleware('events'),
     deleteEvent
   );
 
