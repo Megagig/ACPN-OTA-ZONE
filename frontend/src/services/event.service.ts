@@ -95,25 +95,22 @@ export class EventService {
       // Import the retry utility here to avoid circular dependencies
       const { getWithRetry } = await import('../utils/apiRetryUtils');
 
-      // Use the retry utility with a shorter timeout for this request
+      // Use a larger limit but still paginated to improve loading
       return getWithRetry<PaginatedResponse<EventRegistration>>(
         `/events/${eventId}/registrations?page=${page}&limit=${limit}`,
-        { timeout: 10000 } // 10 second timeout
+        { timeout: 20000 } // Increase timeout to 20 seconds
       );
     } catch (error) {
-      // Ensure we're not returning malformed data if the request fails
       console.error('Failed to get event registrations:', error);
 
-      // Return empty data with pagination info
+      // Return empty data with pagination info to prevent UI errors
       return {
-        success: false,
-        count: 0,
         data: [],
         total: 0,
         page: page,
         totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
+        hasNext: false,
+        hasPrev: false
       };
     }
   }

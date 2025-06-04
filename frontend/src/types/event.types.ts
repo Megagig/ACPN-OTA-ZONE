@@ -193,6 +193,8 @@ export interface AttendanceMarkingData {
   pharmacyId?: string;
   pharmacyName?: string;
   pharmacyRegNumber?: string;
+  // Flag to indicate attendance status
+  attended?: boolean;
 }
 
 export interface PaginatedResponse<T> {

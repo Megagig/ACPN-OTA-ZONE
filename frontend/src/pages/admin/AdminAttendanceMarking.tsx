@@ -96,6 +96,11 @@ const AdminAttendanceMarking: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Define loading state type
+  const [loadingStage, setLoadingStage] = useState<
+    'event' | 'registrations' | 'pharmacies' | 'complete'
+  >('event');
+
   const [event, setEvent] = useState<Event | null>(null);
   const [users, setUsers] = useState<AttendanceUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,6 +120,7 @@ const AdminAttendanceMarking: React.FC = () => {
 
   const loadEventDetails = async () => {
     try {
+      setLoadingStage('event');
       // Check if ID is valid first
       if (!id || id === 'new') {
         navigate('/admin/events');
@@ -166,13 +172,23 @@ const AdminAttendanceMarking: React.FC = () => {
       } else {
         setLoadingMore(true);
       }
-
       console.log(`Loading registrations for event: ${id}, page: ${page}`);
 
-      // First, load all pharmacies regardless of registration status
-      const pharmacies = await loadAllPharmacies();
+      // First, try to load pharmacies but continue even if it fails
+      let pharmacies: Pharmacy[] = [];
+      try {
+        setLoadingStage('pharmacies');
+        pharmacies = await loadAllPharmacies();
+      } catch (error) {
+        console.error(
+          'Failed to load pharmacies, continuing with registrations only:',
+          error
+        );
+        // We'll continue with just event registrations
+      }
 
       // Then load event registrations with attendance data with retry mechanism
+      setLoadingStage('registrations');
       const fetchRegistrations = async (
         retryCount = 0
       ): Promise<PaginatedResponse<EventRegistration>> => {
@@ -329,21 +345,37 @@ const AdminAttendanceMarking: React.FC = () => {
         setLoadingMore(false);
       }
     }
-  };
-
-  // Load all pharmacies from the system
+  }; // Load all pharmacies from the system
   const loadAllPharmacies = async () => {
     try {
       console.log('Loading all pharmacies from the system');
-      const pharmacies = await financialService.getAllPharmacies();
+
+      // Show loading indicator specifically for pharmacies
+      setLoading(true);
+
+      // Load pharmacies with a smaller batch size
+      const pharmacies = await financialService.getAllPharmacies(50);
+
       console.log(`Fetched ${pharmacies.length} pharmacies`);
+
+      // If no pharmacies are fetched, show a friendly message rather than failing
+      if (!pharmacies.length) {
+        toast({
+          title: 'Information',
+          description:
+            'No pharmacies could be loaded. Using only registered members.',
+          variant: 'default',
+        });
+      }
+
       return pharmacies;
     } catch (error) {
       console.error('Error fetching all pharmacies:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load pharmacies',
-        variant: 'destructive',
+        title: 'Warning',
+        description:
+          'Failed to load all pharmacies. Only event registrations will be shown.',
+        variant: 'warning',
       });
       return [];
     }
@@ -379,31 +411,56 @@ const AdminAttendanceMarking: React.FC = () => {
       // No registration or attendance data
     };
   };
-
   const loadEventAndAttendees = useCallback(async () => {
     try {
       console.log(`Starting loadEventAndAttendees for event ID: ${id}`);
       setLoading(true);
 
-      // First load the event details
-      const eventLoaded = await loadEventDetails();
-      console.log(`Event details loaded: ${eventLoaded}`);
+      let eventLoaded = false;
+
+      try {
+        // First load the event details
+        setLoadingStage('event');
+        eventLoaded = await loadEventDetails();
+        console.log(`Event details loaded: ${eventLoaded}`);
+      } catch (error) {
+        console.error('Failed to load event details:', error);
+        toast({
+          title: 'Warning',
+          description:
+            'Could not load event details. Please check your connection and try again.',
+          variant: 'warning',
+        });
+        return;
+      }
 
       if (eventLoaded) {
         // Then attempt to load registrations
-        console.log('Loading registrations...');
-        const registrationsLoaded = await loadRegistrations(1);
-        console.log(`Registrations loaded: ${registrationsLoaded}`);
+        try {
+          setLoadingStage('registrations');
+          console.log('Loading registrations...');
+          const registrationsLoaded = await loadRegistrations(1);
+          console.log(`Registrations loaded: ${registrationsLoaded}`);
 
-        // If we failed to load registrations but event loaded successfully
-        // We should still show the UI rather than infinite loading
-        if (!registrationsLoaded) {
+          // If we failed to load registrations but event loaded successfully
+          if (!registrationsLoaded) {
+            toast({
+              title: 'Warning',
+              description:
+                'Failed to load all registrations. Some data may be incomplete.',
+              variant: 'warning',
+            });
+          }
+        } catch (error) {
+          console.error('Failed to load registrations:', error);
           toast({
             title: 'Warning',
             description:
-              'Failed to load registrations. The list may be empty or there might be a server issue.',
+              'Failed to load registrations. Please try refreshing later.',
             variant: 'warning',
           });
+        } finally {
+          setLoadingStage('complete');
         }
       }
     } catch (error: unknown) {
@@ -428,7 +485,7 @@ const AdminAttendanceMarking: React.FC = () => {
     if (id) {
       loadEventAndAttendees();
 
-      // Set up a timeout to force exit the loading state after 15 seconds
+      // Set up a timeout to force exit the loading state after 10 seconds (reduced from 15)
       // This prevents the UI from being stuck in loading state indefinitely
       const loadingTimeout = setTimeout(() => {
         if (loading) {
@@ -441,11 +498,11 @@ const AdminAttendanceMarking: React.FC = () => {
           toast({
             title: 'Loading timeout',
             description:
-              'The loading process took too long. Please try refreshing the data.',
+              'The loading process took too long. Showing partial data. Try refreshing for complete information.',
             variant: 'warning',
           });
         }
-      }, 15000);
+      }, 10000); // Reduced to 10 seconds
 
       return () => clearTimeout(loadingTimeout);
     }
@@ -481,9 +538,13 @@ const AdminAttendanceMarking: React.FC = () => {
       console.log('Sending attendance data:', attendanceWithPresence);
 
       // Try to mark attendance
-      const response = await EventService.markAttendance(id, [
-        attendanceWithPresence,
-      ]);
+      // Import the retry utility to use for this API call
+      const { postWithRetry } = await import('../../utils/apiRetryUtils');
+      const response = await postWithRetry(
+        `/events/${id}/attendance`,
+        { attendees: [attendanceWithPresence] },
+        { timeout: 15000 }
+      );
       console.log('Attendance marking response:', response);
 
       // Update local state
@@ -599,13 +660,60 @@ const AdminAttendanceMarking: React.FC = () => {
   });
 
   if (loading) {
+    // Calculate progress based on loading stage
+    let progress = 0;
+    let stageDescription = '';
+
+    switch (loadingStage) {
+      case 'event':
+        progress = 25;
+        stageDescription = 'Loading event details from the server...';
+        break;
+      case 'registrations':
+        progress = 50;
+        stageDescription = 'Fetching attendance registrations...';
+        break;
+      case 'pharmacies':
+        progress = 75;
+        stageDescription =
+          'Loading pharmacy data in smaller batches to prevent timeouts...';
+        break;
+      case 'complete':
+        progress = 95;
+        stageDescription = 'Processing data and preparing display...';
+        break;
+    }
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-600">Loading event data and registrations...</p>
-        <p className="text-sm text-gray-500 mt-2">
-          This may take a moment for events with many registrations
-        </p>
+        <div className="w-full max-w-md flex flex-col items-center">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            <p className="text-xl font-medium text-gray-700">
+              {loadingStage === 'event' && 'Loading event data...'}
+              {loadingStage === 'registrations' &&
+                'Loading event registrations...'}
+              {loadingStage === 'pharmacies' && 'Loading pharmacy data...'}
+              {loadingStage === 'complete' && 'Finalizing...'}
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+
+          <p className="text-sm text-gray-600 mb-2">{stageDescription}</p>
+
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            {loadingStage === 'pharmacies'
+              ? 'This may take a moment as we optimize data loading to prevent timeouts. The system will display partial data if the full dataset cannot be loaded.'
+              : "Please wait while we load the attendance data. If loading takes too long, you'll be able to see partial data."}
+          </p>
+        </div>
       </div>
     );
   }

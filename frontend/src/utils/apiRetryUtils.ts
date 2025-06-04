@@ -67,7 +67,7 @@ export async function getWithRetry<T>(
 ): Promise<T> {
   // Add a default timeout if none was specified
   const configWithDefaults = {
-    timeout: 30000, // 30 seconds default timeout
+    timeout: 15000, // Reduce default timeout to 15 seconds
     ...config,
   };
 
@@ -78,6 +78,21 @@ export async function getWithRetry<T>(
     return response.data;
   } catch (error) {
     console.error(`Failed getWithRetry for ${url}:`, error);
+
+    // For timeout errors, return a more user-friendly response
+    if (axios.isCancel(error) || error.code === 'ECONNABORTED') {
+      // Return a minimal structure to avoid breaking the UI
+      return {
+        success: false,
+        message: 'Request timed out. The server took too long to respond.',
+        data: [],
+        count: 0,
+        total: 0,
+        totalPages: 0,
+        currentPage: 1,
+      } as any;
+    }
+
     throw error;
   }
 }

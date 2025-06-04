@@ -651,20 +651,92 @@ export const recordCertificateGeneration = async (
   }
 };
 
-export const getAllPharmacies = async (): Promise<Pharmacy[]> => {
+export const getAllPharmacies = async (limit = 100): Promise<Pharmacy[]> => {
   try {
-    const response = await api.get(`${BASE_URL}/pharmacies`, {
+    // Try to get from cache first
+    const { getPharmaciesFromCache, cachePharmacies } = await import(
+      '../utils/dataCache'
+    );
+    const cachedPharmacies = getPharmaciesFromCache();
+
+    if (cachedPharmacies && cachedPharmacies.length > 0) {
+      console.log(`Retrieved ${cachedPharmacies.length} pharmacies from cache`);
+      return cachedPharmacies;
+    }
+
+    // If not in cache, fetch from API with progressive loading
+    console.log('Fetching pharmacies from API in batches...');
+
+    // Fetch first page to get total count
+    const firstPageResponse = await api.get(`${BASE_URL}/pharmacies`, {
       params: {
         registrationStatus: 'active',
-        limit: 1000, // Fetch a large number of pharmacies, assuming no more than 1000 active
+        limit: limit,
+        page: 1,
       },
+      timeout: 10000, // Reduced timeout for faster feedback
     });
-    // The backend returns pharmacies under response.data.data.pharmacies
-    return response.data.data.pharmacies;
+
+    const firstPageData = firstPageResponse.data.data;
+    let pharmacies = firstPageData.pharmacies || [];
+    const totalPharmacies = firstPageData.total || 0;
+    const totalPages = Math.ceil(totalPharmacies / limit);
+
+    console.log(
+      `Found ${totalPharmacies} total pharmacies, will fetch in ${totalPages} pages with limit ${limit}`
+    );
+
+    // Only try to load more pages if we have a reasonable number
+    // This prevents timeouts with too many requests
+    const MAX_PAGES_TO_LOAD = 3; // Limit to prevent excessive requests
+    const pagesToLoad = Math.min(totalPages, MAX_PAGES_TO_LOAD);
+
+    if (pagesToLoad > 1) {
+      // Load pages 2 to pagesToLoad in parallel with individual error handling
+      const pagePromises = [];
+
+      for (let page = 2; page <= pagesToLoad; page++) {
+        const pagePromise = api
+          .get(`${BASE_URL}/pharmacies`, {
+            params: {
+              registrationStatus: 'active',
+              limit: limit,
+              page: page,
+            },
+            timeout: 8000, // Even shorter timeout for subsequent pages
+          })
+          .then((response) => response.data.data.pharmacies || [])
+          .catch((error) => {
+            console.warn(`Failed to load page ${page} of pharmacies:`, error);
+            return []; // Return empty array for failed pages
+          });
+
+        pagePromises.push(pagePromise);
+      }
+
+      // Wait for all pages (or timeouts)
+      const additionalPharmaciesArrays = await Promise.all(pagePromises);
+
+      // Combine all pharmacy arrays
+      for (const pagePharmacies of additionalPharmaciesArrays) {
+        pharmacies = [...pharmacies, ...pagePharmacies];
+      }
+    }
+
+    console.log(
+      `Successfully loaded ${pharmacies.length} pharmacies out of ${totalPharmacies} total`
+    );
+
+    // Save to cache for future use
+    if (pharmacies.length > 0) {
+      cachePharmacies(pharmacies);
+    }
+
+    return pharmacies;
   } catch (error) {
     console.error('Error fetching pharmacies:', error);
-    // It's good practice to throw the error so the calling component can handle it
-    throw error;
+    // Return an empty array instead of throwing to prevent UI crashes
+    return [];
   }
 };
 
