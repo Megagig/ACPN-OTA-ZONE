@@ -12274,3 +12274,20 @@
 2025-06-09T17:09:24.346Z [info]: Redis client ready and accepting commands
 2025-06-09T17:09:24.549Z [info]: Redis client connected
 2025-06-09T17:09:24.554Z [info]: Redis client ready and accepting commands
+2025-06-09T17:19:51.349Z [debug]: Cache MISS (0ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T17:19:51.659Z [debug]: Cache SET with TTL=60s (2ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T17:19:51.830Z [debug]: Cache HIT (0ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T17:19:54.774Z [debug]: Cache MISS (0ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T17:19:55.143Z [debug]: Cache SET with TTL=300s (3ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T17:19:55.410Z [debug]: Cache HIT (1ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T17:24:10.042Z [debug]: Cache MISS (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T17:24:10.346Z [debug]: Cache SET with TTL=60s (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T17:24:10.512Z [debug]: Cache HIT (0ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T17:24:13.579Z [debug]: Cache HIT (0ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T17:24:14.168Z [debug]: Cache HIT (0ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T17:24:45.941Z [debug]: Cache MISS (2ms): events:{"limit":"20","page":"1"}
+2025-06-09T17:24:45.943Z [debug]: Cache MISS (2ms): events-stats
+2025-06-09T17:24:46.793Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"20","page":"1"}
+2025-06-09T17:24:46.887Z [debug]: Cache SET with TTL=300s (1ms): events-stats
+2025-06-09T17:24:46.957Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-09T17:24:47.054Z [debug]: Cache HIT (1ms): events-stats
