@@ -184,56 +184,61 @@ const UserManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
             User Management
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Manage users, roles, and permissions
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleExportUsers}
-            className="flex items-center space-x-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors"
+            className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors text-sm"
           >
             <Download className="h-4 w-4" />
             <span>Export</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+          <button className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm">
             <UserPlus className="h-4 w-4" />
-            <span>Add User</span>
+            <span className="hidden sm:inline">Add User</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-card rounded-lg shadow-md p-4 border border-border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-card rounded-lg shadow-md p-3 sm:p-4 border border-border">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-300" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold text-foreground">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  Total Users
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground">
                   {stats.totalUsers}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-card rounded-lg shadow-md p-4 border border-border">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                <UserCheck className="h-5 w-5 text-green-600 dark:text-green-300" />
+          <div className="bg-card rounded-lg shadow-md p-3 sm:p-4 border border-border">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="p-1.5 sm:p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-300" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active Users</p>
-                <p className="text-2xl font-bold text-foreground">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  Active Users
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground">
                   {stats.activeUsers}
                 </p>
               </div>
@@ -269,8 +274,8 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-card rounded-lg shadow-md p-4 border border-border">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-card rounded-lg shadow-md p-3 sm:p-4 border border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <input
@@ -280,7 +285,7 @@ const UserManagement: React.FC = () => {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, search: e.target.value }))
               }
-              className="pl-10 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+              className="pl-10 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
             />
           </div>
           <select
@@ -288,7 +293,7 @@ const UserManagement: React.FC = () => {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, role: e.target.value }))
             }
-            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
           >
             <option value="all">All Roles</option>
             <option value="admin">Admin</option>
@@ -302,7 +307,7 @@ const UserManagement: React.FC = () => {
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, status: e.target.value }))
             }
-            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -311,10 +316,10 @@ const UserManagement: React.FC = () => {
             <option value="inactive">Inactive</option>
           </select>
           {selectedUsers.length > 0 && (
-            <div className="flex space-x-2">
+            <div className="flex">
               <button
                 onClick={() => setShowBulkActions(!showBulkActions)}
-                className="flex items-center space-x-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                className="flex items-center justify-center space-x-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 w-full text-sm"
               >
                 <span>{selectedUsers.length} selected</span>
                 <Filter className="h-4 w-4" />
@@ -327,7 +332,7 @@ const UserManagement: React.FC = () => {
         {showBulkActions && selectedUsers.length > 0 && (
           <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
             <p className="text-sm font-medium mb-2">Bulk Actions:</p>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleBulkAction('approve')}
                 className="px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 text-sm"
@@ -351,8 +356,158 @@ const UserManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Users Table */}
-      <div className="bg-card rounded-lg shadow-md border border-border overflow-hidden">
+      {/* Mobile Cards View */}
+      <div className="block lg:hidden space-y-4">
+        {isLoading ? (
+          [...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-card border border-border rounded-lg p-4 shadow-sm animate-pulse"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </div>
+                <div className="h-6 bg-muted rounded w-16"></div>
+              </div>
+              <div className="space-y-2 mb-4">
+                <div className="h-3 bg-muted rounded w-full"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </div>
+              <div className="flex space-x-2">
+                <div className="h-8 bg-muted rounded flex-1"></div>
+                <div className="h-8 bg-muted rounded w-16"></div>
+              </div>
+            </div>
+          ))
+        ) : users.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No users found matching your criteria
+          </div>
+        ) : (
+          users.map((user) => (
+            <div
+              key={user._id}
+              className="bg-card border border-border rounded-lg p-4 shadow-sm"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center space-x-3 flex-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user._id)}
+                    onChange={() => toggleUserSelection(user._id)}
+                    className="rounded border-border"
+                  />
+                  <div>
+                    <h4 className="font-medium text-foreground">
+                      {user.firstName} {user.lastName}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end space-y-1">
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(
+                      user.role
+                    )}`}
+                  >
+                    {user.role}
+                  </span>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                      user.status
+                    )}`}
+                  >
+                    {user.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                {user.pharmacy ? (
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {user.pharmacy.name}
+                    </p>
+                    <p className="text-xs">
+                      {user.pharmacy.registrationNumber}
+                    </p>
+                  </div>
+                ) : (
+                  <p>No pharmacy</p>
+                )}
+                <p>
+                  <span className="font-medium">Last Login:</span>{' '}
+                  {user.lastLogin
+                    ? new Date(user.lastLogin).toLocaleDateString()
+                    : 'Never'}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => console.log('View user:', user._id)}
+                    className="p-1 text-muted-foreground hover:text-foreground"
+                    title="View User"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => console.log('Edit user:', user._id)}
+                    className="p-1 text-muted-foreground hover:text-foreground"
+                    title="Edit User"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  {user.status === 'pending' && (
+                    <button
+                      onClick={() => handleUserAction(user._id, 'approve')}
+                      className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+                      title="Approve User"
+                    >
+                      Approve
+                    </button>
+                  )}
+                  {user.status === 'active' && (
+                    <button
+                      onClick={() => handleUserAction(user._id, 'suspend')}
+                      className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+                      title="Suspend User"
+                    >
+                      Suspend
+                    </button>
+                  )}
+                  {user.status === 'suspended' && (
+                    <button
+                      onClick={() => handleUserAction(user._id, 'activate')}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+                      title="Activate User"
+                    >
+                      Activate
+                    </button>
+                  )}
+                  <button
+                    onClick={() => console.log('More actions for:', user._id)}
+                    className="p-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-card rounded-lg shadow-md border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted">
@@ -555,34 +710,34 @@ const UserManagement: React.FC = () => {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-border flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </p>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="p-3 sm:p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+          <p className="text-sm text-muted-foreground order-2 sm:order-1">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex space-x-2 order-1 sm:order-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

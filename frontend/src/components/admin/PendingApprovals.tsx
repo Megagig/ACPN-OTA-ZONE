@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import userService from '../../services/user.service';
 import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
-import { useToast } from '@chakra-ui/react';
-import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../shadcn/hooks/use-toast';
 
 interface PendingUserType extends User {
   createdAt?: string; // This is fine as it's not in the frontend User type
@@ -21,7 +20,6 @@ const PendingApprovals: React.FC = () => {
     total: 0,
   });
   const { toast } = useToast();
-  const { theme } = useTheme();
 
   const fetchPendingUsers = useCallback(
     async (page: number, limit: number) => {
@@ -44,7 +42,11 @@ const PendingApprovals: React.FC = () => {
             ? err.message
             : 'Failed to load pending approvals.';
         setError(errorMessage);
-        toast({ title: 'Error', description: errorMessage, status: 'error' });
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
@@ -62,7 +64,6 @@ const PendingApprovals: React.FC = () => {
       toast({
         title: 'Success',
         description: 'User approved successfully.',
-        status: 'success',
       });
       fetchPendingUsers(pagination.page, pagination.limit);
     } catch (err) {
@@ -70,7 +71,11 @@ const PendingApprovals: React.FC = () => {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to approve user.';
       setError(errorMessage);
-      toast({ title: 'Error', description: errorMessage, status: 'error' });
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -80,7 +85,6 @@ const PendingApprovals: React.FC = () => {
       toast({
         title: 'Success',
         description: 'User denied successfully.',
-        status: 'success',
       });
       fetchPendingUsers(pagination.page, pagination.limit);
     } catch (err) {
@@ -88,7 +92,11 @@ const PendingApprovals: React.FC = () => {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to deny user.';
       setError(errorMessage);
-      toast({ title: 'Error', description: errorMessage, status: 'error' });
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -105,7 +113,6 @@ const PendingApprovals: React.FC = () => {
       toast({
         title: 'Success',
         description: 'User deleted successfully.',
-        status: 'success',
       });
       fetchPendingUsers(pagination.page, pagination.limit);
     } catch (err) {
@@ -113,7 +120,11 @@ const PendingApprovals: React.FC = () => {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete user.';
       setError(errorMessage);
-      toast({ title: 'Error', description: errorMessage, status: 'error' });
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -164,7 +175,86 @@ const PendingApprovals: React.FC = () => {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile Cards View */}
+      <div className="block md:hidden space-y-4">
+        {pendingUsers
+          .filter((user): user is PendingUserType => !!user)
+          .map((user) => (
+            <div
+              key={user._id}
+              className="bg-card border border-border rounded-lg p-4 shadow-sm"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h4 className="font-medium text-foreground">
+                    {user.firstName} {user.lastName}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    user.status === 'pending'
+                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+                      : user.status === 'active'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+                      : user.status === 'rejected'
+                      ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {user.status}
+                </span>
+              </div>
+
+              <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                <p>
+                  <span className="font-medium">Phone:</span>{' '}
+                  {user.phone || 'N/A'}
+                </p>
+                <p>
+                  <span className="font-medium">PCN License:</span>{' '}
+                  {user.pcnLicense || 'N/A'}
+                </p>
+                <p>
+                  <span className="font-medium">Registered:</span>{' '}
+                  {new Date(
+                    user.createdAt || user.registrationDate || Date.now()
+                  ).toLocaleDateString()}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => handleApprove(user._id)}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30"
+                >
+                  Approve
+                </Button>
+                <Button
+                  onClick={() => handleDeny(user._id)}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 border-yellow-600 dark:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"
+                >
+                  Deny
+                </Button>
+                <Button
+                  onClick={() => handleDelete(user._id)}
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-border">
           <thead className="bg-muted/50">
             <tr>
@@ -261,77 +351,78 @@ const PendingApprovals: React.FC = () => {
               ))}
           </tbody>
         </table>
-        {/* Basic Pagination Controls */}
-        {pagination.total > 0 && pagination.totalPages > 1 && (
-          <div className="px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <Button
-                onClick={() =>
-                  fetchPendingUsers(pagination.page - 1, pagination.limit)
-                }
-                disabled={pagination.page <= 1}
-              >
-                Previous
-              </Button>
-              <Button
-                onClick={() =>
-                  fetchPendingUsers(pagination.page + 1, pagination.limit)
-                }
-                disabled={pagination.page >= pagination.totalPages}
-              >
-                Next
-              </Button>
+      </div>
+
+      {/* Pagination */}
+      {pagination.total > 0 && pagination.totalPages > 1 && (
+        <div className="px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <Button
+              onClick={() =>
+                fetchPendingUsers(pagination.page - 1, pagination.limit)
+              }
+              disabled={pagination.page <= 1}
+            >
+              Previous
+            </Button>
+            <Button
+              onClick={() =>
+                fetchPendingUsers(pagination.page + 1, pagination.limit)
+              }
+              disabled={pagination.page >= pagination.totalPages}
+            >
+              Next
+            </Button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Showing{' '}
+                <span className="font-medium">
+                  {(pagination.page - 1) * pagination.limit + 1}
+                </span>{' '}
+                to{' '}
+                <span className="font-medium">
+                  {Math.min(
+                    pagination.page * pagination.limit,
+                    pagination.total
+                  )}
+                </span>{' '}
+                of <span className="font-medium">{pagination.total}</span>{' '}
+                results
+              </p>
             </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Showing{' '}
-                  <span className="font-medium">
-                    {(pagination.page - 1) * pagination.limit + 1}
-                  </span>{' '}
-                  to{' '}
-                  <span className="font-medium">
-                    {Math.min(
-                      pagination.page * pagination.limit,
-                      pagination.total
-                    )}
-                  </span>{' '}
-                  of <span className="font-medium">{pagination.total}</span>{' '}
-                  results
-                </p>
-              </div>
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
+            <div>
+              <nav
+                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
+                <Button
+                  onClick={() =>
+                    fetchPendingUsers(pagination.page - 1, pagination.limit)
+                  }
+                  disabled={pagination.page <= 1}
+                  variant="outline"
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
                 >
-                  <Button
-                    onClick={() =>
-                      fetchPendingUsers(pagination.page - 1, pagination.limit)
-                    }
-                    disabled={pagination.page <= 1}
-                    variant="outline"
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
-                  >
-                    Previous
-                  </Button>
-                  {/* Consider adding page number buttons here for better UX */}
-                  <Button
-                    onClick={() =>
-                      fetchPendingUsers(pagination.page + 1, pagination.limit)
-                    }
-                    disabled={pagination.page >= pagination.totalPages}
-                    variant="outline"
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
-                  >
-                    Next
-                  </Button>
-                </nav>
-              </div>
+                  Previous
+                </Button>
+                {/* Consider adding page number buttons here for better UX */}
+                <Button
+                  onClick={() =>
+                    fetchPendingUsers(pagination.page + 1, pagination.limit)
+                  }
+                  disabled={pagination.page >= pagination.totalPages}
+                  variant="outline"
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted"
+                >
+                  Next
+                </Button>
+              </nav>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
