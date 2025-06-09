@@ -90,7 +90,12 @@ export const updateUserProfile = asyncHandler(
 // @access  Private
 export const uploadProfilePicture = asyncHandler(
   async (req: Request, res: Response) => {
+    console.log('Upload profile picture request received');
+    console.log('Request file:', req.file);
+    console.log('Request user:', req.user);
+
     if (!req.file) {
+      console.log('No file in request');
       return res.status(400).json({
         success: false,
         message: 'Please upload an image file',
@@ -206,20 +211,27 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // @desc    Get user by ID
-// @route   GET /api/users/:id
+// @route   GET /api/user-management/:id
 // @access  Private (Admin, SuperAdmin)
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
+  console.log('getUserById called with ID:', req.params.id);
+  console.log('Request user:', req.user);
+
   const user = await User.findById(req.params.id).select(
     '-password -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire -refreshToken'
   );
 
+  console.log('Found user:', user ? 'Yes' : 'No');
+
   if (!user) {
+    console.log('User not found for ID:', req.params.id);
     return res.status(404).json({
       success: false,
       message: 'User not found',
     });
   }
 
+  console.log('Returning user data for:', user.email);
   res.status(200).json({
     success: true,
     data: user,

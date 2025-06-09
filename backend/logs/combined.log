@@ -10937,3 +10937,1340 @@
 2025-06-04T19:47:58.455Z [info]: Redis reconnecting... attempt 66. Next retry in 6600ms
 2025-06-04T19:47:58.456Z [warn]: Redis client connection closed
 2025-06-04T19:47:58.456Z [warn]: Redis client reconnecting in 6600ms
+2025-06-04T19:48:05.058Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:05.058Z [info]: Redis reconnecting... attempt 67. Next retry in 6700ms
+2025-06-04T19:48:05.058Z [warn]: Redis client connection closed
+2025-06-04T19:48:05.058Z [warn]: Redis client reconnecting in 6700ms
+2025-06-04T19:48:11.760Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:11.761Z [info]: Redis reconnecting... attempt 68. Next retry in 6800ms
+2025-06-04T19:48:11.761Z [warn]: Redis client connection closed
+2025-06-04T19:48:11.762Z [warn]: Redis client reconnecting in 6800ms
+2025-06-04T19:48:11.762Z [error]: Redis get error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:11.762Z [error]: Redis get error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:11.762Z [error]: Redis get error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:11.763Z [error]: Redis get error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:18.562Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:18.563Z [info]: Redis reconnecting... attempt 69. Next retry in 6900ms
+2025-06-04T19:48:18.563Z [warn]: Redis client connection closed
+2025-06-04T19:48:18.563Z [warn]: Redis client reconnecting in 6900ms
+2025-06-04T19:48:25.466Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:25.466Z [info]: Redis reconnecting... attempt 70. Next retry in 7000ms
+2025-06-04T19:48:25.467Z [warn]: Redis client connection closed
+2025-06-04T19:48:25.467Z [warn]: Redis client reconnecting in 7000ms
+2025-06-04T19:48:32.468Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:32.469Z [info]: Redis reconnecting... attempt 71. Next retry in 7100ms
+2025-06-04T19:48:32.469Z [warn]: Redis client connection closed
+2025-06-04T19:48:32.469Z [warn]: Redis client reconnecting in 7100ms
+2025-06-04T19:48:39.573Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:39.574Z [info]: Redis reconnecting... attempt 72. Next retry in 7200ms
+2025-06-04T19:48:39.574Z [warn]: Redis client connection closed
+2025-06-04T19:48:39.574Z [warn]: Redis client reconnecting in 7200ms
+2025-06-04T19:48:39.575Z [error]: Redis set error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:39.575Z [error]: Redis set error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:39.575Z [error]: Redis set error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:39.575Z [error]: Redis set error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-04T19:48:46.777Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:46.777Z [info]: Redis reconnecting... attempt 73. Next retry in 7300ms
+2025-06-04T19:48:46.778Z [warn]: Redis client connection closed
+2025-06-04T19:48:46.778Z [warn]: Redis client reconnecting in 7300ms
+2025-06-04T19:48:54.079Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:48:54.079Z [info]: Redis reconnecting... attempt 74. Next retry in 7400ms
+2025-06-04T19:48:54.080Z [warn]: Redis client connection closed
+2025-06-04T19:48:54.080Z [warn]: Redis client reconnecting in 7400ms
+2025-06-04T19:49:01.483Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:01.483Z [info]: Redis reconnecting... attempt 75. Next retry in 7500ms
+2025-06-04T19:49:01.483Z [warn]: Redis client connection closed
+2025-06-04T19:49:01.484Z [warn]: Redis client reconnecting in 7500ms
+2025-06-04T19:49:08.988Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:08.989Z [info]: Redis reconnecting... attempt 76. Next retry in 7600ms
+2025-06-04T19:49:08.989Z [warn]: Redis client connection closed
+2025-06-04T19:49:08.989Z [warn]: Redis client reconnecting in 7600ms
+2025-06-04T19:49:16.590Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:16.591Z [info]: Redis reconnecting... attempt 77. Next retry in 7700ms
+2025-06-04T19:49:16.591Z [warn]: Redis client connection closed
+2025-06-04T19:49:16.591Z [warn]: Redis client reconnecting in 7700ms
+2025-06-04T19:49:24.294Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:24.294Z [info]: Redis reconnecting... attempt 78. Next retry in 7800ms
+2025-06-04T19:49:24.295Z [warn]: Redis client connection closed
+2025-06-04T19:49:24.295Z [warn]: Redis client reconnecting in 7800ms
+2025-06-04T19:49:32.097Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:32.098Z [info]: Redis reconnecting... attempt 79. Next retry in 7900ms
+2025-06-04T19:49:32.098Z [warn]: Redis client connection closed
+2025-06-04T19:49:32.098Z [warn]: Redis client reconnecting in 7900ms
+2025-06-04T19:49:40.001Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:40.002Z [info]: Redis reconnecting... attempt 80. Next retry in 8000ms
+2025-06-04T19:49:40.002Z [warn]: Redis client connection closed
+2025-06-04T19:49:40.002Z [warn]: Redis client reconnecting in 8000ms
+2025-06-04T19:49:48.004Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:48.005Z [info]: Redis reconnecting... attempt 81. Next retry in 8100ms
+2025-06-04T19:49:48.005Z [warn]: Redis client connection closed
+2025-06-04T19:49:48.006Z [warn]: Redis client reconnecting in 8100ms
+2025-06-04T19:49:56.106Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:49:56.106Z [info]: Redis reconnecting... attempt 82. Next retry in 8200ms
+2025-06-04T19:49:56.106Z [warn]: Redis client connection closed
+2025-06-04T19:49:56.106Z [warn]: Redis client reconnecting in 8200ms
+2025-06-04T19:50:04.307Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:04.307Z [info]: Redis reconnecting... attempt 83. Next retry in 8300ms
+2025-06-04T19:50:04.307Z [warn]: Redis client connection closed
+2025-06-04T19:50:04.307Z [warn]: Redis client reconnecting in 8300ms
+2025-06-04T19:50:12.608Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:12.608Z [info]: Redis reconnecting... attempt 84. Next retry in 8400ms
+2025-06-04T19:50:12.609Z [warn]: Redis client connection closed
+2025-06-04T19:50:12.609Z [warn]: Redis client reconnecting in 8400ms
+2025-06-04T19:50:21.012Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:21.012Z [info]: Redis reconnecting... attempt 85. Next retry in 8500ms
+2025-06-04T19:50:21.013Z [warn]: Redis client connection closed
+2025-06-04T19:50:21.013Z [warn]: Redis client reconnecting in 8500ms
+2025-06-04T19:50:29.515Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:29.515Z [info]: Redis reconnecting... attempt 86. Next retry in 8600ms
+2025-06-04T19:50:29.516Z [warn]: Redis client connection closed
+2025-06-04T19:50:29.516Z [warn]: Redis client reconnecting in 8600ms
+2025-06-04T19:50:38.121Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:38.122Z [info]: Redis reconnecting... attempt 87. Next retry in 8700ms
+2025-06-04T19:50:38.122Z [warn]: Redis client connection closed
+2025-06-04T19:50:38.122Z [warn]: Redis client reconnecting in 8700ms
+2025-06-04T19:50:46.826Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:46.826Z [info]: Redis reconnecting... attempt 88. Next retry in 8800ms
+2025-06-04T19:50:46.827Z [warn]: Redis client connection closed
+2025-06-04T19:50:46.827Z [warn]: Redis client reconnecting in 8800ms
+2025-06-04T19:50:55.628Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:50:55.628Z [info]: Redis reconnecting... attempt 89. Next retry in 8900ms
+2025-06-04T19:50:55.628Z [warn]: Redis client connection closed
+2025-06-04T19:50:55.629Z [warn]: Redis client reconnecting in 8900ms
+2025-06-04T19:51:04.531Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:51:04.532Z [info]: Redis reconnecting... attempt 90. Next retry in 9000ms
+2025-06-04T19:51:04.532Z [warn]: Redis client connection closed
+2025-06-04T19:51:04.534Z [warn]: Redis client reconnecting in 9000ms
+2025-06-04T19:51:13.542Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:51:13.542Z [info]: Redis reconnecting... attempt 91. Next retry in 9100ms
+2025-06-04T19:51:13.543Z [warn]: Redis client connection closed
+2025-06-04T19:51:13.543Z [warn]: Redis client reconnecting in 9100ms
+2025-06-04T19:51:22.651Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:51:22.651Z [info]: Redis reconnecting... attempt 92. Next retry in 9200ms
+2025-06-04T19:51:22.651Z [warn]: Redis client connection closed
+2025-06-04T19:51:22.651Z [warn]: Redis client reconnecting in 9200ms
+2025-06-04T19:51:31.862Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:51:31.862Z [info]: Redis reconnecting... attempt 93. Next retry in 9300ms
+2025-06-04T19:51:31.862Z [warn]: Redis client connection closed
+2025-06-04T19:51:31.863Z [warn]: Redis client reconnecting in 9300ms
+2025-06-04T19:51:41.165Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:51:41.166Z [info]: Redis reconnecting... attempt 94. Next retry in 9400ms
+2025-06-04T19:51:41.166Z [warn]: Redis client connection closed
+2025-06-04T19:51:41.166Z [warn]: Redis client reconnecting in 9400ms
+2025-06-04T19:51:53.759Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:51:53.759Z [info]: Redis reconnecting... attempt 95. Next retry in 9500ms
+2025-06-04T19:51:53.760Z [warn]: Redis client connection closed
+2025-06-04T19:51:53.760Z [warn]: Redis client reconnecting in 9500ms
+2025-06-04T19:52:03.261Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:52:03.261Z [info]: Redis reconnecting... attempt 96. Next retry in 9600ms
+2025-06-04T19:52:03.261Z [warn]: Redis client connection closed
+2025-06-04T19:52:03.261Z [warn]: Redis client reconnecting in 9600ms
+2025-06-04T19:52:12.871Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:52:12.871Z [info]: Redis reconnecting... attempt 97. Next retry in 9700ms
+2025-06-04T19:52:12.871Z [warn]: Redis client connection closed
+2025-06-04T19:52:12.872Z [warn]: Redis client reconnecting in 9700ms
+2025-06-04T19:52:22.578Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:52:22.578Z [info]: Redis reconnecting... attempt 98. Next retry in 9800ms
+2025-06-04T19:52:22.579Z [warn]: Redis client connection closed
+2025-06-04T19:52:22.579Z [warn]: Redis client reconnecting in 9800ms
+2025-06-04T19:52:32.381Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:52:32.382Z [info]: Redis reconnecting... attempt 99. Next retry in 9900ms
+2025-06-04T19:52:32.382Z [warn]: Redis client connection closed
+2025-06-04T19:52:32.382Z [warn]: Redis client reconnecting in 9900ms
+2025-06-04T19:52:42.284Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:52:42.284Z [info]: Redis reconnecting... attempt 100. Next retry in 10000ms
+2025-06-04T19:52:42.285Z [warn]: Redis client connection closed
+2025-06-04T19:52:42.285Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:52:52.287Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:52:52.287Z [info]: Redis reconnecting... attempt 101. Next retry in 10000ms
+2025-06-04T19:52:52.288Z [warn]: Redis client connection closed
+2025-06-04T19:52:52.288Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:53:02.289Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:53:02.289Z [info]: Redis reconnecting... attempt 102. Next retry in 10000ms
+2025-06-04T19:53:02.289Z [warn]: Redis client connection closed
+2025-06-04T19:53:02.289Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:53:12.291Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:53:12.291Z [info]: Redis reconnecting... attempt 103. Next retry in 10000ms
+2025-06-04T19:53:12.292Z [warn]: Redis client connection closed
+2025-06-04T19:53:12.292Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:53:22.300Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:53:22.300Z [info]: Redis reconnecting... attempt 104. Next retry in 10000ms
+2025-06-04T19:53:22.300Z [warn]: Redis client connection closed
+2025-06-04T19:53:22.300Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:53:32.302Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:53:32.302Z [info]: Redis reconnecting... attempt 105. Next retry in 10000ms
+2025-06-04T19:53:32.303Z [warn]: Redis client connection closed
+2025-06-04T19:53:32.303Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:53:42.306Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:53:42.306Z [info]: Redis reconnecting... attempt 106. Next retry in 10000ms
+2025-06-04T19:53:42.307Z [warn]: Redis client connection closed
+2025-06-04T19:53:42.307Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:53:52.308Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:53:52.309Z [info]: Redis reconnecting... attempt 107. Next retry in 10000ms
+2025-06-04T19:53:52.309Z [warn]: Redis client connection closed
+2025-06-04T19:53:52.309Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:54:02.310Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:54:02.310Z [info]: Redis reconnecting... attempt 108. Next retry in 10000ms
+2025-06-04T19:54:02.310Z [warn]: Redis client connection closed
+2025-06-04T19:54:02.310Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:54:12.312Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:54:12.312Z [info]: Redis reconnecting... attempt 109. Next retry in 10000ms
+2025-06-04T19:54:12.312Z [warn]: Redis client connection closed
+2025-06-04T19:54:12.312Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:54:22.317Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:54:22.317Z [info]: Redis reconnecting... attempt 110. Next retry in 10000ms
+2025-06-04T19:54:22.318Z [warn]: Redis client connection closed
+2025-06-04T19:54:22.318Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:54:32.320Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:54:32.320Z [info]: Redis reconnecting... attempt 111. Next retry in 10000ms
+2025-06-04T19:54:32.321Z [warn]: Redis client connection closed
+2025-06-04T19:54:32.321Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:54:42.324Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:54:42.325Z [info]: Redis reconnecting... attempt 112. Next retry in 10000ms
+2025-06-04T19:54:42.325Z [warn]: Redis client connection closed
+2025-06-04T19:54:42.325Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:54:52.328Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:54:52.328Z [info]: Redis reconnecting... attempt 113. Next retry in 10000ms
+2025-06-04T19:54:52.329Z [warn]: Redis client connection closed
+2025-06-04T19:54:52.329Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:55:02.329Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:55:02.330Z [info]: Redis reconnecting... attempt 114. Next retry in 10000ms
+2025-06-04T19:55:02.330Z [warn]: Redis client connection closed
+2025-06-04T19:55:02.330Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:55:12.330Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:55:12.331Z [info]: Redis reconnecting... attempt 115. Next retry in 10000ms
+2025-06-04T19:55:12.331Z [warn]: Redis client connection closed
+2025-06-04T19:55:12.331Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:55:22.333Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:55:22.334Z [info]: Redis reconnecting... attempt 116. Next retry in 10000ms
+2025-06-04T19:55:22.334Z [warn]: Redis client connection closed
+2025-06-04T19:55:22.334Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:55:32.337Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:55:32.338Z [info]: Redis reconnecting... attempt 117. Next retry in 10000ms
+2025-06-04T19:55:32.339Z [warn]: Redis client connection closed
+2025-06-04T19:55:32.340Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:55:42.341Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:55:42.342Z [info]: Redis reconnecting... attempt 118. Next retry in 10000ms
+2025-06-04T19:55:42.343Z [warn]: Redis client connection closed
+2025-06-04T19:55:42.344Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:55:52.345Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:55:52.345Z [info]: Redis reconnecting... attempt 119. Next retry in 10000ms
+2025-06-04T19:55:52.346Z [warn]: Redis client connection closed
+2025-06-04T19:55:52.346Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:56:02.347Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:56:02.347Z [info]: Redis reconnecting... attempt 120. Next retry in 10000ms
+2025-06-04T19:56:02.347Z [warn]: Redis client connection closed
+2025-06-04T19:56:02.347Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:56:12.348Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:56:12.349Z [info]: Redis reconnecting... attempt 121. Next retry in 10000ms
+2025-06-04T19:56:12.349Z [warn]: Redis client connection closed
+2025-06-04T19:56:12.349Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:56:22.351Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:56:22.351Z [info]: Redis reconnecting... attempt 122. Next retry in 10000ms
+2025-06-04T19:56:22.352Z [warn]: Redis client connection closed
+2025-06-04T19:56:22.352Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:56:32.355Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:56:32.356Z [info]: Redis reconnecting... attempt 123. Next retry in 10000ms
+2025-06-04T19:56:32.356Z [warn]: Redis client connection closed
+2025-06-04T19:56:32.356Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:56:42.357Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:56:42.358Z [info]: Redis reconnecting... attempt 124. Next retry in 10000ms
+2025-06-04T19:56:42.358Z [warn]: Redis client connection closed
+2025-06-04T19:56:42.359Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:56:52.362Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:56:52.362Z [info]: Redis reconnecting... attempt 125. Next retry in 10000ms
+2025-06-04T19:56:52.363Z [warn]: Redis client connection closed
+2025-06-04T19:56:52.363Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:57:02.365Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:57:02.365Z [info]: Redis reconnecting... attempt 126. Next retry in 10000ms
+2025-06-04T19:57:02.365Z [warn]: Redis client connection closed
+2025-06-04T19:57:02.366Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:57:12.369Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:57:12.370Z [info]: Redis reconnecting... attempt 127. Next retry in 10000ms
+2025-06-04T19:57:12.371Z [warn]: Redis client connection closed
+2025-06-04T19:57:12.371Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:57:22.374Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:57:22.375Z [info]: Redis reconnecting... attempt 128. Next retry in 10000ms
+2025-06-04T19:57:22.375Z [warn]: Redis client connection closed
+2025-06-04T19:57:22.376Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:57:32.379Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:57:32.379Z [info]: Redis reconnecting... attempt 129. Next retry in 10000ms
+2025-06-04T19:57:32.380Z [warn]: Redis client connection closed
+2025-06-04T19:57:32.380Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:57:42.382Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:57:42.383Z [info]: Redis reconnecting... attempt 130. Next retry in 10000ms
+2025-06-04T19:57:42.383Z [warn]: Redis client connection closed
+2025-06-04T19:57:42.383Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:57:52.386Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:57:52.386Z [info]: Redis reconnecting... attempt 131. Next retry in 10000ms
+2025-06-04T19:57:52.387Z [warn]: Redis client connection closed
+2025-06-04T19:57:52.387Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:58:02.388Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:58:02.388Z [info]: Redis reconnecting... attempt 132. Next retry in 10000ms
+2025-06-04T19:58:02.389Z [warn]: Redis client connection closed
+2025-06-04T19:58:02.389Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:58:12.390Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:58:12.390Z [info]: Redis reconnecting... attempt 133. Next retry in 10000ms
+2025-06-04T19:58:12.391Z [warn]: Redis client connection closed
+2025-06-04T19:58:12.391Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:58:22.392Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:58:22.393Z [info]: Redis reconnecting... attempt 134. Next retry in 10000ms
+2025-06-04T19:58:22.393Z [warn]: Redis client connection closed
+2025-06-04T19:58:22.393Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:58:32.395Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:58:32.396Z [info]: Redis reconnecting... attempt 135. Next retry in 10000ms
+2025-06-04T19:58:32.396Z [warn]: Redis client connection closed
+2025-06-04T19:58:32.396Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:58:42.396Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:58:42.396Z [info]: Redis reconnecting... attempt 136. Next retry in 10000ms
+2025-06-04T19:58:42.397Z [warn]: Redis client connection closed
+2025-06-04T19:58:42.397Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:58:52.398Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:58:52.399Z [info]: Redis reconnecting... attempt 137. Next retry in 10000ms
+2025-06-04T19:58:52.399Z [warn]: Redis client connection closed
+2025-06-04T19:58:52.399Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:59:02.401Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:59:02.401Z [info]: Redis reconnecting... attempt 138. Next retry in 10000ms
+2025-06-04T19:59:02.401Z [warn]: Redis client connection closed
+2025-06-04T19:59:02.401Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:59:12.404Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:59:12.404Z [info]: Redis reconnecting... attempt 139. Next retry in 10000ms
+2025-06-04T19:59:12.405Z [warn]: Redis client connection closed
+2025-06-04T19:59:12.405Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:59:22.406Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:59:22.406Z [info]: Redis reconnecting... attempt 140. Next retry in 10000ms
+2025-06-04T19:59:22.406Z [warn]: Redis client connection closed
+2025-06-04T19:59:22.406Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:59:32.412Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:59:32.412Z [info]: Redis reconnecting... attempt 141. Next retry in 10000ms
+2025-06-04T19:59:32.412Z [warn]: Redis client connection closed
+2025-06-04T19:59:32.413Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:59:42.415Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:59:42.416Z [info]: Redis reconnecting... attempt 142. Next retry in 10000ms
+2025-06-04T19:59:42.416Z [warn]: Redis client connection closed
+2025-06-04T19:59:42.416Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T19:59:52.418Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T19:59:52.418Z [info]: Redis reconnecting... attempt 143. Next retry in 10000ms
+2025-06-04T19:59:52.418Z [warn]: Redis client connection closed
+2025-06-04T19:59:52.418Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:00:02.419Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:00:02.419Z [info]: Redis reconnecting... attempt 144. Next retry in 10000ms
+2025-06-04T20:00:02.419Z [warn]: Redis client connection closed
+2025-06-04T20:00:02.419Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:00:12.420Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:00:12.420Z [info]: Redis reconnecting... attempt 145. Next retry in 10000ms
+2025-06-04T20:00:12.420Z [warn]: Redis client connection closed
+2025-06-04T20:00:12.420Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:00:22.422Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:00:22.423Z [info]: Redis reconnecting... attempt 146. Next retry in 10000ms
+2025-06-04T20:00:22.423Z [warn]: Redis client connection closed
+2025-06-04T20:00:22.423Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:00:32.425Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:00:32.425Z [info]: Redis reconnecting... attempt 147. Next retry in 10000ms
+2025-06-04T20:00:32.426Z [warn]: Redis client connection closed
+2025-06-04T20:00:32.426Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:00:42.427Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:00:42.427Z [info]: Redis reconnecting... attempt 148. Next retry in 10000ms
+2025-06-04T20:00:42.428Z [warn]: Redis client connection closed
+2025-06-04T20:00:42.428Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:00:52.429Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:00:52.429Z [info]: Redis reconnecting... attempt 149. Next retry in 10000ms
+2025-06-04T20:00:52.429Z [warn]: Redis client connection closed
+2025-06-04T20:00:52.429Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:01:02.431Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:01:02.431Z [info]: Redis reconnecting... attempt 150. Next retry in 10000ms
+2025-06-04T20:01:02.431Z [warn]: Redis client connection closed
+2025-06-04T20:01:02.432Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:01:12.434Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:01:12.434Z [info]: Redis reconnecting... attempt 151. Next retry in 10000ms
+2025-06-04T20:01:12.434Z [warn]: Redis client connection closed
+2025-06-04T20:01:12.434Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:01:22.435Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:01:22.436Z [info]: Redis reconnecting... attempt 152. Next retry in 10000ms
+2025-06-04T20:01:22.436Z [warn]: Redis client connection closed
+2025-06-04T20:01:22.437Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:01:32.436Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:01:32.437Z [info]: Redis reconnecting... attempt 153. Next retry in 10000ms
+2025-06-04T20:01:32.437Z [warn]: Redis client connection closed
+2025-06-04T20:01:32.437Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:01:42.440Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:01:42.440Z [info]: Redis reconnecting... attempt 154. Next retry in 10000ms
+2025-06-04T20:01:42.440Z [warn]: Redis client connection closed
+2025-06-04T20:01:42.440Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:01:52.442Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:01:52.443Z [info]: Redis reconnecting... attempt 155. Next retry in 10000ms
+2025-06-04T20:01:52.443Z [warn]: Redis client connection closed
+2025-06-04T20:01:52.443Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:02:02.445Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:02:02.445Z [info]: Redis reconnecting... attempt 156. Next retry in 10000ms
+2025-06-04T20:02:02.446Z [warn]: Redis client connection closed
+2025-06-04T20:02:02.446Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:02:12.454Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:02:12.454Z [info]: Redis reconnecting... attempt 157. Next retry in 10000ms
+2025-06-04T20:02:12.454Z [warn]: Redis client connection closed
+2025-06-04T20:02:12.454Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:02:22.456Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:02:22.457Z [info]: Redis reconnecting... attempt 158. Next retry in 10000ms
+2025-06-04T20:02:22.457Z [warn]: Redis client connection closed
+2025-06-04T20:02:22.457Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:02:32.464Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:02:32.465Z [info]: Redis reconnecting... attempt 159. Next retry in 10000ms
+2025-06-04T20:02:32.465Z [warn]: Redis client connection closed
+2025-06-04T20:02:32.465Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:02:42.465Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:02:42.465Z [info]: Redis reconnecting... attempt 160. Next retry in 10000ms
+2025-06-04T20:02:42.467Z [warn]: Redis client connection closed
+2025-06-04T20:02:42.467Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:02:52.473Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:02:52.473Z [info]: Redis reconnecting... attempt 161. Next retry in 10000ms
+2025-06-04T20:02:52.474Z [warn]: Redis client connection closed
+2025-06-04T20:02:52.474Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:03:02.476Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:03:02.477Z [info]: Redis reconnecting... attempt 162. Next retry in 10000ms
+2025-06-04T20:03:02.477Z [warn]: Redis client connection closed
+2025-06-04T20:03:02.477Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:03:12.480Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:03:12.480Z [info]: Redis reconnecting... attempt 163. Next retry in 10000ms
+2025-06-04T20:03:12.481Z [warn]: Redis client connection closed
+2025-06-04T20:03:12.481Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:03:22.484Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:03:22.484Z [info]: Redis reconnecting... attempt 164. Next retry in 10000ms
+2025-06-04T20:03:22.485Z [warn]: Redis client connection closed
+2025-06-04T20:03:22.485Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:03:32.494Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:03:32.495Z [info]: Redis reconnecting... attempt 165. Next retry in 10000ms
+2025-06-04T20:03:32.495Z [warn]: Redis client connection closed
+2025-06-04T20:03:32.495Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:03:42.503Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:03:42.504Z [info]: Redis reconnecting... attempt 166. Next retry in 10000ms
+2025-06-04T20:03:42.504Z [warn]: Redis client connection closed
+2025-06-04T20:03:42.504Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:03:52.508Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:03:52.508Z [info]: Redis reconnecting... attempt 167. Next retry in 10000ms
+2025-06-04T20:03:52.509Z [warn]: Redis client connection closed
+2025-06-04T20:03:52.509Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:04:02.509Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:04:02.509Z [info]: Redis reconnecting... attempt 168. Next retry in 10000ms
+2025-06-04T20:04:02.510Z [warn]: Redis client connection closed
+2025-06-04T20:04:02.510Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:04:12.515Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:04:12.515Z [info]: Redis reconnecting... attempt 169. Next retry in 10000ms
+2025-06-04T20:04:12.516Z [warn]: Redis client connection closed
+2025-06-04T20:04:12.516Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:04:22.519Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:04:22.519Z [info]: Redis reconnecting... attempt 170. Next retry in 10000ms
+2025-06-04T20:04:22.520Z [warn]: Redis client connection closed
+2025-06-04T20:04:22.520Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:04:32.522Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:04:32.523Z [info]: Redis reconnecting... attempt 171. Next retry in 10000ms
+2025-06-04T20:04:32.523Z [warn]: Redis client connection closed
+2025-06-04T20:04:32.523Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:04:42.525Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:04:42.526Z [info]: Redis reconnecting... attempt 172. Next retry in 10000ms
+2025-06-04T20:04:42.526Z [warn]: Redis client connection closed
+2025-06-04T20:04:42.526Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:04:52.528Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:04:52.529Z [info]: Redis reconnecting... attempt 173. Next retry in 10000ms
+2025-06-04T20:04:52.529Z [warn]: Redis client connection closed
+2025-06-04T20:04:52.529Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:05:02.533Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:05:02.533Z [info]: Redis reconnecting... attempt 174. Next retry in 10000ms
+2025-06-04T20:05:02.534Z [warn]: Redis client connection closed
+2025-06-04T20:05:02.534Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:05:12.537Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:05:12.538Z [info]: Redis reconnecting... attempt 175. Next retry in 10000ms
+2025-06-04T20:05:12.538Z [warn]: Redis client connection closed
+2025-06-04T20:05:12.538Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:05:22.541Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:05:22.541Z [info]: Redis reconnecting... attempt 176. Next retry in 10000ms
+2025-06-04T20:05:22.542Z [warn]: Redis client connection closed
+2025-06-04T20:05:22.542Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:05:32.545Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:05:32.545Z [info]: Redis reconnecting... attempt 177. Next retry in 10000ms
+2025-06-04T20:05:32.546Z [warn]: Redis client connection closed
+2025-06-04T20:05:32.546Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:05:42.547Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:05:42.548Z [info]: Redis reconnecting... attempt 178. Next retry in 10000ms
+2025-06-04T20:05:42.548Z [warn]: Redis client connection closed
+2025-06-04T20:05:42.548Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:05:52.551Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:05:52.551Z [info]: Redis reconnecting... attempt 179. Next retry in 10000ms
+2025-06-04T20:05:52.552Z [warn]: Redis client connection closed
+2025-06-04T20:05:52.552Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:06:02.553Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:06:02.553Z [info]: Redis reconnecting... attempt 180. Next retry in 10000ms
+2025-06-04T20:06:02.554Z [warn]: Redis client connection closed
+2025-06-04T20:06:02.554Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:06:12.557Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:06:12.558Z [info]: Redis reconnecting... attempt 181. Next retry in 10000ms
+2025-06-04T20:06:12.558Z [warn]: Redis client connection closed
+2025-06-04T20:06:12.558Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:06:22.561Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:06:22.562Z [info]: Redis reconnecting... attempt 182. Next retry in 10000ms
+2025-06-04T20:06:22.562Z [warn]: Redis client connection closed
+2025-06-04T20:06:22.562Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:06:32.564Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:06:32.564Z [info]: Redis reconnecting... attempt 183. Next retry in 10000ms
+2025-06-04T20:06:32.565Z [warn]: Redis client connection closed
+2025-06-04T20:06:32.565Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:06:42.567Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:06:42.567Z [info]: Redis reconnecting... attempt 184. Next retry in 10000ms
+2025-06-04T20:06:42.568Z [warn]: Redis client connection closed
+2025-06-04T20:06:42.568Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:06:52.573Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:06:52.573Z [info]: Redis reconnecting... attempt 185. Next retry in 10000ms
+2025-06-04T20:06:52.574Z [warn]: Redis client connection closed
+2025-06-04T20:06:52.574Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:07:02.576Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:07:02.576Z [info]: Redis reconnecting... attempt 186. Next retry in 10000ms
+2025-06-04T20:07:02.577Z [warn]: Redis client connection closed
+2025-06-04T20:07:02.577Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:07:12.580Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:07:12.580Z [info]: Redis reconnecting... attempt 187. Next retry in 10000ms
+2025-06-04T20:07:12.581Z [warn]: Redis client connection closed
+2025-06-04T20:07:12.581Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:07:22.585Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:07:22.586Z [info]: Redis reconnecting... attempt 188. Next retry in 10000ms
+2025-06-04T20:07:22.586Z [warn]: Redis client connection closed
+2025-06-04T20:07:22.587Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:07:32.587Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:07:32.588Z [info]: Redis reconnecting... attempt 189. Next retry in 10000ms
+2025-06-04T20:07:32.588Z [warn]: Redis client connection closed
+2025-06-04T20:07:32.588Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:07:42.589Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:07:42.590Z [info]: Redis reconnecting... attempt 190. Next retry in 10000ms
+2025-06-04T20:07:42.590Z [warn]: Redis client connection closed
+2025-06-04T20:07:42.590Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:07:52.600Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:07:52.601Z [info]: Redis reconnecting... attempt 191. Next retry in 10000ms
+2025-06-04T20:07:52.601Z [warn]: Redis client connection closed
+2025-06-04T20:07:52.601Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:08:02.602Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:08:02.603Z [info]: Redis reconnecting... attempt 192. Next retry in 10000ms
+2025-06-04T20:08:02.603Z [warn]: Redis client connection closed
+2025-06-04T20:08:02.604Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:08:22.605Z [error]: Redis client error: Error: connect ETIMEDOUT
+2025-06-04T20:08:22.605Z [info]: Redis reconnecting... attempt 193. Next retry in 10000ms
+2025-06-04T20:08:22.605Z [warn]: Redis client connection closed
+2025-06-04T20:08:22.605Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:08:32.607Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:08:32.607Z [info]: Redis reconnecting... attempt 194. Next retry in 10000ms
+2025-06-04T20:08:32.608Z [warn]: Redis client connection closed
+2025-06-04T20:08:32.608Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:08:42.610Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:08:42.610Z [info]: Redis reconnecting... attempt 195. Next retry in 10000ms
+2025-06-04T20:08:42.611Z [warn]: Redis client connection closed
+2025-06-04T20:08:42.611Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:08:52.613Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:08:52.613Z [info]: Redis reconnecting... attempt 196. Next retry in 10000ms
+2025-06-04T20:08:52.614Z [warn]: Redis client connection closed
+2025-06-04T20:08:52.614Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:09:02.618Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:09:02.618Z [info]: Redis reconnecting... attempt 197. Next retry in 10000ms
+2025-06-04T20:09:02.619Z [warn]: Redis client connection closed
+2025-06-04T20:09:02.619Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:09:12.621Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:09:12.621Z [info]: Redis reconnecting... attempt 198. Next retry in 10000ms
+2025-06-04T20:09:12.622Z [warn]: Redis client connection closed
+2025-06-04T20:09:12.622Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:09:22.623Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:09:22.623Z [info]: Redis reconnecting... attempt 199. Next retry in 10000ms
+2025-06-04T20:09:22.624Z [warn]: Redis client connection closed
+2025-06-04T20:09:22.624Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:09:32.625Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:09:32.626Z [info]: Redis reconnecting... attempt 200. Next retry in 10000ms
+2025-06-04T20:09:32.626Z [warn]: Redis client connection closed
+2025-06-04T20:09:32.627Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:09:42.628Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:09:42.628Z [info]: Redis reconnecting... attempt 201. Next retry in 10000ms
+2025-06-04T20:09:42.628Z [warn]: Redis client connection closed
+2025-06-04T20:09:42.629Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:09:52.630Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:09:52.631Z [info]: Redis reconnecting... attempt 202. Next retry in 10000ms
+2025-06-04T20:09:52.631Z [warn]: Redis client connection closed
+2025-06-04T20:09:52.631Z [warn]: Redis client reconnecting in 10000ms
+2025-06-04T20:10:02.632Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-04T20:10:02.632Z [info]: Redis reconnecting... attempt 203. Next retry in 10000ms
+2025-06-04T20:10:02.632Z [warn]: Redis client connection closed
+2025-06-04T20:10:02.632Z [warn]: Redis client reconnecting in 10000ms
+2025-06-08T03:29:35.278Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-08T03:29:35.279Z [info]: Redis reconnecting... attempt 204. Next retry in 10000ms
+2025-06-08T03:29:35.283Z [warn]: Redis client connection closed
+2025-06-08T03:29:35.285Z [warn]: Redis client reconnecting in 10000ms
+2025-06-08T03:29:45.284Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-08T03:29:45.285Z [info]: Redis reconnecting... attempt 205. Next retry in 10000ms
+2025-06-08T03:29:45.285Z [warn]: Redis client connection closed
+2025-06-08T03:29:45.285Z [warn]: Redis client reconnecting in 10000ms
+2025-06-09T14:13:46.896Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:46.899Z [info]: Redis reconnecting... attempt 1. Next retry in 100ms
+2025-06-09T14:13:46.899Z [warn]: Redis client connection closed
+2025-06-09T14:13:46.900Z [warn]: Redis client reconnecting in 100ms
+2025-06-09T14:13:47.329Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:47.329Z [info]: Redis reconnecting... attempt 2. Next retry in 200ms
+2025-06-09T14:13:47.329Z [warn]: Redis client connection closed
+2025-06-09T14:13:47.330Z [warn]: Redis client reconnecting in 200ms
+2025-06-09T14:13:47.530Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:47.531Z [info]: Redis reconnecting... attempt 3. Next retry in 300ms
+2025-06-09T14:13:47.531Z [warn]: Redis client connection closed
+2025-06-09T14:13:47.531Z [warn]: Redis client reconnecting in 300ms
+2025-06-09T14:13:47.832Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:47.832Z [info]: Redis reconnecting... attempt 4. Next retry in 400ms
+2025-06-09T14:13:47.833Z [warn]: Redis client connection closed
+2025-06-09T14:13:47.833Z [warn]: Redis client reconnecting in 400ms
+2025-06-09T14:13:48.233Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:48.234Z [info]: Redis reconnecting... attempt 5. Next retry in 500ms
+2025-06-09T14:13:48.234Z [warn]: Redis client connection closed
+2025-06-09T14:13:48.234Z [warn]: Redis client reconnecting in 500ms
+2025-06-09T14:13:48.735Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:48.735Z [info]: Redis reconnecting... attempt 6. Next retry in 600ms
+2025-06-09T14:13:48.735Z [warn]: Redis client connection closed
+2025-06-09T14:13:48.735Z [warn]: Redis client reconnecting in 600ms
+2025-06-09T14:13:49.336Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:49.337Z [info]: Redis reconnecting... attempt 7. Next retry in 700ms
+2025-06-09T14:13:49.337Z [warn]: Redis client connection closed
+2025-06-09T14:13:49.337Z [warn]: Redis client reconnecting in 700ms
+2025-06-09T14:13:50.038Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:50.039Z [info]: Redis reconnecting... attempt 8. Next retry in 800ms
+2025-06-09T14:13:50.039Z [warn]: Redis client connection closed
+2025-06-09T14:13:50.039Z [warn]: Redis client reconnecting in 800ms
+2025-06-09T14:13:55.986Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:55.987Z [info]: Redis reconnecting... attempt 9. Next retry in 900ms
+2025-06-09T14:13:55.987Z [warn]: Redis client connection closed
+2025-06-09T14:13:55.987Z [warn]: Redis client reconnecting in 900ms
+2025-06-09T14:13:56.887Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:56.887Z [info]: Redis reconnecting... attempt 10. Next retry in 1000ms
+2025-06-09T14:13:56.887Z [warn]: Redis client connection closed
+2025-06-09T14:13:56.887Z [warn]: Redis client reconnecting in 1000ms
+2025-06-09T14:13:57.889Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:57.889Z [info]: Redis reconnecting... attempt 11. Next retry in 1100ms
+2025-06-09T14:13:57.890Z [warn]: Redis client connection closed
+2025-06-09T14:13:57.890Z [warn]: Redis client reconnecting in 1100ms
+2025-06-09T14:13:58.991Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:13:58.992Z [info]: Redis reconnecting... attempt 12. Next retry in 1200ms
+2025-06-09T14:13:58.992Z [warn]: Redis client connection closed
+2025-06-09T14:13:58.992Z [warn]: Redis client reconnecting in 1200ms
+2025-06-09T14:14:00.194Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:00.194Z [info]: Redis reconnecting... attempt 13. Next retry in 1300ms
+2025-06-09T14:14:00.195Z [warn]: Redis client connection closed
+2025-06-09T14:14:00.195Z [warn]: Redis client reconnecting in 1300ms
+2025-06-09T14:14:01.498Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:01.499Z [info]: Redis reconnecting... attempt 14. Next retry in 1400ms
+2025-06-09T14:14:01.499Z [warn]: Redis client connection closed
+2025-06-09T14:14:01.500Z [warn]: Redis client reconnecting in 1400ms
+2025-06-09T14:14:02.902Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:02.903Z [info]: Redis reconnecting... attempt 15. Next retry in 1500ms
+2025-06-09T14:14:02.904Z [warn]: Redis client connection closed
+2025-06-09T14:14:02.904Z [warn]: Redis client reconnecting in 1500ms
+2025-06-09T14:14:04.406Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:04.407Z [info]: Redis reconnecting... attempt 16. Next retry in 1600ms
+2025-06-09T14:14:04.407Z [warn]: Redis client connection closed
+2025-06-09T14:14:04.407Z [warn]: Redis client reconnecting in 1600ms
+2025-06-09T14:14:06.009Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:06.010Z [info]: Redis reconnecting... attempt 17. Next retry in 1700ms
+2025-06-09T14:14:06.010Z [warn]: Redis client connection closed
+2025-06-09T14:14:06.011Z [warn]: Redis client reconnecting in 1700ms
+2025-06-09T14:14:07.713Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:07.713Z [info]: Redis reconnecting... attempt 18. Next retry in 1800ms
+2025-06-09T14:14:07.714Z [warn]: Redis client connection closed
+2025-06-09T14:14:07.714Z [warn]: Redis client reconnecting in 1800ms
+2025-06-09T14:14:09.516Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:09.517Z [info]: Redis reconnecting... attempt 19. Next retry in 1900ms
+2025-06-09T14:14:09.517Z [warn]: Redis client connection closed
+2025-06-09T14:14:09.517Z [warn]: Redis client reconnecting in 1900ms
+2025-06-09T14:14:11.419Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:11.419Z [info]: Redis reconnecting... attempt 20. Next retry in 2000ms
+2025-06-09T14:14:11.420Z [warn]: Redis client connection closed
+2025-06-09T14:14:11.420Z [warn]: Redis client reconnecting in 2000ms
+2025-06-09T14:14:13.422Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:13.423Z [info]: Redis reconnecting... attempt 21. Next retry in 2100ms
+2025-06-09T14:14:13.423Z [warn]: Redis client connection closed
+2025-06-09T14:14:13.424Z [warn]: Redis client reconnecting in 2100ms
+2025-06-09T14:14:15.526Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:15.528Z [info]: Redis reconnecting... attempt 22. Next retry in 2200ms
+2025-06-09T14:14:15.529Z [warn]: Redis client connection closed
+2025-06-09T14:14:15.529Z [warn]: Redis client reconnecting in 2200ms
+2025-06-09T14:14:17.731Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:17.732Z [info]: Redis reconnecting... attempt 23. Next retry in 2300ms
+2025-06-09T14:14:17.733Z [warn]: Redis client connection closed
+2025-06-09T14:14:17.733Z [warn]: Redis client reconnecting in 2300ms
+2025-06-09T14:14:20.034Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:20.035Z [info]: Redis reconnecting... attempt 24. Next retry in 2400ms
+2025-06-09T14:14:20.035Z [warn]: Redis client connection closed
+2025-06-09T14:14:20.036Z [warn]: Redis client reconnecting in 2400ms
+2025-06-09T14:14:22.439Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:22.440Z [info]: Redis reconnecting... attempt 25. Next retry in 2500ms
+2025-06-09T14:14:22.441Z [warn]: Redis client connection closed
+2025-06-09T14:14:22.442Z [warn]: Redis client reconnecting in 2500ms
+2025-06-09T14:14:24.946Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:24.947Z [info]: Redis reconnecting... attempt 26. Next retry in 2600ms
+2025-06-09T14:14:24.947Z [warn]: Redis client connection closed
+2025-06-09T14:14:24.947Z [warn]: Redis client reconnecting in 2600ms
+2025-06-09T14:14:27.550Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:27.551Z [info]: Redis reconnecting... attempt 27. Next retry in 2700ms
+2025-06-09T14:14:27.551Z [warn]: Redis client connection closed
+2025-06-09T14:14:27.551Z [warn]: Redis client reconnecting in 2700ms
+2025-06-09T14:14:30.252Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:30.252Z [info]: Redis reconnecting... attempt 28. Next retry in 2800ms
+2025-06-09T14:14:30.253Z [warn]: Redis client connection closed
+2025-06-09T14:14:30.253Z [warn]: Redis client reconnecting in 2800ms
+2025-06-09T14:14:33.054Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:33.056Z [info]: Redis reconnecting... attempt 29. Next retry in 2900ms
+2025-06-09T14:14:33.056Z [warn]: Redis client connection closed
+2025-06-09T14:14:33.056Z [warn]: Redis client reconnecting in 2900ms
+2025-06-09T14:14:35.959Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:35.960Z [info]: Redis reconnecting... attempt 30. Next retry in 3000ms
+2025-06-09T14:14:35.960Z [warn]: Redis client connection closed
+2025-06-09T14:14:35.961Z [warn]: Redis client reconnecting in 3000ms
+2025-06-09T14:14:38.962Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:38.963Z [info]: Redis reconnecting... attempt 31. Next retry in 3100ms
+2025-06-09T14:14:38.963Z [warn]: Redis client connection closed
+2025-06-09T14:14:38.964Z [warn]: Redis client reconnecting in 3100ms
+2025-06-09T14:14:42.066Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:42.068Z [info]: Redis reconnecting... attempt 32. Next retry in 3200ms
+2025-06-09T14:14:42.070Z [warn]: Redis client connection closed
+2025-06-09T14:14:42.070Z [warn]: Redis client reconnecting in 3200ms
+2025-06-09T14:14:45.273Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:45.274Z [info]: Redis reconnecting... attempt 33. Next retry in 3300ms
+2025-06-09T14:14:45.274Z [warn]: Redis client connection closed
+2025-06-09T14:14:45.275Z [warn]: Redis client reconnecting in 3300ms
+2025-06-09T14:14:48.576Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:48.577Z [info]: Redis reconnecting... attempt 34. Next retry in 3400ms
+2025-06-09T14:14:48.577Z [warn]: Redis client connection closed
+2025-06-09T14:14:48.578Z [warn]: Redis client reconnecting in 3400ms
+2025-06-09T14:14:51.980Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:51.981Z [info]: Redis reconnecting... attempt 35. Next retry in 3500ms
+2025-06-09T14:14:51.981Z [warn]: Redis client connection closed
+2025-06-09T14:14:51.981Z [warn]: Redis client reconnecting in 3500ms
+2025-06-09T14:14:55.487Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:55.488Z [info]: Redis reconnecting... attempt 36. Next retry in 3600ms
+2025-06-09T14:14:55.488Z [warn]: Redis client connection closed
+2025-06-09T14:14:55.488Z [warn]: Redis client reconnecting in 3600ms
+2025-06-09T14:14:59.090Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:14:59.091Z [info]: Redis reconnecting... attempt 37. Next retry in 3700ms
+2025-06-09T14:14:59.091Z [warn]: Redis client connection closed
+2025-06-09T14:14:59.091Z [warn]: Redis client reconnecting in 3700ms
+2025-06-09T14:15:02.793Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:02.794Z [info]: Redis reconnecting... attempt 38. Next retry in 3800ms
+2025-06-09T14:15:02.794Z [warn]: Redis client connection closed
+2025-06-09T14:15:02.794Z [warn]: Redis client reconnecting in 3800ms
+2025-06-09T14:15:06.599Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:06.600Z [info]: Redis reconnecting... attempt 39. Next retry in 3900ms
+2025-06-09T14:15:06.600Z [warn]: Redis client connection closed
+2025-06-09T14:15:06.600Z [warn]: Redis client reconnecting in 3900ms
+2025-06-09T14:15:10.502Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:10.503Z [info]: Redis reconnecting... attempt 40. Next retry in 4000ms
+2025-06-09T14:15:10.504Z [warn]: Redis client connection closed
+2025-06-09T14:15:10.504Z [warn]: Redis client reconnecting in 4000ms
+2025-06-09T14:15:14.507Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:14.508Z [info]: Redis reconnecting... attempt 41. Next retry in 4100ms
+2025-06-09T14:15:14.508Z [warn]: Redis client connection closed
+2025-06-09T14:15:14.509Z [warn]: Redis client reconnecting in 4100ms
+2025-06-09T14:15:18.611Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:18.612Z [info]: Redis reconnecting... attempt 42. Next retry in 4200ms
+2025-06-09T14:15:18.612Z [warn]: Redis client connection closed
+2025-06-09T14:15:18.613Z [warn]: Redis client reconnecting in 4200ms
+2025-06-09T14:15:22.814Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:22.815Z [info]: Redis reconnecting... attempt 43. Next retry in 4300ms
+2025-06-09T14:15:22.815Z [warn]: Redis client connection closed
+2025-06-09T14:15:22.815Z [warn]: Redis client reconnecting in 4300ms
+2025-06-09T14:15:27.119Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:27.120Z [info]: Redis reconnecting... attempt 44. Next retry in 4400ms
+2025-06-09T14:15:27.120Z [warn]: Redis client connection closed
+2025-06-09T14:15:27.120Z [warn]: Redis client reconnecting in 4400ms
+2025-06-09T14:15:31.521Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:31.522Z [info]: Redis reconnecting... attempt 45. Next retry in 4500ms
+2025-06-09T14:15:31.522Z [warn]: Redis client connection closed
+2025-06-09T14:15:31.522Z [warn]: Redis client reconnecting in 4500ms
+2025-06-09T14:15:36.026Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:36.027Z [info]: Redis reconnecting... attempt 46. Next retry in 4600ms
+2025-06-09T14:15:36.027Z [warn]: Redis client connection closed
+2025-06-09T14:15:36.027Z [warn]: Redis client reconnecting in 4600ms
+2025-06-09T14:15:40.633Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:40.636Z [info]: Redis reconnecting... attempt 47. Next retry in 4700ms
+2025-06-09T14:15:40.641Z [warn]: Redis client connection closed
+2025-06-09T14:15:40.641Z [warn]: Redis client reconnecting in 4700ms
+2025-06-09T14:15:45.349Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:45.351Z [info]: Redis reconnecting... attempt 48. Next retry in 4800ms
+2025-06-09T14:15:45.353Z [warn]: Redis client connection closed
+2025-06-09T14:15:45.354Z [warn]: Redis client reconnecting in 4800ms
+2025-06-09T14:15:50.155Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:50.167Z [info]: Redis reconnecting... attempt 49. Next retry in 4900ms
+2025-06-09T14:15:50.168Z [warn]: Redis client connection closed
+2025-06-09T14:15:50.168Z [warn]: Redis client reconnecting in 4900ms
+2025-06-09T14:15:55.071Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:15:55.075Z [info]: Redis reconnecting... attempt 50. Next retry in 5000ms
+2025-06-09T14:15:55.076Z [warn]: Redis client connection closed
+2025-06-09T14:15:55.078Z [warn]: Redis client reconnecting in 5000ms
+2025-06-09T14:16:00.078Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:00.079Z [info]: Redis reconnecting... attempt 51. Next retry in 5100ms
+2025-06-09T14:16:00.079Z [warn]: Redis client connection closed
+2025-06-09T14:16:00.079Z [warn]: Redis client reconnecting in 5100ms
+2025-06-09T14:16:05.182Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:05.183Z [info]: Redis reconnecting... attempt 52. Next retry in 5200ms
+2025-06-09T14:16:05.183Z [warn]: Redis client connection closed
+2025-06-09T14:16:05.183Z [warn]: Redis client reconnecting in 5200ms
+2025-06-09T14:16:10.387Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:10.388Z [info]: Redis reconnecting... attempt 53. Next retry in 5300ms
+2025-06-09T14:16:10.388Z [warn]: Redis client connection closed
+2025-06-09T14:16:10.389Z [warn]: Redis client reconnecting in 5300ms
+2025-06-09T14:16:15.692Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:15.693Z [info]: Redis reconnecting... attempt 54. Next retry in 5400ms
+2025-06-09T14:16:15.693Z [warn]: Redis client connection closed
+2025-06-09T14:16:15.694Z [warn]: Redis client reconnecting in 5400ms
+2025-06-09T14:16:21.096Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:21.097Z [info]: Redis reconnecting... attempt 55. Next retry in 5500ms
+2025-06-09T14:16:21.097Z [warn]: Redis client connection closed
+2025-06-09T14:16:21.097Z [warn]: Redis client reconnecting in 5500ms
+2025-06-09T14:16:26.600Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:26.601Z [info]: Redis reconnecting... attempt 56. Next retry in 5600ms
+2025-06-09T14:16:26.601Z [warn]: Redis client connection closed
+2025-06-09T14:16:26.601Z [warn]: Redis client reconnecting in 5600ms
+2025-06-09T14:16:32.202Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:32.203Z [info]: Redis reconnecting... attempt 57. Next retry in 5700ms
+2025-06-09T14:16:32.203Z [warn]: Redis client connection closed
+2025-06-09T14:16:32.203Z [warn]: Redis client reconnecting in 5700ms
+2025-06-09T14:16:37.907Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:37.909Z [info]: Redis reconnecting... attempt 58. Next retry in 5800ms
+2025-06-09T14:16:37.909Z [warn]: Redis client connection closed
+2025-06-09T14:16:37.910Z [warn]: Redis client reconnecting in 5800ms
+2025-06-09T14:16:43.710Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:43.711Z [info]: Redis reconnecting... attempt 59. Next retry in 5900ms
+2025-06-09T14:16:43.711Z [warn]: Redis client connection closed
+2025-06-09T14:16:43.712Z [warn]: Redis client reconnecting in 5900ms
+2025-06-09T14:16:49.614Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:49.615Z [info]: Redis reconnecting... attempt 60. Next retry in 6000ms
+2025-06-09T14:16:49.617Z [warn]: Redis client connection closed
+2025-06-09T14:16:49.617Z [warn]: Redis client reconnecting in 6000ms
+2025-06-09T14:16:55.619Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:16:55.619Z [info]: Redis reconnecting... attempt 61. Next retry in 6100ms
+2025-06-09T14:16:55.619Z [warn]: Redis client connection closed
+2025-06-09T14:16:55.619Z [warn]: Redis client reconnecting in 6100ms
+2025-06-09T14:17:01.721Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:01.723Z [info]: Redis reconnecting... attempt 62. Next retry in 6200ms
+2025-06-09T14:17:01.723Z [warn]: Redis client connection closed
+2025-06-09T14:17:01.723Z [warn]: Redis client reconnecting in 6200ms
+2025-06-09T14:17:07.928Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:07.929Z [info]: Redis reconnecting... attempt 63. Next retry in 6300ms
+2025-06-09T14:17:07.929Z [warn]: Redis client connection closed
+2025-06-09T14:17:07.930Z [warn]: Redis client reconnecting in 6300ms
+2025-06-09T14:17:14.231Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:14.232Z [info]: Redis reconnecting... attempt 64. Next retry in 6400ms
+2025-06-09T14:17:14.232Z [warn]: Redis client connection closed
+2025-06-09T14:17:14.232Z [warn]: Redis client reconnecting in 6400ms
+2025-06-09T14:17:14.233Z [error]: Redis get error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:14.233Z [error]: Redis get error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:20.634Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:20.635Z [info]: Redis reconnecting... attempt 65. Next retry in 6500ms
+2025-06-09T14:17:20.635Z [warn]: Redis client connection closed
+2025-06-09T14:17:20.636Z [warn]: Redis client reconnecting in 6500ms
+2025-06-09T14:17:27.138Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:27.139Z [info]: Redis reconnecting... attempt 66. Next retry in 6600ms
+2025-06-09T14:17:27.139Z [warn]: Redis client connection closed
+2025-06-09T14:17:27.139Z [warn]: Redis client reconnecting in 6600ms
+2025-06-09T14:17:33.740Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:33.741Z [info]: Redis reconnecting... attempt 67. Next retry in 6700ms
+2025-06-09T14:17:33.741Z [warn]: Redis client connection closed
+2025-06-09T14:17:33.741Z [warn]: Redis client reconnecting in 6700ms
+2025-06-09T14:17:40.443Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:40.444Z [info]: Redis reconnecting... attempt 68. Next retry in 6800ms
+2025-06-09T14:17:40.444Z [warn]: Redis client connection closed
+2025-06-09T14:17:40.444Z [warn]: Redis client reconnecting in 6800ms
+2025-06-09T14:17:40.445Z [error]: Redis set error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:40.445Z [error]: Redis get error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:40.445Z [error]: Redis set error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:40.445Z [error]: Redis get error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:40.445Z [error]: Redis get error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:40.446Z [error]: Redis get error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:17:47.246Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:47.246Z [info]: Redis reconnecting... attempt 69. Next retry in 6900ms
+2025-06-09T14:17:47.247Z [warn]: Redis client connection closed
+2025-06-09T14:17:47.247Z [warn]: Redis client reconnecting in 6900ms
+2025-06-09T14:17:54.148Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:17:54.148Z [info]: Redis reconnecting... attempt 70. Next retry in 7000ms
+2025-06-09T14:17:54.148Z [warn]: Redis client connection closed
+2025-06-09T14:17:54.149Z [warn]: Redis client reconnecting in 7000ms
+2025-06-09T14:18:01.150Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:01.151Z [info]: Redis reconnecting... attempt 71. Next retry in 7100ms
+2025-06-09T14:18:01.151Z [warn]: Redis client connection closed
+2025-06-09T14:18:01.151Z [warn]: Redis client reconnecting in 7100ms
+2025-06-09T14:18:08.256Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:08.259Z [info]: Redis reconnecting... attempt 72. Next retry in 7200ms
+2025-06-09T14:18:08.260Z [warn]: Redis client connection closed
+2025-06-09T14:18:08.260Z [warn]: Redis client reconnecting in 7200ms
+2025-06-09T14:18:08.260Z [error]: Redis set error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:08.261Z [error]: Redis set error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:08.261Z [error]: Redis get error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:08.261Z [error]: Redis get error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:08.261Z [error]: Redis set error for key events-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:08.262Z [error]: Redis set error for key events:{"limit":"20","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:15.461Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:15.461Z [info]: Redis reconnecting... attempt 73. Next retry in 7300ms
+2025-06-09T14:18:15.461Z [warn]: Redis client connection closed
+2025-06-09T14:18:15.462Z [warn]: Redis client reconnecting in 7300ms
+2025-06-09T14:18:22.766Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:22.767Z [info]: Redis reconnecting... attempt 74. Next retry in 7400ms
+2025-06-09T14:18:22.770Z [warn]: Redis client connection closed
+2025-06-09T14:18:22.770Z [warn]: Redis client reconnecting in 7400ms
+2025-06-09T14:18:30.170Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:30.170Z [info]: Redis reconnecting... attempt 75. Next retry in 7500ms
+2025-06-09T14:18:30.170Z [warn]: Redis client connection closed
+2025-06-09T14:18:30.170Z [warn]: Redis client reconnecting in 7500ms
+2025-06-09T14:18:37.672Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:37.673Z [info]: Redis reconnecting... attempt 76. Next retry in 7600ms
+2025-06-09T14:18:37.673Z [warn]: Redis client connection closed
+2025-06-09T14:18:37.673Z [warn]: Redis client reconnecting in 7600ms
+2025-06-09T14:18:37.673Z [error]: Redis set error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:37.674Z [error]: Redis set error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:18:45.275Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:45.276Z [info]: Redis reconnecting... attempt 77. Next retry in 7700ms
+2025-06-09T14:18:45.276Z [warn]: Redis client connection closed
+2025-06-09T14:18:45.276Z [warn]: Redis client reconnecting in 7700ms
+2025-06-09T14:18:52.979Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:18:52.980Z [info]: Redis reconnecting... attempt 78. Next retry in 7800ms
+2025-06-09T14:18:52.980Z [warn]: Redis client connection closed
+2025-06-09T14:18:52.980Z [warn]: Redis client reconnecting in 7800ms
+2025-06-09T14:19:00.782Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:19:00.782Z [info]: Redis reconnecting... attempt 79. Next retry in 7900ms
+2025-06-09T14:19:00.783Z [warn]: Redis client connection closed
+2025-06-09T14:19:00.783Z [warn]: Redis client reconnecting in 7900ms
+2025-06-09T14:19:08.685Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:19:08.687Z [info]: Redis reconnecting... attempt 80. Next retry in 8000ms
+2025-06-09T14:19:08.688Z [warn]: Redis client connection closed
+2025-06-09T14:19:08.688Z [warn]: Redis client reconnecting in 8000ms
+2025-06-09T14:19:16.689Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:19:16.690Z [info]: Redis reconnecting... attempt 81. Next retry in 8100ms
+2025-06-09T14:19:16.690Z [warn]: Redis client connection closed
+2025-06-09T14:19:16.690Z [warn]: Redis client reconnecting in 8100ms
+2025-06-09T14:19:24.799Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:19:24.799Z [info]: Redis reconnecting... attempt 82. Next retry in 8200ms
+2025-06-09T14:19:24.799Z [warn]: Redis client connection closed
+2025-06-09T14:19:24.799Z [warn]: Redis client reconnecting in 8200ms
+2025-06-09T14:19:33.002Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:19:33.003Z [info]: Redis reconnecting... attempt 83. Next retry in 8300ms
+2025-06-09T14:19:33.003Z [warn]: Redis client connection closed
+2025-06-09T14:19:33.003Z [warn]: Redis client reconnecting in 8300ms
+2025-06-09T14:19:41.305Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:19:41.306Z [info]: Redis reconnecting... attempt 84. Next retry in 8400ms
+2025-06-09T14:19:41.306Z [warn]: Redis client connection closed
+2025-06-09T14:19:41.306Z [warn]: Redis client reconnecting in 8400ms
+2025-06-09T14:20:04.498Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:04.502Z [info]: Redis reconnecting... attempt 1. Next retry in 100ms
+2025-06-09T14:20:04.502Z [warn]: Redis client connection closed
+2025-06-09T14:20:04.503Z [warn]: Redis client reconnecting in 100ms
+2025-06-09T14:20:04.813Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:04.814Z [info]: Redis reconnecting... attempt 2. Next retry in 200ms
+2025-06-09T14:20:04.814Z [warn]: Redis client connection closed
+2025-06-09T14:20:04.815Z [warn]: Redis client reconnecting in 200ms
+2025-06-09T14:20:05.016Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:05.018Z [info]: Redis reconnecting... attempt 3. Next retry in 300ms
+2025-06-09T14:20:05.018Z [warn]: Redis client connection closed
+2025-06-09T14:20:05.019Z [warn]: Redis client reconnecting in 300ms
+2025-06-09T14:20:05.320Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:05.321Z [info]: Redis reconnecting... attempt 4. Next retry in 400ms
+2025-06-09T14:20:05.322Z [warn]: Redis client connection closed
+2025-06-09T14:20:05.322Z [warn]: Redis client reconnecting in 400ms
+2025-06-09T14:20:05.724Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:05.725Z [info]: Redis reconnecting... attempt 5. Next retry in 500ms
+2025-06-09T14:20:05.725Z [warn]: Redis client connection closed
+2025-06-09T14:20:05.726Z [warn]: Redis client reconnecting in 500ms
+2025-06-09T14:20:06.228Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:06.229Z [info]: Redis reconnecting... attempt 6. Next retry in 600ms
+2025-06-09T14:20:06.229Z [warn]: Redis client connection closed
+2025-06-09T14:20:06.229Z [warn]: Redis client reconnecting in 600ms
+2025-06-09T14:20:06.831Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:06.832Z [info]: Redis reconnecting... attempt 7. Next retry in 700ms
+2025-06-09T14:20:06.832Z [warn]: Redis client connection closed
+2025-06-09T14:20:06.832Z [warn]: Redis client reconnecting in 700ms
+2025-06-09T14:20:07.752Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:07.753Z [info]: Redis reconnecting... attempt 8. Next retry in 800ms
+2025-06-09T14:20:07.754Z [warn]: Redis client connection closed
+2025-06-09T14:20:07.754Z [warn]: Redis client reconnecting in 800ms
+2025-06-09T14:20:08.556Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:08.557Z [info]: Redis reconnecting... attempt 9. Next retry in 900ms
+2025-06-09T14:20:08.557Z [warn]: Redis client connection closed
+2025-06-09T14:20:08.558Z [warn]: Redis client reconnecting in 900ms
+2025-06-09T14:20:09.459Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:09.460Z [info]: Redis reconnecting... attempt 10. Next retry in 1000ms
+2025-06-09T14:20:09.460Z [warn]: Redis client connection closed
+2025-06-09T14:20:09.460Z [warn]: Redis client reconnecting in 1000ms
+2025-06-09T14:20:10.462Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:10.463Z [info]: Redis reconnecting... attempt 11. Next retry in 1100ms
+2025-06-09T14:20:10.463Z [warn]: Redis client connection closed
+2025-06-09T14:20:10.464Z [warn]: Redis client reconnecting in 1100ms
+2025-06-09T14:20:11.565Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:11.565Z [info]: Redis reconnecting... attempt 12. Next retry in 1200ms
+2025-06-09T14:20:11.566Z [warn]: Redis client connection closed
+2025-06-09T14:20:11.566Z [warn]: Redis client reconnecting in 1200ms
+2025-06-09T14:20:12.766Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:12.766Z [info]: Redis reconnecting... attempt 13. Next retry in 1300ms
+2025-06-09T14:20:12.766Z [warn]: Redis client connection closed
+2025-06-09T14:20:12.766Z [warn]: Redis client reconnecting in 1300ms
+2025-06-09T14:20:14.070Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:14.075Z [info]: Redis reconnecting... attempt 14. Next retry in 1400ms
+2025-06-09T14:20:14.078Z [warn]: Redis client connection closed
+2025-06-09T14:20:14.082Z [warn]: Redis client reconnecting in 1400ms
+2025-06-09T14:20:15.481Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:15.484Z [info]: Redis reconnecting... attempt 15. Next retry in 1500ms
+2025-06-09T14:20:15.485Z [warn]: Redis client connection closed
+2025-06-09T14:20:15.486Z [warn]: Redis client reconnecting in 1500ms
+2025-06-09T14:20:16.986Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:16.987Z [info]: Redis reconnecting... attempt 16. Next retry in 1600ms
+2025-06-09T14:20:16.988Z [warn]: Redis client connection closed
+2025-06-09T14:20:16.988Z [warn]: Redis client reconnecting in 1600ms
+2025-06-09T14:20:18.590Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:18.591Z [info]: Redis reconnecting... attempt 17. Next retry in 1700ms
+2025-06-09T14:20:18.591Z [warn]: Redis client connection closed
+2025-06-09T14:20:18.591Z [warn]: Redis client reconnecting in 1700ms
+2025-06-09T14:20:20.295Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:20.297Z [info]: Redis reconnecting... attempt 18. Next retry in 1800ms
+2025-06-09T14:20:20.297Z [warn]: Redis client connection closed
+2025-06-09T14:20:20.298Z [warn]: Redis client reconnecting in 1800ms
+2025-06-09T14:20:22.099Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:22.100Z [info]: Redis reconnecting... attempt 19. Next retry in 1900ms
+2025-06-09T14:20:22.101Z [warn]: Redis client connection closed
+2025-06-09T14:20:22.101Z [warn]: Redis client reconnecting in 1900ms
+2025-06-09T14:20:24.005Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:24.006Z [info]: Redis reconnecting... attempt 20. Next retry in 2000ms
+2025-06-09T14:20:24.008Z [warn]: Redis client connection closed
+2025-06-09T14:20:24.009Z [warn]: Redis client reconnecting in 2000ms
+2025-06-09T14:20:26.009Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:26.009Z [info]: Redis reconnecting... attempt 21. Next retry in 2100ms
+2025-06-09T14:20:26.009Z [warn]: Redis client connection closed
+2025-06-09T14:20:26.009Z [warn]: Redis client reconnecting in 2100ms
+2025-06-09T14:20:28.110Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:28.112Z [info]: Redis reconnecting... attempt 22. Next retry in 2200ms
+2025-06-09T14:20:28.112Z [warn]: Redis client connection closed
+2025-06-09T14:20:28.112Z [warn]: Redis client reconnecting in 2200ms
+2025-06-09T14:20:30.321Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:30.325Z [info]: Redis reconnecting... attempt 23. Next retry in 2300ms
+2025-06-09T14:20:30.325Z [warn]: Redis client connection closed
+2025-06-09T14:20:30.325Z [warn]: Redis client reconnecting in 2300ms
+2025-06-09T14:20:32.625Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:32.629Z [info]: Redis reconnecting... attempt 24. Next retry in 2400ms
+2025-06-09T14:20:32.633Z [warn]: Redis client connection closed
+2025-06-09T14:20:32.635Z [warn]: Redis client reconnecting in 2400ms
+2025-06-09T14:20:35.034Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:35.035Z [info]: Redis reconnecting... attempt 25. Next retry in 2500ms
+2025-06-09T14:20:35.035Z [warn]: Redis client connection closed
+2025-06-09T14:20:35.035Z [warn]: Redis client reconnecting in 2500ms
+2025-06-09T14:20:37.537Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:37.537Z [info]: Redis reconnecting... attempt 26. Next retry in 2600ms
+2025-06-09T14:20:37.538Z [warn]: Redis client connection closed
+2025-06-09T14:20:37.538Z [warn]: Redis client reconnecting in 2600ms
+2025-06-09T14:20:40.142Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:40.143Z [info]: Redis reconnecting... attempt 27. Next retry in 2700ms
+2025-06-09T14:20:40.143Z [warn]: Redis client connection closed
+2025-06-09T14:20:40.144Z [warn]: Redis client reconnecting in 2700ms
+2025-06-09T14:20:42.846Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:42.847Z [info]: Redis reconnecting... attempt 28. Next retry in 2800ms
+2025-06-09T14:20:42.847Z [warn]: Redis client connection closed
+2025-06-09T14:20:42.847Z [warn]: Redis client reconnecting in 2800ms
+2025-06-09T14:20:42.847Z [error]: Redis get error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:20:42.847Z [error]: Redis get error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:20:45.656Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:45.656Z [info]: Redis reconnecting... attempt 29. Next retry in 2900ms
+2025-06-09T14:20:45.656Z [warn]: Redis client connection closed
+2025-06-09T14:20:45.656Z [warn]: Redis client reconnecting in 2900ms
+2025-06-09T14:20:48.559Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:48.562Z [info]: Redis reconnecting... attempt 30. Next retry in 3000ms
+2025-06-09T14:20:48.562Z [warn]: Redis client connection closed
+2025-06-09T14:20:48.562Z [warn]: Redis client reconnecting in 3000ms
+2025-06-09T14:20:51.566Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:51.567Z [info]: Redis reconnecting... attempt 31. Next retry in 3100ms
+2025-06-09T14:20:51.567Z [warn]: Redis client connection closed
+2025-06-09T14:20:51.568Z [warn]: Redis client reconnecting in 3100ms
+2025-06-09T14:20:54.671Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:54.672Z [info]: Redis reconnecting... attempt 32. Next retry in 3200ms
+2025-06-09T14:20:54.673Z [warn]: Redis client connection closed
+2025-06-09T14:20:54.673Z [warn]: Redis client reconnecting in 3200ms
+2025-06-09T14:20:54.673Z [error]: Redis set error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:20:54.674Z [error]: Redis set error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:20:54.674Z [error]: Redis get error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:20:54.674Z [error]: Redis get error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:20:57.874Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:20:57.875Z [info]: Redis reconnecting... attempt 33. Next retry in 3300ms
+2025-06-09T14:20:57.875Z [warn]: Redis client connection closed
+2025-06-09T14:20:57.876Z [warn]: Redis client reconnecting in 3300ms
+2025-06-09T14:21:01.180Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:01.180Z [info]: Redis reconnecting... attempt 34. Next retry in 3400ms
+2025-06-09T14:21:01.181Z [warn]: Redis client connection closed
+2025-06-09T14:21:01.181Z [warn]: Redis client reconnecting in 3400ms
+2025-06-09T14:21:04.583Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:04.583Z [info]: Redis reconnecting... attempt 35. Next retry in 3500ms
+2025-06-09T14:21:04.584Z [warn]: Redis client connection closed
+2025-06-09T14:21:04.585Z [warn]: Redis client reconnecting in 3500ms
+2025-06-09T14:21:08.085Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:08.085Z [info]: Redis reconnecting... attempt 36. Next retry in 3600ms
+2025-06-09T14:21:08.086Z [warn]: Redis client connection closed
+2025-06-09T14:21:08.086Z [warn]: Redis client reconnecting in 3600ms
+2025-06-09T14:21:08.087Z [error]: Redis set error for key pharmacy-stats: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:21:08.087Z [error]: Redis set error for key pharmacies:{"limit":"10","page":"1"}: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:21:11.691Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:11.691Z [info]: Redis reconnecting... attempt 37. Next retry in 3700ms
+2025-06-09T14:21:11.691Z [warn]: Redis client connection closed
+2025-06-09T14:21:11.692Z [warn]: Redis client reconnecting in 3700ms
+2025-06-09T14:21:15.396Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:15.396Z [info]: Redis reconnecting... attempt 38. Next retry in 3800ms
+2025-06-09T14:21:15.396Z [warn]: Redis client connection closed
+2025-06-09T14:21:15.396Z [warn]: Redis client reconnecting in 3800ms
+2025-06-09T14:21:19.197Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:19.198Z [info]: Redis reconnecting... attempt 39. Next retry in 3900ms
+2025-06-09T14:21:19.199Z [warn]: Redis client connection closed
+2025-06-09T14:21:19.199Z [warn]: Redis client reconnecting in 3900ms
+2025-06-09T14:21:23.103Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:23.107Z [info]: Redis reconnecting... attempt 40. Next retry in 4000ms
+2025-06-09T14:21:23.108Z [warn]: Redis client connection closed
+2025-06-09T14:21:23.108Z [warn]: Redis client reconnecting in 4000ms
+2025-06-09T14:21:27.110Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:27.111Z [info]: Redis reconnecting... attempt 41. Next retry in 4100ms
+2025-06-09T14:21:27.111Z [warn]: Redis client connection closed
+2025-06-09T14:21:27.112Z [warn]: Redis client reconnecting in 4100ms
+2025-06-09T14:21:31.213Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:31.214Z [info]: Redis reconnecting... attempt 42. Next retry in 4200ms
+2025-06-09T14:21:31.214Z [warn]: Redis client connection closed
+2025-06-09T14:21:31.214Z [warn]: Redis client reconnecting in 4200ms
+2025-06-09T14:21:35.415Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:35.417Z [info]: Redis reconnecting... attempt 43. Next retry in 4300ms
+2025-06-09T14:21:35.417Z [warn]: Redis client connection closed
+2025-06-09T14:21:35.417Z [warn]: Redis client reconnecting in 4300ms
+2025-06-09T14:21:39.719Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:39.722Z [info]: Redis reconnecting... attempt 44. Next retry in 4400ms
+2025-06-09T14:21:39.723Z [warn]: Redis client connection closed
+2025-06-09T14:21:39.726Z [warn]: Redis client reconnecting in 4400ms
+2025-06-09T14:21:44.129Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:44.129Z [info]: Redis reconnecting... attempt 45. Next retry in 4500ms
+2025-06-09T14:21:44.129Z [warn]: Redis client connection closed
+2025-06-09T14:21:44.129Z [warn]: Redis client reconnecting in 4500ms
+2025-06-09T14:21:48.632Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:48.633Z [info]: Redis reconnecting... attempt 46. Next retry in 4600ms
+2025-06-09T14:21:48.634Z [warn]: Redis client connection closed
+2025-06-09T14:21:48.634Z [warn]: Redis client reconnecting in 4600ms
+2025-06-09T14:21:53.239Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:53.239Z [info]: Redis reconnecting... attempt 47. Next retry in 4700ms
+2025-06-09T14:21:53.239Z [warn]: Redis client connection closed
+2025-06-09T14:21:53.240Z [warn]: Redis client reconnecting in 4700ms
+2025-06-09T14:21:57.941Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:21:57.942Z [info]: Redis reconnecting... attempt 48. Next retry in 4800ms
+2025-06-09T14:21:57.943Z [warn]: Redis client connection closed
+2025-06-09T14:21:57.945Z [warn]: Redis client reconnecting in 4800ms
+2025-06-09T14:21:57.945Z [error]: Redis get error for key pharmacy:add: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:22:02.746Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:02.747Z [info]: Redis reconnecting... attempt 49. Next retry in 4900ms
+2025-06-09T14:22:02.747Z [warn]: Redis client connection closed
+2025-06-09T14:22:02.747Z [warn]: Redis client reconnecting in 4900ms
+2025-06-09T14:22:07.650Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:07.651Z [info]: Redis reconnecting... attempt 50. Next retry in 5000ms
+2025-06-09T14:22:07.651Z [warn]: Redis client connection closed
+2025-06-09T14:22:07.651Z [warn]: Redis client reconnecting in 5000ms
+2025-06-09T14:22:12.655Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:12.656Z [info]: Redis reconnecting... attempt 51. Next retry in 5100ms
+2025-06-09T14:22:12.656Z [warn]: Redis client connection closed
+2025-06-09T14:22:12.657Z [warn]: Redis client reconnecting in 5100ms
+2025-06-09T14:22:17.758Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:17.759Z [info]: Redis reconnecting... attempt 52. Next retry in 5200ms
+2025-06-09T14:22:17.759Z [warn]: Redis client connection closed
+2025-06-09T14:22:17.760Z [warn]: Redis client reconnecting in 5200ms
+2025-06-09T14:22:17.760Z [error]: Redis get error for key pharmacy:add: MaxRetriesPerRequestError: Reached the max retries per request limit (which is 3). Refer to "maxRetriesPerRequest" option for details.
+2025-06-09T14:22:22.963Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:22.964Z [info]: Redis reconnecting... attempt 53. Next retry in 5300ms
+2025-06-09T14:22:22.964Z [warn]: Redis client connection closed
+2025-06-09T14:22:22.964Z [warn]: Redis client reconnecting in 5300ms
+2025-06-09T14:22:28.268Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:28.268Z [info]: Redis reconnecting... attempt 54. Next retry in 5400ms
+2025-06-09T14:22:28.269Z [warn]: Redis client connection closed
+2025-06-09T14:22:28.269Z [warn]: Redis client reconnecting in 5400ms
+2025-06-09T14:22:33.672Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:33.673Z [info]: Redis reconnecting... attempt 55. Next retry in 5500ms
+2025-06-09T14:22:33.674Z [warn]: Redis client connection closed
+2025-06-09T14:22:33.674Z [warn]: Redis client reconnecting in 5500ms
+2025-06-09T14:22:39.175Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:39.176Z [info]: Redis reconnecting... attempt 56. Next retry in 5600ms
+2025-06-09T14:22:39.176Z [warn]: Redis client connection closed
+2025-06-09T14:22:39.176Z [warn]: Redis client reconnecting in 5600ms
+2025-06-09T14:22:44.780Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:44.781Z [info]: Redis reconnecting... attempt 57. Next retry in 5700ms
+2025-06-09T14:22:44.781Z [warn]: Redis client connection closed
+2025-06-09T14:22:44.781Z [warn]: Redis client reconnecting in 5700ms
+2025-06-09T14:22:50.483Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:50.484Z [info]: Redis reconnecting... attempt 58. Next retry in 5800ms
+2025-06-09T14:22:50.484Z [warn]: Redis client connection closed
+2025-06-09T14:22:50.485Z [warn]: Redis client reconnecting in 5800ms
+2025-06-09T14:22:56.286Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:22:56.286Z [info]: Redis reconnecting... attempt 59. Next retry in 5900ms
+2025-06-09T14:22:56.287Z [warn]: Redis client connection closed
+2025-06-09T14:22:56.287Z [warn]: Redis client reconnecting in 5900ms
+2025-06-09T14:23:02.187Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:02.188Z [info]: Redis reconnecting... attempt 60. Next retry in 6000ms
+2025-06-09T14:23:02.188Z [warn]: Redis client connection closed
+2025-06-09T14:23:02.188Z [warn]: Redis client reconnecting in 6000ms
+2025-06-09T14:23:08.190Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:08.191Z [info]: Redis reconnecting... attempt 61. Next retry in 6100ms
+2025-06-09T14:23:08.191Z [warn]: Redis client connection closed
+2025-06-09T14:23:08.191Z [warn]: Redis client reconnecting in 6100ms
+2025-06-09T14:23:14.295Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:14.296Z [info]: Redis reconnecting... attempt 62. Next retry in 6200ms
+2025-06-09T14:23:14.296Z [warn]: Redis client connection closed
+2025-06-09T14:23:14.296Z [warn]: Redis client reconnecting in 6200ms
+2025-06-09T14:23:20.497Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:20.497Z [info]: Redis reconnecting... attempt 63. Next retry in 6300ms
+2025-06-09T14:23:20.497Z [warn]: Redis client connection closed
+2025-06-09T14:23:20.497Z [warn]: Redis client reconnecting in 6300ms
+2025-06-09T14:23:26.798Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:26.798Z [info]: Redis reconnecting... attempt 64. Next retry in 6400ms
+2025-06-09T14:23:26.798Z [warn]: Redis client connection closed
+2025-06-09T14:23:26.799Z [warn]: Redis client reconnecting in 6400ms
+2025-06-09T14:23:33.200Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:33.201Z [info]: Redis reconnecting... attempt 65. Next retry in 6500ms
+2025-06-09T14:23:33.201Z [warn]: Redis client connection closed
+2025-06-09T14:23:33.202Z [warn]: Redis client reconnecting in 6500ms
+2025-06-09T14:23:39.708Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:39.708Z [info]: Redis reconnecting... attempt 66. Next retry in 6600ms
+2025-06-09T14:23:39.708Z [warn]: Redis client connection closed
+2025-06-09T14:23:39.709Z [warn]: Redis client reconnecting in 6600ms
+2025-06-09T14:23:46.310Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:46.311Z [info]: Redis reconnecting... attempt 67. Next retry in 6700ms
+2025-06-09T14:23:46.311Z [warn]: Redis client connection closed
+2025-06-09T14:23:46.311Z [warn]: Redis client reconnecting in 6700ms
+2025-06-09T14:23:53.014Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:53.015Z [info]: Redis reconnecting... attempt 68. Next retry in 6800ms
+2025-06-09T14:23:53.017Z [warn]: Redis client connection closed
+2025-06-09T14:23:53.018Z [warn]: Redis client reconnecting in 6800ms
+2025-06-09T14:23:59.821Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:23:59.822Z [info]: Redis reconnecting... attempt 69. Next retry in 6900ms
+2025-06-09T14:23:59.823Z [warn]: Redis client connection closed
+2025-06-09T14:23:59.823Z [warn]: Redis client reconnecting in 6900ms
+2025-06-09T14:24:06.725Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:24:06.726Z [info]: Redis reconnecting... attempt 70. Next retry in 7000ms
+2025-06-09T14:24:06.726Z [warn]: Redis client connection closed
+2025-06-09T14:24:06.726Z [warn]: Redis client reconnecting in 7000ms
+2025-06-09T14:24:13.727Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:24:13.727Z [info]: Redis reconnecting... attempt 71. Next retry in 7100ms
+2025-06-09T14:24:13.728Z [warn]: Redis client connection closed
+2025-06-09T14:24:13.728Z [warn]: Redis client reconnecting in 7100ms
+2025-06-09T14:24:20.829Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:24:20.830Z [info]: Redis reconnecting... attempt 72. Next retry in 7200ms
+2025-06-09T14:24:20.830Z [warn]: Redis client connection closed
+2025-06-09T14:24:20.831Z [warn]: Redis client reconnecting in 7200ms
+2025-06-09T14:24:28.032Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:24:28.033Z [info]: Redis reconnecting... attempt 73. Next retry in 7300ms
+2025-06-09T14:24:28.033Z [warn]: Redis client connection closed
+2025-06-09T14:24:28.033Z [warn]: Redis client reconnecting in 7300ms
+2025-06-09T14:24:35.334Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-09T14:24:35.335Z [info]: Redis reconnecting... attempt 74. Next retry in 7400ms
+2025-06-09T14:24:35.335Z [warn]: Redis client connection closed
+2025-06-09T14:24:35.335Z [warn]: Redis client reconnecting in 7400ms
+2025-06-09T14:24:42.740Z [info]: Redis client connected
+2025-06-09T14:24:42.745Z [info]: Redis client ready and accepting commands
+2025-06-09T14:26:16.432Z [info]: Redis client connected
+2025-06-09T14:26:16.438Z [info]: Redis client ready and accepting commands
+2025-06-09T15:49:10.980Z [debug]: Cache MISS (5ms): events:{"limit":"20","page":"1"}
+2025-06-09T15:49:10.983Z [debug]: Cache MISS (4ms): events-stats
+2025-06-09T15:49:12.124Z [debug]: Cache SET with TTL=300s (4ms): events-stats
+2025-06-09T15:49:12.394Z [debug]: Cache HIT (9ms): events-stats
+2025-06-09T15:49:13.930Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-09T15:49:14.122Z [debug]: Cache HIT (2ms): events:{"limit":"20","page":"1"}
+2025-06-09T15:50:05.192Z [debug]: Cache MISS (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T15:50:05.629Z [debug]: Cache SET with TTL=60s (4ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T15:50:06.039Z [debug]: Cache HIT (3ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T15:50:27.438Z [debug]: Cache MISS (1ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T15:50:27.883Z [debug]: Cache SET with TTL=300s (3ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T15:50:28.070Z [debug]: Cache HIT (0ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-09T15:50:34.122Z [debug]: Cache HIT (5ms): events-stats
+2025-06-09T15:50:34.125Z [debug]: Cache HIT (4ms): events:{"limit":"20","page":"1"}
+2025-06-09T15:50:34.312Z [debug]: Cache HIT (1ms): events-stats
+2025-06-09T15:50:34.324Z [debug]: Cache HIT (3ms): events:{"limit":"20","page":"1"}
+2025-06-09T15:52:05.286Z [debug]: Cache MISS (2ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:52:06.064Z [debug]: Cache SET with TTL=300s (13ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:52:06.230Z [debug]: Cache HIT (1ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:52:15.322Z [debug]: Cache MISS (2ms): users:683d67432788fcf188ca7745
+2025-06-09T15:52:15.504Z [debug]: Cache SET with TTL=600s (2ms): users:683d67432788fcf188ca7745
+2025-06-09T15:52:15.711Z [debug]: Cache HIT (4ms): users:683d67432788fcf188ca7745
+2025-06-09T15:52:52.802Z [debug]: Cache MISS (3ms): pharmacies:{"limit":"10","page":"1"}
+2025-06-09T15:52:52.892Z [debug]: Cache MISS (1ms): pharmacy-stats
+2025-06-09T15:52:53.568Z [debug]: Cache SET with TTL=600s (4ms): pharmacies:{"limit":"10","page":"1"}
+2025-06-09T15:52:53.568Z [debug]: Cache SET with TTL=3600s (1ms): pharmacy-stats
+2025-06-09T15:52:54.013Z [debug]: Cache HIT (1ms): pharmacies:{"limit":"10","page":"1"}
+2025-06-09T15:52:54.013Z [debug]: Cache HIT (0ms): pharmacy-stats
+2025-06-09T15:53:00.250Z [debug]: Cache MISS (0ms): pharmacy:683d6bb02788fcf188ca77bc
+2025-06-09T15:53:00.708Z [debug]: Cache SET with TTL=900s (6ms): pharmacy:683d6bb02788fcf188ca77bc
+2025-06-09T15:53:00.875Z [debug]: Cache HIT (1ms): pharmacy:683d6bb02788fcf188ca77bc
+2025-06-09T15:53:04.636Z [debug]: Cache HIT (8ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:53:04.856Z [debug]: Cache HIT (1ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:53:10.725Z [debug]: Cache MISS (0ms): users:6840a5d90c3cd841ed69f417
+2025-06-09T15:53:11.216Z [debug]: Cache SET with TTL=600s (2ms): users:6840a5d90c3cd841ed69f417
+2025-06-09T15:53:11.400Z [debug]: Cache HIT (1ms): users:6840a5d90c3cd841ed69f417
+2025-06-09T15:53:31.530Z [debug]: Cache HIT (0ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:53:31.694Z [debug]: Cache HIT (2ms): users:{"limit":"10","page":"1"}
+2025-06-09T15:53:35.126Z [debug]: Cache HIT (2ms): users:683d67432788fcf188ca7745
+2025-06-09T15:53:35.775Z [debug]: Cache HIT (1ms): users:683d67432788fcf188ca7745
+2025-06-09T15:54:13.941Z [debug]: Cache DEL (3ms): users:683d67432788fcf188ca7745, Keys removed: 1
+2025-06-09T15:54:13.942Z [debug]: Cache DEL by pattern (3ms): users:*, Keys matched: 3, Keys removed: 3
+2025-06-09T15:54:14.588Z [debug]: Cache MISS (24ms): users:683d67432788fcf188ca7745
+2025-06-09T15:54:14.881Z [debug]: Cache SET with TTL=600s (2ms): users:683d67432788fcf188ca7745
+2025-06-09T15:54:15.068Z [debug]: Cache HIT (1ms): users:683d67432788fcf188ca7745
+2025-06-09T16:09:41.524Z [info]: Redis client connected
+2025-06-09T16:09:41.530Z [info]: Redis client ready and accepting commands
+2025-06-09T16:12:54.911Z [debug]: Cache MISS (20ms): users:683d67432788fcf188ca7745
+2025-06-09T16:12:55.283Z [debug]: Cache SET with TTL=600s (10ms): users:683d67432788fcf188ca7745
+2025-06-09T16:12:55.989Z [debug]: Cache HIT (3ms): users:683d67432788fcf188ca7745
+2025-06-09T16:15:14.075Z [info]: Redis client connected
+2025-06-09T16:15:14.080Z [info]: Redis client ready and accepting commands
+2025-06-09T16:19:46.369Z [debug]: Cache MISS (2ms): users:{"limit":"10","page":"1"}
+2025-06-09T16:19:46.867Z [debug]: Cache SET with TTL=300s (1ms): users:{"limit":"10","page":"1"}
+2025-06-09T16:19:47.069Z [debug]: Cache HIT (7ms): users:{"limit":"10","page":"1"}
+2025-06-09T16:21:58.246Z [debug]: Cache DEL (10ms): users:6839dd4b76963f7e3caef1f7, Keys removed: 0
+2025-06-09T16:21:58.251Z [debug]: Cache DEL by pattern (15ms): users:*, Keys matched: 2, Keys removed: 2
+2025-06-09T16:22:00.959Z [info]: Redis client connected
+2025-06-09T16:22:00.964Z [info]: Redis client ready and accepting commands
+2025-06-09T16:23:12.337Z [info]: Redis client connected
+2025-06-09T16:23:12.342Z [info]: Redis client ready and accepting commands
+2025-06-09T16:26:43.388Z [debug]: Cache MISS (5ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T16:26:43.923Z [debug]: Cache SET with TTL=60s (3ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T16:26:44.251Z [debug]: Cache HIT (3ms): users-pending:{"limit":"10","page":"1"}
+2025-06-09T16:48:19.905Z [info]: Redis client connected
+2025-06-09T16:48:19.962Z [info]: Redis client ready and accepting commands
+2025-06-09T16:48:21.215Z [info]: Redis client connected
+2025-06-09T16:48:21.230Z [info]: Redis client ready and accepting commands
+2025-06-09T16:48:22.352Z [info]: Redis client connected
+2025-06-09T16:48:22.365Z [info]: Redis client ready and accepting commands
+2025-06-09T17:00:24.834Z [info]: Redis client connected
+2025-06-09T17:00:24.846Z [info]: Redis client ready and accepting commands
+2025-06-09T17:00:25.344Z [info]: Redis client connected
+2025-06-09T17:00:25.351Z [info]: Redis client ready and accepting commands
+2025-06-09T17:00:25.654Z [info]: Redis client connected
+2025-06-09T17:00:25.660Z [info]: Redis client ready and accepting commands
+2025-06-09T17:05:07.714Z [info]: Redis client connected
+2025-06-09T17:05:07.721Z [info]: Redis client ready and accepting commands
+2025-06-09T17:05:08.088Z [info]: Redis client connected
+2025-06-09T17:05:08.093Z [info]: Redis client ready and accepting commands
+2025-06-09T17:05:08.383Z [info]: Redis client connected
+2025-06-09T17:05:08.387Z [info]: Redis client ready and accepting commands
+2025-06-09T17:05:43.714Z [info]: Redis client connected
+2025-06-09T17:05:43.720Z [info]: Redis client ready and accepting commands
+2025-06-09T17:05:44.047Z [info]: Redis client connected
+2025-06-09T17:05:44.054Z [info]: Redis client ready and accepting commands
+2025-06-09T17:05:44.126Z [info]: Redis client connected
+2025-06-09T17:05:44.132Z [info]: Redis client ready and accepting commands
+2025-06-09T17:06:02.998Z [debug]: Cache MISS (2ms): pharmacy-stats
+2025-06-09T17:06:03.003Z [debug]: Cache MISS (5ms): pharmacies:{"limit":"10","page":"1"}
+2025-06-09T17:06:03.618Z [debug]: Cache SET with TTL=600s (4ms): pharmacies:{"limit":"10","page":"1"}
+2025-06-09T17:06:03.779Z [debug]: Cache HIT (0ms): pharmacies:{"limit":"10","page":"1"}
+2025-06-09T17:06:04.305Z [debug]: Cache SET with TTL=3600s (4ms): pharmacy-stats
+2025-06-09T17:06:04.497Z [debug]: Cache HIT (0ms): pharmacy-stats
+2025-06-09T17:06:07.096Z [debug]: Cache MISS (2ms): users:{"limit":"10","page":"1"}
+2025-06-09T17:06:07.439Z [debug]: Cache SET with TTL=300s (1ms): users:{"limit":"10","page":"1"}
+2025-06-09T17:06:07.605Z [debug]: Cache HIT (1ms): users:{"limit":"10","page":"1"}
+2025-06-09T17:07:56.368Z [debug]: Cache HIT (1ms): users:{"limit":"10","page":"1"}
+2025-06-09T17:07:57.050Z [debug]: Cache HIT (0ms): users:{"limit":"10","page":"1"}
+2025-06-09T17:08:42.291Z [info]: Redis client connected
+2025-06-09T17:08:42.304Z [info]: Redis client ready and accepting commands
+2025-06-09T17:08:43.019Z [info]: Redis client connected
+2025-06-09T17:08:43.026Z [info]: Redis client ready and accepting commands
+2025-06-09T17:08:43.080Z [info]: Redis client connected
+2025-06-09T17:08:43.085Z [info]: Redis client ready and accepting commands
+2025-06-09T17:09:22.303Z [info]: Redis client connected
+2025-06-09T17:09:22.318Z [info]: Redis client ready and accepting commands
+2025-06-09T17:09:24.340Z [info]: Redis client connected
+2025-06-09T17:09:24.346Z [info]: Redis client ready and accepting commands
+2025-06-09T17:09:24.549Z [info]: Redis client connected
+2025-06-09T17:09:24.554Z [info]: Redis client ready and accepting commands

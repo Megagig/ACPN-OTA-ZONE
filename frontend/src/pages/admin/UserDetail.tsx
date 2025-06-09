@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import userService from '../../services/user.service';
 import userManagementService from '../../services/userManagement.service';
 import type {
   Role,
@@ -102,7 +101,7 @@ const UserDetail: React.FC = () => {
   const fetchUser = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await userService.getUserById(id!);
+      const response = await userManagementService.getUserById(id!);
       setUser(response.data);
 
       // Initialize form data
@@ -165,7 +164,7 @@ const UserDetail: React.FC = () => {
     e.preventDefault();
 
     try {
-      await userService.updateUser(id!, editFormData);
+      await userManagementService.updateUser(id!, editFormData);
       toast({
         title: 'Success',
         description: 'User details updated successfully.',
@@ -228,7 +227,7 @@ const UserDetail: React.FC = () => {
 
   const handleDeleteUser = async () => {
     try {
-      await userService.deleteUser(id!);
+      await userManagementService.deleteUser(id!);
       toast({
         title: 'Success',
         description: 'User deleted successfully.',

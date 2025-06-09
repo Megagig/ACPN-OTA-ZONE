@@ -179,6 +179,21 @@ class UserManagementService {
   }
 
   // User management methods
+  async getUserById(id: string): Promise<UserResponse> {
+    const response = await api.get(`/user-management/${id}`);
+    return response.data;
+  }
+
+  async updateUser(id: string, userData: Partial<User>): Promise<UserResponse> {
+    const response = await api.put(`/users/${id}`, userData);
+    return response.data;
+  }
+
+  async deleteUser(id: string): Promise<BaseResponse> {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  }
+
   async getUserProfile(): Promise<UserResponse> {
     const response = await api.get('/user-management/profile');
     return response.data;
@@ -293,4 +308,3 @@ class UserManagementService {
 }
 
 export default new UserManagementService();
-export type { AuditTrailEntry };

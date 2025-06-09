@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>API Test</title>
+  </head>
+  <body>
+    <h1>API Test</h1>
+    <button onclick="testGetUser()">Test Get User</button>
+    <button onclick="testUploadPicture()">Test Upload Picture</button>
+    <div id="result"></div>
+
+    <script>
+      async function testGetUser() {
+        try {
+          // You'll need to get a valid JWT token first
+          const token = prompt('Enter your JWT token:');
+
+          const response = await fetch(
+            '/api/user-management/683d67432788fcf188ca7745',
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const data = await response.json();
+          document.getElementById('result').innerHTML = JSON.stringify(
+            data,
+            null,
+            2
+          );
+        } catch (error) {
+          document.getElementById('result').innerHTML =
+            'Error: ' + error.message;
+        }
+      }
+
+      async function testUploadPicture() {
+        const token = prompt('Enter your JWT token:');
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+
+        fileInput.onchange = async () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append('profilePicture', file);
+
+          try {
+            const response = await fetch(
+              '/api/user-management/profile/picture',
+              {
+                method: 'PUT',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+              }
+            );
+
+            const data = await response.json();
+            document.getElementById('result').innerHTML = JSON.stringify(
+              data,
+              null,
+              2
+            );
+          } catch (error) {
+            document.getElementById('result').innerHTML =
+              'Error: ' + error.message;
+          }
+        };
+
+        fileInput.click();
+      }
+    </script>
+  </body>
+</html>

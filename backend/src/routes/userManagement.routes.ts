@@ -18,16 +18,22 @@ const {
   getUserAuditTrail,
   checkUserPermission: checkPermission,
   getFilteredUsers,
+  getUserById,
 } = userManagementController;
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../../uploads/profile-pictures'));
+    const uploadPath = path.join(__dirname, '../../uploads/profile-pictures');
+    console.log('Multer destination path:', uploadPath);
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+    const filename =
+      'profile-' + uniqueSuffix + path.extname(file.originalname);
+    console.log('Multer filename:', filename);
+    cb(null, filename);
   },
 });
 
@@ -35,6 +41,7 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: function (req, file, cb) {
+    console.log('Multer fileFilter - file:', file);
     const filetypes = /jpeg|jpg|png|gif/;
     const mimetype = filetypes.test(file.mimetype);
     const extname = filetypes.test(
@@ -63,6 +70,14 @@ router
 
 // Routes to manage user permissions and roles
 router.route('/permissions').get(getUserPermissions);
+
+// Route to get user by ID
+router
+  .route('/:id')
+  .get(
+    authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    getUserById
+  );
 
 // Admin routes for user management
 router
