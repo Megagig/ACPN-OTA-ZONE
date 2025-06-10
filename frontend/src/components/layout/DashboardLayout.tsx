@@ -125,7 +125,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-center h-16 border-b border-border">
-            <h2 className="text-xl font-bold text-primary">ACPN Ota Zone</h2>
+            <div className="flex items-center">
+              <img
+                src="/acpn-ota-zone-logo.svg"
+                alt="ACPN Ota Zone Logo"
+                className="w-10 h-10 mr-2"
+              />
+              <h2 className="text-xl font-bold text-primary">ACPN Ota Zone</h2>
+            </div>
           </div>
 
           {/* Navigation Items */}

@@ -13843,3 +13843,31 @@
 2025-06-10T14:39:47.772Z [debug]: Cache HIT (5ms): events:{"limit":"12","page":"1","status":"published"}
 2025-06-10T14:41:29.907Z [info]: Redis client connected
 2025-06-10T14:41:29.922Z [info]: Redis client ready and accepting commands
+2025-06-10T14:44:17.670Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:44:17.683Z [debug]: Cache MISS (0ms): events-stats
+2025-06-10T14:44:19.397Z [debug]: Cache SET with TTL=300s (5ms): events-stats
+2025-06-10T14:44:19.896Z [debug]: Cache HIT (1ms): events-stats
+2025-06-10T14:44:20.084Z [debug]: Cache SET with TTL=120s (7ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:44:21.233Z [debug]: Cache HIT (31ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:44:27.214Z [debug]: Cache MISS (5ms): events:683edd859906fb0fcef13693
+2025-06-10T14:44:31.974Z [debug]: Cache SET with TTL=180s (3ms): events:683edd859906fb0fcef13693
+2025-06-10T14:44:32.299Z [debug]: Cache HIT (2ms): events:683edd859906fb0fcef13693
+2025-06-10T14:49:51.726Z [debug]: Cache MISS (0ms): events:683edd859906fb0fcef13693
+2025-06-10T14:49:56.097Z [debug]: Cache SET with TTL=180s (14ms): events:683edd859906fb0fcef13693
+2025-06-10T14:49:56.555Z [debug]: Cache HIT (0ms): events:683edd859906fb0fcef13693
+2025-06-10T14:50:06.133Z [debug]: Cache MISS (2ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:50:12.157Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:50:14.222Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:50:14.471Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:50:14.779Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:53:16.642Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:53:25.537Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:53:25.754Z [debug]: Cache HIT (2ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:55:03.188Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:55:04.935Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:55:42.431Z [debug]: Cache MISS (0ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:55:44.757Z [debug]: Cache MISS (1ms): events-stats
+2025-06-10T14:55:46.575Z [debug]: Cache SET with TTL=120s (0ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:55:46.808Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-10T14:55:47.176Z [debug]: Cache SET with TTL=300s (3ms): events-stats
+2025-06-10T14:55:47.421Z [debug]: Cache HIT (2ms): events-stats

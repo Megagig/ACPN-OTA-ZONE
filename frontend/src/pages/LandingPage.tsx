@@ -16,9 +16,16 @@ const LandingPage: React.FC = () => {
         >
           <div className="w-full py-6 flex items-center justify-between border-b border-primary-foreground/20 lg:border-none">
             <div className="flex items-center">
-              <span className="text-primary-foreground text-xl font-bold">
-                ACPN Ota Zone
-              </span>
+              <div className="flex items-center">
+                <img
+                  src="/acpn-ota-zone-logo.svg"
+                  alt="ACPN Ota Zone Logo"
+                  className="w-10 h-10 mr-2"
+                />
+                <span className="text-primary-foreground text-xl font-bold">
+                  ACPN Ota Zone
+                </span>
+              </div>
               <div className="hidden ml-10 space-x-8 lg:block">
                 <Link
                   to="#about"

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="gradientPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006400" />
+      <stop offset="100%" stop-color="#00A000" />
+    </linearGradient>
+    <linearGradient id="gradientSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006400" />
+      <stop offset="100%" stop-color="#008000" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Circular background -->
+  <circle cx="128" cy="128" r="120" fill="#FFFFFF" stroke="url(#gradientPrimary)" stroke-width="6" />
+  
+  <!-- Medical cross symbol -->
+  <path d="M128 48 L128 208 M68 128 L188 128" stroke="url(#gradientPrimary)" stroke-width="12" stroke-linecap="round" />
+  
+  <!-- Mortar and pestle simplified symbol -->
+  <path d="M90 160 A50 25 0 0 0 166 160 L90 160 Z" fill="url(#gradientSecondary)" />
+  <path d="M120 145 L136 145 L130 105 L126 105 Z" fill="url(#gradientSecondary)" />
+  
+  <!-- Text elements -->
+  <g transform="translate(128, 220)" text-anchor="middle">
+    <text font-family="Arial, sans-serif" font-weight="bold" font-size="16" fill="#006400">ACPN OTA ZONE</text>
+  </g>
+  
+  <!-- Circular outer rim with text -->
+  <g fill="#006400">
+    <path id="circle-text-path" d="M 128,30 a 98,98 0 1,1 -0.1,0" fill="none"/>
+    <text font-family="Arial, sans-serif" font-size="12" letter-spacing="1">
+      <textPath href="#circle-text-path" startOffset="5%">ASSOCIATION OF COMMUNITY PHARMACISTS OF NIGERIA • OTA ZONE •</textPath>
+    </text>
+  </g>
+</svg>
