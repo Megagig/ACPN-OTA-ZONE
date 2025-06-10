@@ -17,6 +17,7 @@ import {
   getAllPenaltyConfigs,
   getUserPenalties,
   getUserRegistrations,
+  getUserEventHistory,
   getEventRegistrations,
   calculatePenalties,
   sendAttendanceWarningsForYear,
@@ -49,6 +50,9 @@ router
     cacheMiddleware('registrations-user', { ttl: 60 }),
     getUserRegistrations
   );
+router
+  .route('/my-history')
+  .get(cacheMiddleware('history-user', { ttl: 300 }), getUserEventHistory);
 
 // Stats route (must come before /:id to avoid conflict)
 router

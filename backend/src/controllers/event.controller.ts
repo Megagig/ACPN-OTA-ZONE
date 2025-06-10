@@ -998,6 +998,80 @@ export const getEventRegistrations = asyncHandler(
   }
 );
 
+// @desc    Get user's event history (for attendance tracking)
+// @route   GET /api/events/my-history
+// @access  Private
+export const getUserEventHistory = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const startIndex = (page - 1) * limit;
+
+    // Get user's event registrations with attendance data
+    const registrations = await EventRegistration.find({ userId })
+      .populate({
+        path: 'eventId',
+        select: 'title description startDate endDate location eventType status',
+        populate: {
+          path: 'createdBy',
+          select: 'firstName lastName email',
+        },
+      })
+      .sort({ registrationDate: -1 })
+      .skip(startIndex)
+      .limit(limit);
+
+    // Get attendance records for the user
+    const eventIds = registrations.map((reg) => reg.eventId);
+    const attendanceRecords = await EventAttendance.find({
+      userId,
+      eventId: { $in: eventIds },
+    });
+
+    // Create attendance map for quick lookup
+    const attendanceMap = new Map();
+    attendanceRecords.forEach((record) => {
+      attendanceMap.set(record.eventId.toString(), {
+        eventId: record.eventId,
+        attended: record.attended,
+        attendedAt: record.markedAt,
+        notes: record.notes,
+      });
+    });
+
+    // Combine registration and attendance data
+    const eventHistory = registrations.map((registration) => {
+      const eventIdStr = registration.eventId._id.toString();
+      const attendance = attendanceMap.get(eventIdStr);
+
+      return {
+        registration: registration.toObject(),
+        attendance: attendance || null,
+      };
+    });
+
+    // Get total count for pagination
+    const total = await EventRegistration.countDocuments({ userId });
+
+    res.status(200).json({
+      success: true,
+      count: eventHistory.length,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        total,
+      },
+      data: {
+        registrations: registrations,
+        attendance: attendanceRecords,
+        eventHistory,
+      },
+    });
+  }
+);
+
 // Helper function to send notifications to all users
 async function sendEventNotifications(eventId: string) {
   try {
