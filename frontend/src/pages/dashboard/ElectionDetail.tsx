@@ -15,7 +15,6 @@ import {
   Text,
   Heading,
   Divider,
-  useToast,
   Box,
   Flex,
   VStack,
@@ -24,7 +23,14 @@ import {
   Tab,
   TabPanels,
   TabPanel,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  HStack,
 } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 import type {
   Election,
   ElectionStatus,
@@ -37,7 +43,6 @@ import CandidatesList from './CandidatesList';
 const ElectionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -51,70 +56,42 @@ const ElectionDetail: React.FC = () => {
           setElection(data);
         }
       } catch (error) {
-        toast({
-          title: 'Error fetching election',
-          description: 'Unable to load election details',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast.error('Unable to load election details', { autoClose: 3000 });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElection();
-  }, [id, toast]);
+  }, [id]);
 
   const handlePublishElection = async () => {
     try {
       if (election && id) {
-        await electionService.updateElectionStatus(id, 'active');
-        toast({
-          title: 'Election published',
-          description: 'The election is now live and open for voting',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
+        await electionService.updateElectionStatus(id, 'ongoing');
+        toast.success('The election is now live and open for voting', {
+          autoClose: 3000,
         });
-        // Refresh election data
         const updated = await electionService.getElectionById(id);
         setElection(updated);
       }
     } catch (error) {
-      toast({
-        title: 'Error publishing election',
-        description: 'Failed to publish the election',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast.error('Failed to publish the election', { autoClose: 3000 });
     }
   };
 
   const handleCloseElection = async () => {
     try {
       if (election && id) {
-        await electionService.updateElectionStatus(id, 'completed');
-        toast({
-          title: 'Election closed',
-          description: 'The election has been marked as completed',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
+        await electionService.updateElectionStatus(id, 'ended');
+        toast.success('The election has been marked as completed', {
+          autoClose: 3000,
         });
-        // Refresh election data
         const updated = await electionService.getElectionById(id);
         setElection(updated);
       }
     } catch (error) {
-      toast({
-        title: 'Error closing election',
-        description: 'Failed to close the election',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast.error('Failed to close the election', { autoClose: 3000 });
     }
   };
 
@@ -122,9 +99,9 @@ const ElectionDetail: React.FC = () => {
     switch (status) {
       case 'draft':
         return 'gray';
-      case 'active':
+      case 'ongoing':
         return 'green';
-      case 'completed':
+      case 'ended':
         return 'blue';
       case 'cancelled':
         return 'red';
@@ -155,9 +132,10 @@ const ElectionDetail: React.FC = () => {
         </Stat>
         <Stat as={Card} p={4}>
           <StatLabel>Votes Cast</StatLabel>
-          <StatNumber>{election.totalVotes || 0}</StatNumber>
+          {/* Assuming totalVoters is the correct field, or it might be another field like totalVotesCasted etc. */}
+          <StatNumber>{election.totalVoters || 0}</StatNumber>
           <StatHelpText>
-            {election.status === 'active' ? 'Ongoing voting' : 'Final count'}
+            {election.status === 'ongoing' ? 'Ongoing voting' : 'Final count'}
           </StatHelpText>
         </Stat>
       </SimpleGrid>
@@ -187,7 +165,7 @@ const ElectionDetail: React.FC = () => {
             </Button>
           </>
         )}
-        {election.status === 'active' && (
+        {election.status === 'ongoing' && (
           <>
             <Button
               leftIcon={<FaVoteYea />}
@@ -205,7 +183,7 @@ const ElectionDetail: React.FC = () => {
             </Button>
           </>
         )}
-        {election.status === 'completed' && (
+        {election.status === 'ended' && (
           <Button
             leftIcon={<FaChartBar />}
             colorScheme="blue"
@@ -331,7 +309,7 @@ const ElectionDetail: React.FC = () => {
             </VStack>
           </TabPanel>
           <TabPanel p={0}>
-            {election.status === 'completed' ? (
+            {election.status === 'ended' ? (
               <Box>
                 <Heading size="md" mb={4}>
                   Election Results

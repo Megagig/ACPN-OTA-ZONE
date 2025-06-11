@@ -25,9 +25,9 @@ import {
   AlertIcon,
   Card,
   CardBody,
-  useToast,
 } from '@chakra-ui/react';
-import type { Election, Position } from '../../types/election.types';
+import { toast } from 'react-toastify';
+import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -49,7 +49,6 @@ interface VotingStatistics {
 const ElectionResults: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,13 +64,8 @@ const ElectionResults: React.FC = () => {
 
           // If election is completed, fetch voting statistics
           if (data.status === 'ongoing') {
-            toast({
-              title: 'Election is still active',
-              description:
-                'Results will be available after the election closes',
-              status: 'info',
-              duration: 5000,
-              isClosable: true,
+            toast.info('Results will be available after the election closes', {
+              autoClose: 5000,
             });
             navigate(`/elections/${id}`);
             return;
@@ -99,20 +93,14 @@ const ElectionResults: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching election results:', error);
-        toast({
-          title: 'Error fetching election results',
-          description: 'Unable to load election results',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast.error('Unable to load election results', { autoClose: 3000 });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElectionResults();
-  }, [id, navigate, toast]);
+  }, [id, navigate]);
 
   const renderPositionResults = (position: Position) => {
     if (!position.candidates || position.candidates.length === 0) {
@@ -128,7 +116,7 @@ const ElectionResults: React.FC = () => {
     );
 
     // Sort candidates by vote count in descending order
-    const sortedCandidates = [...position.candidates].sort(
+    const sortedCandidates: Candidate[] = [...position.candidates].sort(
       (a, b) => (b.voteCount || 0) - (a.voteCount || 0)
     );
 
@@ -154,12 +142,12 @@ const ElectionResults: React.FC = () => {
                   {candidate.photoUrl ? (
                     <img
                       src={candidate.photoUrl}
-                      alt={candidate.name}
+                      alt={candidate.name || 'Candidate'}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold">
-                      {candidate.name.charAt(0)}
+                      {(candidate.name || 'C').charAt(0)}
                     </div>
                   )}
                   <Text
@@ -167,7 +155,7 @@ const ElectionResults: React.FC = () => {
                       index === 0 ? 'font-bold' : 'font-medium'
                     } flex items-center gap-2`}
                   >
-                    {candidate.name}{' '}
+                    {candidate.name || 'N/A'}{' '}
                     {index === 0 && <FaMedal className="text-yellow-500" />}
                   </Text>
                 </HStack>

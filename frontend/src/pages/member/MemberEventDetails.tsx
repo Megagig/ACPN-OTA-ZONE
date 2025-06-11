@@ -1,35 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
-  Card,
-  CardBody,
-  Text,
-  SimpleGrid,
-  Badge,
   Button,
+  Image,
+  Text,
+  Flex,
+  Badge,
   Spinner,
+  Icon,
   Alert,
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  List,
-  ListItem,
-  ListIcon,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-  Image,
   IconButton,
-  Tooltip,
-  Flex,
   Heading,
-  VStack,
+  Tooltip,
+  SimpleGrid,
+  Card,
+  CardBody,
   HStack,
-  Icon,
-  useToast,
-  Link as ChakraLink,
+  List,
+  ListItem,
+  ListIcon,
+  VStack,
   Divider,
 } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 import {
   FaMapMarkerAlt,
   FaCheckCircle,
@@ -42,7 +41,7 @@ import {
 } from 'react-icons/fa';
 import { EventService } from '../../services/event.service';
 import type {
-  Event,
+  Event as AppEvent, // Aliased to avoid conflict with global Event type
   EventType,
   EventRegistration,
 } from '../../types/event.types';
@@ -65,9 +64,8 @@ const MemberEventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
 
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<AppEvent | null>(null); // Use aliased AppEvent
   const [userRegistration, setUserRegistration] =
     useState<EventRegistration | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,12 +119,8 @@ const MemberEventDetails: React.FC = () => {
         registrationData
       );
       setUserRegistration(registration);
-      toast({
-        title: 'Registration Successful',
-        description: `You have successfully registered for ${event.title}.`,
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
+      toast.success(`You have successfully registered for ${event.title}.`, {
+        autoClose: 5000,
       });
       loadEventDetails(); // Refresh event details
     } catch (err: unknown) {
@@ -134,13 +128,7 @@ const MemberEventDetails: React.FC = () => {
       const errorMessage =
         error.response?.data?.message || 'Failed to register for event';
       setError(errorMessage);
-      toast({
-        title: 'Registration Failed',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      toast.error(errorMessage, { autoClose: 5000 });
     } finally {
       setRegistering(false);
     }
@@ -154,12 +142,8 @@ const MemberEventDetails: React.FC = () => {
       setError(null); // Clear previous errors
       await EventService.unregisterFromEvent(event._id);
       setUserRegistration(null);
-      toast({
-        title: 'Unregistration Successful',
-        description: `You have successfully unregistered from ${event.title}.`,
-        status: 'info',
-        duration: 5000,
-        isClosable: true,
+      toast.info(`You have successfully unregistered from ${event.title}.`, {
+        autoClose: 5000,
       });
       loadEventDetails(); // Refresh event details
     } catch (err: unknown) {
@@ -167,13 +151,7 @@ const MemberEventDetails: React.FC = () => {
       const errorMessage =
         error.response?.data?.message || 'Failed to unregister from event';
       setError(errorMessage);
-      toast({
-        title: 'Unregistration Failed',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      toast.error(errorMessage, { autoClose: 5000 });
     } finally {
       setRegistering(false);
     }
@@ -181,11 +159,8 @@ const MemberEventDetails: React.FC = () => {
 
   const toggleFavorite = () => {
     setFavorite(!favorite);
-    toast({
-      title: favorite ? 'Removed from favorites' : 'Added to favorites',
-      status: 'info',
-      duration: 2000,
-      isClosable: true,
+    toast.info(favorite ? 'Removed from favorites' : 'Added to favorites', {
+      autoClose: 2000,
     });
     // TODO: Implement favorite API call
   };
@@ -199,12 +174,7 @@ const MemberEventDetails: React.FC = () => {
           url: window.location.href,
         })
         .then(() => {
-          toast({
-            title: 'Event Shared!',
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          });
+          toast.success('Event Shared!', { autoClose: 3000 });
         })
         .catch((error) => {
           // If sharing fails, or is cancelled by user, it might throw an error or just not resolve.
@@ -214,13 +184,7 @@ const MemberEventDetails: React.FC = () => {
         });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: 'Link Copied!',
-        description: 'Event link copied to clipboard.',
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast.info('Event link copied to clipboard.', { autoClose: 3000 });
     }
   };
 

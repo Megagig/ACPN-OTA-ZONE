@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import userService from '../../services/user.service';
 import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
-import { useToast } from '../shadcn/hooks/use-toast';
+import { toast } from 'react-toastify';
 import ConfirmationModal from '../common/ConfirmationModal'; // Import the modal
 
 interface ApprovedUserType extends User {
@@ -19,7 +19,6 @@ const ApprovedUsers: React.FC = () => {
     totalPages: 1,
     total: 0,
   });
-  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState<string | null>(null);
 
@@ -46,16 +45,12 @@ const ApprovedUsers: React.FC = () => {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load approved users.';
         setError(errorMessage);
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
     },
-    [toast]
+    []
   );
 
   useEffect(() => {
@@ -77,10 +72,7 @@ const ApprovedUsers: React.FC = () => {
 
     try {
       await userService.deleteUser(userIdToDelete);
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully.',
-      });
+      toast.success('User deleted successfully.');
       closeDeleteModal();
       // Refresh the list after deletion
       fetchApprovedUsers(pagination.page, pagination.limit);
@@ -88,11 +80,7 @@ const ApprovedUsers: React.FC = () => {
       console.error('Error deleting user:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete user.';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
       closeDeleteModal();
     }
   };

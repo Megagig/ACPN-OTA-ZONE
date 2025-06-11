@@ -26,7 +26,7 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
-import { useToast } from '../../hooks/useToast';
+import { toast } from 'react-toastify';
 
 interface SelectedCandidates {
   [positionId: string]: string;
@@ -35,7 +35,6 @@ interface SelectedCandidates {
 const VotingInterface: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -52,12 +51,8 @@ const VotingInterface: React.FC = () => {
           const data = await electionService.getElectionById(id);
 
           if (data.status !== 'ongoing') {
-            toast({
-              title: 'Voting unavailable',
-              description: 'This election is not currently active for voting',
-              status: 'warning',
-              duration: 3000,
-              isClosable: true,
+            toast.warn('This election is not currently active for voting', {
+              autoClose: 3000,
             });
             navigate(`/elections/${id}`);
             return;
@@ -71,20 +66,14 @@ const VotingInterface: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading election:', error);
-        toast({
-          title: 'Error loading election',
-          description: 'Unable to load election details',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast.error('Unable to load election details', { autoClose: 3000 });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElection();
-  }, [id, navigate, toast]);
+  }, [id, navigate]);
 
   const handleSelectCandidate = (positionId: string, candidateId: string) => {
     setSelectedCandidates({
@@ -121,23 +110,13 @@ const VotingInterface: React.FC = () => {
 
       await electionService.submitVotes(id, votes);
 
-      toast({
-        title: 'Votes submitted successfully',
-        description: 'Your votes have been recorded',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast.success('Your votes have been recorded', { autoClose: 3000 });
 
       navigate(`/elections/${id}`);
     } catch (error) {
       console.error('Error submitting votes:', error);
-      toast({
-        title: 'Error submitting votes',
-        description: 'There was a problem recording your votes',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+      toast.error('There was a problem recording your votes', {
+        autoClose: 3000,
       });
     } finally {
       setSubmitting(false);

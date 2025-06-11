@@ -31,9 +31,9 @@ import {
   AlertDialogOverlay,
   Card,
   CardBody,
-  useToast,
   useDisclosure,
 } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 import {
   FaPlus,
   FaTrash,
@@ -68,7 +68,6 @@ interface PollFormValues {
 const PollForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
   const [loading, setLoading] = useState<boolean>(true);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [currentEditQuestion, setCurrentEditQuestion] = useState<number | null>(
@@ -137,34 +136,20 @@ const PollForm: React.FC = () => {
 
         if (isEdit && id) {
           await pollService.updatePoll(id, pollData);
-          toast({
-            title: 'Poll updated',
-            description: 'Poll has been updated successfully',
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
+          toast.success('Poll has been updated successfully', {
+            autoClose: 3000,
           });
         } else {
           await pollService.createPoll(pollData);
-          toast({
-            title: 'Poll created',
-            description: 'Poll has been created successfully',
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
+          toast.success('Poll has been created successfully', {
+            autoClose: 3000,
           });
         }
 
         navigate('/polls/list');
       } catch (err) {
         console.error('Error saving poll:', err);
-        toast({
-          title: 'Error saving poll',
-          description: 'There was an error saving the poll',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast.error('There was an error saving the poll', { autoClose: 3000 });
       } finally {
         setSubmitting(false);
       }
@@ -180,12 +165,8 @@ const PollForm: React.FC = () => {
           const data = await pollService.getPollById(id);
 
           if (data.status !== 'draft') {
-            toast({
-              title: 'Cannot edit active or closed poll',
-              description: 'Only draft polls can be edited',
-              status: 'warning',
-              duration: 5000,
-              isClosable: true,
+            toast.warning('Only draft polls can be edited', {
+              autoClose: 5000,
             });
             navigate('/polls/list');
             return;
@@ -208,13 +189,7 @@ const PollForm: React.FC = () => {
           });
         } catch (err) {
           console.error('Error loading poll:', err);
-          toast({
-            title: 'Error loading poll',
-            description: 'Unable to load poll details',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
+          toast.error('Unable to load poll details', { autoClose: 3000 });
           navigate('/polls/list');
         } finally {
           setLoading(false);
@@ -225,7 +200,7 @@ const PollForm: React.FC = () => {
     };
 
     fetchPoll();
-  }, [id, navigate, toast]); // setInitialFormValues is stable
+  }, [id, navigate]); // Removed toast from dependency array
 
   const addQuestion = () => {
     const newQuestion: PollQuestion = {

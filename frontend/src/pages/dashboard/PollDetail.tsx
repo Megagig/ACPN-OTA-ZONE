@@ -10,7 +10,7 @@ import {
 import ChartComponent from '../../components/common/ChartComponent';
 import { Alert, Card, CardBody } from '../../components/ui/chakra-components';
 import { AlertIcon } from '../../components/ui/chakra-components';
-import { useToast } from '../../hooks/useToast';
+import { toast } from 'react-toastify';
 import type {
   Poll,
   PollResults,
@@ -30,7 +30,6 @@ interface OptionStatistic {
 const PollDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [results, setResults] = useState<PollResults | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -51,12 +50,8 @@ const PollDetail: React.FC = () => {
           }
         }
       } catch (error: any) {
-        toast({
-          title: 'Error loading poll data',
-          description: 'Unable to load poll details or results',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
+        toast.error('Unable to load poll details or results', {
+          autoClose: 3000,
         });
       } finally {
         setLoading(false);
@@ -64,7 +59,7 @@ const PollDetail: React.FC = () => {
     };
 
     fetchPollData();
-  }, [id, toast]);
+  }, [id]);
 
   const getPollStatusColor = (status: string): string => {
     switch (status) {

@@ -41,16 +41,15 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   useDisclosure,
-  useToast,
   Card,
   CardBody,
 } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 import type { Poll, PollStatus } from '../../types/poll.types';
 import pollService from '../../services/poll.service';
 
 const PollsList: React.FC = () => {
   const navigate = useNavigate();
-  const toast = useToast();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [filteredPolls, setFilteredPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -69,12 +68,8 @@ const PollsList: React.FC = () => {
         setFilteredPolls(data);
       } catch {
         console.error('Error fetching polls');
-        toast({
-          title: 'Error fetching polls',
-          description: 'There was an error loading the polls.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
+        toast.error('There was an error loading the polls.', {
+          autoClose: 3000,
         });
       } finally {
         setLoading(false);
@@ -82,7 +77,7 @@ const PollsList: React.FC = () => {
     };
 
     fetchPolls();
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     // Apply filters
@@ -112,21 +107,11 @@ const PollsList: React.FC = () => {
     try {
       await pollService.deletePoll(pollToDelete);
       setPolls(polls.filter((poll) => poll._id !== pollToDelete));
-      toast({
-        title: 'Poll deleted',
-        description: 'The poll has been successfully deleted.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
+      toast.success('The poll has been successfully deleted.', {
+        autoClose: 3000,
       });
     } catch {
-      toast({
-        title: 'Error deleting poll',
-        description: 'There was an error deleting the poll.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast.error('There was an error deleting the poll.', { autoClose: 3000 });
     } finally {
       setPollToDelete(null);
       onClose();
@@ -146,20 +131,10 @@ const PollsList: React.FC = () => {
         polls.map((poll) => (poll._id === id ? { ...poll, status } : poll))
       );
 
-      toast({
-        title: 'Poll status updated',
-        description: `Poll status changed to ${status}.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast.success(`Poll status changed to ${status}.`, { autoClose: 3000 });
     } catch {
-      toast({
-        title: 'Error updating poll status',
-        description: 'There was an error updating the poll status.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+      toast.error('There was an error updating the poll status.', {
+        autoClose: 3000,
       });
     }
   };

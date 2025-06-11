@@ -20,7 +20,6 @@ import {
   Tr,
   Th,
   Td,
-  useToast,
   Stat,
   StatLabel,
   StatNumber,
@@ -31,12 +30,12 @@ import {
   Tabs,
   Tab,
 } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import eventService from '../../services/event.service';
 import type { Event, PenaltyInfo } from '../../types/event.types';
 
 const MemberAttendanceStatus: React.FC = () => {
-  const toast = useToast();
   const [loading, setLoading] = useState<boolean>(true);
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [events, setEvents] = useState<Event[]>([]);
@@ -105,12 +104,8 @@ const MemberAttendanceStatus: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching attendance data:', error);
-        toast({
-          title: 'Error',
-          description: 'Unable to load attendance data. Please try again.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
+        toast.error('Unable to load attendance data. Please try again.', {
+          autoClose: 5000,
         });
       } finally {
         setLoading(false);
@@ -118,7 +113,7 @@ const MemberAttendanceStatus: React.FC = () => {
     };
 
     fetchData();
-  }, [year, toast, meetingEvents]);
+  }, [year, meetingEvents]);
 
   // Format date function
   const formatDate = (dateString: string) => {

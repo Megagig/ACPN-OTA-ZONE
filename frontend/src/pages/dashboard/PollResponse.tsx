@@ -5,8 +5,7 @@ import pollService from '../../services/poll.service';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Card, CardBody, Alert } from '@chakra-ui/react';
 import { AlertIcon } from '../../components/ui/chakra-components';
-import { useToast } from '../../hooks/useToast';
-import { useTheme } from '../../context/ThemeContext';
+import { toast } from 'react-toastify';
 
 interface FormValues {
   [key: string]: string | string[] | number | boolean;
@@ -15,8 +14,6 @@ interface FormValues {
 const PollResponse: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { theme } = useTheme();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -38,20 +35,14 @@ const PollResponse: React.FC = () => {
           setHasResponded(hasUserResponded);
         }
       } catch {
-        toast({
-          title: 'Error loading poll',
-          description: 'Unable to load poll data',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast.error('Unable to load poll data', { autoClose: 3000 });
       } finally {
         setLoading(false);
       }
     };
 
     fetchPoll();
-  }, [id, toast]);
+  }, [id]);
 
   const handleInputChange = (
     questionId: string,
@@ -120,22 +111,14 @@ const PollResponse: React.FC = () => {
         answers: responses,
       });
 
-      toast({
-        title: 'Response submitted',
-        description: 'Your poll response has been submitted successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
+      toast.success('Your poll response has been submitted successfully', {
+        autoClose: 3000,
       });
 
       navigate('/dashboard/polls');
     } catch {
-      toast({
-        title: 'Submission failed',
-        description: 'Unable to submit your response. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+      toast.error('Unable to submit your response. Please try again.', {
+        autoClose: 3000,
       });
     } finally {
       setSubmitting(false);

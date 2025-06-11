@@ -45,8 +45,8 @@ import {
   Stepper as ChakraStepper,
   Icon,
   Flex,
-  useToast,
 } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 import {
   FaCalendarDay,
   FaMapMarkerAlt,
@@ -65,7 +65,6 @@ const MemberEventRegistration: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -187,17 +186,14 @@ const MemberEventRegistration: React.FC = () => {
       setError(null);
       await EventService.registerForEvent(event._id, formData);
       setShowConfirmDialog(true);
+      // Assuming success toast is handled by navigation or confirmation dialog
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to register for event');
-      toast({
-        title: 'Registration Failed',
-        description:
-          error.response?.data?.message || 'An unexpected error occurred.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      const errorMessage =
+        error.response?.data?.message ||
+        'Failed to register for event. An unexpected error occurred.';
+      setError(errorMessage);
+      toast.error(errorMessage, { autoClose: 5000 });
     } finally {
       setRegistering(false);
     }
