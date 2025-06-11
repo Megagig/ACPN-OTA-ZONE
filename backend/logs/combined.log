@@ -14990,3 +14990,10 @@
 2025-06-11T09:54:38.758Z [debug]: Cache HIT (1ms): payments-pending
 2025-06-11T09:54:38.942Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"status":"all"}
 2025-06-11T09:54:39.156Z [debug]: Cache HIT (4ms): payments-admin:{"status":"all"}
+2025-06-11T10:04:07.848Z [debug]: Cache MISS (1ms): payments-pending
+2025-06-11T10:04:07.867Z [debug]: Cache MISS (0ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-11T10:04:08.237Z [debug]: Cache SET with TTL=60s (1ms): payments-pending
+2025-06-11T10:04:08.237Z [debug]: Cache SET with TTL=180s (0ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-11T10:10:27.262Z [debug]: Cache MISS (0ms): users-pending:{"limit":"10","page":"1"}
+2025-06-11T10:10:27.621Z [debug]: Cache SET with TTL=60s (2ms): users-pending:{"limit":"10","page":"1"}
+2025-06-11T10:10:27.854Z [debug]: Cache HIT (0ms): users-pending:{"limit":"10","page":"1"}

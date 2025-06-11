@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import userService from '../../services/user.service';
 import type { User } from '../../types/auth.types';
 import { Button } from '../shadcn/button';
-import { useToast } from '../shadcn/hooks/use-toast';
+import { toast } from 'react-toastify';
 
 interface PendingUserType extends User {
   createdAt?: string; // This is fine as it's not in the frontend User type
@@ -19,7 +19,6 @@ const PendingApprovals: React.FC = () => {
     totalPages: 1,
     total: 0,
   });
-  const { toast } = useToast();
 
   const fetchPendingUsers = useCallback(
     async (page: number, limit: number) => {
@@ -42,16 +41,12 @@ const PendingApprovals: React.FC = () => {
             ? err.message
             : 'Failed to load pending approvals.';
         setError(errorMessage);
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
     },
-    [toast]
+    [] // Removed toast from dependencies, fetchPendingUsers doesn't directly use it anymore in a way that requires it in deps
   ); // Removed userService.getPendingApprovals from deps as it's a stable function from an imported object
 
   useEffect(() => {
@@ -61,42 +56,28 @@ const PendingApprovals: React.FC = () => {
   const handleApprove = async (userId: string) => {
     try {
       await userService.approveUser(userId);
-      toast({
-        title: 'Success',
-        description: 'User approved successfully.',
-      });
+      toast.success('User approved successfully.');
       fetchPendingUsers(pagination.page, pagination.limit);
     } catch (err) {
       console.error('Error approving user:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to approve user.';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
     }
   };
 
   const handleDeny = async (userId: string) => {
     try {
       await userService.denyUser(userId);
-      toast({
-        title: 'Success',
-        description: 'User denied successfully.',
-      });
+      toast.success('User denied successfully.');
       fetchPendingUsers(pagination.page, pagination.limit);
     } catch (err) {
       console.error('Error denying user:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to deny user.';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
     }
   };
 
@@ -110,21 +91,14 @@ const PendingApprovals: React.FC = () => {
     }
     try {
       await userService.deleteUser(userId);
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully.',
-      });
+      toast.success('User deleted successfully.');
       fetchPendingUsers(pagination.page, pagination.limit);
     } catch (err) {
       console.error('Error deleting user:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete user.';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      toast.error(errorMessage);
     }
   };
 
