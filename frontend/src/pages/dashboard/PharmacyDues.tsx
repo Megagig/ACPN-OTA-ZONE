@@ -6,7 +6,8 @@ import submitPaymentWithAxios from '../../services/submitPaymentWithAxios'; // I
 import type { Payment } from '../../types/financial.types';
 import type { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
 import CertificateView from '../../components/certificate/CertificateView';
-import { useTheme } from '../../context/ThemeContext';
+import { toast } from 'react-toastify'; // Import toast
+import 'react-toastify/dist/ReactToastify.css'; // Import default CSS
 
 // Enhanced payment interface that extends Payment with a dueInfo property
 interface EnhancedPayment extends Omit<Payment, 'dueInfo'> {
@@ -27,8 +28,8 @@ const PharmacyDues: React.FC = () => {
     receipt: null as File | null,
   });
   const [submittingPayment, setSubmittingPayment] = useState<boolean>(false);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage] = useState<number>(1); // setCurrentPage removed
+  const [, setTotalPages] = useState<number>(1); // totalPages variable removed, setTotalPages kept
   const [itemsPerPage] = useState<number>(10);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [payments, setPayments] = useState<EnhancedPayment[]>([]);
@@ -38,7 +39,6 @@ const PharmacyDues: React.FC = () => {
   const [selectedCertificateDueId, setSelectedCertificateDueId] = useState<
     string | null
   >(null);
-  const { theme } = useTheme();
 
   const fetchPharmacyAndDues = useCallback(async () => {
     try {
@@ -197,23 +197,29 @@ const PharmacyDues: React.FC = () => {
       !paymentData.receipt
     ) {
       setError('Please fill all required payment fields and upload a receipt');
+      toast.error(
+        'Please fill all required payment fields and upload a receipt'
+      );
       return;
     }
 
     // Validate payment amount
     if (paymentData.amount <= 0) {
       setError('Payment amount must be greater than zero');
+      toast.error('Payment amount must be greater than zero');
       return;
     }
 
     if (paymentData.amount > selectedDue.balance) {
       setError('Payment amount cannot exceed the outstanding balance');
+      toast.error('Payment amount cannot exceed the outstanding balance');
       return;
     }
 
     // Don't allow submission if balance is 0
     if (selectedDue.balance === 0) {
       setError('This due has already been fully paid');
+      toast.error('This due has already been fully paid');
       return;
     }
 
@@ -223,6 +229,7 @@ const PharmacyDues: React.FC = () => {
       // Verify we have the receipt file
       if (!paymentData.receipt) {
         setError('Receipt file is required');
+        toast.error('Receipt file is required');
         setSubmittingPayment(false);
         return;
       }
@@ -255,9 +262,12 @@ const PharmacyDues: React.FC = () => {
         // Check if file size is reasonable before uploading
         if (paymentData.receipt.size > 8 * 1024 * 1024) {
           // 8MB limit on client side
-          throw new Error(
-            'Receipt file is too large. Please use a file smaller than 8MB.'
-          );
+          const sizeError =
+            'Receipt file is too large. Please use a file smaller than 8MB.';
+          setError(sizeError);
+          toast.error(sizeError);
+          setSubmittingPayment(false);
+          return;
         }
         try {
           // Add the file with explicit filename and content type for better MIME handling
@@ -284,12 +294,19 @@ const PharmacyDues: React.FC = () => {
           );
         } catch (fileError) {
           console.error('Error adding file to FormData:', fileError);
-          throw new Error(
-            'Error processing file. Please try a different file.'
-          );
+          const processingError =
+            'Error processing file. Please try a different file.';
+          setError(processingError);
+          toast.error(processingError);
+          setSubmittingPayment(false);
+          return;
         }
       } else {
-        throw new Error('Receipt is not a valid File object');
+        const invalidFileError = 'Receipt is not a valid File object';
+        setError(invalidFileError);
+        toast.error(invalidFileError);
+        setSubmittingPayment(false);
+        return;
       }
 
       console.log('Submitting payment...');
@@ -311,8 +328,7 @@ const PharmacyDues: React.FC = () => {
       setShowPaymentModal(false);
       setError(null);
 
-      // Show success message
-      alert(
+      toast.success(
         'Payment submitted successfully! It will be reviewed by an administrator.'
       );
     } catch (err: unknown) {
@@ -358,7 +374,8 @@ const PharmacyDues: React.FC = () => {
       }
 
       if (err instanceof Error) {
-        errorMessage = err.message;
+        // This block might be redundant or could be merged with the one above
+        // errorMessage = err.message; // Already set
 
         // Check for Axios error with response data
         if ('response' in err && err.response) {
@@ -393,7 +410,7 @@ const PharmacyDues: React.FC = () => {
       }
 
       setError(errorMessage);
-      console.error('Payment submission failed:', errorMessage);
+      toast.error(errorMessage); // Display error toast
     } finally {
       setSubmittingPayment(false);
     }
@@ -496,31 +513,53 @@ const PharmacyDues: React.FC = () => {
     );
   }
 
-  if (error) {
+  // This 'error' state is now primarily for payment submission errors,
+  // as loading errors are handled above or inline with toasts.
+  // We might still want a general error display if toasts are missed or for non-payment errors.
+  if (error && !showPaymentModal) {
+    // Only show this general error if modal is not open
     return (
       <div
-        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4"
+        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-4"
         role="alert"
       >
-        <p className="font-bold">Error</p>
+        <p className="font-bold">An error occurred:</p>
         <p>{error}</p>
-        <div className="mt-4">
-          <button
-            onClick={() => {
-              setError(null);
-              fetchPharmacyAndDues();
-            }}
-            className="text-destructive hover:text-destructive/80 underline"
-          >
-            Try Again
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            setError(null); // Clear general error
+            // Optionally, re-fetch data if appropriate
+            // fetchPharmacyAndDues();
+          }}
+          className="mt-2 text-sm text-destructive hover:text-destructive/80 underline"
+        >
+          Dismiss
+        </button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-6">
+      {/* General error display, if not handled by toast or specific UI elements */}
+      {error && !showPaymentModal && (
+        <div
+          className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-4"
+          role="alert"
+        >
+          <p className="font-bold">An error occurred:</p>
+          <p>{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+            }}
+            className="mt-2 text-sm text-destructive hover:text-destructive/80 underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <div>
           <Link
@@ -1002,26 +1041,11 @@ const PharmacyDues: React.FC = () => {
 
       {/* Payment History Section */}
       {showPaymentHistory && (
-        <div className="bg-card rounded-lg shadow overflow-hidden mb-6">
-          <div className="p-6 bg-muted border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">
-              Payment History
-            </h2>
-          </div>
-
-          {/* Combine dues with no payment and actual payments */}
-          {payments.length === 0 &&
-          dues.filter((d) => d.paymentStatus !== 'paid').length === 0 ? (
-            <div className="p-6 text-center">
-              <i className="fas fa-history text-muted-foreground text-5xl mb-4"></i>
-              <h3 className="text-lg font-medium text-foreground mb-1">
-                No payment history
-              </h3>
-              <p className="text-muted-foreground">
-                You haven't made any payments yet.
-              </p>
-            </div>
-          ) : (
+        <div className="mt-8 bg-card shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            Payment History
+          </h2>
+          {payments.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-muted">
@@ -1030,10 +1054,10 @@ const PharmacyDues: React.FC = () => {
                       Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Due Type
+                      Due Title
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Amount
+                      Amount Paid
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Method
@@ -1047,357 +1071,58 @@ const PharmacyDues: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-card divide-y divide-border">
-                  {/* Show all dues as pending if no payment exists for them */}
-                  {(dues || [])
-                    .filter((due) => {
-                      // Only show dues that are not fully paid and have no payment record in payments
-                      const hasPayment = payments.some((p) =>
-                        typeof p.dueId === 'string'
-                          ? p.dueId === due._id
-                          : (p.dueId as { _id: string })?._id === due._id
-                      );
-                      return !hasPayment && due.paymentStatus !== 'paid';
-                    })
-                    .map((due) => (
-                      <tr
-                        key={due._id + '-pending'}
-                        className="hover:bg-muted/50"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {formatDate(due.dueDate)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {due.title ||
-                            (due.dueTypeId &&
-                              typeof due.dueTypeId === 'object' &&
-                              (due.dueTypeId as { name?: string })?.name) ||
-                            'Unknown Due'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                          {formatCurrency(due.totalAmount)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
-                          -
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(due.paymentStatus)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handleDueSelection(due)}
-                            className="text-primary hover:text-primary/80 mr-3"
+                  {payments.map((payment) => (
+                    <tr key={payment._id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {formatDate(payment.paymentDate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {payment.dueInfo?.title ||
+                          (payment.dueId &&
+                          typeof (payment.dueId as any).title === 'string'
+                            ? (payment.dueId as any).title
+                            : String(payment.dueId))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {formatCurrency(payment.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                        {payment.paymentMethod}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {getStatusBadge(payment.approvalStatus)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {payment.receiptUrl ? (
+                          <a
+                            href={payment.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary/80"
                           >
-                            Make Payment
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  {/* Show actual payment records */}
-                  {payments.map((payment) => {
-                    // Extract due info from either enhanced payment or direct dueId
-                    const dueInfo =
-                      payment.dueInfo ||
-                      (typeof payment.dueId === 'object'
-                        ? (payment.dueId as PharmacyDue)
-                        : null);
-                    return (
-                      <tr key={payment._id} className="hover:bg-muted/50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {payment.paymentDate
-                            ? formatDate(payment.paymentDate)
-                            : formatDate(payment.createdAt) || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {dueInfo?.title ||
-                            (dueInfo?.dueTypeId &&
-                              typeof dueInfo.dueTypeId === 'object' &&
-                              (dueInfo.dueTypeId as { name?: string })?.name) ||
-                            'Unknown Due'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                          {formatCurrency(payment.amount)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
-                          {payment.paymentMethod ||
-                            payment.paymentReference ||
-                            'Bank Transfer'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {payment.status === 'approved' ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                              Approved
-                            </span>
-                          ) : payment.status === 'rejected' ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
-                              Rejected
-                            </span>
-                          ) : (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {payment.receiptUrl && (
-                            <a
-                              href={
-                                payment.receiptUrl.startsWith('http')
-                                  ? payment.receiptUrl
-                                  : `${process.env.REACT_APP_API_URL || ''}${
-                                      payment.receiptUrl
-                                    }`
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:text-primary/80 mr-3"
-                            >
-                              View Receipt
-                            </a>
-                          )}
-                          {payment.status === 'approved' && dueInfo && (
-                            <button
-                              onClick={() =>
-                                downloadClearanceCertificate(
-                                  typeof payment.dueId === 'string'
-                                    ? payment.dueId
-                                    : (payment.dueId as { _id: string })?._id
-                                )
-                              }
-                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                            >
-                              Certificate
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            View Receipt
+                          </a>
+                        ) : (
+                          'N/A'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
+          ) : (
+            <p className="text-muted-foreground">No payment history found.</p>
           )}
         </div>
       )}
 
-      {/* Dues List */}
-      <div className="bg-card rounded-lg shadow overflow-hidden">
-        <div className="p-6 bg-muted border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">
-            Dues History
-          </h2>
-        </div>
-
-        {(dues || []).length === 0 ? (
-          <div className="p-6 text-center">
-            <i className="fas fa-file-invoice-dollar text-muted-foreground text-5xl mb-4"></i>
-            <h3 className="text-lg font-medium text-foreground mb-1">
-              No dues found
-            </h3>
-            <p className="text-muted-foreground">
-              You currently have no dues assigned to your pharmacy.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Due Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Paid Date
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
-                {(dues || []).map((due) => (
-                  <tr
-                    key={due._id}
-                    className={
-                      due.paymentStatus === 'paid'
-                        ? 'bg-green-50 dark:bg-green-950/30'
-                        : ''
-                    }
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <span className="font-medium text-foreground capitalize">
-                          {due.title}
-                        </span>
-                        {due.dueTypeId?.isRecurring && (
-                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                            Recurring
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-foreground">
-                        {due.description || due.dueTypeId?.description || '-'}
-                      </div>
-                      {due.penalties.length > 0 && (
-                        <div className="text-xs text-destructive mt-1">
-                          Penalties:{' '}
-                          {formatCurrency(
-                            due.penalties.reduce((sum, p) => sum + p.amount, 0)
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm">
-                        <div className="font-medium text-foreground">
-                          Total: {formatCurrency(due.totalAmount)}
-                        </div>
-                        <div className="text-green-600 dark:text-green-400">
-                          Paid: {formatCurrency(due.amountPaid)}
-                        </div>
-                        <div className="text-destructive">
-                          Balance: {formatCurrency(due.balance)}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      <div>Due: {formatDate(due.dueDate)}</div>
-                      {due.assignedAt && (
-                        <div className="text-xs text-muted-foreground/70">
-                          Assigned: {formatDate(due.assignedAt)}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(due.paymentStatus)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {due.paymentStatus === 'paid'
-                        ? formatDate(due.updatedAt)
-                        : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      {due.paymentStatus !== 'paid' && due.balance > 0 && (
-                        <button
-                          onClick={() => handleDueSelection(due)}
-                          className="text-primary hover:text-primary/80"
-                        >
-                          Pay Now
-                        </button>
-                      )}
-                      {due.paymentStatus === 'paid' && (
-                        <button
-                          onClick={() => downloadClearanceCertificate(due._id)}
-                          className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                        >
-                          Certificate
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-card px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Showing{' '}
-                  <span className="font-medium">
-                    {(currentPage - 1) * itemsPerPage + 1}
-                  </span>{' '}
-                  to{' '}
-                  <span className="font-medium">
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      (dues || []).length + (currentPage - 1) * itemsPerPage
-                    )}
-                  </span>{' '}
-                  of{' '}
-                  <span className="font-medium">
-                    {(dues || []).length + (currentPage - 1) * itemsPerPage}
-                  </span>{' '}
-                  results
-                </p>
-              </div>
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
-                >
-                  <button
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-card text-sm font-medium ${
-                      currentPage === 1
-                        ? 'text-muted-foreground cursor-not-allowed'
-                        : 'text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    <span className="sr-only">Previous</span>
-                    <i className="fas fa-chevron-left"></i>
-                  </button>
-
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`relative inline-flex items-center px-4 py-2 border border-border bg-card text-sm font-medium ${
-                        currentPage === i + 1
-                          ? 'z-10 bg-primary/10 border-primary text-primary'
-                          : 'text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-card text-sm font-medium ${
-                      currentPage === totalPages
-                        ? 'text-muted-foreground cursor-not-allowed'
-                        : 'text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    <span className="sr-only">Next</span>
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </nav>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Certificate Modal */}
-      {showCertificateModal && selectedCertificateDueId && (
+      {showCertificateModal && selectedCertificateDueId && pharmacy && (
         <CertificateView
           dueId={selectedCertificateDueId}
           isVisible={showCertificateModal}
-          onClose={() => {
-            setShowCertificateModal(false);
-            setSelectedCertificateDueId(null);
-          }}
+          onClose={() => setShowCertificateModal(false)}
         />
       )}
     </div>
