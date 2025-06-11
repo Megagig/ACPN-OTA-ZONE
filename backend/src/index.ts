@@ -34,6 +34,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Body parsing middleware
+app.use(express.json()); // Add this line to parse JSON bodies
+
 // Create uploads directory if it doesn't exist
 import fs from 'fs';
 const uploadDir = path.join(__dirname, '../uploads/receipts');
@@ -121,7 +124,6 @@ app.use('/api/cache', cacheRoutes);
 
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Error Handling Middlewares
