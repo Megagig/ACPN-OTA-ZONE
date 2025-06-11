@@ -22,7 +22,6 @@ import Unauthorized from './pages/auth/Unauthorized';
 import NotFound from './pages/auth/NotFound';
 
 // Dashboard Pages
-import DashboardHome from './pages/dashboard/DashboardHome';
 import MemberDashboard from './pages/dashboard/MemberDashboard';
 import Profile from './pages/dashboard/Profile';
 
