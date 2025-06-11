@@ -34,11 +34,22 @@ const storage = multer.diskStorage({
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
+    console.log('Multer: Using upload path:', uploadPath);
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
+    // Keep the original file extension but sanitize and make unique
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'receipt-' + uniqueSuffix + path.extname(file.originalname));
+    const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileExt = path.extname(originalName) || '.jpg'; // Default to .jpg if no extension
+    const newFilename = 'receipt-' + uniqueSuffix + fileExt;
+    console.log(
+      'Multer: Generated filename:',
+      newFilename,
+      'for original:',
+      file.originalname
+    );
+    cb(null, newFilename);
   },
 });
 
@@ -50,10 +61,27 @@ const fileFilter = (req: any, file: any, cb: any) => {
   );
   const mimetype = allowedTypes.test(file.mimetype);
 
+  console.log(
+    'Multer: Checking file:',
+    file.originalname,
+    'mimetype:',
+    file.mimetype,
+    'valid ext:',
+    extname,
+    'valid mime:',
+    mimetype
+  );
+
   if (extname && mimetype) {
+    console.log('File accepted:', file.originalname, file.mimetype);
     return cb(null, true);
   } else {
-    cb(new Error('Only PDF, JPEG, JPG, and PNG files are allowed'));
+    console.log('File rejected:', file.originalname, file.mimetype);
+    cb(
+      new Error(
+        `Only PDF, JPEG, JPG, and PNG files are allowed. Got: ${file.mimetype}`
+      )
+    );
   }
 };
 
@@ -61,6 +89,8 @@ const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1, // Only one file at a time
+    fieldSize: 8 * 1024 * 1024, // Allow for base64 encoded files
   },
   fileFilter: fileFilter,
 });
@@ -79,7 +109,31 @@ const handleUploadErrors = (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) => {
+): void => {
+  // Log request information before processing
+  console.log('Processing payment upload request', {
+    headers: {
+      'content-type': req.headers['content-type'],
+      'content-length': req.headers['content-length'],
+    },
+    method: req.method,
+    url: req.url,
+    body: Object.keys(req.body || {}),
+  });
+
+  // Check if the content type is correct for file uploads
+  const contentType = req.headers['content-type'] || '';
+  if (!contentType.includes('multipart/form-data')) {
+    console.error('Invalid content type for file upload:', contentType);
+    res.status(400).json({
+      success: false,
+      error:
+        'Invalid request format. Must use multipart/form-data for file uploads.',
+      details: { contentType },
+    });
+    return; // Return without calling next()
+  }
+
   upload.single('receipt')(req, res, (err) => {
     if (err) {
       console.error('File upload error:', err);
@@ -91,21 +145,37 @@ const handleUploadErrors = (
       if (err instanceof multer.MulterError) {
         // A Multer error occurred
         errorMessage = `Multer error: ${err.code}`;
+
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          errorMessage = 'File is too large. Maximum size is 5MB.';
+        } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          errorMessage =
+            'Unexpected file field. Use "receipt" as the field name.';
+        }
+
         errorDetails = { code: err.code, field: err.field };
       } else if (err instanceof Error) {
         // A general error occurred
         errorMessage = err.message;
+
+        // Special case for "Unexpected end of form"
+        if (err.message.includes('Unexpected end of form')) {
+          errorMessage =
+            'Upload interrupted or incomplete. Please try again with a smaller file or better connection.';
+        }
+
         errorDetails = {
           name: err.name,
           stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
         };
       }
 
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: errorMessage,
         details: errorDetails,
       });
+      return; // Return without calling next()
     }
 
     // Log successful upload
@@ -118,6 +188,15 @@ const handleUploadErrors = (
       });
     } else {
       console.warn('No file uploaded but no error reported');
+      // If we get here without a file and without an error, it's a problem
+      res.status(400).json({
+        success: false,
+        error: 'No receipt file was provided',
+        details: {
+          hint: 'Make sure you included a file with field name "receipt"',
+        },
+      });
+      return; // Return without calling next()
     }
 
     next();

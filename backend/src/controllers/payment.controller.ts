@@ -107,29 +107,61 @@ export const submitPayment = asyncHandler(
 
       try {
         if (!req.file) {
-          console.error('Missing file in request');
+          console.error('Missing file in request. Request body:', req.body);
           return next(
-            new ErrorResponse('Receipt file is missing or invalid', 400)
+            new ErrorResponse(
+              'Receipt file is missing or invalid. Make sure to upload a file with field name "receipt".',
+              400
+            )
           );
         }
 
         console.log('Complete file object:', JSON.stringify(req.file, null, 2));
 
         // Make sure we have a valid path - Multer may use different properties
-        const filePath =
-          req.file.path ||
-          (req.file as any).destination + '/' + (req.file as any).filename;
+        const filePath = req.file.path || '';
+
+        if (!filePath || typeof filePath !== 'string') {
+          console.error('Invalid file path:', filePath);
+          return next(
+            new ErrorResponse('Invalid file path for receipt upload', 400)
+          );
+        }
+
+        // Check if file exists on disk
+        try {
+          const fs = require('fs');
+          const fileExists = fs.existsSync(filePath);
+          console.log(`File ${filePath} exists: ${fileExists}`);
+          if (!fileExists) {
+            return next(
+              new ErrorResponse(`File not found at path: ${filePath}`, 400)
+            );
+          }
+        } catch (fsError) {
+          console.error('Error checking file existence:', fsError);
+        }
 
         // Upload to Cloudinary if available
         if (typeof uploadToCloudinary === 'function') {
           console.log('Uploading to Cloudinary:', filePath);
-          const result = await uploadToCloudinary(filePath, 'payment-receipts');
-          receiptUrl = result.secure_url;
-          receiptPublicId = result.public_id;
-          console.log('Cloudinary upload successful:', {
-            receiptUrl,
-            receiptPublicId,
-          });
+          try {
+            const result = await uploadToCloudinary(
+              filePath,
+              'payment-receipts'
+            );
+            receiptUrl = result.secure_url;
+            receiptPublicId = result.public_id;
+            console.log('Cloudinary upload successful:', {
+              receiptUrl,
+              receiptPublicId,
+            });
+          } catch (cloudinaryError) {
+            console.error('Cloudinary upload error:', cloudinaryError);
+            // Fallback to local path on cloudinary error
+            receiptUrl = `/static/receipts/${req.file.filename}`;
+            receiptPublicId = req.file.filename;
+          }
         } else {
           // Fallback if Cloudinary is not available
           // Use static route path for receipts

@@ -251,7 +251,7 @@ const PharmacyDues: React.FC = () => {
 
       // Ensure receipt is properly added to FormData
       if (paymentData.receipt instanceof File) {
-        // Add the file as the last field in the FormData to ensure it's properly terminated
+        // Add the file directly since we already cleaned it during selection
         formData.append('receipt', paymentData.receipt);
 
         console.log(
@@ -695,7 +695,11 @@ const PharmacyDues: React.FC = () => {
                 )}
               </div>
 
-              <form onSubmit={handlePaymentSubmit} className="space-y-4">
+              <form
+                onSubmit={handlePaymentSubmit}
+                className="space-y-4"
+                encType="multipart/form-data"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-1">
@@ -791,12 +795,66 @@ const PharmacyDues: React.FC = () => {
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) =>
-                      setPaymentData((prev) => ({
-                        ...prev,
-                        receipt: e.target.files?.[0] || null,
-                      }))
-                    }
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        // Check file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          setError('File size must be less than 5MB');
+                          return;
+                        }
+
+                        // Check file type
+                        const validTypes = [
+                          'image/jpeg',
+                          'image/jpg',
+                          'image/png',
+                          'application/pdf',
+                        ];
+                        if (!validTypes.includes(file.type)) {
+                          setError('File must be PDF, JPG, JPEG, or PNG');
+                          return;
+                        }
+
+                        try {
+                          // Create a clean file object - avoids issues with file properties
+                          const fileExtension = file.name.substring(
+                            file.name.lastIndexOf('.')
+                          );
+                          const simpleName = `receipt${fileExtension}`;
+
+                          // Read the file as an ArrayBuffer
+                          const arrayBuffer = await file.arrayBuffer();
+
+                          // Create a new, clean file object
+                          const cleanFile = new File(
+                            [arrayBuffer],
+                            simpleName,
+                            {
+                              type: file.type,
+                              lastModified: new Date().getTime(),
+                            }
+                          );
+
+                          setPaymentData((prev) => ({
+                            ...prev,
+                            receipt: cleanFile,
+                          }));
+                        } catch (error) {
+                          console.error('Error processing file:', error);
+                          // Fallback to original file if there's an error
+                          setPaymentData((prev) => ({
+                            ...prev,
+                            receipt: file,
+                          }));
+                        }
+                      } else {
+                        setPaymentData((prev) => ({
+                          ...prev,
+                          receipt: null,
+                        }));
+                      }
+                    }}
                     required
                     className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   />

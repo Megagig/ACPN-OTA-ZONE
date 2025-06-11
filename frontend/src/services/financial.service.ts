@@ -511,33 +511,61 @@ export const getPharmacyPaymentHistory = async (
 // Payment Management API
 export const submitPayment = async (data: FormData): Promise<Payment> => {
   try {
-    // Create a new FormData object to ensure proper format
-    const cleanFormData = new FormData();
-
-    // Add text fields first
-    for (const [key, value] of Array.from(data.entries())) {
-      if (key !== 'receipt' && typeof value === 'string') {
-        cleanFormData.append(key, value);
+    // Debug log the FormData contents
+    console.log('Submitting payment with FormData:');
+    for (const pair of data.entries()) {
+      if (pair[0] === 'receipt') {
+        const file = pair[1] as File;
+        console.log('FormData entry - receipt:', {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
+      } else {
+        console.log('FormData entry:', pair[0], pair[1]);
       }
     }
 
-    // Add the file last - this helps prevent "Unexpected end of form" errors
-    const receiptFile = data.get('receipt') as File;
-    if (receiptFile instanceof File) {
-      cleanFormData.append('receipt', receiptFile);
-    }
+    // Make a direct XMLHttpRequest for better control over the FormData submission
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${BASE_URL}/payments/submit`, true);
 
-    // Use a longer timeout for file uploads
-    const response = await api.post(
-      `${BASE_URL}/payments/submit`,
-      cleanFormData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 30000, // 30 seconds timeout for file uploads
+      // Set the auth token
+      const token = localStorage.getItem('token');
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       }
-    );
+
+      xhr.timeout = 60000; // 60 seconds timeout
+
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response.data);
+          } catch (e) {
+            reject(new Error(`Invalid response format: ${xhr.responseText}`));
+          }
+        } else {
+          reject(
+            new Error(
+              `Upload failed: ${xhr.status} ${xhr.statusText} - ${xhr.responseText}`
+            )
+          );
+        }
+      };
+
+      xhr.onerror = function () {
+        reject(new Error('Network error during upload'));
+      };
+
+      xhr.ontimeout = function () {
+        reject(new Error('Upload timed out'));
+      };
+
+      xhr.send(data);
+    });
 
     return response.data.data;
   } catch (error) {
