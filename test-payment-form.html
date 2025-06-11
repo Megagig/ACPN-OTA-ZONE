@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Upload Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      button {
+        padding: 8px;
+        width: 100%;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        min-height: 100px;
+        white-space: pre-wrap;
+      }
+      .progress-container {
+        width: 100%;
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+      .progress-bar {
+        height: 100%;
+        background-color: #4caf50;
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Payment Upload Test</h1>
+
+    <div class="form-group">
+      <label for="token">Auth Token:</label>
+      <input type="text" id="token" placeholder="Paste your JWT token here" />
+    </div>
+
+    <div class="form-group">
+      <label for="dueId">Due ID:</label>
+      <input type="text" id="dueId" value="645f3d1c5e01b8b9a0e1c7a8" />
+    </div>
+
+    <div class="form-group">
+      <label for="pharmacyId">Pharmacy ID:</label>
+      <input type="text" id="pharmacyId" value="645f3d1c5e01b8b9a0e1c7a9" />
+    </div>
+
+    <div class="form-group">
+      <label for="amount">Amount:</label>
+      <input type="number" id="amount" value="100.00" />
+    </div>
+
+    <div class="form-group">
+      <label for="paymentMethod">Payment Method:</label>
+      <input type="text" id="paymentMethod" value="bank_transfer" />
+    </div>
+
+    <div class="form-group">
+      <label for="paymentReference">Payment Reference:</label>
+      <input type="text" id="paymentReference" value="TEST-REF-123" />
+    </div>
+
+    <div class="form-group">
+      <label for="receipt">Receipt File:</label>
+      <input
+        type="file"
+        id="receipt"
+        accept="image/jpeg,image/png,application/pdf"
+      />
+    </div>
+
+    <div
+      class="progress-container"
+      id="progressContainer"
+      style="display: none"
+    >
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <button onclick="submitPayment()">Submit Payment</button>
+
+    <h2>Result:</h2>
+    <div id="result">Results will appear here...</div>
+
+    <script>
+      function submitPayment() {
+        const token = document.getElementById('token').value.trim();
+        if (!token) {
+          document.getElementById('result').textContent =
+            'Error: Please provide an authentication token';
+          return;
+        }
+
+        const dueId = document.getElementById('dueId').value.trim();
+        const pharmacyId = document.getElementById('pharmacyId').value.trim();
+        const amount = document.getElementById('amount').value.trim();
+        const paymentMethod = document
+          .getElementById('paymentMethod')
+          .value.trim();
+        const paymentReference = document
+          .getElementById('paymentReference')
+          .value.trim();
+        const receiptFile = document.getElementById('receipt').files[0];
+
+        if (!receiptFile) {
+          document.getElementById('result').textContent =
+            'Error: Please select a receipt file';
+          return;
+        }
+
+        // Show progress container
+        document.getElementById('progressContainer').style.display = 'block';
+
+        // Create FormData
+        const formData = new FormData();
+        formData.append('dueId', dueId);
+        formData.append('pharmacyId', pharmacyId);
+        formData.append('amount', amount);
+        formData.append('paymentMethod', paymentMethod);
+        formData.append('paymentReference', paymentReference);
+        formData.append('timestamp', Date.now().toString());
+        formData.append('receipt', receiptFile);
+
+        // Log the FormData contents
+        console.log('Submitting FormData:');
+        for (let [key, value] of formData.entries()) {
+          if (key === 'receipt') {
+            console.log(
+              `${key}: ${value.name} (${value.type}, ${value.size} bytes)`
+            );
+          } else {
+            console.log(`${key}: ${value}`);
+          }
+        }
+
+        // Create and configure XHR request
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/payments/submit', true);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+        // Track upload progress
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round(
+              (event.loaded / event.total) * 100
+            );
+            document.getElementById('progressBar').style.width =
+              percentComplete + '%';
+            console.log(`Upload progress: ${percentComplete}%`);
+          }
+        };
+
+        xhr.onload = function () {
+          let result = '';
+          try {
+            const response = JSON.parse(xhr.responseText);
+            result = `Status: ${xhr.status}\n\nResponse:\n${JSON.stringify(
+              response,
+              null,
+              2
+            )}`;
+          } catch (e) {
+            result = `Status: ${xhr.status}\n\nResponse:\n${xhr.responseText}`;
+          }
+
+          document.getElementById('result').textContent = result;
+          console.log('Response:', result);
+        };
+
+        xhr.onerror = function () {
+          document.getElementById('result').textContent =
+            'Network error occurred';
+          console.error('Network error during upload');
+        };
+
+        xhr.timeout = 120000; // 2 minutes
+        xhr.ontimeout = function () {
+          document.getElementById('result').textContent =
+            'Request timed out after 2 minutes';
+          console.error('Request timed out');
+        };
+
+        // Send the request
+        xhr.send(formData);
+
+        document.getElementById('result').textContent = 'Uploading...';
+      }
+    </script>
+  </body>
+</html>

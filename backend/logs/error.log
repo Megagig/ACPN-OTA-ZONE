@@ -3133,3 +3133,15 @@
 2025-06-09T18:31:50.561Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
 2025-06-09T18:31:51.198Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
 2025-06-09T18:31:51.337Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:16.501Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:16.512Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:16.588Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:16.719Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:16.742Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:16.806Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:17.040Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:17.045Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:17.131Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:17.448Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:17.463Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-11T02:58:17.542Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379

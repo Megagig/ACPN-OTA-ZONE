@@ -526,10 +526,29 @@ export const submitPayment = async (data: FormData): Promise<Payment> => {
       }
     }
 
+    // Create a new FormData instance to ensure it's properly formatted
+    const cleanFormData = new FormData();
+
+    // Copy all entries from the original FormData to ensure proper formatting
+    for (const [key, value] of data.entries()) {
+      // Special handling for receipt file
+      if (key === 'receipt' && value instanceof File) {
+        // Ensure the file is properly attached
+        cleanFormData.append('receipt', value, value.name);
+        console.log(
+          `Adding file to clean FormData: ${value.name} (${value.size} bytes)`
+        );
+      } else {
+        cleanFormData.append(key, value as string);
+        console.log(`Adding field to clean FormData: ${key}=${value}`);
+      }
+    }
+
     // Make a direct XMLHttpRequest for better control over the FormData submission
-    return new Promise((resolve, reject) => {
+    const result = await new Promise<{ data: Payment }>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${BASE_URL}/payments/submit`, true);
+      // Use the correct API endpoint with /api prefix
+      xhr.open('POST', `/api/payments/submit`, true);
 
       // Set the auth token
       const token = localStorage.getItem('token');
@@ -537,37 +556,83 @@ export const submitPayment = async (data: FormData): Promise<Payment> => {
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       }
 
-      xhr.timeout = 60000; // 60 seconds timeout
+      // Do NOT set Content-Type header manually for FormData as it needs to include boundary
+      // The browser will automatically set the correct Content-Type with boundary parameter
+
+      // Add progress tracking
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          console.log(`Upload progress: ${percentComplete}%`);
+        }
+      };
+
+      xhr.timeout = 120000; // 2 minutes timeout to match vite proxy config
 
       xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
-            resolve(response.data);
+            console.log(
+              'Upload completed successfully with response:',
+              response
+            );
+            resolve({ data: response.data || response });
           } catch (e) {
+            console.error('Error parsing response:', e, xhr.responseText);
             reject(new Error(`Invalid response format: ${xhr.responseText}`));
           }
         } else {
-          reject(
-            new Error(
-              `Upload failed: ${xhr.status} ${xhr.statusText} - ${xhr.responseText}`
-            )
+          console.error(
+            'Upload failed with status:',
+            xhr.status,
+            xhr.statusText,
+            xhr.responseText
           );
+
+          let errorMessage = `Upload failed: ${xhr.status} ${xhr.statusText}`;
+
+          try {
+            // Try to parse the error response
+            const errorResponse = JSON.parse(xhr.responseText);
+            if (errorResponse.error) {
+              errorMessage = errorResponse.error;
+            }
+          } catch (e) {
+            // If parsing fails, use the raw response
+            if (xhr.responseText) {
+              errorMessage += ` - ${xhr.responseText}`;
+            }
+          }
+
+          reject(new Error(errorMessage));
         }
       };
 
-      xhr.onerror = function () {
-        reject(new Error('Network error during upload'));
+      xhr.onerror = function (e) {
+        console.error('Network error during upload:', e);
+        reject(
+          new Error(
+            'Network error during upload. Please check your connection and try again.'
+          )
+        );
       };
 
       xhr.ontimeout = function () {
-        reject(new Error('Upload timed out'));
+        console.error('Upload request timed out after 2 minutes');
+        reject(
+          new Error(
+            'Upload timed out. Please try with a smaller file or check your connection.'
+          )
+        );
       };
 
-      xhr.send(data);
+      console.log('Sending FormData request now...');
+      xhr.send(cleanFormData);
     });
 
-    return response.data.data;
+    // Return the payment data from the response
+    return result.data;
   } catch (error) {
     console.error('Error submitting payment:', error);
     throw error;

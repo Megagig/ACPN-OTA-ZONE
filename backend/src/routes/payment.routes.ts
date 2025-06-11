@@ -88,9 +88,10 @@ const fileFilter = (req: any, file: any, cb: any) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // Increased to 10MB limit
     files: 1, // Only one file at a time
-    fieldSize: 8 * 1024 * 1024, // Allow for base64 encoded files
+    fieldSize: 15 * 1024 * 1024, // Increased field size limit for encoded files
+    parts: 20, // Allow up to 20 parts in the multipart form (fields + files)
   },
   fileFilter: fileFilter,
 });
@@ -121,6 +122,25 @@ const handleUploadErrors = (
     body: Object.keys(req.body || {}),
   });
 
+  // Check if the request is unusually large (pre-emptive check)
+  const contentLength = Number(req.headers['content-length'] || 0);
+  const maxSize = 15 * 1024 * 1024; // 15MB max total request size
+  if (contentLength > maxSize) {
+    console.error(
+      `Request too large: ${contentLength} bytes exceeds ${maxSize} bytes`
+    );
+    res.status(413).json({
+      success: false,
+      error: 'Request entity too large',
+      details: {
+        received: contentLength,
+        maxAllowed: maxSize,
+        hint: 'Please reduce the file size and try again',
+      },
+    });
+    return; // Return without calling next()
+  }
+
   // Check if the content type is correct for file uploads
   const contentType = req.headers['content-type'] || '';
   if (!contentType.includes('multipart/form-data')) {
@@ -134,23 +154,33 @@ const handleUploadErrors = (
     return; // Return without calling next()
   }
 
+  // Use multer with increased timeouts and improved error handling
   upload.single('receipt')(req, res, (err) => {
     if (err) {
       console.error('File upload error:', err);
 
       // Provide more detailed error information
       let errorMessage = 'Error uploading file';
-      let errorDetails = {};
+      let errorDetails: any = {};
+      let statusCode = 400;
 
       if (err instanceof multer.MulterError) {
         // A Multer error occurred
         errorMessage = `Multer error: ${err.code}`;
 
         if (err.code === 'LIMIT_FILE_SIZE') {
-          errorMessage = 'File is too large. Maximum size is 5MB.';
+          errorMessage = 'File is too large. Maximum size is 10MB.';
         } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
           errorMessage =
             'Unexpected file field. Use "receipt" as the field name.';
+        } else if (err.code === 'LIMIT_PART_COUNT') {
+          errorMessage = 'Too many parts in the multipart form.';
+        } else if (err.code === 'LIMIT_FIELD_KEY') {
+          errorMessage = 'Field name too long.';
+        } else if (err.code === 'LIMIT_FIELD_VALUE') {
+          errorMessage = 'Field value too long.';
+        } else if (err.code === 'LIMIT_FIELD_COUNT') {
+          errorMessage = 'Too many fields in the form.';
         }
 
         errorDetails = { code: err.code, field: err.field };
@@ -158,10 +188,20 @@ const handleUploadErrors = (
         // A general error occurred
         errorMessage = err.message;
 
-        // Special case for "Unexpected end of form"
+        // Check for specific errors with improved messages
         if (err.message.includes('Unexpected end of form')) {
           errorMessage =
             'Upload interrupted or incomplete. Please try again with a smaller file or better connection.';
+          statusCode = 400;
+          errorDetails.hint =
+            'This usually happens when the upload is interrupted or the connection is unstable';
+        } else if (err.message.includes('Unexpected end of multipart data')) {
+          errorMessage = 'Upload interrupted or incomplete. Please try again.';
+          statusCode = 400;
+          errorDetails.hint = 'The upload was cut off before completing';
+        } else if (err.message.includes('timeout')) {
+          errorMessage = 'Upload timed out. Please try with a smaller file.';
+          statusCode = 408;
         }
 
         errorDetails = {
@@ -170,7 +210,7 @@ const handleUploadErrors = (
         };
       }
 
-      res.status(400).json({
+      res.status(statusCode).json({
         success: false,
         error: errorMessage,
         details: errorDetails,

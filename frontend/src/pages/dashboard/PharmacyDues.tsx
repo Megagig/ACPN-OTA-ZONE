@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import financialService from '../../services/financial.service';
+import submitPaymentWithAxios from '../../services/submitPaymentWithAxios'; // Import the new function
 import type { Payment } from '../../types/financial.types';
 import type { Pharmacy, PharmacyDue } from '../../types/pharmacy.types';
 import CertificateView from '../../components/certificate/CertificateView';
@@ -251,23 +252,49 @@ const PharmacyDues: React.FC = () => {
 
       // Ensure receipt is properly added to FormData
       if (paymentData.receipt instanceof File) {
-        // Add the file directly since we already cleaned it during selection
-        formData.append('receipt', paymentData.receipt);
+        // Check if file size is reasonable before uploading
+        if (paymentData.receipt.size > 8 * 1024 * 1024) {
+          // 8MB limit on client side
+          throw new Error(
+            'Receipt file is too large. Please use a file smaller than 8MB.'
+          );
+        }
+        try {
+          // Add the file with explicit filename and content type for better MIME handling
+          const cleanFileName = paymentData.receipt.name
+            .replace(/[^a-zA-Z0-9.-]/g, '_') // Remove problematic characters
+            .toLowerCase(); // Standardize case
 
-        console.log(
-          'Added receipt file to form data:',
-          paymentData.receipt.name,
-          'Type:',
-          paymentData.receipt.type,
-          'Size:',
-          paymentData.receipt.size
-        );
+          // Make sure we're appending with the original filename
+          formData.append(
+            'receipt',
+            paymentData.receipt,
+            cleanFileName // Use sanitized filename
+          );
+
+          console.log(
+            'Added receipt file to form data:',
+            cleanFileName,
+            'Type:',
+            paymentData.receipt.type,
+            'Size:',
+            paymentData.receipt.size,
+            'Is File object:',
+            paymentData.receipt instanceof File
+          );
+        } catch (fileError) {
+          console.error('Error adding file to FormData:', fileError);
+          throw new Error(
+            'Error processing file. Please try a different file.'
+          );
+        }
       } else {
         throw new Error('Receipt is not a valid File object');
       }
 
       console.log('Submitting payment...');
-      const response = await financialService.submitPayment(formData);
+      // Use the new Axios-based implementation instead of the original function
+      const response = await submitPaymentWithAxios(formData);
       console.log('Payment submission successful:', response);
 
       // Refresh dues list
@@ -304,9 +331,22 @@ const PharmacyDues: React.FC = () => {
         ) {
           errorMessage =
             'Network timeout occurred. Your file may be too large or your connection is slow. Please try again with a smaller file or better connection.';
-        } else if (errorMessage.includes('Unexpected end of form')) {
+        } else if (
+          errorMessage.includes('Unexpected end of form') ||
+          errorMessage.includes('interrupted') ||
+          errorMessage.includes('incomplete')
+        ) {
           errorMessage =
-            'There was a problem with the file upload. Please try again.';
+            'Your file upload was interrupted. Please try again with a smaller file or check your internet connection.';
+        } else if (
+          errorMessage.includes('entity too large') ||
+          errorMessage.includes('too large')
+        ) {
+          errorMessage =
+            'The file is too large. Please reduce the size and try again (maximum 8MB).';
+        } else if (errorMessage.includes('timeout')) {
+          errorMessage =
+            'The upload timed out. Please try with a smaller file or on a faster connection.';
         }
       } else if (typeof err === 'object' && err !== null) {
         const errorObj = err as any;
@@ -792,72 +832,132 @@ const PharmacyDues: React.FC = () => {
                   <label className="block text-sm font-medium text-foreground mb-1">
                     Payment Receipt *
                   </label>
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0] || null;
-                      if (file) {
-                        // Check file size (max 5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                          setError('File size must be less than 5MB');
-                          return;
-                        }
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0] || null;
+                        if (file) {
+                          // Reset any previous errors
+                          setError(null);
 
-                        // Check file type
-                        const validTypes = [
-                          'image/jpeg',
-                          'image/jpg',
-                          'image/png',
-                          'application/pdf',
-                        ];
-                        if (!validTypes.includes(file.type)) {
-                          setError('File must be PDF, JPG, JPEG, or PNG');
-                          return;
-                        }
+                          // Check file size (max 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            setError(
+                              'File size must be less than 5MB. Please select a smaller file.'
+                            );
+                            e.target.value = ''; // Clear the file input
+                            return;
+                          }
 
-                        try {
-                          // Create a clean file object - avoids issues with file properties
-                          const fileExtension = file.name.substring(
-                            file.name.lastIndexOf('.')
-                          );
-                          const simpleName = `receipt${fileExtension}`;
+                          // Check file type
+                          const validTypes = [
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png',
+                            'application/pdf',
+                          ];
 
-                          // Read the file as an ArrayBuffer
-                          const arrayBuffer = await file.arrayBuffer();
+                          // More reliable type checking using both MIME type and extension
+                          const fileExtension = file.name
+                            .substring(file.name.lastIndexOf('.'))
+                            .toLowerCase();
 
-                          // Create a new, clean file object
-                          const cleanFile = new File(
-                            [arrayBuffer],
-                            simpleName,
-                            {
-                              type: file.type,
-                              lastModified: new Date().getTime(),
+                          const validExtensions = [
+                            '.pdf',
+                            '.jpg',
+                            '.jpeg',
+                            '.png',
+                          ];
+
+                          if (
+                            !validTypes.includes(file.type) ||
+                            !validExtensions.includes(fileExtension)
+                          ) {
+                            setError(
+                              'File must be PDF, JPG, JPEG, or PNG format'
+                            );
+                            e.target.value = ''; // Clear the file input
+                            return;
+                          }
+
+                          try {
+                            console.log(
+                              'Processing file:',
+                              file.name,
+                              'type:',
+                              file.type,
+                              'size:',
+                              file.size
+                            );
+
+                            // Create a more reliable filename
+                            const timestamp = new Date().getTime();
+                            const simpleName = `receipt_${timestamp}${fileExtension}`;
+
+                            // Read the file as an ArrayBuffer
+                            const arrayBuffer = await file.arrayBuffer();
+                            console.log(
+                              'File read as ArrayBuffer successfully, size:',
+                              arrayBuffer.byteLength
+                            );
+
+                            // Create a new, clean file object with a controlled size
+                            const maxSize = 4 * 1024 * 1024; // 4MB max to be safe
+                            if (arrayBuffer.byteLength > maxSize) {
+                              setError(
+                                'File content is too large after processing. Please use a smaller or simpler file.'
+                              );
+                              e.target.value = ''; // Clear the file input
+                              return;
                             }
-                          );
 
+                            // Create a new, clean file object
+                            const cleanFile = new File(
+                              [arrayBuffer],
+                              simpleName,
+                              {
+                                type: file.type,
+                                lastModified: timestamp,
+                              }
+                            );
+
+                            console.log('Clean file created successfully:', {
+                              name: cleanFile.name,
+                              type: cleanFile.type,
+                              size: cleanFile.size,
+                            });
+
+                            setPaymentData((prev) => ({
+                              ...prev,
+                              receipt: cleanFile,
+                            }));
+                          } catch (error) {
+                            console.error('Error processing file:', error);
+                            setError(
+                              'Error processing file. Please try a different file or format.'
+                            );
+                            e.target.value = ''; // Clear the file input
+                          }
+                        } else {
                           setPaymentData((prev) => ({
                             ...prev,
-                            receipt: cleanFile,
-                          }));
-                        } catch (error) {
-                          console.error('Error processing file:', error);
-                          // Fallback to original file if there's an error
-                          setPaymentData((prev) => ({
-                            ...prev,
-                            receipt: file,
+                            receipt: null,
                           }));
                         }
-                      } else {
-                        setPaymentData((prev) => ({
-                          ...prev,
-                          receipt: null,
-                        }));
-                      }
-                    }}
-                    required
-                    className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                  />
+                      }}
+                      required
+                      className="w-full rounded-md border border-border shadow-sm px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    />
+                    {paymentData.receipt && (
+                      <div className="mt-1 text-xs text-green-600 dark:text-green-400">
+                        <i className="fas fa-check-circle mr-1"></i>
+                        File selected: {paymentData.receipt.name} (
+                        {Math.round(paymentData.receipt.size / 1024)}KB)
+                      </div>
+                    )}
+                  </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Upload receipt in PDF, JPG, JPEG, or PNG format (max 5MB)
                   </p>
