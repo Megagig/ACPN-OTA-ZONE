@@ -234,6 +234,166 @@ const AdminPaymentReview: React.FC = () => {
     }
   };
 
+  // Render function for tab content (table and pagination)
+  const renderTabContent = () => (
+    <>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Pharmacy
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Due
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Method
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-background divide-y divide-border">
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-4 w-32" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-4 w-28" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-4 w-20" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-4 w-24" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-4 w-28" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-4 w-20" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Skeleton className="h-8 w-20" />
+                  </td>
+                </tr>
+              ))
+            ) : payments.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="px-6 py-4 text-center text-muted-foreground"
+                >
+                  No payments found for this category
+                </td>
+              </tr>
+            ) : (
+              payments.map((payment: Payment) => (
+                <tr key={payment._id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    {typeof payment.pharmacyId === 'object' &&
+                    payment.pharmacyId?.name
+                      ? payment.pharmacyId.name
+                      : payment.pharmacyId?.toString() || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    {typeof payment.dueId === 'object' && payment.dueId?.title
+                      ? payment.dueId.title
+                      : payment.dueInfo?.title ||
+                        payment.dueId?.toString() ||
+                        'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    {formatCurrency(payment.amount)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    {getPaymentMethodDisplay(payment.paymentMethod || '')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    {formatDate(payment.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Badge
+                      className={getStatusBadgeColor(
+                        (payment.approvalStatus ||
+                          payment.status) as PaymentApprovalStatus
+                      )}
+                    >
+                      {payment.approvalStatus || payment.status}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          Actions
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>
+                          <a
+                            href={payment.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cursor-pointer w-full" // Ensure link takes full width
+                          >
+                            View Receipt
+                          </a>
+                        </DropdownMenuItem>
+
+                        {payment.approvalStatus ===
+                          PaymentApprovalStatus.PENDING && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => openReviewModal(payment)}
+                            >
+                              Review Payment
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDeleteModal(payment)}
+                              className="text-red-600 dark:text-red-400"
+                            >
+                              Delete Payment
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {!isLoading && totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
+    </>
+  );
+
   if (error) {
     return (
       <Alert className="mb-6">
@@ -288,166 +448,22 @@ const AdminPaymentReview: React.FC = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value={activeTab}>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Pharmacy
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Due
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Method
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-background divide-y divide-border">
-                    {isLoading ? (
-                      // Loading skeleton
-                      Array.from({ length: 5 }).map((_, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-4 w-32" />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-4 w-28" />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-4 w-20" />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-4 w-24" />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-4 w-28" />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-4 w-20" />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Skeleton className="h-8 w-20" />
-                          </td>
-                        </tr>
-                      ))
-                    ) : payments.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="px-6 py-4 text-center text-muted-foreground"
-                        >
-                          No payments found
-                        </td>
-                      </tr>
-                    ) : (
-                      payments.map((payment: Payment) => (
-                        <tr key={payment._id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                            {payment.pharmacyId.toString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                            {payment.dueId.toString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {formatCurrency(payment.amount)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                            {getPaymentMethodDisplay(
-                              payment.paymentMethod || ''
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                            {formatDate(payment.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge
-                              className={getStatusBadgeColor(
-                                (payment.approvalStatus ||
-                                  payment.status) as PaymentApprovalStatus
-                              )}
-                            >
-                              {payment.approvalStatus || payment.status}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  Actions
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem>
-                                  <a
-                                    href={payment.receiptUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="cursor-pointer"
-                                  >
-                                    View Receipt
-                                  </a>
-                                </DropdownMenuItem>
-
-                                {payment.approvalStatus ===
-                                  PaymentApprovalStatus.PENDING && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => openReviewModal(payment)}
-                                    >
-                                      Review Payment
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => openDeleteModal(payment)}
-                                      className="text-red-600 dark:text-red-400"
-                                    >
-                                      Delete Payment
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {!isLoading && totalPages > 1 && (
-                <div className="mt-6 flex justify-center">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
+            <TabsContent value="all">{renderTabContent()}</TabsContent>
+            <TabsContent value={PaymentApprovalStatus.PENDING}>
+              {renderTabContent()}
+            </TabsContent>
+            <TabsContent value={PaymentApprovalStatus.APPROVED}>
+              {renderTabContent()}
+            </TabsContent>
+            <TabsContent value={PaymentApprovalStatus.REJECTED}>
+              {renderTabContent()}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
       {/* Review Modal */}
-      <Dialog
-        isOpen={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-      >
+      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Review Payment</DialogTitle>
@@ -586,10 +602,7 @@ const AdminPaymentReview: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation Modal */}
-      <Dialog
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-      >
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
