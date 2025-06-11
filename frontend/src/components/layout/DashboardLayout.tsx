@@ -26,6 +26,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Define navigation items based on user role
   const getNavItems = () => {
     const commonItems = [
+      { name: 'My Profile', path: '/profile', icon: 'user' },
+    ];
+
+    const adminCommonItems = [
       { name: 'Dashboard', path: '/dashboard', icon: 'home' },
       { name: 'My Profile', path: '/profile', icon: 'user' },
     ];
@@ -61,7 +65,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     ];
 
     const memberItems = [
-      { name: 'My Dashboard', path: '/dashboard', icon: 'home' },
+      { name: 'Dashboard', path: '/dashboard', icon: 'home' },
       { name: 'My Pharmacy', path: '/my-pharmacy', icon: 'building' },
       { name: 'My Documents', path: '/my-documents', icon: 'file-alt' },
       { name: 'Dues & Payments', path: '/payments', icon: 'money-bill' },
@@ -76,10 +80,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     ];
 
     if (['admin', 'superadmin'].includes(user?.role)) {
-      return [...commonItems, ...adminItems];
+      return [...adminCommonItems, ...adminItems];
     } else if (['treasurer', 'financial_secretary'].includes(user?.role)) {
       return [
-        ...commonItems,
+        ...adminCommonItems,
         { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
         { name: 'Finances', path: '/finances', icon: 'money-bill' },
         {
@@ -92,7 +96,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       ];
     } else if (user?.role === 'secretary') {
       return [
-        ...commonItems,
+        ...adminCommonItems,
         { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
         { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
         { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },

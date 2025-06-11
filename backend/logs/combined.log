@@ -14066,3 +14066,24 @@
 2025-06-11T01:24:21.831Z [debug]: Cache HIT (3ms): member-payments:{"limit":"5","page":"1"}
 2025-06-11T01:24:21.835Z [debug]: Cache HIT (5ms): member-dashboard
 2025-06-11T01:24:21.849Z [debug]: Cache HIT (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:33:29.480Z [debug]: Cache MISS (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:33:29.846Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:33:30.095Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:33:30.096Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T01:33:30.926Z [debug]: Cache SET with TTL=300s (10ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T01:33:31.119Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T01:37:46.498Z [debug]: Cache HIT (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:37:46.729Z [debug]: Cache HIT (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:37:46.730Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T01:37:46.898Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T01:37:51.396Z [debug]: Cache MISS (1ms): member-dashboard
+2025-06-11T01:37:51.397Z [debug]: Cache MISS (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-11T01:37:51.399Z [debug]: Cache MISS (0ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T01:37:51.409Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:37:51.652Z [debug]: Cache HIT (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T01:37:52.161Z [debug]: Cache SET with TTL=180s (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-11T01:37:52.181Z [debug]: Cache SET with TTL=300s (3ms): member-dashboard
+2025-06-11T01:37:52.334Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-11T01:37:52.338Z [debug]: Cache SET with TTL=120s (0ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T01:37:52.359Z [debug]: Cache HIT (1ms): member-dashboard
+2025-06-11T01:37:52.546Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
