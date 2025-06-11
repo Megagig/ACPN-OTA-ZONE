@@ -33,8 +33,6 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Create uploads directory if it doesn't exist
 import fs from 'fs';
@@ -48,16 +46,6 @@ if (!fs.existsSync(uploadDir)) {
 import staticFilesRouter from './routes/static.routes';
 app.use('/api/static', staticFilesRouter); // Map to /api/static to match frontend URL
 
-// File upload middleware for organization documents
-app.use(
-  fileUpload({
-    useTempFiles: true,
-    tempFileDir: '/tmp/',
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    abortOnLimit: true,
-  })
-);
-
 // Routes
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
@@ -66,7 +54,7 @@ import documentRoutes from './routes/document.routes';
 import organizationDocumentRoutes from './routes/organizationDocument.routes';
 import dueRoutes from './routes/due.routes';
 import dueTypeRoutes from './routes/dueType.routes';
-import paymentRoutes from './routes/payment.routes';
+import paymentRoutes from './routes/payment.routes'; // Import paymentRoutes here
 import donationRoutes from './routes/donation.routes';
 import eventRoutes from './routes/event.routes';
 import electionRoutes from './routes/election.routes';
@@ -80,6 +68,21 @@ import dashboardRoutes from './routes/dashboard.routes';
 import memberDashboardRoutes from './routes/memberDashboard.routes';
 import cacheRoutes from './routes/cache.routes';
 
+// Register paymentRoutes (which uses multer) BEFORE global fileupload or general body parsers
+app.use('/api/payments', paymentRoutes);
+
+// File upload middleware for organization documents (express-fileupload)
+// This should ideally not be global or be placed after routes using other parsers like multer
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: '/tmp/',
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    abortOnLimit: true,
+  })
+);
+
+// Routes
 app.get('/', (req: Request, res: Response) => {
   res.send('ACPN OTA Zone API is running...');
 });
@@ -115,6 +118,11 @@ app.use('/api/user-management', userManagementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/member-dashboard', memberDashboardRoutes);
 app.use('/api/cache', cacheRoutes);
+
+// General body parsers - place them after specific multipart handlers if possible,
+// or ensure they don't process multipart/form-data if other handlers are meant to.
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';

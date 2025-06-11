@@ -14582,3 +14582,53 @@
 2025-06-11T08:33:21.866Z [debug]: Cache SET with TTL=300s (4ms): member-dashboard
 2025-06-11T08:33:23.396Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
 2025-06-11T08:33:24.461Z [debug]: Cache HIT (2ms): events:{"limit":"20","page":"1"}
+2025-06-11T08:38:59.161Z [debug]: Cache MISS (0ms): member-payments:{"limit":"5","page":"1"}
+2025-06-11T08:38:59.178Z [debug]: Cache MISS (0ms): member-dashboard
+2025-06-11T08:38:59.321Z [debug]: Cache MISS (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:38:59.928Z [debug]: Cache SET with TTL=300s (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:39:00.239Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:39:00.244Z [debug]: Cache SET with TTL=180s (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-11T08:39:00.392Z [debug]: Cache SET with TTL=300s (1ms): member-dashboard
+2025-06-11T08:39:00.401Z [debug]: Cache MISS (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T08:39:00.404Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-11T08:39:00.568Z [debug]: Cache HIT (2ms): member-dashboard
+2025-06-11T08:39:01.272Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T08:39:01.468Z [debug]: Cache HIT (0ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T08:41:05.225Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:41:05.741Z [debug]: Cache HIT (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:41:05.741Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:41:08.348Z [debug]: Cache SET with TTL=300s (5ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:41:08.545Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:41:36.228Z [debug]: Cache MISS (10ms): payments-pending
+2025-06-11T08:41:36.228Z [debug]: Cache MISS (8ms): dues-analytics
+2025-06-11T08:41:36.228Z [debug]: Cache MISS (1ms): payments-admin:{"status":"all"}
+2025-06-11T08:41:36.574Z [debug]: Cache SET with TTL=600s (5ms): dues-analytics
+2025-06-11T08:41:36.666Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-11T08:41:36.767Z [debug]: Cache HIT (1ms): dues-analytics
+2025-06-11T08:41:36.866Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-11T08:41:38.059Z [debug]: Cache SET with TTL=180s (3ms): payments-admin:{"status":"all"}
+2025-06-11T08:41:38.263Z [debug]: Cache HIT (6ms): payments-admin:{"status":"all"}
+2025-06-11T08:47:10.747Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:47:11.063Z [debug]: Cache SET with TTL=300s (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:47:11.281Z [debug]: Cache MISS (3ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:47:12.076Z [debug]: Cache SET with TTL=300s (17ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:52:33.855Z [info]: Redis client connected
+2025-06-11T08:52:33.860Z [info]: Redis client ready and accepting commands
+2025-06-11T08:54:05.311Z [info]: Redis client connected
+2025-06-11T08:54:05.316Z [info]: Redis client ready and accepting commands
+2025-06-11T08:54:28.228Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:54:28.849Z [debug]: Cache SET with TTL=300s (16ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:54:29.079Z [debug]: Cache HIT (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:54:29.080Z [debug]: Cache MISS (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:54:30.323Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:54:30.517Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:58:51.108Z [info]: Redis client connected
+2025-06-11T08:58:51.113Z [info]: Redis client ready and accepting commands
+2025-06-11T08:59:32.521Z [info]: Redis client connected
+2025-06-11T08:59:32.526Z [info]: Redis client ready and accepting commands
+2025-06-11T08:59:41.754Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:59:42.169Z [debug]: Cache SET with TTL=300s (5ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T08:59:42.365Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T08:59:43.188Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-11T09:00:32.541Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T09:00:32.854Z [debug]: Cache HIT (7ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}

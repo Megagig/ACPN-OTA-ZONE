@@ -112,15 +112,9 @@ const handleUploadErrors = (
   next: express.NextFunction
 ): void => {
   // Log request information before processing
-  console.log('Processing payment upload request', {
-    headers: {
-      'content-type': req.headers['content-type'],
-      'content-length': req.headers['content-length'],
-    },
-    method: req.method,
-    url: req.url,
-    body: Object.keys(req.body || {}),
-  });
+  console.log('Handling payment upload request. Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Request body keys (pre-multer):', Object.keys(req.body || {}));
+
 
   // Check if the request is unusually large (pre-emptive check)
   const contentLength = Number(req.headers['content-length'] || 0);
@@ -167,6 +161,7 @@ const handleUploadErrors = (
       if (err instanceof multer.MulterError) {
         // A Multer error occurred
         errorMessage = `Multer error: ${err.code}`;
+        errorDetails = { code: err.code, field: err.field, message: err.message }; // Include original message
 
         if (err.code === 'LIMIT_FILE_SIZE') {
           errorMessage = 'File is too large. Maximum size is 10MB.';
@@ -182,32 +177,36 @@ const handleUploadErrors = (
         } else if (err.code === 'LIMIT_FIELD_COUNT') {
           errorMessage = 'Too many fields in the form.';
         }
-
-        errorDetails = { code: err.code, field: err.field };
       } else if (err instanceof Error) {
         // A general error occurred
-        errorMessage = err.message;
+        errorMessage = err.message; // Default to original error message
+        errorDetails = {
+          name: err.name,
+          message: err.message, // Keep original message in details
+          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        };
 
-        // Check for specific errors with improved messages
+        // Check for specific errors with improved messages and hints
         if (err.message.includes('Unexpected end of form')) {
           errorMessage =
             'Upload interrupted or incomplete. Please try again with a smaller file or better connection.';
           statusCode = 400;
           errorDetails.hint =
-            'This usually happens when the upload is interrupted or the connection is unstable';
+            'This usually happens when the upload is interrupted, the connection is unstable, or server timeouts are hit.';
         } else if (err.message.includes('Unexpected end of multipart data')) {
           errorMessage = 'Upload interrupted or incomplete. Please try again.';
           statusCode = 400;
-          errorDetails.hint = 'The upload was cut off before completing';
+          errorDetails.hint = 'The upload was cut off before completing.';
         } else if (err.message.includes('timeout')) {
           errorMessage = 'Upload timed out. Please try with a smaller file.';
           statusCode = 408;
+          errorDetails.hint = 'The server took too long to process the upload.';
+        } else if (err.message.includes('Only PDF, JPEG, JPG, and PNG files are allowed')) {
+          // This handles the error from our custom fileFilter
+          errorMessage = err.message;
+          statusCode = 400;
+          errorDetails.hint = 'Ensure the file is one of the accepted types: PDF, JPEG, JPG, PNG.';
         }
-
-        errorDetails = {
-          name: err.name,
-          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        };
       }
 
       res.status(statusCode).json({
