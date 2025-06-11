@@ -77,6 +77,7 @@ import permissionRoutes from './routes/permission.routes';
 import roleRoutes from './routes/role.routes';
 import userManagementRoutes from './routes/userManagement.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import memberDashboardRoutes from './routes/memberDashboard.routes';
 import cacheRoutes from './routes/cache.routes';
 
 app.get('/', (req: Request, res: Response) => {
@@ -112,6 +113,7 @@ app.use('/api/permissions', permissionRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/user-management', userManagementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/member-dashboard', memberDashboardRoutes);
 app.use('/api/cache', cacheRoutes);
 
 // Error Handling Middlewares

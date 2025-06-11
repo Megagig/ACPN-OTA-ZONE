@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import dashboardService from '../../services/dashboard.service';
 import { EventService } from '../../services/event.service';
-import financialService from '../../services/financial.service';
 import documentService from '../../services/document.service';
 import pharmacyService from '../../services/pharmacy.service';
+import memberDashboardService from '../../services/memberDashboard.service';
 
 // Types
-import type { ActivityItem } from '../../services/dashboard.service';
 import type { Event } from '../../types/event.types';
 import type { Payment } from '../../types/financial.types';
 import type { Pharmacy } from '../../types/pharmacy.types';
@@ -21,7 +19,14 @@ interface MemberDashboardStats {
   attendedEvents: number;
   missedEvents: number;
   documentsCount: number;
-  recentActivity: ActivityItem[];
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    timestamp: string;
+    status?: string;
+  }>;
 }
 
 const MemberDashboard: React.FC = () => {
@@ -54,10 +59,10 @@ const MemberDashboard: React.FC = () => {
         setError(null);
 
         // Create a safe version of Promise.all that doesn't fail if one promise fails
-        const safePromiseAll = async (promises) => {
+        const safePromiseAll = async (promises: Promise<any>[]) => {
           return Promise.all(
-            promises.map((promise) =>
-              promise.catch((error) => {
+            promises.map((promise: Promise<any>) =>
+              promise.catch((error: any) => {
                 console.warn(
                   'Error in one of the dashboard data requests:',
                   error
@@ -70,30 +75,27 @@ const MemberDashboard: React.FC = () => {
 
         // Fetch multiple data sources in parallel with error handling for each
         const [
-          dashboardStats,
+          memberDashboardStats,
           eventsData,
-          paymentsData,
+          memberPaymentsData,
           documentsData,
           pharmacyData,
         ] = await safePromiseAll([
-          dashboardService.getOverviewStats().catch(() => ({
-            recentActivity: [],
-            totalPharmacies: 0,
-            activePharmacies: 0,
-            pendingApprovals: 0,
-            totalUsers: 0,
-            totalEvents: 0,
+          memberDashboardService.getMemberDashboardStats().catch(() => ({
+            userFinancialSummary: {
+              totalDue: 0,
+              totalPaid: 0,
+              remainingBalance: 0,
+            },
+            userAttendanceSummary: { attended: 0, missed: 0 },
             upcomingEvents: 0,
-            totalDuesCollected: 0,
-            totalDuesOutstanding: 0,
-            totalPolls: 0,
-            activePolls: 0,
+            recentActivity: [],
           })),
           EventService.getAllEvents({ status: 'published' }, 1, 5).catch(
             () => ({ data: [] })
           ),
-          financialService
-            .getAllPayments({ limit: 5, page: 1 })
+          memberDashboardService
+            .getMemberPayments(1, 5)
             .catch(() => ({ payments: [] })),
           documentService
             .getDocuments({ accessLevel: 'members' })
@@ -115,23 +117,22 @@ const MemberDashboard: React.FC = () => {
         setUpcomingEvents(upcoming);
 
         // Set payments and pharmacy data
-        setRecentPayments(paymentsData.payments || []);
+        setRecentPayments(memberPaymentsData.payments || []);
         setPharmacy(pharmacyData || null);
 
-        // Calculate aggregated stats
-        // Use mock data for member dashboard until proper API endpoints are available
-        const totalDue = 0;
-        const totalPaid = 0;
+        // Calculate aggregated stats from member dashboard data
+        const { userFinancialSummary, userAttendanceSummary, recentActivity } =
+          memberDashboardStats;
 
         setStats({
-          totalDue,
-          totalPaid,
-          remainingBalance: totalDue - totalPaid,
+          totalDue: userFinancialSummary?.totalDue || 0,
+          totalPaid: userFinancialSummary?.totalPaid || 0,
+          remainingBalance: userFinancialSummary?.remainingBalance || 0,
           upcomingEvents: upcoming.length,
-          attendedEvents: 0,
-          missedEvents: 0,
-          documentsCount: 0,
-          recentActivity: dashboardStats.recentActivity || [],
+          attendedEvents: userAttendanceSummary?.attended || 0,
+          missedEvents: userAttendanceSummary?.missed || 0,
+          documentsCount: documentsData?.length || 0,
+          recentActivity: recentActivity || [],
         });
 
         setLoading(false);
@@ -239,7 +240,7 @@ const MemberDashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">
-              Welcome back, {user?.firstName}!
+              Welcome back, {user?.firstName || 'Member'}!
             </h1>
             <p className="text-primary-foreground/90">
               Here's an overview of your account and recent activities

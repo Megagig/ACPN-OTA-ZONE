@@ -14015,3 +14015,13 @@
 2025-06-11T00:53:47.884Z [info]: Redis client ready and accepting commands
 2025-06-11T00:53:48.708Z [info]: Redis client connected
 2025-06-11T00:53:48.713Z [info]: Redis client ready and accepting commands
+2025-06-11T00:55:57.859Z [debug]: Cache MISS (8ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T00:55:57.859Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T00:55:58.272Z [debug]: Cache SET with TTL=300s (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T00:55:58.425Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-11T00:55:58.777Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T00:55:58.979Z [debug]: Cache HIT (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-11T00:56:16.161Z [info]: Redis client connected
+2025-06-11T00:56:16.165Z [info]: Redis client ready and accepting commands
+2025-06-11T00:56:16.337Z [info]: Redis client connected
+2025-06-11T00:56:16.341Z [info]: Redis client ready and accepting commands
