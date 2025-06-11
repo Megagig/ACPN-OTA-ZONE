@@ -14966,3 +14966,27 @@
 2025-06-11T09:48:17.430Z [debug]: Cache HIT (2ms): history-user:{"limit":"10","page":"1"}
 2025-06-11T09:48:17.707Z [debug]: Cache HIT (26ms): events:{"limit":"10","page":"1"}
 2025-06-11T09:48:18.013Z [debug]: Cache HIT (10ms): history-user:{"limit":"10","page":"1"}
+2025-06-11T09:53:24.652Z [debug]: Cache MISS (2ms): events:{"limit":"20","page":"1"}
+2025-06-11T09:53:24.652Z [debug]: Cache MISS (1ms): events-stats
+2025-06-11T09:53:25.498Z [debug]: Cache SET with TTL=120s (4ms): events:{"limit":"20","page":"1"}
+2025-06-11T09:53:25.603Z [debug]: Cache SET with TTL=300s (1ms): events-stats
+2025-06-11T09:53:25.693Z [debug]: Cache HIT (6ms): events:{"limit":"20","page":"1"}
+2025-06-11T09:53:25.792Z [debug]: Cache HIT (7ms): events-stats
+2025-06-11T09:54:02.082Z [debug]: Cache MISS (1ms): dues-all
+2025-06-11T09:54:02.929Z [debug]: Cache SET with TTL=300s (6ms): dues-all
+2025-06-11T09:54:03.113Z [debug]: Cache HIT (2ms): dues-all
+2025-06-11T09:54:10.559Z [debug]: Cache MISS (1ms): payments-admin
+2025-06-11T09:54:11.266Z [debug]: Cache SET with TTL=180s (2ms): payments-admin
+2025-06-11T09:54:26.492Z [debug]: Cache HIT (28ms): events-stats
+2025-06-11T09:54:26.492Z [debug]: Cache HIT (26ms): events:{"limit":"20","page":"1"}
+2025-06-11T09:54:26.695Z [debug]: Cache HIT (1ms): events-stats
+2025-06-11T09:54:26.723Z [debug]: Cache HIT (5ms): events:{"limit":"20","page":"1"}
+2025-06-11T09:54:38.212Z [debug]: Cache MISS (1ms): dues-analytics
+2025-06-11T09:54:38.260Z [debug]: Cache MISS (0ms): payments-pending
+2025-06-11T09:54:38.301Z [debug]: Cache MISS (1ms): payments-admin:{"status":"all"}
+2025-06-11T09:54:38.549Z [debug]: Cache SET with TTL=600s (1ms): dues-analytics
+2025-06-11T09:54:38.568Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-11T09:54:38.742Z [debug]: Cache HIT (1ms): dues-analytics
+2025-06-11T09:54:38.758Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-11T09:54:38.942Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"status":"all"}
+2025-06-11T09:54:39.156Z [debug]: Cache HIT (4ms): payments-admin:{"status":"all"}

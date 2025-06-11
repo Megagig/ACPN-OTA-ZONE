@@ -62,13 +62,15 @@ const PharmacyDues: React.FC = () => {
           Math.ceil((response.pagination?.total || 0) / itemsPerPage)
         );
       } else {
-        setError(
-          'Pharmacy profile not found. Please register your pharmacy first.'
-        );
+        const pharmacyNotFoundMsg =
+          'Pharmacy profile not found. Please register your pharmacy first.';
+        setError(pharmacyNotFoundMsg); // Keep for UI state
+        toast.warn(pharmacyNotFoundMsg); // Add toast
         setDues([]);
       }
     } catch (err) {
-      setError('Failed to load dues data');
+      setError('Failed to load dues data'); // Keep for general error display
+      toast.error('Failed to load dues data. Please try refreshing.'); // Add toast
       setDues([]);
       console.error(err);
     } finally {
@@ -171,7 +173,8 @@ const PharmacyDues: React.FC = () => {
   const handleDueSelection = (due: PharmacyDue) => {
     // Don't allow selection of dues with zero balance
     if (due.balance <= 0) {
-      setError('This due has already been fully paid');
+      // setError('This due has already been fully paid'); // Remove setError
+      toast.error('This due has already been fully paid'); // Use toast
       return;
     }
 
@@ -196,7 +199,7 @@ const PharmacyDues: React.FC = () => {
       !paymentData.paymentMethod ||
       !paymentData.receipt
     ) {
-      setError('Please fill all required payment fields and upload a receipt');
+      // setError('Please fill all required payment fields and upload a receipt'); // Remove setError
       toast.error(
         'Please fill all required payment fields and upload a receipt'
       );
@@ -205,20 +208,20 @@ const PharmacyDues: React.FC = () => {
 
     // Validate payment amount
     if (paymentData.amount <= 0) {
-      setError('Payment amount must be greater than zero');
+      // setError('Payment amount must be greater than zero'); // Remove setError
       toast.error('Payment amount must be greater than zero');
       return;
     }
 
     if (paymentData.amount > selectedDue.balance) {
-      setError('Payment amount cannot exceed the outstanding balance');
+      // setError('Payment amount cannot exceed the outstanding balance'); // Remove setError
       toast.error('Payment amount cannot exceed the outstanding balance');
       return;
     }
 
     // Don't allow submission if balance is 0
     if (selectedDue.balance === 0) {
-      setError('This due has already been fully paid');
+      // setError('This due has already been fully paid'); // Remove setError
       toast.error('This due has already been fully paid');
       return;
     }
@@ -228,7 +231,7 @@ const PharmacyDues: React.FC = () => {
 
       // Verify we have the receipt file
       if (!paymentData.receipt) {
-        setError('Receipt file is required');
+        // setError('Receipt file is required'); // Remove setError
         toast.error('Receipt file is required');
         setSubmittingPayment(false);
         return;
@@ -264,7 +267,7 @@ const PharmacyDues: React.FC = () => {
           // 8MB limit on client side
           const sizeError =
             'Receipt file is too large. Please use a file smaller than 8MB.';
-          setError(sizeError);
+          // setError(sizeError); // Remove setError
           toast.error(sizeError);
           setSubmittingPayment(false);
           return;
@@ -296,14 +299,14 @@ const PharmacyDues: React.FC = () => {
           console.error('Error adding file to FormData:', fileError);
           const processingError =
             'Error processing file. Please try a different file.';
-          setError(processingError);
+          // setError(processingError); // Remove setError
           toast.error(processingError);
           setSubmittingPayment(false);
           return;
         }
       } else {
         const invalidFileError = 'Receipt is not a valid File object';
-        setError(invalidFileError);
+        // setError(invalidFileError); // Remove setError
         toast.error(invalidFileError);
         setSubmittingPayment(false);
         return;
@@ -879,14 +882,21 @@ const PharmacyDues: React.FC = () => {
                         const file = e.target.files?.[0] || null;
                         if (file) {
                           // Reset any previous errors
-                          setError(null);
+                          // setError(null); // Remove setError(null)
 
                           // Check file size (max 5MB)
                           if (file.size > 5 * 1024 * 1024) {
-                            setError(
+                            // setError( // Remove setError
+                            //   'File size must be less than 5MB. Please select a smaller file.'
+                            // );
+                            toast.error(
                               'File size must be less than 5MB. Please select a smaller file.'
                             );
                             e.target.value = ''; // Clear the file input
+                            setPaymentData((prev) => ({
+                              ...prev,
+                              receipt: null,
+                            })); // Clear receipt in state
                             return;
                           }
 
@@ -914,10 +924,17 @@ const PharmacyDues: React.FC = () => {
                             !validTypes.includes(file.type) ||
                             !validExtensions.includes(fileExtension)
                           ) {
-                            setError(
+                            // setError( // Remove setError
+                            //   'File must be PDF, JPG, JPEG, or PNG format'
+                            // );
+                            toast.error(
                               'File must be PDF, JPG, JPEG, or PNG format'
                             );
                             e.target.value = ''; // Clear the file input
+                            setPaymentData((prev) => ({
+                              ...prev,
+                              receipt: null,
+                            })); // Clear receipt in state
                             return;
                           }
 
@@ -945,10 +962,17 @@ const PharmacyDues: React.FC = () => {
                             // Create a new, clean file object with a controlled size
                             const maxSize = 4 * 1024 * 1024; // 4MB max to be safe
                             if (arrayBuffer.byteLength > maxSize) {
-                              setError(
+                              // setError( // Remove setError
+                              //   'File content is too large after processing. Please use a smaller or simpler file.'
+                              // );
+                              toast.error(
                                 'File content is too large after processing. Please use a smaller or simpler file.'
                               );
                               e.target.value = ''; // Clear the file input
+                              setPaymentData((prev) => ({
+                                ...prev,
+                                receipt: null,
+                              })); // Clear receipt in state
                               return;
                             }
 
@@ -974,10 +998,17 @@ const PharmacyDues: React.FC = () => {
                             }));
                           } catch (error) {
                             console.error('Error processing file:', error);
-                            setError(
+                            // setError( // Remove setError
+                            //   'Error processing file. Please try a different file or format.'
+                            // );
+                            toast.error(
                               'Error processing file. Please try a different file or format.'
                             );
                             e.target.value = ''; // Clear the file input
+                            setPaymentData((prev) => ({
+                              ...prev,
+                              receipt: null,
+                            })); // Clear receipt in state
                           }
                         } else {
                           setPaymentData((prev) => ({
