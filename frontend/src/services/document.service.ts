@@ -6,7 +6,8 @@ import type {
   DocumentSummary,
 } from '../types/document.types';
 
-const BASE_URL = '/api/organization-documents';
+// Using relative path since api.ts already has the '/api' baseURL
+const BASE_URL = '/organization-documents';
 
 // Documents API
 export const getDocuments = async (

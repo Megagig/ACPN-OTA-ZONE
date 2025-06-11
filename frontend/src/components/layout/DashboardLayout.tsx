@@ -61,6 +61,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     ];
 
     const memberItems = [
+      { name: 'My Dashboard', path: '/dashboard', icon: 'home' },
       { name: 'My Pharmacy', path: '/my-pharmacy', icon: 'building' },
       { name: 'My Documents', path: '/my-documents', icon: 'file-alt' },
       { name: 'Dues & Payments', path: '/payments', icon: 'money-bill' },

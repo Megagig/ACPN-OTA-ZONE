@@ -10,6 +10,7 @@ import { ToastProvider } from './components/shadcn/toast';
 import { QueryProvider } from './lib/react-query';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -22,6 +23,7 @@ import NotFound from './pages/auth/NotFound';
 
 // Dashboard Pages
 import DashboardHome from './pages/dashboard/DashboardHome';
+import MemberDashboard from './pages/dashboard/MemberDashboard';
 import Profile from './pages/dashboard/Profile';
 
 // Admin Pages
@@ -153,7 +155,11 @@ function App() {
                 {/* Protected Dashboard Routes */}
                 <Route element={<ProtectedRoute />}>
                   <Route element={<DashboardLayout />}>
-                    <Route path="/dashboard" element={<DashboardHome />} />
+                    <Route path="/dashboard" element={<RoleBasedDashboard />} />
+                    <Route
+                      path="/member-dashboard"
+                      element={<MemberDashboard />}
+                    />
                     <Route path="/profile" element={<Profile />} />
 
                     {/* Admin Routes - Add more protected routes as needed */}
