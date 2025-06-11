@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import MemberEventWidget from '../../components/member/MemberEventWidget';
 import AdminEventWidget from '../../components/admin/AdminEventWidget';
-import dashboardService, {
-  type ActivityItem,
-} from '../../services/dashboard.service';
+import dashboardService from '../../services/dashboard.service';
 
 interface DashboardStats {
   totalPharmacies: number;
@@ -23,7 +21,6 @@ const DashboardHome: React.FC = () => {
     activeElections: 0,
     totalDuesPaid: 0,
   });
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,9 +42,6 @@ const DashboardHome: React.FC = () => {
           totalDuesPaid: overviewStats.totalDuesCollected,
         });
 
-        // Set recent activity
-        setRecentActivity(overviewStats.recentActivity);
-
         setIsLoading(false);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
@@ -58,34 +52,6 @@ const DashboardHome: React.FC = () => {
 
     fetchDashboardData();
   }, []);
-
-  // Helper function to format activity timestamps
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays <= 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
-  };
-
-  // Helper function to get status badge color
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'success':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
-      case 'pending':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
-      case 'warning':
-        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400';
-      case 'error':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
-      default:
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
-    }
-  };
 
   if (isLoading) {
     return (
@@ -374,91 +340,6 @@ const DashboardHome: React.FC = () => {
         ) : (
           <MemberEventWidget />
         )}
-      </div>
-
-      {/* Recent Activity Section */}
-      <div className="bg-card shadow overflow-hidden sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-foreground">
-            Recent Activity
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Latest updates and activities.
-          </p>
-        </div>
-        <ul className="divide-y divide-border">
-          {recentActivity.length > 0 ? (
-            recentActivity.map((activity) => (
-              <li key={activity.id}>
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-primary truncate">
-                      {activity.title}
-                    </p>
-                    <div className="ml-2 flex-shrink-0 flex">
-                      <p
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
-                          activity.status || 'default'
-                        )}`}
-                      >
-                        {activity.status || 'Activity'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
-                    <div className="sm:flex">
-                      <p className="flex items-center text-sm text-muted-foreground">
-                        {(() => {
-                          try {
-                            if (
-                              typeof activity.description === 'object' &&
-                              activity.description !== null
-                            ) {
-                              return JSON.stringify(activity.description);
-                            }
-                            return (
-                              activity.description?.toString() ||
-                              'No description'
-                            );
-                          } catch (error) {
-                            console.error(
-                              'Error rendering activity description:',
-                              error
-                            );
-                            return 'Activity description unavailable';
-                          }
-                        })()}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-muted-foreground sm:mt-0">
-                      <svg
-                        className="flex-shrink-0 mr-1.5 h-5 w-5 text-muted-foreground"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <p>{formatTimestamp(activity.timestamp)}</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))
-          ) : (
-            <li>
-              <div className="px-4 py-4 sm:px-6">
-                <p className="text-sm text-muted-foreground text-center">
-                  No recent activity to display.
-                </p>
-              </div>
-            </li>
-          )}
-        </ul>
       </div>
     </div>
   );
