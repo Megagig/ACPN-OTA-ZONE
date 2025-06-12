@@ -77,9 +77,21 @@ const MemberAttendanceStatus: React.FC = () => {
         const userHistory = await eventService.getUserEventHistory();
         if (userHistory && userHistory.data) {
           // Extract attended event IDs from the attendance records
-          const attendedIds = userHistory.data.attendance
-            .filter((attendance) => attendance.attendedAt)
-            .map((attendance) => attendance.eventId);
+          // Handle both old and new API response structures
+          const attendanceData = userHistory.data.attendance || [];
+          const attendedIds = attendanceData
+            .filter((attendance) => attendance.attended === true)
+            .map((attendance) => {
+              // Handle both populated and unpopulated eventId
+              if (
+                typeof attendance.eventId === 'object' &&
+                attendance.eventId._id
+              ) {
+                return attendance.eventId._id;
+              }
+              return attendance.eventId as string;
+            })
+            .filter((id): id is string => typeof id === 'string');
           setAttendedEvents(attendedIds);
         }
 

@@ -500,18 +500,9 @@ export const markAttendance = asyncHandler(
       );
     }
 
-    // Check if event is ongoing (for meetings, only during meetings)
-    if (event.eventType === EventType.MEETING) {
-      const now = new Date();
-      if (now < event.startDate || now > event.endDate) {
-        return next(
-          new ErrorResponse(
-            'Attendance can only be marked during the meeting',
-            400
-          )
-        );
-      }
-    }
+    // Allow attendance marking at any time for meetings
+    // Admins should be able to mark attendance retroactively
+    // The time restriction has been removed to support better admin workflow
 
     const attendanceRecords = [];
 
@@ -1040,11 +1031,13 @@ export const getUserEventHistory = asyncHandler(
       .skip(startIndex)
       .limit(limit);
 
-    // Get attendance records for the user
-    const eventIds = registrations.map((reg) => reg.eventId);
+    // Get ALL attendance records for the user (not just for registered events)
+    // This ensures admin-marked attendance is included even without registration
     const attendanceRecords = await EventAttendance.find({
       userId,
-      eventId: { $in: eventIds },
+    }).populate({
+      path: 'eventId',
+      select: 'title description startDate endDate location eventType status',
     });
 
     // Create attendance map for quick lookup
@@ -1058,19 +1051,43 @@ export const getUserEventHistory = asyncHandler(
       });
     });
 
-    // Combine registration and attendance data
-    const eventHistory = registrations.map((registration) => {
-      const eventIdStr = registration.eventId._id.toString();
+    // Get all unique event IDs (from both registrations and attendance)
+    const registrationEventIds = registrations.map((reg) =>
+      reg.eventId._id.toString()
+    );
+    const attendanceEventIds = attendanceRecords.map((att) =>
+      att.eventId._id.toString()
+    );
+    const allEventIds = [
+      ...new Set([...registrationEventIds, ...attendanceEventIds]),
+    ];
+
+    // Get all events for complete event history
+    const allEvents = await Event.find({
+      _id: { $in: allEventIds },
+    }).populate('createdBy', 'firstName lastName email');
+
+    // Create a map of registrations by event ID
+    const registrationMap = new Map();
+    registrations.forEach((reg) => {
+      registrationMap.set(reg.eventId._id.toString(), reg.toObject());
+    });
+
+    // Combine registration and attendance data for all events
+    const eventHistory = allEvents.map((event) => {
+      const eventIdStr = (event._id as string).toString();
+      const registration = registrationMap.get(eventIdStr);
       const attendance = attendanceMap.get(eventIdStr);
 
       return {
-        registration: registration.toObject(),
+        event: event.toObject(),
+        registration: registration || null,
         attendance: attendance || null,
       };
     });
 
-    // Get total count for pagination
-    const total = await EventRegistration.countDocuments({ userId });
+    // Get total count for pagination (based on all events with attendance or registration)
+    const totalUniqueEvents = allEventIds.length;
 
     res.status(200).json({
       success: true,
@@ -1078,13 +1095,20 @@ export const getUserEventHistory = asyncHandler(
       pagination: {
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
-        total,
+        totalPages: Math.ceil(totalUniqueEvents / limit),
+        total: totalUniqueEvents,
       },
       data: {
         registrations: registrations,
         attendance: attendanceRecords,
         eventHistory,
+        // Include summary for easy frontend access
+        summary: {
+          totalEvents: allEvents.length,
+          totalRegistrations: registrations.length,
+          totalAttendedEvents: attendanceRecords.filter((att) => att.attended)
+            .length,
+        },
       },
     });
   }

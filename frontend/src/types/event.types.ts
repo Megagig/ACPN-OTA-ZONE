@@ -67,9 +67,11 @@ export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'waived';
 
 export interface EventAttendance {
   _id: string;
-  eventId: string;
+  eventId: string | Event;
   userId: string;
+  attended: boolean;
   attendedAt: string;
+  markedAt: string;
   markedBy: string;
   notes?: string;
   createdAt?: string;
