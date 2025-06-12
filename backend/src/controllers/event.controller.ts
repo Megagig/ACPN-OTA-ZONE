@@ -482,6 +482,17 @@ export const markAttendance = asyncHandler(
     const adminId = (req as any).user.id;
     const { attendanceList } = req.body; // Array of { userId, attended, notes? }
 
+    // Validate attendanceList
+    if (!attendanceList || !Array.isArray(attendanceList)) {
+      return next(
+        new ErrorResponse('attendanceList must be provided as an array', 400)
+      );
+    }
+
+    if (attendanceList.length === 0) {
+      return next(new ErrorResponse('attendanceList cannot be empty', 400));
+    }
+
     const event = await Event.findById(eventId);
     if (!event) {
       return next(
