@@ -225,9 +225,22 @@ export interface EventStats {
 }
 
 export interface UserEventHistory {
-  registrations: EventRegistration[];
-  attendance: EventAttendance[];
-  penalties: PenaltyInfo[];
+  success: boolean;
+  count: number;
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    total: number;
+  };
+  data: {
+    registrations: EventRegistration[];
+    attendance: EventAttendance[];
+    eventHistory: Array<{
+      registration: EventRegistration;
+      attendance: EventAttendance | null;
+    }>;
+  };
 }
 
 export interface PenaltyInfo {

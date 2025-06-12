@@ -75,9 +75,9 @@ const MemberAttendanceStatus: React.FC = () => {
 
         // Get user's event history which includes attendance records
         const userHistory = await eventService.getUserEventHistory();
-        if (userHistory) {
+        if (userHistory && userHistory.data) {
           // Extract attended event IDs from the attendance records
-          const attendedIds = userHistory.attendance
+          const attendedIds = userHistory.data.attendance
             .filter((attendance) => attendance.attendedAt)
             .map((attendance) => attendance.eventId);
           setAttendedEvents(attendedIds);

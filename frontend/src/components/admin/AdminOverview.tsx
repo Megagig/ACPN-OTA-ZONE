@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Users,
   Building,
@@ -26,6 +27,7 @@ interface StatCardProps {
   };
   className?: string;
   isLoading?: boolean;
+  to?: string; // Optional link destination
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -35,39 +37,54 @@ const StatCard: React.FC<StatCardProps> = ({
   trend,
   className = '',
   isLoading = false,
-}) => (
-  <div
-    className={`bg-card rounded-lg shadow-md p-4 sm:p-6 border border-border ${className}`}
-  >
-    <div className="flex items-center justify-between">
-      <div className="flex-1 min-w-0">
-        <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
-          {title}
-        </p>
-        {isLoading ? (
-          <div className="h-6 sm:h-8 w-16 sm:w-24 bg-muted animate-pulse rounded mt-2"></div>
-        ) : (
-          <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
-            {typeof value === 'number' ? value.toLocaleString() : value}
+  to,
+}) => {
+  const cardContent = (
+    <div
+      className={`bg-card rounded-lg shadow-md p-4 sm:p-6 border border-border ${className} ${
+        to ? 'hover:bg-accent transition-colors cursor-pointer' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+            {title}
           </p>
-        )}
-        {trend && !isLoading && (
-          <p
-            className={`text-xs sm:text-sm ${
-              trend.isPositive ? 'text-green-600' : 'text-red-600'
-            } mt-1`}
-          >
-            {trend.isPositive ? '+' : ''}
-            {trend.value}% from last month
-          </p>
-        )}
-      </div>
-      <div className="flex-shrink-0 ml-3 p-2 sm:p-3 bg-primary/10 rounded-full">
-        {icon}
+          {isLoading ? (
+            <div className="h-6 sm:h-8 w-16 sm:w-24 bg-muted animate-pulse rounded mt-2"></div>
+          ) : (
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
+              {typeof value === 'number' ? value.toLocaleString() : value}
+            </p>
+          )}
+          {trend && !isLoading && (
+            <p
+              className={`text-xs sm:text-sm ${
+                trend.isPositive ? 'text-green-600' : 'text-red-600'
+              } mt-1`}
+            >
+              {trend.isPositive ? '+' : ''}
+              {trend.value}% from last month
+            </p>
+          )}
+        </div>
+        <div className="flex-shrink-0 ml-3 p-2 sm:p-3 bg-primary/10 rounded-full">
+          {icon}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+
+  if (to) {
+    return (
+      <Link to={to} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
+};
 
 const ActivityCard: React.FC<{ activity: ActivityItem }> = ({ activity }) => {
   const getStatusIcon = (status?: string) => {
@@ -189,6 +206,7 @@ const AdminOverview: React.FC = () => {
           icon={<Building className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
           isLoading={isLoading}
           className="border-l-4 border-blue-500"
+          to="/pharmacies"
         />
         <StatCard
           title="Active Users"
@@ -196,6 +214,7 @@ const AdminOverview: React.FC = () => {
           icon={<Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
           isLoading={isLoading}
           className="border-l-4 border-green-500"
+          to="/users"
         />
         <StatCard
           title="Upcoming Events"
@@ -203,6 +222,7 @@ const AdminOverview: React.FC = () => {
           icon={<Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
           isLoading={isLoading}
           className="border-l-4 border-purple-500"
+          to="/events"
         />
         <StatCard
           title="Dues Collected"
@@ -210,6 +230,7 @@ const AdminOverview: React.FC = () => {
           icon={<DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
           isLoading={isLoading}
           className="border-l-4 border-yellow-500"
+          to="/finances"
         />
       </div>
 
@@ -221,6 +242,7 @@ const AdminOverview: React.FC = () => {
           icon={<Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />}
           isLoading={isLoading}
           className="border-l-4 border-orange-500"
+          to="/users"
         />
         <StatCard
           title="Active Polls"
@@ -228,6 +250,7 @@ const AdminOverview: React.FC = () => {
           icon={<FileText className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />}
           isLoading={isLoading}
           className="border-l-4 border-indigo-500"
+          to="/elections"
         />
         <StatCard
           title="Outstanding Dues"
@@ -235,6 +258,7 @@ const AdminOverview: React.FC = () => {
           icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />}
           isLoading={isLoading}
           className="border-l-4 border-red-500"
+          to="/finances/outstanding-dues"
         />
       </div>
 

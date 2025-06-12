@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom'; // Ensure Link is imported
 import { useAuth } from '../../context/AuthContext';
 import MemberEventWidget from '../../components/member/MemberEventWidget';
 import AdminEventWidget from '../../components/admin/AdminEventWidget';
@@ -30,10 +31,7 @@ const DashboardHome: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        // Fetch dashboard overview stats
         const overviewStats = await dashboardService.getOverviewStats();
-
-        // Map overview stats to dashboard stats
         setStats({
           totalPharmacies: overviewStats.totalPharmacies,
           totalMembers: overviewStats.totalUsers,
@@ -43,8 +41,8 @@ const DashboardHome: React.FC = () => {
         });
 
         setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
         setError('Failed to load dashboard data');
         setIsLoading(false);
       }
@@ -102,7 +100,10 @@ const DashboardHome: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {/* Total Pharmacies Card */}
-        <div className="bg-card overflow-hidden shadow rounded-lg">
+        <Link
+          to="/pharmacies"
+          className="bg-card overflow-hidden shadow rounded-lg block hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-colors duration-150"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-primary rounded-md p-3">
@@ -137,18 +138,18 @@ const DashboardHome: React.FC = () => {
           </div>
           <div className="bg-accent px-5 py-3">
             <div className="text-sm">
-              <a
-                href="/pharmacies"
-                className="font-medium text-primary hover:text-primary/80"
-              >
+              <span className="font-medium text-primary hover:text-primary/80">
                 View all
-              </a>
+              </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Total Members Card */}
-        <div className="bg-card overflow-hidden shadow rounded-lg">
+        <Link
+          to="/users"
+          className="bg-card overflow-hidden shadow rounded-lg block hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-colors duration-150"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-green-500 dark:bg-green-600 rounded-md p-3">
@@ -183,18 +184,18 @@ const DashboardHome: React.FC = () => {
           </div>
           <div className="bg-accent px-5 py-3">
             <div className="text-sm">
-              <a
-                href="/users"
-                className="font-medium text-primary hover:text-primary/80"
-              >
+              <span className="font-medium text-primary hover:text-primary/80">
                 View all
-              </a>
+              </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Upcoming Events Card */}
-        <div className="bg-card overflow-hidden shadow rounded-lg">
+        <Link
+          to="/events"
+          className="bg-card overflow-hidden shadow rounded-lg block hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-colors duration-150"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-yellow-500 dark:bg-yellow-600 rounded-md p-3">
@@ -229,18 +230,18 @@ const DashboardHome: React.FC = () => {
           </div>
           <div className="bg-accent px-5 py-3">
             <div className="text-sm">
-              <a
-                href="/events"
-                className="font-medium text-primary hover:text-primary/80"
-              >
+              <span className="font-medium text-primary hover:text-primary/80">
                 View all
-              </a>
+              </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Active Elections Card */}
-        <div className="bg-card overflow-hidden shadow rounded-lg">
+        <Link
+          to="/elections"
+          className="bg-card overflow-hidden shadow rounded-lg block hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-colors duration-150"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-purple-500 dark:bg-purple-600 rounded-md p-3">
@@ -275,18 +276,18 @@ const DashboardHome: React.FC = () => {
           </div>
           <div className="bg-accent px-5 py-3">
             <div className="text-sm">
-              <a
-                href="/elections"
-                className="font-medium text-primary hover:text-primary/80"
-              >
+              <span className="font-medium text-primary hover:text-primary/80">
                 View all
-              </a>
+              </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Total Dues Paid Card */}
-        <div className="bg-card overflow-hidden shadow rounded-lg">
+        <Link
+          to="/finances"
+          className="bg-card overflow-hidden shadow rounded-lg block hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-colors duration-150"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-red-500 dark:bg-red-600 rounded-md p-3">
@@ -321,15 +322,12 @@ const DashboardHome: React.FC = () => {
           </div>
           <div className="bg-accent px-5 py-3">
             <div className="text-sm">
-              <a
-                href="/finances"
-                className="font-medium text-primary hover:text-primary/80"
-              >
+              <span className="font-medium text-primary hover:text-primary/80">
                 View details
-              </a>
+              </span>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Event Management Widget */}
@@ -341,6 +339,8 @@ const DashboardHome: React.FC = () => {
           <MemberEventWidget />
         )}
       </div>
+
+      {/* Recent Activity Section - REMOVED */}
     </div>
   );
 };
