@@ -60,6 +60,10 @@ const eventRegistrationSchema = new Schema<IEventRegistration>(
 // Compound index to ensure one registration per user per event
 eventRegistrationSchema.index({ eventId: 1, userId: 1 }, { unique: true });
 
+// Index for efficient pagination and filtering
+eventRegistrationSchema.index({ eventId: 1, createdAt: -1 });
+eventRegistrationSchema.index({ eventId: 1, status: 1 });
+
 const EventRegistration = mongoose.model<IEventRegistration>(
   'EventRegistration',
   eventRegistrationSchema

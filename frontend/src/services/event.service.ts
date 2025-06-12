@@ -39,8 +39,15 @@ export class EventService {
   }
 
   static async getEventById(id: string): Promise<Event> {
-    const response = await apiClient.get(`/events/${id}`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get(`/events/${id}`, {
+        timeout: 10000, // 10 second timeout for individual event requests
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Failed to get event by ID:', error);
+      throw error;
+    }
   }
 
   static async createEvent(eventData: CreateEventData): Promise<Event> {
@@ -95,10 +102,10 @@ export class EventService {
       // Import the retry utility here to avoid circular dependencies
       const { getWithRetry } = await import('../utils/apiRetryUtils');
 
-      // Use a larger limit but still paginated to improve loading
+      // Use reasonable timeout for better user experience
       return getWithRetry<PaginatedResponse<EventRegistration>>(
         `/events/${eventId}/registrations?page=${page}&limit=${limit}`,
-        { timeout: 20000 } // Increase timeout to 20 seconds
+        { timeout: 10000 } // Reduce timeout to 10 seconds
       );
     } catch (error) {
       console.error('Failed to get event registrations:', error);
@@ -110,7 +117,7 @@ export class EventService {
         page: page,
         totalPages: 1,
         hasNext: false,
-        hasPrev: false
+        hasPrev: false,
       };
     }
   }

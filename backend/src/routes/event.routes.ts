@@ -74,6 +74,7 @@ router
   .route('/:id/registrations')
   .get(
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
+    cacheMiddleware('event-registrations', { ttl: 60 }),
     getEventRegistrations
   );
 

@@ -959,26 +959,33 @@ export const getEventRegistrations = asyncHandler(
       .skip(startIndex)
       .limit(limit);
 
-    // Get attendance data for registered users
-    const registrationsWithAttendance = await Promise.all(
-      registrations.map(async (registration) => {
-        const attendance = await EventAttendance.findOne({
-          eventId: eventId,
-          userId: registration.userId,
-        });
+    // Get all attendance data for this event in a single query
+    const userIds = registrations.map((reg) => reg.userId._id || reg.userId);
+    const attendanceRecords = await EventAttendance.find({
+      eventId: eventId,
+      userId: { $in: userIds },
+    });
 
-        return {
-          ...registration.toObject(),
-          attendance: attendance
-            ? {
-                present: attendance.attended,
-                checkedInAt: attendance.markedAt,
-                notes: attendance.notes,
-              }
-            : null,
-        };
-      })
-    );
+    // Create a map for quick attendance lookup
+    const attendanceMap = new Map();
+    attendanceRecords.forEach((attendance) => {
+      attendanceMap.set(attendance.userId.toString(), {
+        present: attendance.attended,
+        checkedInAt: attendance.markedAt,
+        notes: attendance.notes,
+      });
+    });
+
+    // Combine registrations with attendance data
+    const registrationsWithAttendance = registrations.map((registration) => {
+      const userId = registration.userId._id || registration.userId;
+      const attendance = attendanceMap.get(userId.toString()) || null;
+
+      return {
+        ...registration.toObject(),
+        attendance,
+      };
+    });
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
