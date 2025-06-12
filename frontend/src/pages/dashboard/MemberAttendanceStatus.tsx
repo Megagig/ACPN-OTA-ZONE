@@ -81,20 +81,6 @@ const MemberAttendanceStatus: React.FC = () => {
             .filter((attendance) => attendance.attendedAt)
             .map((attendance) => attendance.eventId);
           setAttendedEvents(attendedIds);
-
-          // Calculate attendance percentage for meetings
-          const meetingsCount = meetingEvents.length;
-          if (meetingsCount > 0) {
-            const attendedMeetings = meetingEvents.filter((meeting) =>
-              attendedIds.includes(meeting._id)
-            ).length;
-            const percentage = (attendedMeetings / meetingsCount) * 100;
-            setAttendancePercentage(percentage);
-            setBelowThreshold(percentage < 50);
-          } else {
-            setAttendancePercentage(0);
-            setBelowThreshold(false);
-          }
         }
 
         // Get penalty information
@@ -113,7 +99,23 @@ const MemberAttendanceStatus: React.FC = () => {
     };
 
     fetchData();
-  }, [year, meetingEvents]);
+  }, [year]);
+
+  // Calculate attendance percentage when meeting events or attended events change
+  useEffect(() => {
+    const meetingsCount = meetingEvents.length;
+    if (meetingsCount > 0) {
+      const attendedMeetings = meetingEvents.filter((meeting) =>
+        attendedEvents.includes(meeting._id)
+      ).length;
+      const percentage = (attendedMeetings / meetingsCount) * 100;
+      setAttendancePercentage(percentage);
+      setBelowThreshold(percentage < 50);
+    } else {
+      setAttendancePercentage(0);
+      setBelowThreshold(false);
+    }
+  }, [meetingEvents, attendedEvents]);
 
   // Format date function
   const formatDate = (dateString: string) => {
