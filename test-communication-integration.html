@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Communication API Integration Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      .info {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+      .response-data {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 5px 0;
+      }
+      .form-group {
+        margin: 10px 0;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Communication API Integration Test</h1>
+      <p>
+        Testing communication service API endpoints after removing mock data
+      </p>
+
+      <div id="status" class="info">
+        <strong>System Status:</strong> Initializing...
+      </div>
+
+      <div id="auth-section" class="test-section">
+        <h3>🔐 Authentication</h3>
+        <div class="form-group">
+          <label>Email:</label>
+          <input
+            type="email"
+            id="loginEmail"
+            value="test@example.com"
+            placeholder="Enter email"
+          />
+        </div>
+        <div class="form-group">
+          <label>Password:</label>
+          <input
+            type="password"
+            id="loginPassword"
+            value="password123"
+            placeholder="Enter password"
+          />
+        </div>
+        <button onclick="testAuthentication()">🔑 Login & Get Token</button>
+        <div id="auth-result"></div>
+      </div>
+
+      <div id="communication-section" class="test-section">
+        <h3>📢 Communication Endpoints</h3>
+        <button onclick="testGetCommunications()">
+          📋 Get All Communications (Admin)
+        </button>
+        <button onclick="testGetUserInbox()">📥 Get User Inbox</button>
+        <button onclick="testGetUserSent()">📤 Get User Sent</button>
+        <button onclick="testGetCommunicationSummary()">
+          📊 Get Communication Stats
+        </button>
+        <div id="communication-result"></div>
+      </div>
+
+      <div id="messaging-section" class="test-section">
+        <h3>💬 Messaging Endpoints</h3>
+        <button onclick="testGetThreads()">🧵 Get Message Threads</button>
+        <button onclick="testCreateThread()">➕ Create New Thread</button>
+        <div id="messaging-result"></div>
+      </div>
+
+      <div id="create-communication-section" class="test-section">
+        <h3>✏️ Create Communication</h3>
+        <div class="form-group">
+          <label>Subject:</label>
+          <input
+            type="text"
+            id="commSubject"
+            value="Test Communication"
+            placeholder="Enter subject"
+          />
+        </div>
+        <div class="form-group">
+          <label>Content:</label>
+          <textarea id="commContent" rows="4" placeholder="Enter content">
+This is a test communication from the API integration test.</textarea
+          >
+        </div>
+        <div class="form-group">
+          <label>Message Type:</label>
+          <select id="commType">
+            <option value="announcement">Announcement</option>
+            <option value="email">Email</option>
+            <option value="sms">SMS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Recipient Type:</label>
+          <select id="commRecipientType">
+            <option value="all_members">All Members</option>
+            <option value="executives">Executives</option>
+            <option value="specific_users">Specific Users</option>
+          </select>
+        </div>
+        <button onclick="testCreateCommunication()">
+          📝 Create Communication
+        </button>
+        <div id="create-comm-result"></div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = 'http://localhost:5000/api';
+      let authToken = null;
+
+      // Helper function to make API calls
+      async function apiCall(endpoint, options = {}) {
+        const defaultOptions = {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authToken && { Authorization: `Bearer ${authToken}` }),
+          },
+        };
+
+        const mergedOptions = {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers,
+          },
+        };
+
+        const response = await fetch(
+          `${API_BASE_URL}${endpoint}`,
+          mergedOptions
+        );
+        const data = await response.json();
+
+        return {
+          status: response.status,
+          ok: response.ok,
+          data,
+        };
+      }
+
+      // Update status display
+      function updateStatus(message, type = 'info') {
+        const statusEl = document.getElementById('status');
+        statusEl.className = type;
+        statusEl.innerHTML = `<strong>Status:</strong> ${message}`;
+      }
+
+      // Display result in a section
+      function displayResult(sectionId, title, result) {
+        const section = document.getElementById(sectionId);
+        const resultHtml = `
+                <h4>${title}</h4>
+                <div class="status ${result.ok ? 'success' : 'error'}">
+                    <strong>Status:</strong> ${result.status} - ${
+          result.ok ? 'Success' : 'Error'
+        }
+                </div>
+                <div class="response-data">${JSON.stringify(
+                  result.data,
+                  null,
+                  2
+                )}</div>
+            `;
+        section.innerHTML = resultHtml;
+      }
+
+      // Test authentication
+      async function testAuthentication() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+          updateStatus('Attempting authentication...', 'info');
+
+          const result = await apiCall('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (result.ok && result.data.token) {
+            authToken = result.data.token;
+            updateStatus('Authentication successful! Token stored.', 'success');
+            displayResult('auth-result', '🔑 Authentication Result', result);
+          } else {
+            updateStatus('Authentication failed', 'error');
+            displayResult('auth-result', '❌ Authentication Error', result);
+          }
+        } catch (error) {
+          updateStatus(`Authentication error: ${error.message}`, 'error');
+          displayResult('auth-result', '❌ Authentication Exception', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Test get all communications (admin endpoint)
+      async function testGetCommunications() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        try {
+          updateStatus('Fetching all communications...', 'info');
+          const result = await apiCall('/communications/admin');
+          displayResult(
+            'communication-result',
+            '📋 All Communications (Admin)',
+            result
+          );
+
+          if (result.ok) {
+            updateStatus(
+              `Found ${result.data.data?.length || 0} communications`,
+              'success'
+            );
+          } else {
+            updateStatus('Failed to fetch communications', 'warning');
+          }
+        } catch (error) {
+          updateStatus(
+            `Error fetching communications: ${error.message}`,
+            'error'
+          );
+          displayResult('communication-result', '❌ Communications Error', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Test get user inbox
+      async function testGetUserInbox() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        try {
+          updateStatus('Fetching user inbox...', 'info');
+          const result = await apiCall('/communications/inbox');
+          displayResult('communication-result', '📥 User Inbox', result);
+
+          if (result.ok) {
+            updateStatus(
+              `Found ${result.data.data?.length || 0} inbox items`,
+              'success'
+            );
+          }
+        } catch (error) {
+          updateStatus(`Error fetching inbox: ${error.message}`, 'error');
+          displayResult('communication-result', '❌ Inbox Error', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Test get user sent communications
+      async function testGetUserSent() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        try {
+          updateStatus('Fetching sent communications...', 'info');
+          const result = await apiCall('/communications/sent');
+          displayResult('communication-result', '📤 User Sent', result);
+
+          if (result.ok) {
+            updateStatus(
+              `Found ${result.data.data?.length || 0} sent items`,
+              'success'
+            );
+          }
+        } catch (error) {
+          updateStatus(
+            `Error fetching sent communications: ${error.message}`,
+            'error'
+          );
+          displayResult(
+            'communication-result',
+            '❌ Sent Communications Error',
+            {
+              ok: false,
+              data: { error: error.message },
+            }
+          );
+        }
+      }
+
+      // Test get communication summary/stats
+      async function testGetCommunicationSummary() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        try {
+          updateStatus('Fetching communication stats...', 'info');
+          const result = await apiCall('/communications/stats');
+          displayResult(
+            'communication-result',
+            '📊 Communication Stats',
+            result
+          );
+
+          if (result.ok) {
+            updateStatus('Communication stats loaded successfully', 'success');
+          }
+        } catch (error) {
+          updateStatus(`Error fetching stats: ${error.message}`, 'error');
+          displayResult('communication-result', '❌ Stats Error', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Test get message threads
+      async function testGetThreads() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        try {
+          updateStatus('Fetching message threads...', 'info');
+          const result = await apiCall('/messages/threads');
+          displayResult('messaging-result', '🧵 Message Threads', result);
+
+          if (result.ok) {
+            updateStatus(
+              `Found ${result.data.data?.length || 0} threads`,
+              'success'
+            );
+          }
+        } catch (error) {
+          updateStatus(`Error fetching threads: ${error.message}`, 'error');
+          displayResult('messaging-result', '❌ Threads Error', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Test create thread
+      async function testCreateThread() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        try {
+          updateStatus('Creating new thread...', 'info');
+          const result = await apiCall('/messages/threads', {
+            method: 'POST',
+            body: JSON.stringify({
+              participants: ['test-user-id'],
+              subject: 'Test Thread',
+              content: 'This is a test message thread.',
+            }),
+          });
+          displayResult('messaging-result', '➕ Create Thread', result);
+
+          if (result.ok) {
+            updateStatus('Thread created successfully', 'success');
+          }
+        } catch (error) {
+          updateStatus(`Error creating thread: ${error.message}`, 'error');
+          displayResult('messaging-result', '❌ Create Thread Error', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Test create communication
+      async function testCreateCommunication() {
+        if (!authToken) {
+          alert('Please authenticate first');
+          return;
+        }
+
+        const subject = document.getElementById('commSubject').value;
+        const content = document.getElementById('commContent').value;
+        const messageType = document.getElementById('commType').value;
+        const recipientType =
+          document.getElementById('commRecipientType').value;
+
+        if (!subject || !content) {
+          alert('Please fill in subject and content');
+          return;
+        }
+
+        try {
+          updateStatus('Creating communication...', 'info');
+          const result = await apiCall('/communications', {
+            method: 'POST',
+            body: JSON.stringify({
+              subject,
+              content,
+              messageType,
+              recipientType,
+            }),
+          });
+          displayResult(
+            'create-comm-result',
+            '📝 Create Communication',
+            result
+          );
+
+          if (result.ok) {
+            updateStatus('Communication created successfully', 'success');
+          }
+        } catch (error) {
+          updateStatus(
+            `Error creating communication: ${error.message}`,
+            'error'
+          );
+          displayResult('create-comm-result', '❌ Create Communication Error', {
+            ok: false,
+            data: { error: error.message },
+          });
+        }
+      }
+
+      // Check server status on page load
+      async function checkServerStatus() {
+        try {
+          const result = await apiCall('/health-check');
+          if (result.ok) {
+            updateStatus('Backend server is running and accessible', 'success');
+          } else {
+            updateStatus('Backend server responded with error', 'warning');
+          }
+        } catch (error) {
+          updateStatus(
+            `Cannot connect to backend server: ${error.message}`,
+            'error'
+          );
+          displayResult('auth-result', '❌ Server Connection Error', {
+            ok: false,
+            data: { error: `Cannot connect to ${API_BASE_URL}` },
+          });
+        }
+      }
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        checkServerStatus();
+      });
+    </script>
+  </body>
+</html>
