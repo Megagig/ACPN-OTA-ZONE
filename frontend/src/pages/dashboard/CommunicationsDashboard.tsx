@@ -191,28 +191,28 @@ const CommunicationsDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Total Communications"
-          value={isLoading ? '-' : summary?.total.toString() || '0'}
+          value={isLoading ? '-' : summary?.total?.toString() || '0'}
           icon={<i className="fas fa-envelope"></i>}
           className="border-l-4 border-blue-500"
           isLoading={isLoading}
         />
         <StatCard
           title="Sent"
-          value={isLoading ? '-' : summary?.sent.toString() || '0'}
+          value={isLoading ? '-' : summary?.sent?.toString() || '0'}
           icon={<i className="fas fa-check-circle"></i>}
           className="border-l-4 border-green-500"
           isLoading={isLoading}
         />
         <StatCard
           title="Draft"
-          value={isLoading ? '-' : summary?.draft.toString() || '0'}
+          value={isLoading ? '-' : summary?.draft?.toString() || '0'}
           icon={<i className="fas fa-file-alt"></i>}
           className="border-l-4 border-yellow-500"
           isLoading={isLoading}
         />
         <StatCard
           title="Scheduled"
-          value={isLoading ? '-' : summary?.scheduled.toString() || '0'}
+          value={isLoading ? '-' : summary?.scheduled?.toString() || '0'}
           icon={<i className="fas fa-clock"></i>}
           className="border-l-4 border-purple-500"
           isLoading={isLoading}
