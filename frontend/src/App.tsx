@@ -507,10 +507,7 @@ function App() {
                       element={<MemberEventRegistration />}
                     />
 
-                    <Route
-                      path="/messages"
-                      element={<div>Messages (Coming Soon)</div>}
-                    />
+                    <Route path="/messages" element={<MessagingInterface />} />
                     <Route
                       path="/elections/dashboard"
                       element={<ElectionDashboard />}

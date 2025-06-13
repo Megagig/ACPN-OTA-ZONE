@@ -20898,3 +20898,15 @@
 2025-06-13T16:54:16.884Z [debug]: Cache HIT (2ms): events-stats
 2025-06-13T16:54:18.616Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"20","page":"1"}
 2025-06-13T16:54:18.866Z [debug]: Cache HIT (7ms): events:{"limit":"20","page":"1"}
+2025-06-13T16:58:55.958Z [debug]: Cache MISS (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-13T16:58:55.958Z [debug]: Cache MISS (1ms): member-dashboard
+2025-06-13T16:58:55.971Z [debug]: Cache MISS (0ms): member-payments:{"limit":"5","page":"1"}
+2025-06-13T16:58:55.991Z [debug]: Cache MISS (0ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-13T16:58:56.419Z [debug]: Cache SET with TTL=300s (3ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-13T16:58:56.626Z [debug]: Cache HIT (1ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-13T16:58:56.726Z [debug]: Cache SET with TTL=300s (7ms): member-dashboard
+2025-06-13T16:58:56.745Z [debug]: Cache SET with TTL=180s (7ms): member-payments:{"limit":"5","page":"1"}
+2025-06-13T16:58:56.870Z [debug]: Cache SET with TTL=120s (6ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-13T16:58:56.922Z [debug]: Cache HIT (0ms): member-dashboard
+2025-06-13T16:58:56.940Z [debug]: Cache HIT (0ms): member-payments:{"limit":"5","page":"1"}
+2025-06-13T16:58:57.041Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
