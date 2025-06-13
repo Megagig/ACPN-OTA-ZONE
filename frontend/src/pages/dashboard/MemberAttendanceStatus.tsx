@@ -56,18 +56,24 @@ const MemberAttendanceStatus: React.FC = () => {
       try {
         setLoading(true);
 
-        // Get all events and filter by year on the frontend
-        const eventsResponse = await eventService.getAllEvents({});
+        // Get events filtered by year on the backend for better performance
+        const startOfYear = new Date(year, 0, 1).toISOString();
+        const endOfYear = new Date(year, 11, 31, 23, 59, 59).toISOString();
+
+        const eventsResponse = await eventService.getAllEvents(
+          {
+            startDate: startOfYear,
+            endDate: endOfYear,
+          },
+          1,
+          100
+        ); // Increase limit since we're filtering by year
 
         if (eventsResponse && eventsResponse.data) {
-          const eventsData = eventsResponse.data.filter((event: Event) => {
-            const eventYear = new Date(event.startDate).getFullYear();
-            return eventYear === year;
-          });
-          setEvents(eventsData);
+          setEvents(eventsResponse.data);
 
           // Filter out meeting events
-          const meetings = eventsData.filter(
+          const meetings = eventsResponse.data.filter(
             (event) => event.eventType === 'meetings'
           );
           setMeetingEvents(meetings);
@@ -100,11 +106,26 @@ const MemberAttendanceStatus: React.FC = () => {
         if (penaltyResponse) {
           setPenalties(penaltyResponse);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching attendance data:', error);
-        toast.error('Unable to load attendance data. Please try again.', {
-          autoClose: 5000,
-        });
+
+        // More specific error messages
+        if (error?.code === 'ECONNABORTED') {
+          toast.error(
+            'Request timed out. Please check your connection and try again.',
+            {
+              autoClose: 5000,
+            }
+          );
+        } else if (error?.response?.status === 401) {
+          toast.error('Please log in again to view your attendance status.', {
+            autoClose: 5000,
+          });
+        } else {
+          toast.error('Unable to load attendance data. Please try again.', {
+            autoClose: 5000,
+          });
+        }
       } finally {
         setLoading(false);
       }

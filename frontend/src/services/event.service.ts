@@ -34,8 +34,15 @@ export class EventService {
       ),
     });
 
-    const response = await apiClient.get(`/events?${params}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/events?${params}`, {
+        timeout: 20000, // 20 second timeout for events list
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get events:', error);
+      throw error;
+    }
   }
 
   static async getEventById(id: string): Promise<Event> {

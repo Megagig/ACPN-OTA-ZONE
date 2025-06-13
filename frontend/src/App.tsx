@@ -27,6 +27,7 @@ import Profile from './pages/dashboard/Profile';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminSettings from './components/admin/AdminSettings';
 import PharmaciesManagement from './pages/admin/PharmaciesManagement';
 import PharmacyDetail from './pages/admin/PharmacyDetail';
 import UsersManagement from './pages/admin/UsersManagement';
@@ -207,6 +208,7 @@ function App() {
                         path="/admin/cache-monitoring"
                         element={<CacheMonitoring />}
                       />
+                      <Route path="/settings" element={<AdminSettings />} />
                     </Route>
 
                     {/* Treasurer Routes */}

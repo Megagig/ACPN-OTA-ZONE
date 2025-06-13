@@ -20767,3 +20767,134 @@
 2025-06-12T17:32:15.341Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
 2025-06-12T17:32:15.357Z [debug]: Cache HIT (5ms): penalties-user
 2025-06-12T17:32:15.590Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-12T17:34:58.583Z [info]: Redis client connected
+2025-06-12T17:34:58.589Z [info]: Redis client ready and accepting commands
+2025-06-12T17:35:10.179Z [debug]: Cache MISS (3ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:35:12.087Z [debug]: Cache MISS (1ms): events:683edd859906fb0fcef13693
+2025-06-12T17:35:18.240Z [debug]: Cache MISS (2ms): events:683edd859906fb0fcef13693
+2025-06-12T17:35:18.630Z [debug]: Cache MISS (0ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:35:21.201Z [debug]: Cache SET with TTL=180s (8ms): events:683edd859906fb0fcef13693
+2025-06-12T17:35:21.390Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:35:21.421Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:35:22.684Z [debug]: Cache SET with TTL=180s (1ms): events:683edd859906fb0fcef13693
+2025-06-12T17:36:17.859Z [debug]: Cache MISS (15ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:36:19.827Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:36:20.059Z [debug]: Cache HIT (5ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:38:07.622Z [debug]: Cache DEL by pattern (4ms): events:*, Keys matched: 2, Keys removed: 2
+2025-06-12T17:38:08.544Z [debug]: Cache MISS (2ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:38:12.581Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:38:12.839Z [debug]: Cache HIT (4ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:38:28.969Z [debug]: Cache HIT (2ms): events:{"limit":"20","page":"1"}
+2025-06-12T17:38:51.344Z [debug]: Cache MISS (0ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:38:52.597Z [debug]: Cache SET with TTL=180s (2ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:38:52.849Z [debug]: Cache HIT (7ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:38:52.894Z [debug]: Cache MISS (2ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:38:53.935Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:38:54.213Z [debug]: Cache HIT (3ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:38:58.923Z [debug]: Cache HIT (1ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:38:59.159Z [debug]: Cache HIT (1ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:38:59.290Z [debug]: Cache HIT (1ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-12T17:38:59.640Z [debug]: Cache HIT (3ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-12T17:38:59.643Z [debug]: Cache MISS (4ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"20","page":"1"}
+2025-06-12T17:39:00.663Z [debug]: Cache SET with TTL=60s (3ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"20","page":"1"}
+2025-06-12T17:39:00.905Z [debug]: Cache HIT (13ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"20","page":"1"}
+2025-06-12T17:39:12.881Z [debug]: Cache MISS (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:39:15.627Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:39:15.920Z [debug]: Cache HIT (2ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:41:07.026Z [debug]: Cache HIT (3ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:41:07.241Z [debug]: Cache HIT (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:44:02.239Z [info]: Redis client connected
+2025-06-12T17:44:02.247Z [info]: Redis client ready and accepting commands
+2025-06-12T17:44:39.722Z [info]: Redis client connected
+2025-06-12T17:44:39.727Z [info]: Redis client ready and accepting commands
+2025-06-12T17:50:31.454Z [info]: Redis client connected
+2025-06-12T17:50:31.460Z [info]: Redis client ready and accepting commands
+2025-06-12T17:51:51.487Z [debug]: Cache MISS (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:51:53.231Z [debug]: Cache SET with TTL=120s (6ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:51:53.524Z [debug]: Cache HIT (2ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:53:51.154Z [debug]: Cache HIT (3ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:53:51.414Z [debug]: Cache HIT (2ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:55:08.094Z [debug]: Cache MISS (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:55:10.333Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:55:10.597Z [debug]: Cache HIT (16ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-12T17:55:17.803Z [debug]: Cache MISS (1ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:55:21.395Z [debug]: Cache SET with TTL=120s (7ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:55:21.693Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:55:29.893Z [debug]: Cache MISS (1ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:55:32.696Z [debug]: Cache SET with TTL=180s (2ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:55:32.951Z [debug]: Cache HIT (1ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:55:45.967Z [debug]: Cache HIT (3ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:55:46.226Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:55:54.256Z [debug]: Cache HIT (2ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:55:54.548Z [debug]: Cache HIT (1ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:55:54.637Z [debug]: Cache MISS (1ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:55:56.408Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:55:56.677Z [debug]: Cache HIT (2ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:56:18.484Z [debug]: Cache HIT (0ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:56:18.726Z [debug]: Cache HIT (0ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:56:37.973Z [debug]: Cache HIT (0ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:56:37.978Z [debug]: Cache HIT (1ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:56:38.212Z [debug]: Cache HIT (3ms): events:684b107ddaae11bf3fa7563b
+2025-06-12T17:56:38.212Z [debug]: Cache HIT (1ms): event-registrations:684b107ddaae11bf3fa7563b:{"limit":"10","page":"1"}
+2025-06-12T17:56:41.812Z [debug]: Cache HIT (1ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:56:42.549Z [debug]: Cache HIT (1ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:56:42.795Z [debug]: Cache HIT (1ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:56:43.059Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}
+2025-06-12T17:56:43.296Z [debug]: Cache MISS (5ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"10","page":"1"}
+2025-06-12T17:56:44.341Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"10","page":"1"}
+2025-06-12T17:56:44.578Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"10","page":"1"}
+2025-06-12T18:01:59.379Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-12T18:02:17.817Z [debug]: Cache MISS (5ms): events:{"limit":"20","page":"1"}
+2025-06-12T18:02:23.446Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-12T18:02:37.988Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-12T18:04:46.246Z [info]: Redis client connected
+2025-06-12T18:04:46.251Z [info]: Redis client ready and accepting commands
+2025-06-12T18:11:40.435Z [debug]: Cache MISS (5ms): events:{"limit":"20","page":"1"}
+2025-06-12T18:11:40.435Z [debug]: Cache MISS (3ms): events-stats
+2025-06-12T18:11:41.883Z [debug]: Cache SET with TTL=300s (3ms): events-stats
+2025-06-12T18:11:42.131Z [debug]: Cache HIT (0ms): events-stats
+2025-06-12T18:11:42.363Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-12T18:11:42.577Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-12T19:01:21.932Z [info]: Redis reconnecting... attempt 1. Next retry in 100ms
+2025-06-12T19:01:21.932Z [warn]: Redis client connection closed
+2025-06-12T19:01:21.933Z [warn]: Redis client reconnecting in 100ms
+2025-06-12T19:01:21.937Z [info]: Redis reconnecting... attempt 1. Next retry in 100ms
+2025-06-12T19:01:21.956Z [warn]: Redis client connection closed
+2025-06-12T19:01:21.961Z [warn]: Redis client reconnecting in 100ms
+2025-06-12T19:01:22.037Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-12T19:01:22.082Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-12T19:01:22.050Z [info]: Redis reconnecting... attempt 2. Next retry in 200ms
+2025-06-12T19:01:22.061Z [warn]: Redis client connection closed
+2025-06-12T19:01:22.068Z [warn]: Redis client reconnecting in 200ms
+2025-06-12T19:01:22.082Z [info]: Redis reconnecting... attempt 2. Next retry in 200ms
+2025-06-12T19:01:22.096Z [warn]: Redis client connection closed
+2025-06-12T19:01:22.099Z [warn]: Redis client reconnecting in 200ms
+2025-06-12T19:01:22.270Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-12T19:01:22.270Z [info]: Redis reconnecting... attempt 3. Next retry in 300ms
+2025-06-12T19:01:22.270Z [warn]: Redis client connection closed
+2025-06-12T19:01:22.270Z [warn]: Redis client reconnecting in 300ms
+2025-06-12T19:01:22.302Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-12T19:01:22.313Z [info]: Redis reconnecting... attempt 3. Next retry in 300ms
+2025-06-12T19:01:22.313Z [warn]: Redis client connection closed
+2025-06-12T19:01:22.313Z [warn]: Redis client reconnecting in 300ms
+2025-06-12T19:01:22.580Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-12T19:01:22.591Z [info]: Redis reconnecting... attempt 4. Next retry in 400ms
+2025-06-12T19:01:22.596Z [warn]: Redis client connection closed
+2025-06-12T19:01:22.602Z [warn]: Redis client reconnecting in 400ms
+2025-06-12T19:01:22.616Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-12T19:01:22.620Z [info]: Redis reconnecting... attempt 4. Next retry in 400ms
+2025-06-12T19:01:22.623Z [warn]: Redis client connection closed
+2025-06-12T19:01:22.624Z [warn]: Redis client reconnecting in 400ms
+2025-06-13T16:50:42.847Z [info]: Redis client connected
+2025-06-13T16:50:42.859Z [info]: Redis client ready and accepting commands
+2025-06-13T16:52:12.664Z [debug]: Cache MISS (3ms): events:{"limit":"20","page":"1"}
+2025-06-13T16:52:12.668Z [debug]: Cache MISS (4ms): events-stats
+2025-06-13T16:52:13.829Z [debug]: Cache SET with TTL=300s (8ms): events-stats
+2025-06-13T16:52:14.035Z [debug]: Cache SET with TTL=120s (6ms): events:{"limit":"20","page":"1"}
+2025-06-13T16:52:14.036Z [debug]: Cache HIT (2ms): events-stats
+2025-06-13T16:52:14.235Z [debug]: Cache HIT (7ms): events:{"limit":"20","page":"1"}
+2025-06-13T16:54:16.666Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-13T16:54:16.695Z [debug]: Cache HIT (1ms): events-stats
+2025-06-13T16:54:16.884Z [debug]: Cache HIT (2ms): events-stats
+2025-06-13T16:54:18.616Z [debug]: Cache SET with TTL=120s (3ms): events:{"limit":"20","page":"1"}
+2025-06-13T16:54:18.866Z [debug]: Cache HIT (7ms): events:{"limit":"20","page":"1"}

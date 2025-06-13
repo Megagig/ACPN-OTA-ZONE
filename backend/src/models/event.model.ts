@@ -136,6 +136,16 @@ eventSchema.virtual('attendance', {
   justOne: false,
 });
 
+// Create indexes for better query performance
+eventSchema.index({ startDate: 1 }); // Index for date range queries
+eventSchema.index({ endDate: 1 }); // Index for date range queries
+eventSchema.index({ eventType: 1 }); // Index for filtering by event type
+eventSchema.index({ status: 1 }); // Index for filtering by status
+eventSchema.index({ startDate: 1, endDate: 1 }); // Compound index for date ranges
+eventSchema.index({ eventType: 1, startDate: 1 }); // Compound index for type + date queries
+eventSchema.index({ createdBy: 1 }); // Index for user's events
+eventSchema.index({ 'location.virtual': 1 }); // Index for virtual events
+
 // Update event status automatically based on dates
 eventSchema.pre('save', function (next) {
   // Only auto-update status if it's not being explicitly set
