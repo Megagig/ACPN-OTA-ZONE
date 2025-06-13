@@ -20910,3 +20910,37 @@
 2025-06-13T16:58:56.922Z [debug]: Cache HIT (0ms): member-dashboard
 2025-06-13T16:58:56.940Z [debug]: Cache HIT (0ms): member-payments:{"limit":"5","page":"1"}
 2025-06-13T16:58:57.041Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-13T17:34:10.057Z [info]: Redis client connected
+2025-06-13T17:34:10.064Z [info]: Redis client ready and accepting commands
+2025-06-13T17:34:42.198Z [info]: Redis client connected
+2025-06-13T17:34:42.205Z [info]: Redis client ready and accepting commands
+2025-06-13T17:35:06.452Z [info]: Redis client connected
+2025-06-13T17:35:06.460Z [info]: Redis client ready and accepting commands
+2025-06-13T17:36:17.301Z [info]: Redis client connected
+2025-06-13T17:36:17.307Z [info]: Redis client ready and accepting commands
+2025-06-13T18:08:05.830Z [info]: Redis client connected
+2025-06-13T18:08:05.847Z [info]: Redis client ready and accepting commands
+2025-06-13T18:08:09.444Z [info]: Redis client connected
+2025-06-13T18:08:09.464Z [info]: Redis client ready and accepting commands
+2025-06-13T18:10:57.521Z [info]: Redis client connected
+2025-06-13T18:10:57.526Z [info]: Redis client ready and accepting commands
+2025-06-13T18:10:57.901Z [info]: Redis client connected
+2025-06-13T18:10:57.906Z [info]: Redis client ready and accepting commands
+2025-06-13T18:23:28.560Z [info]: Redis client connected
+2025-06-13T18:23:28.566Z [info]: Redis client connected
+2025-06-13T18:23:28.575Z [info]: Redis client ready and accepting commands
+2025-06-13T18:23:28.581Z [info]: Redis client ready and accepting commands
+2025-06-13T18:29:01.938Z [info]: Redis client connected
+2025-06-13T18:29:01.955Z [info]: Redis client ready and accepting commands
+2025-06-13T18:29:05.058Z [info]: Redis client connected
+2025-06-13T18:29:05.081Z [info]: Redis client ready and accepting commands
+2025-06-13T18:39:10.943Z [info]: Redis client connected
+2025-06-13T18:39:10.953Z [info]: Redis client ready and accepting commands
+2025-06-13T18:39:29.461Z [info]: Redis client connected
+2025-06-13T18:39:29.466Z [info]: Redis client ready and accepting commands
+2025-06-13T18:40:20.880Z [info]: Redis client connected
+2025-06-13T18:40:20.885Z [info]: Redis client ready and accepting commands
+2025-06-13T18:40:45.982Z [info]: Redis client connected
+2025-06-13T18:40:45.987Z [info]: Redis client ready and accepting commands
+2025-06-13T18:41:07.336Z [info]: Redis client connected
+2025-06-13T18:41:07.342Z [info]: Redis client ready and accepting commands

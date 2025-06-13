@@ -88,6 +88,7 @@ import CommunicationsList from './pages/dashboard/CommunicationsList';
 import CommunicationForm from './pages/dashboard/CommunicationForm';
 import CommunicationDetail from './pages/dashboard/CommunicationDetail';
 import MessagingInterface from './pages/dashboard/MessagingInterface';
+import AnnouncementsInterface from './pages/dashboard/AnnouncementsInterface';
 
 // Election Pages
 import ElectionDashboard from './pages/dashboard/ElectionDashboard';
@@ -447,6 +448,10 @@ function App() {
                       <Route
                         path="/communications/messages"
                         element={<MessagingInterface />}
+                      />
+                      <Route
+                        path="/communications/announcements"
+                        element={<AnnouncementsInterface />}
                       />
                       <Route
                         path="/documents/dashboard"

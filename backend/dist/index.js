@@ -32,8 +32,8 @@ const corsOptions = {
     optionsSuccessStatus: 200,
 };
 app.use((0, cors_1.default)(corsOptions));
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+// Body parsing middleware
+app.use(express_1.default.json()); // Add this line to parse JSON bodies
 // Create uploads directory if it doesn't exist
 const fs_1 = __importDefault(require("fs"));
 const uploadDir = path_1.default.join(__dirname, '../uploads/receipts');
@@ -44,13 +44,6 @@ if (!fs_1.default.existsSync(uploadDir)) {
 // Static file serving - must come before fileUpload middleware
 const static_routes_1 = __importDefault(require("./routes/static.routes"));
 app.use('/api/static', static_routes_1.default); // Map to /api/static to match frontend URL
-// File upload middleware for organization documents
-app.use((0, express_fileupload_1.default)({
-    useTempFiles: true,
-    tempFileDir: '/tmp/',
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    abortOnLimit: true,
-}));
 // Routes
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
@@ -59,7 +52,7 @@ const document_routes_1 = __importDefault(require("./routes/document.routes"));
 const organizationDocument_routes_1 = __importDefault(require("./routes/organizationDocument.routes"));
 const due_routes_1 = __importDefault(require("./routes/due.routes"));
 const dueType_routes_1 = __importDefault(require("./routes/dueType.routes"));
-const payment_routes_1 = __importDefault(require("./routes/payment.routes"));
+const payment_routes_1 = __importDefault(require("./routes/payment.routes")); // Import paymentRoutes here
 const donation_routes_1 = __importDefault(require("./routes/donation.routes"));
 const event_routes_1 = __importDefault(require("./routes/event.routes"));
 const election_routes_1 = __importDefault(require("./routes/election.routes"));
@@ -70,7 +63,20 @@ const permission_routes_1 = __importDefault(require("./routes/permission.routes"
 const role_routes_1 = __importDefault(require("./routes/role.routes"));
 const userManagement_routes_1 = __importDefault(require("./routes/userManagement.routes"));
 const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"));
+const memberDashboard_routes_1 = __importDefault(require("./routes/memberDashboard.routes"));
 const cache_routes_1 = __importDefault(require("./routes/cache.routes"));
+const message_routes_1 = __importDefault(require("./routes/message.routes"));
+// Register paymentRoutes (which uses multer) BEFORE global fileupload or general body parsers
+app.use('/api/payments', payment_routes_1.default);
+// File upload middleware for organization documents (express-fileupload)
+// This should ideally not be global or be placed after routes using other parsers like multer
+app.use((0, express_fileupload_1.default)({
+    useTempFiles: true,
+    tempFileDir: '/tmp/',
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    abortOnLimit: true,
+}));
+// Routes
 app.get('/', (req, res) => {
     res.send('ACPN OTA Zone API is running...');
 });
@@ -102,7 +108,12 @@ app.use('/api/permissions', permission_routes_1.default);
 app.use('/api/roles', role_routes_1.default);
 app.use('/api/user-management', userManagement_routes_1.default);
 app.use('/api/dashboard', dashboard_routes_1.default);
+app.use('/api/member-dashboard', memberDashboard_routes_1.default);
 app.use('/api/cache', cache_routes_1.default);
+app.use('/api/messages', message_routes_1.default);
+// General body parsers - place them after specific multipart handlers if possible,
+// or ensure they don't process multipart/form-data if other handlers are meant to.
+app.use(express_1.default.urlencoded({ extended: true }));
 // Error Handling Middlewares
 const error_middleware_1 = require("./middleware/error.middleware");
 // Global unhandled promise rejection handler

@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelEvent = exports.publishEvent = exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.getEventAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
+exports.cancelEvent = exports.publishEvent = exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getUserEventHistory = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.getEventAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
 const event_model_1 = __importStar(require("../models/event.model"));
 const eventRegistration_model_1 = __importStar(require("../models/eventRegistration.model"));
 const eventAttendance_model_1 = __importDefault(require("../models/eventAttendance.model"));
@@ -399,17 +399,20 @@ exports.markAttendance = (0, async_middleware_1.default)((req, res, next) => __a
     const eventId = req.params.id;
     const adminId = req.user.id;
     const { attendanceList } = req.body; // Array of { userId, attended, notes? }
+    // Validate attendanceList
+    if (!attendanceList || !Array.isArray(attendanceList)) {
+        return next(new errorResponse_1.default('attendanceList must be provided as an array', 400));
+    }
+    if (attendanceList.length === 0) {
+        return next(new errorResponse_1.default('attendanceList cannot be empty', 400));
+    }
     const event = yield event_model_1.default.findById(eventId);
     if (!event) {
         return next(new errorResponse_1.default(`Event not found with id of ${eventId}`, 404));
     }
-    // Check if event is ongoing (for meetings, only during meetings)
-    if (event.eventType === event_model_1.EventType.MEETING) {
-        const now = new Date();
-        if (now < event.startDate || now > event.endDate) {
-            return next(new errorResponse_1.default('Attendance can only be marked during the meeting', 400));
-        }
-    }
+    // Allow attendance marking at any time for meetings
+    // Admins should be able to mark attendance retroactively
+    // The time restriction has been removed to support better admin workflow
     const attendanceRecords = [];
     for (const attendance of attendanceList) {
         const existingAttendance = yield eventAttendance_model_1.default.findOne({
@@ -774,20 +777,27 @@ exports.getEventRegistrations = (0, async_middleware_1.default)((req, res) => __
         .sort({ createdAt: -1 })
         .skip(startIndex)
         .limit(limit);
-    // Get attendance data for registered users
-    const registrationsWithAttendance = yield Promise.all(registrations.map((registration) => __awaiter(void 0, void 0, void 0, function* () {
-        const attendance = yield eventAttendance_model_1.default.findOne({
-            eventId: eventId,
-            userId: registration.userId,
+    // Get all attendance data for this event in a single query
+    const userIds = registrations.map((reg) => reg.userId._id || reg.userId);
+    const attendanceRecords = yield eventAttendance_model_1.default.find({
+        eventId: eventId,
+        userId: { $in: userIds },
+    });
+    // Create a map for quick attendance lookup
+    const attendanceMap = new Map();
+    attendanceRecords.forEach((attendance) => {
+        attendanceMap.set(attendance.userId.toString(), {
+            present: attendance.attended,
+            checkedInAt: attendance.markedAt,
+            notes: attendance.notes,
         });
-        return Object.assign(Object.assign({}, registration.toObject()), { attendance: attendance
-                ? {
-                    present: attendance.attended,
-                    checkedInAt: attendance.markedAt,
-                    notes: attendance.notes,
-                }
-                : null });
-    })));
+    });
+    // Combine registrations with attendance data
+    const registrationsWithAttendance = registrations.map((registration) => {
+        const userId = registration.userId._id || registration.userId;
+        const attendance = attendanceMap.get(userId.toString()) || null;
+        return Object.assign(Object.assign({}, registration.toObject()), { attendance });
+    });
     // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
@@ -801,6 +811,96 @@ exports.getEventRegistrations = (0, async_middleware_1.default)((req, res) => __
         hasNextPage,
         hasPrevPage,
         data: registrationsWithAttendance,
+    });
+}));
+// @desc    Get user's event history (for attendance tracking)
+// @route   GET /api/events/my-history
+// @access  Private
+exports.getUserEventHistory = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    // Get user's event registrations with attendance data
+    const registrations = yield eventRegistration_model_1.default.find({ userId })
+        .populate({
+        path: 'eventId',
+        select: 'title description startDate endDate location eventType status',
+        populate: {
+            path: 'createdBy',
+            select: 'firstName lastName email',
+        },
+    })
+        .sort({ registrationDate: -1 })
+        .skip(startIndex)
+        .limit(limit);
+    // Get ALL attendance records for the user (not just for registered events)
+    // This ensures admin-marked attendance is included even without registration
+    const attendanceRecords = yield eventAttendance_model_1.default.find({
+        userId,
+    }).populate({
+        path: 'eventId',
+        select: 'title description startDate endDate location eventType status',
+    });
+    // Create attendance map for quick lookup
+    const attendanceMap = new Map();
+    attendanceRecords.forEach((record) => {
+        attendanceMap.set(record.eventId.toString(), {
+            eventId: record.eventId,
+            attended: record.attended,
+            attendedAt: record.markedAt,
+            notes: record.notes,
+        });
+    });
+    // Get all unique event IDs (from both registrations and attendance)
+    const registrationEventIds = registrations.map((reg) => reg.eventId._id.toString());
+    const attendanceEventIds = attendanceRecords.map((att) => att.eventId._id.toString());
+    const allEventIds = [
+        ...new Set([...registrationEventIds, ...attendanceEventIds]),
+    ];
+    // Get all events for complete event history
+    const allEvents = yield event_model_1.default.find({
+        _id: { $in: allEventIds },
+    }).populate('createdBy', 'firstName lastName email');
+    // Create a map of registrations by event ID
+    const registrationMap = new Map();
+    registrations.forEach((reg) => {
+        registrationMap.set(reg.eventId._id.toString(), reg.toObject());
+    });
+    // Combine registration and attendance data for all events
+    const eventHistory = allEvents.map((event) => {
+        const eventIdStr = event._id.toString();
+        const registration = registrationMap.get(eventIdStr);
+        const attendance = attendanceMap.get(eventIdStr);
+        return {
+            event: event.toObject(),
+            registration: registration || null,
+            attendance: attendance || null,
+        };
+    });
+    // Get total count for pagination (based on all events with attendance or registration)
+    const totalUniqueEvents = allEventIds.length;
+    res.status(200).json({
+        success: true,
+        count: eventHistory.length,
+        pagination: {
+            page,
+            limit,
+            totalPages: Math.ceil(totalUniqueEvents / limit),
+            total: totalUniqueEvents,
+        },
+        data: {
+            registrations: registrations,
+            attendance: attendanceRecords,
+            eventHistory,
+            // Include summary for easy frontend access
+            summary: {
+                totalEvents: allEvents.length,
+                totalRegistrations: registrations.length,
+                totalAttendedEvents: attendanceRecords.filter((att) => att.attended)
+                    .length,
+            },
+        },
     });
 }));
 // Helper function to send notifications to all users

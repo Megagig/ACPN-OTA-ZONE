@@ -9,21 +9,26 @@ const path_1 = __importDefault(require("path"));
 const userManagement_controller_1 = __importDefault(require("../controllers/userManagement.controller"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const user_model_1 = require("../models/user.model");
-const { getUserProfile, updateUserProfile, uploadProfilePicture, getUserPermissions, updateUserStatus, bulkUpdateUserStatus, getAllUsers: getUsersByStatus, updateUserRole: assignUserRole, bulkUpdateUserRole: bulkAssignUserRole, getUserAuditTrail, checkUserPermission: checkPermission, getFilteredUsers, } = userManagement_controller_1.default;
+const { getUserProfile, updateUserProfile, uploadProfilePicture, getUserPermissions, updateUserStatus, bulkUpdateUserStatus, getAllUsers: getUsersByStatus, updateUserRole: assignUserRole, bulkUpdateUserRole: bulkAssignUserRole, getUserAuditTrail, checkUserPermission: checkPermission, getFilteredUsers, getUserById, } = userManagement_controller_1.default;
 // Configure multer for file uploads
 const storage = multer_1.default.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path_1.default.join(__dirname, '../../uploads/profile-pictures'));
+        const uploadPath = path_1.default.join(__dirname, '../../uploads/profile-pictures');
+        console.log('Multer destination path:', uploadPath);
+        cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, 'profile-' + uniqueSuffix + path_1.default.extname(file.originalname));
+        const filename = 'profile-' + uniqueSuffix + path_1.default.extname(file.originalname);
+        console.log('Multer filename:', filename);
+        cb(null, filename);
     },
 });
 const upload = (0, multer_1.default)({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: function (req, file, cb) {
+        console.log('Multer fileFilter - file:', file);
         const filetypes = /jpeg|jpg|png|gif/;
         const mimetype = filetypes.test(file.mimetype);
         const extname = filetypes.test(path_1.default.extname(file.originalname).toLowerCase());
@@ -43,6 +48,10 @@ router
     .put(upload.single('profilePicture'), uploadProfilePicture);
 // Routes to manage user permissions and roles
 router.route('/permissions').get(getUserPermissions);
+// Route to get user by ID
+router
+    .route('/:id')
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), getUserById);
 // Admin routes for user management
 router
     .route('/status/:status')

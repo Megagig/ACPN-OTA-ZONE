@@ -1,22 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import communicationService from '../../services/communication.service';
-import type {
-  CommunicationThread,
-  CommunicationThreadItem,
-} from '../../types/communication.types';
+import messageService, {
+  type MessageThread,
+  type ThreadMessage,
+} from '../../services/message.service';
+import socketService from '../../services/socket.service';
 import { useAuth } from '../../context/AuthContext';
 
 const MessagingInterface = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [threads, setThreads] = useState<CommunicationThread[]>([]);
+  const [threads, setThreads] = useState<MessageThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedThread, setSelectedThread] =
-    useState<CommunicationThread | null>(null);
+  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(
+    null
+  );
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showNewThreadForm, setShowNewThreadForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [newThreadData, setNewThreadData] = useState({
     recipient: '',
     subject: '',
@@ -39,7 +43,7 @@ const MessagingInterface = () => {
   const fetchThreads = async () => {
     setIsLoading(true);
     try {
-      const data = await communicationService.getThreads();
+      const data = await messageService.getThreads();
       setThreads(data);
 
       // Select the first thread by default if any exist
@@ -55,8 +59,11 @@ const MessagingInterface = () => {
 
   const selectThread = async (threadId: string) => {
     try {
-      const thread = await communicationService.getThreadById(threadId);
+      const thread = await messageService.getThread(threadId);
       setSelectedThread(thread);
+
+      // Mark thread as read
+      await messageService.markThreadAsRead(threadId);
 
       // Update unread count in threads list
       setThreads((prev) =>
@@ -72,10 +79,10 @@ const MessagingInterface = () => {
 
     setIsSending(true);
     try {
-      const sentMessage = await communicationService.sendMessage(
-        selectedThread._id,
-        newMessage
-      );
+      const sentMessage = await messageService.sendMessage(selectedThread._id, {
+        content: newMessage,
+        messageType: 'text',
+      });
 
       // Update the thread with the new message
       setSelectedThread((prev) => {
@@ -83,9 +90,9 @@ const MessagingInterface = () => {
 
         return {
           ...prev,
-          messages: [...prev.messages, sentMessage],
+          messages: [...(prev.messages || []), sentMessage],
           lastMessage: newMessage,
-          lastMessageDate: sentMessage.createdAt,
+          lastMessageAt: sentMessage.createdAt,
         };
       });
 
@@ -96,7 +103,7 @@ const MessagingInterface = () => {
             ? {
                 ...t,
                 lastMessage: newMessage,
-                lastMessageDate: sentMessage.createdAt,
+                lastMessageAt: sentMessage.createdAt,
               }
             : t
         )
@@ -122,7 +129,12 @@ const MessagingInterface = () => {
 
     setIsSending(true);
     try {
-      const newThread = await communicationService.createThread(newThreadData);
+      const newThread = await messageService.createThread({
+        subject: newThreadData.subject,
+        participants: [newThreadData.recipient],
+        message: newThreadData.message,
+        threadType: 'direct',
+      });
 
       // Add the new thread to the list
       setThreads((prev) => [newThread, ...prev]);
@@ -141,6 +153,25 @@ const MessagingInterface = () => {
       console.error('Error creating thread:', error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  // Handle user search for recipient
+  const handleSearchUsers = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await messageService.searchUsers(query);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -181,16 +212,116 @@ const MessagingInterface = () => {
   };
 
   // Get the other participant's name
-  const getOtherParticipantName = (thread: CommunicationThread) => {
+  const getOtherParticipantName = (thread: MessageThread) => {
     if (!user) return 'Unknown';
 
-    const firstMessage = thread.messages[0];
-    if (firstMessage.sender === user._id) {
-      return firstMessage.recipientName;
-    } else {
-      return firstMessage.senderName;
+    // Find the participant that's not the current user
+    const otherParticipant = thread.participantDetails?.find(
+      (participant) => participant._id !== user._id
+    );
+
+    if (otherParticipant) {
+      return `${otherParticipant.firstName} ${otherParticipant.lastName}`;
     }
+
+    // Fallback to participant IDs if details not populated
+    const otherParticipantId = thread.participants.find(
+      (participantId) => participantId !== user._id
+    );
+
+    return otherParticipantId || 'Unknown User';
   };
+
+  // Socket.io integration
+  useEffect(() => {
+    const initializeSocket = async () => {
+      const token = localStorage.getItem('token');
+      if (token && user) {
+        try {
+          await socketService.connect(token);
+
+          // Setup real-time message listener
+          socketService.onNewMessage(handleNewMessage);
+
+          // Setup typing indicators
+          socketService.onUserTyping(handleUserTyping);
+          socketService.onUserStoppedTyping(handleUserStoppedTyping);
+        } catch (error) {
+          console.error('Failed to connect to messaging server:', error);
+        }
+      }
+    };
+
+    initializeSocket();
+
+    // Cleanup on unmount
+    return () => {
+      socketService.offNewMessage(handleNewMessage);
+      socketService.offUserTyping(handleUserTyping);
+      socketService.offUserStoppedTyping(handleUserStoppedTyping);
+      socketService.disconnect();
+    };
+  }, [user]);
+
+  // Join thread room when thread is selected
+  useEffect(() => {
+    if (selectedThread && socketService.getConnectionStatus()) {
+      socketService.joinThread(selectedThread._id);
+
+      return () => {
+        socketService.leaveThread(selectedThread._id);
+      };
+    }
+  }, [selectedThread]);
+
+  // Real-time message handler
+  const handleNewMessage = useCallback(
+    (data: any) => {
+      const { message, threadId } = data;
+
+      // Update the selected thread if it matches
+      if (selectedThread && selectedThread._id === threadId) {
+        setSelectedThread((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            messages: [...(prev.messages || []), message],
+            lastMessage: message.content,
+            lastMessageAt: message.createdAt,
+          };
+        });
+      }
+
+      // Update threads list
+      setThreads((prev) =>
+        prev.map((t) =>
+          t._id === threadId
+            ? {
+                ...t,
+                lastMessage: message.content,
+                lastMessageAt: message.createdAt,
+                unreadCount:
+                  selectedThread?._id === threadId
+                    ? 0
+                    : (t.unreadCount || 0) + 1,
+              }
+            : t
+        )
+      );
+    },
+    [selectedThread]
+  );
+
+  // Typing indicator handlers
+  const handleUserTyping = useCallback((data: any) => {
+    // Implement typing indicator UI
+    console.log('User typing:', data);
+  }, []);
+
+  const handleUserStoppedTyping = useCallback((data: any) => {
+    // Implement typing indicator UI
+    console.log('User stopped typing:', data);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -229,7 +360,7 @@ const MessagingInterface = () => {
             </div>
 
             <div className="space-y-4">
-              <div>
+              <div className="relative">
                 <label
                   htmlFor="recipient"
                   className="block text-sm font-medium text-gray-700 mb-1"
@@ -240,15 +371,60 @@ const MessagingInterface = () => {
                   id="recipient"
                   type="text"
                   className="border border-gray-300 rounded-md shadow-sm p-2 w-full"
-                  placeholder="Recipient name or ID"
-                  value={newThreadData.recipient}
-                  onChange={(e) =>
-                    setNewThreadData({
-                      ...newThreadData,
-                      recipient: e.target.value,
-                    })
-                  }
+                  placeholder="Search for users..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    handleSearchUsers(e.target.value);
+                  }}
                 />
+
+                {/* Search Results Dropdown */}
+                {searchQuery && (searchResults.length > 0 || isSearching) && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                    {isSearching ? (
+                      <div className="p-3 text-center text-gray-500">
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Searching...
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      searchResults.map((user) => (
+                        <div
+                          key={user._id}
+                          className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onClick={() => {
+                            setNewThreadData({
+                              ...newThreadData,
+                              recipient: user._id,
+                            });
+                            setSearchQuery(
+                              `${user.firstName} ${user.lastName}`
+                            );
+                            setSearchResults([]);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-3">
+                              {user.firstName.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {user.firstName} {user.lastName}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {user.email}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-3 text-center text-gray-500">
+                        No users found
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -370,7 +546,9 @@ const MessagingInterface = () => {
                             {getOtherParticipantName(thread)}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {formatDate(thread.lastMessageDate)}
+                            {formatDate(
+                              thread.lastMessageAt || thread.updatedAt
+                            )}
                           </p>
                         </div>
                         <p className="text-xs text-gray-500 truncate">
@@ -412,38 +590,36 @@ const MessagingInterface = () => {
 
                 {/* Messages Container */}
                 <div className="flex-1 p-4 overflow-y-auto">
-                  {selectedThread.messages.map(
-                    (message: CommunicationThreadItem) => (
+                  {selectedThread.messages?.map((message: ThreadMessage) => (
+                    <div
+                      key={message._id}
+                      className={`flex mb-4 ${
+                        user && message.senderId === user._id
+                          ? 'justify-end'
+                          : 'justify-start'
+                      }`}
+                    >
                       <div
-                        key={message._id}
-                        className={`flex mb-4 ${
-                          user && message.sender === user._id
-                            ? 'justify-end'
-                            : 'justify-start'
+                        className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
+                          user && message.senderId === user._id
+                            ? 'bg-indigo-100 text-indigo-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        <div
-                          className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
-                            user && message.sender === user._id
-                              ? 'bg-indigo-100 text-indigo-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          <p className="text-sm">{message.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {formatDate(message.createdAt)}
-                            {message.readStatus &&
-                              user &&
-                              message.sender === user._id && (
-                                <span className="ml-2 text-blue-500">
-                                  <i className="fas fa-check-double"></i>
-                                </span>
-                              )}
-                          </p>
-                        </div>
+                        <p className="text-sm">{message.content}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDate(message.createdAt)}
+                          {message.readBy.length > 0 &&
+                            user &&
+                            message.senderId === user._id && (
+                              <span className="ml-2 text-blue-500">
+                                <i className="fas fa-check-double"></i>
+                              </span>
+                            )}
+                        </p>
                       </div>
-                    )
-                  )}
+                    </div>
+                  ))}
                   <div ref={messagesEndRef}></div>
                 </div>
 

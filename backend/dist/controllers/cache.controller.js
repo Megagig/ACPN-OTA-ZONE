@@ -78,10 +78,11 @@ const clearCache = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { pattern, key } = req.body;
         if (!pattern && !key) {
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: 'Either pattern or key must be provided',
             });
+            return;
         }
         let deletedCount = 0;
         if (key) {
@@ -117,10 +118,11 @@ const warmCache = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { resources } = req.body;
         if (!resources || !Array.isArray(resources)) {
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: 'Resources array must be provided',
             });
+            return;
         }
         const warmedResources = [];
         // This is a basic implementation - in a real scenario, you would

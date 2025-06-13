@@ -33,53 +33,86 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegistrationStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-var RegistrationStatus;
-(function (RegistrationStatus) {
-    RegistrationStatus["REGISTERED"] = "registered";
-    RegistrationStatus["CONFIRMED"] = "confirmed";
-    RegistrationStatus["CANCELLED"] = "cancelled";
-    RegistrationStatus["WAITLIST"] = "waitlist";
-})(RegistrationStatus || (exports.RegistrationStatus = RegistrationStatus = {}));
-const eventRegistrationSchema = new mongoose_1.Schema({
-    eventId: {
+const threadMessageSchema = new mongoose_1.Schema({
+    threadId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Event',
+        ref: 'MessageThread',
         required: true,
     },
-    userId: {
+    senderId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
     },
-    status: {
+    content: {
         type: String,
-        enum: Object.values(RegistrationStatus),
-        default: RegistrationStatus.REGISTERED,
+        required: true,
+        maxlength: 5000,
     },
-    registrationDate: {
+    messageType: {
+        type: String,
+        enum: ['text', 'image', 'file', 'system'],
+        default: 'text',
+    },
+    attachments: [
+        {
+            type: String,
+        },
+    ],
+    readBy: [
+        {
+            userId: {
+                type: mongoose_1.default.Schema.Types.ObjectId,
+                ref: 'User',
+            },
+            readAt: {
+                type: Date,
+                default: Date.now,
+            },
+        },
+    ],
+    editedAt: {
         type: Date,
-        default: Date.now,
     },
-    paymentStatus: {
-        type: String,
-        enum: ['pending', 'paid', 'waived'],
-        default: 'pending',
+    isDeleted: {
+        type: Boolean,
+        default: false,
     },
-    paymentReference: {
-        type: String,
+    deletedAt: {
+        type: Date,
     },
-    notes: {
-        type: String,
+    deletedBy: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
+    },
+    replyTo: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'ThreadMessage',
     },
 }, {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
 });
-// Compound index to ensure one registration per user per event
-eventRegistrationSchema.index({ eventId: 1, userId: 1 }, { unique: true });
-// Index for efficient pagination and filtering
-eventRegistrationSchema.index({ eventId: 1, createdAt: -1 });
-eventRegistrationSchema.index({ eventId: 1, status: 1 });
-const EventRegistration = mongoose_1.default.model('EventRegistration', eventRegistrationSchema);
-exports.default = EventRegistration;
+// Indexes for better performance
+threadMessageSchema.index({ threadId: 1, createdAt: -1 });
+threadMessageSchema.index({ senderId: 1 });
+threadMessageSchema.index({ isDeleted: 1 });
+threadMessageSchema.index({ 'readBy.userId': 1 });
+// Virtual populate for sender details
+threadMessageSchema.virtual('senderDetails', {
+    ref: 'User',
+    localField: 'senderId',
+    foreignField: '_id',
+    justOne: true,
+});
+// Virtual populate for reply message details
+threadMessageSchema.virtual('replyToMessage', {
+    ref: 'ThreadMessage',
+    localField: 'replyTo',
+    foreignField: '_id',
+    justOne: true,
+});
+const ThreadMessage = mongoose_1.default.model('ThreadMessage', threadMessageSchema);
+exports.default = ThreadMessage;

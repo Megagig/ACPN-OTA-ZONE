@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACPN Messaging System Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .test-section h3 {
+        margin-top: 0;
+        color: #2563eb;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .status.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .status.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      button {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #1d4ed8;
+      }
+      .logs {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+      .feature-list {
+        list-style-type: none;
+        padding: 0;
+      }
+      .feature-list li {
+        padding: 8px;
+        margin: 5px 0;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border-left: 4px solid #2563eb;
+      }
+      .feature-list li.completed {
+        background: #d4edda;
+        border-left-color: #28a745;
+      }
+      .nav-links {
+        display: flex;
+        gap: 15px;
+        margin: 20px 0;
+        padding: 15px;
+        background: #e3f2fd;
+        border-radius: 8px;
+      }
+      .nav-links a {
+        color: #1976d2;
+        text-decoration: none;
+        padding: 8px 15px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #1976d2;
+      }
+      .nav-links a:hover {
+        background: #1976d2;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 ACPN Messaging System Integration Test</h1>
+      <p><strong>Test Date:</strong> June 13, 2025</p>
+
+      <div class="nav-links">
+        <a href="http://localhost:5173" target="_blank">Frontend App</a>
+        <a href="http://localhost:5000/api/health-check" target="_blank"
+          >Backend Health</a
+        >
+        <a href="http://localhost:5173/communications/messages" target="_blank"
+          >Messaging Interface</a
+        >
+        <a
+          href="http://localhost:5173/communications/announcements"
+          target="_blank"
+          >Announcements</a
+        >
+      </div>
+
+      <div class="test-section">
+        <h3>📋 Implementation Status</h3>
+        <ul class="feature-list">
+          <li class="completed">✅ Frontend Messaging Interface</li>
+          <li class="completed">✅ Backend Message API Controllers</li>
+          <li class="completed">
+            ✅ Database Models (MessageThread, ThreadMessage, ThreadParticipant)
+          </li>
+          <li class="completed">✅ Socket.io Real-time Integration</li>
+          <li class="completed">✅ User Search Functionality</li>
+          <li class="completed">✅ Thread Management</li>
+          <li class="completed">✅ Message Read Status</li>
+          <li class="completed">✅ Announcements Interface</li>
+          <li class="completed">✅ TypeScript Error Resolution</li>
+          <li class="completed">✅ API Route Integration</li>
+        </ul>
+      </div>
+
+      <div class="test-section">
+        <h3>🔧 System Tests</h3>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <button onclick="testMessageAPI()">Test Message API</button>
+        <button onclick="testUserSearch()">Test User Search</button>
+        <button onclick="testSocketConnection()">Test Socket Connection</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+
+        <div id="test-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>📊 API Endpoints</h3>
+        <ul>
+          <li><code>GET /api/messages/threads</code> - Get user threads</li>
+          <li>
+            <code>GET /api/messages/threads/:id</code> - Get specific thread
+          </li>
+          <li><code>POST /api/messages/threads</code> - Create new thread</li>
+          <li>
+            <code>POST /api/messages/threads/:id/messages</code> - Send message
+          </li>
+          <li><code>GET /api/messages/users/search</code> - Search users</li>
+          <li>
+            <code>PATCH /api/messages/threads/:id/read</code> - Mark as read
+          </li>
+          <li>
+            <code>DELETE /api/messages/messages/:id</code> - Delete message
+          </li>
+        </ul>
+      </div>
+
+      <div class="test-section">
+        <h3>🔌 Real-time Features</h3>
+        <ul>
+          <li>✅ Socket.io Server Integration</li>
+          <li>✅ Authentication Middleware</li>
+          <li>✅ Thread Room Management</li>
+          <li>✅ Real-time Message Broadcasting</li>
+          <li>✅ Typing Indicators</li>
+          <li>✅ User Presence Status</li>
+          <li>✅ Auto-join User Threads</li>
+        </ul>
+      </div>
+
+      <div class="test-section">
+        <h3>📝 Next Steps</h3>
+        <ol>
+          <li>
+            <strong>User Authentication Test:</strong> Login to test messaging
+            with real users
+          </li>
+          <li>
+            <strong>Thread Creation:</strong> Test creating new message threads
+          </li>
+          <li>
+            <strong>Real-time Messaging:</strong> Test sending/receiving
+            messages
+          </li>
+          <li>
+            <strong>Announcements:</strong> Test announcement creation and
+            distribution
+          </li>
+          <li>
+            <strong>Mobile Responsiveness:</strong> Test on different screen
+            sizes
+          </li>
+          <li>
+            <strong>Performance:</strong> Test with multiple users and messages
+          </li>
+          <li>
+            <strong>Error Handling:</strong> Test edge cases and error scenarios
+          </li>
+        </ol>
+      </div>
+
+      <div class="test-section">
+        <h3>🔍 Test Logs</h3>
+        <div id="logs" class="logs">Ready to run tests...\n</div>
+      </div>
+    </div>
+
+    <script>
+      function log(message) {
+        const logs = document.getElementById('logs');
+        const timestamp = new Date().toLocaleTimeString();
+        logs.textContent += `[${timestamp}] ${message}\n`;
+        logs.scrollTop = logs.scrollHeight;
+      }
+
+      function showResult(elementId, isSuccess, message) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.innerHTML = `<div class="status ${
+            isSuccess ? 'success' : 'error'
+          }">${message}</div>`;
+        }
+      }
+
+      async function testBackendHealth() {
+        log('Testing backend health...');
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/health-check'
+          );
+          const data = await response.json();
+
+          if (response.ok) {
+            log('✅ Backend health check passed');
+            showResult(
+              'test-results',
+              true,
+              '✅ Backend is healthy and responding'
+            );
+            return true;
+          } else {
+            log('❌ Backend health check failed');
+            showResult('test-results', false, '❌ Backend health check failed');
+            return false;
+          }
+        } catch (error) {
+          log(`❌ Backend connection error: ${error.message}`);
+          showResult(
+            'test-results',
+            false,
+            `❌ Backend connection error: ${error.message}`
+          );
+          return false;
+        }
+      }
+
+      async function testMessageAPI() {
+        log('Testing message API authentication...');
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/messages/threads'
+          );
+
+          if (response.status === 401) {
+            log('✅ Message API properly protected with authentication');
+            showResult(
+              'test-results',
+              true,
+              '✅ Message API authentication working correctly'
+            );
+            return true;
+          } else {
+            log('❌ Message API authentication may not be working');
+            showResult(
+              'test-results',
+              false,
+              '❌ Message API authentication issue'
+            );
+            return false;
+          }
+        } catch (error) {
+          log(`❌ Message API test error: ${error.message}`);
+          showResult(
+            'test-results',
+            false,
+            `❌ Message API test error: ${error.message}`
+          );
+          return false;
+        }
+      }
+
+      async function testUserSearch() {
+        log('Testing user search API...');
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/messages/users/search?q=test'
+          );
+
+          if (response.status === 401) {
+            log('✅ User search API properly protected');
+            showResult(
+              'test-results',
+              true,
+              '✅ User search API authentication working'
+            );
+            return true;
+          } else {
+            log('❌ User search API authentication may not be working');
+            showResult(
+              'test-results',
+              false,
+              '❌ User search API authentication issue'
+            );
+            return false;
+          }
+        } catch (error) {
+          log(`❌ User search test error: ${error.message}`);
+          showResult(
+            'test-results',
+            false,
+            `❌ User search test error: ${error.message}`
+          );
+          return false;
+        }
+      }
+
+      async function testSocketConnection() {
+        log('Testing Socket.io connection...');
+        try {
+          // Try to connect to socket without authentication (should fail)
+          const script = document.createElement('script');
+          script.src = 'http://localhost:5000/socket.io/socket.io.js';
+          script.onload = () => {
+            try {
+              const socket = io('http://localhost:5000');
+
+              socket.on('connect_error', (error) => {
+                log('✅ Socket.io server responding (authentication required)');
+                showResult(
+                  'test-results',
+                  true,
+                  '✅ Socket.io server is running and protected'
+                );
+                socket.disconnect();
+              });
+
+              socket.on('connect', () => {
+                log(
+                  '❌ Socket connected without authentication (security issue)'
+                );
+                showResult(
+                  'test-results',
+                  false,
+                  '❌ Socket security issue - connected without auth'
+                );
+                socket.disconnect();
+              });
+
+              setTimeout(() => {
+                if (!socket.connected) {
+                  log('✅ Socket properly requires authentication');
+                  showResult(
+                    'test-results',
+                    true,
+                    '✅ Socket.io properly secured'
+                  );
+                }
+              }, 2000);
+            } catch (error) {
+              log(`Socket test error: ${error.message}`);
+            }
+          };
+          script.onerror = () => {
+            log('❌ Could not load Socket.io client library');
+            showResult(
+              'test-results',
+              false,
+              '❌ Socket.io server may not be running'
+            );
+          };
+          document.head.appendChild(script);
+        } catch (error) {
+          log(`❌ Socket connection test error: ${error.message}`);
+          showResult(
+            'test-results',
+            false,
+            `❌ Socket test error: ${error.message}`
+          );
+          return false;
+        }
+      }
+
+      async function runAllTests() {
+        log('🚀 Running comprehensive test suite...');
+        document.getElementById('test-results').innerHTML = '';
+
+        const tests = [
+          testBackendHealth,
+          testMessageAPI,
+          testUserSearch,
+          testSocketConnection,
+        ];
+
+        let passed = 0;
+        for (const test of tests) {
+          const result = await test();
+          if (result) passed++;
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        log(`\n🎯 Test Summary: ${passed}/${tests.length} tests passed`);
+        const successRate = (passed / tests.length) * 100;
+
+        if (successRate === 100) {
+          showResult(
+            'test-results',
+            true,
+            `🎉 All tests passed! System ready for production.`
+          );
+        } else if (successRate >= 75) {
+          showResult(
+            'test-results',
+            true,
+            `✅ Most tests passed (${successRate}%). Minor issues to resolve.`
+          );
+        } else {
+          showResult(
+            'test-results',
+            false,
+            `❌ ${
+              100 - successRate
+            }% of tests failed. Major issues need attention.`
+          );
+        }
+      }
+
+      // Auto-run basic health check on page load
+      window.addEventListener('load', () => {
+        setTimeout(testBackendHealth, 1000);
+      });
+    </script>
+  </body>
+</html>

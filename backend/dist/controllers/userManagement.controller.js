@@ -122,7 +122,11 @@ exports.updateUserProfile = (0, async_middleware_1.default)((req, res) => __awai
 // @route   PUT /api/users/profile/picture
 // @access  Private
 exports.uploadProfilePicture = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('Upload profile picture request received');
+    console.log('Request file:', req.file);
+    console.log('Request user:', req.user);
     if (!req.file) {
+        console.log('No file in request');
         return res.status(400).json({
             success: false,
             message: 'Please upload an image file',
@@ -217,16 +221,21 @@ exports.getAllUsers = (0, async_middleware_1.default)((req, res) => __awaiter(vo
     });
 }));
 // @desc    Get user by ID
-// @route   GET /api/users/:id
+// @route   GET /api/user-management/:id
 // @access  Private (Admin, SuperAdmin)
 exports.getUserById = (0, async_middleware_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('getUserById called with ID:', req.params.id);
+    console.log('Request user:', req.user);
     const user = yield user_model_1.default.findById(req.params.id).select('-password -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire -refreshToken');
+    console.log('Found user:', user ? 'Yes' : 'No');
     if (!user) {
+        console.log('User not found for ID:', req.params.id);
         return res.status(404).json({
             success: false,
             message: 'User not found',
         });
     }
+    console.log('Returning user data for:', user.email);
     res.status(200).json({
         success: true,
         data: user,

@@ -33,19 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegistrationStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-var RegistrationStatus;
-(function (RegistrationStatus) {
-    RegistrationStatus["REGISTERED"] = "registered";
-    RegistrationStatus["CONFIRMED"] = "confirmed";
-    RegistrationStatus["CANCELLED"] = "cancelled";
-    RegistrationStatus["WAITLIST"] = "waitlist";
-})(RegistrationStatus || (exports.RegistrationStatus = RegistrationStatus = {}));
-const eventRegistrationSchema = new mongoose_1.Schema({
-    eventId: {
+const threadParticipantSchema = new mongoose_1.Schema({
+    threadId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Event',
+        ref: 'MessageThread',
         required: true,
     },
     userId: {
@@ -53,33 +45,54 @@ const eventRegistrationSchema = new mongoose_1.Schema({
         ref: 'User',
         required: true,
     },
-    status: {
-        type: String,
-        enum: Object.values(RegistrationStatus),
-        default: RegistrationStatus.REGISTERED,
-    },
-    registrationDate: {
+    joinedAt: {
         type: Date,
         default: Date.now,
     },
-    paymentStatus: {
-        type: String,
-        enum: ['pending', 'paid', 'waived'],
-        default: 'pending',
+    lastReadAt: {
+        type: Date,
     },
-    paymentReference: {
-        type: String,
+    leftAt: {
+        type: Date,
     },
-    notes: {
+    addedBy: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    role: {
         type: String,
+        enum: ['participant', 'admin'],
+        default: 'participant',
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+    notificationSettings: {
+        muted: {
+            type: Boolean,
+            default: false,
+        },
+        mutedUntil: {
+            type: Date,
+        },
     },
 }, {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
 });
-// Compound index to ensure one registration per user per event
-eventRegistrationSchema.index({ eventId: 1, userId: 1 }, { unique: true });
-// Index for efficient pagination and filtering
-eventRegistrationSchema.index({ eventId: 1, createdAt: -1 });
-eventRegistrationSchema.index({ eventId: 1, status: 1 });
-const EventRegistration = mongoose_1.default.model('EventRegistration', eventRegistrationSchema);
-exports.default = EventRegistration;
+// Compound indexes for better performance
+threadParticipantSchema.index({ threadId: 1, userId: 1 }, { unique: true });
+threadParticipantSchema.index({ userId: 1, isActive: 1 });
+threadParticipantSchema.index({ threadId: 1, isActive: 1 });
+// Virtual populate for user details
+threadParticipantSchema.virtual('userDetails', {
+    ref: 'User',
+    localField: 'userId',
+    foreignField: '_id',
+    justOne: true,
+});
+const ThreadParticipant = mongoose_1.default.model('ThreadParticipant', threadParticipantSchema);
+exports.default = ThreadParticipant;

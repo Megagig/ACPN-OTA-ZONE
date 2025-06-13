@@ -22,6 +22,9 @@ router
 router
     .route('/my-registrations')
     .get((0, cache_middleware_1.cacheMiddleware)('registrations-user', { ttl: 60 }), event_controller_1.getUserRegistrations);
+router
+    .route('/my-history')
+    .get((0, cache_middleware_1.cacheMiddleware)('history-user', { ttl: 300 }), event_controller_1.getUserEventHistory);
 // Stats route (must come before /:id to avoid conflict)
 router
     .route('/stats')
@@ -33,7 +36,7 @@ router.route('/:id/register').delete(event_controller_1.cancelRegistration);
 // Get event registrations (Admin/Secretary only)
 router
     .route('/:id/registrations')
-    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.getEventRegistrations);
+    .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), (0, cache_middleware_1.cacheMiddleware)('event-registrations', { ttl: 60 }), event_controller_1.getEventRegistrations);
 // Event notification routes
 router.route('/:id/acknowledge').post(event_controller_1.acknowledgeEvent);
 // Admin/Secretary routes - Event management

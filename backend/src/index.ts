@@ -1,11 +1,13 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
 import connectDB from './config/db';
 import fileUpload from 'express-fileupload'; // Import express-fileupload
 import path from 'path';
 import ensureAssets from './utils/ensureAssets';
 import './config/redis'; // Import Redis configuration
+import SocketService from './services/socket.service';
 
 // Load environment variables
 dotenv.config();
@@ -70,6 +72,7 @@ import userManagementRoutes from './routes/userManagement.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import memberDashboardRoutes from './routes/memberDashboard.routes';
 import cacheRoutes from './routes/cache.routes';
+import messageRoutes from './routes/message.routes';
 
 // Register paymentRoutes (which uses multer) BEFORE global fileupload or general body parsers
 app.use('/api/payments', paymentRoutes);
@@ -121,6 +124,7 @@ app.use('/api/user-management', userManagementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/member-dashboard', memberDashboardRoutes);
 app.use('/api/cache', cacheRoutes);
+app.use('/api/messages', messageRoutes);
 
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.
@@ -148,9 +152,22 @@ process.on('uncaughtException', (err) => {
 app.use(notFound);
 app.use(errorHandler);
 
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const socketService = new SocketService(server);
+
+// Make socket service available globally
+declare global {
+  var socketService: SocketService;
+}
+global.socketService = socketService;
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Socket.io enabled for real-time messaging`);
 });
 
 export default app;

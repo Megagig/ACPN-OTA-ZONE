@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
 import communicationService from '../../services/communication.service';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
@@ -12,7 +11,6 @@ import type {
 
 const CommunicationsDashboard = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<CommunicationSummary | null>(null);
   const [recentCommunications, setRecentCommunications] = useState<
@@ -178,6 +176,13 @@ const CommunicationsDashboard = () => {
           >
             <i className="fas fa-comment mr-2"></i>
             Messages
+          </button>
+          <button
+            className="bg-accent hover:bg-accent/80 text-accent-foreground px-4 py-2 rounded-md text-sm shadow"
+            onClick={() => navigate('/communications/announcements')}
+          >
+            <i className="fas fa-bullhorn mr-2"></i>
+            Announcements
           </button>
         </div>
       </div>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACPN OTA Zone - Messaging System Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ACPN OTA Zone - Messaging System Test</h1>
+        <p>This page tests the messaging system endpoints and real-time functionality.</p>
+
+        <!-- Backend Health Check -->
+        <div class="test-section">
+            <h3>1. Backend Health Check</h3>
+            <p>Testing if the backend server is running and responding.</p>
+            <button onclick="testBackendHealth()">Test Backend Health</button>
+            <span id="backend-status" class="status pending">Not tested</span>
+            <div id="backend-log" class="log"></div>
+        </div>
+
+        <!-- API Authentication Test -->
+        <div class="test-section">
+            <h3>2. API Authentication Test</h3>
+            <p>Testing if the messaging API requires authentication.</p>
+            <button onclick="testAPIAuth()">Test API Auth</button>
+            <span id="auth-status" class="status pending">Not tested</span>
+            <div id="auth-log" class="log"></div>
+        </div>
+
+        <!-- User Search Test -->
+        <div class="test-section">
+            <h3>3. User Search Test (with token)</h3>
+            <p>Testing user search functionality with authentication.</p>
+            <input type="text" id="auth-token" placeholder="Enter JWT token" />
+            <input type="text" id="search-query" placeholder="Search query" value="test" />
+            <button onclick="testUserSearch()">Test User Search</button>
+            <span id="search-status" class="status pending">Not tested</span>
+            <div id="search-log" class="log"></div>
+        </div>
+
+        <!-- Socket.io Connection Test -->
+        <div class="test-section">
+            <h3>4. Socket.io Connection Test</h3>
+            <p>Testing real-time messaging connection.</p>
+            <input type="text" id="socket-token" placeholder="Enter JWT token for socket connection" />
+            <button onclick="testSocketConnection()">Test Socket Connection</button>
+            <button onclick="disconnectSocket()" id="disconnect-btn" disabled>Disconnect</button>
+            <span id="socket-status" class="status pending">Not tested</span>
+            <div id="socket-log" class="log"></div>
+        </div>
+
+        <!-- Frontend Integration Test -->
+        <div class="test-section">
+            <h3>5. Frontend Integration</h3>
+            <p>Testing if the frontend application is accessible.</p>
+            <button onclick="testFrontend()">Test Frontend</button>
+            <span id="frontend-status" class="status pending">Not tested</span>
+            <div id="frontend-log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        const FRONTEND_BASE = 'http://localhost:5173';
+        let socket = null;
+
+        function log(elementId, message) {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function setStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${status}`;
+            element.textContent = text;
+        }
+
+        async function testBackendHealth() {
+            log('backend-log', 'Testing backend health...');
+            setStatus('backend-status', 'pending', 'Testing...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health-check`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('backend-log', `✓ Backend is healthy: ${data.message}`);
+                    log('backend-log', `Environment: ${data.environment}`);
+                    setStatus('backend-status', 'success', 'Healthy');
+                } else {
+                    log('backend-log', `✗ Backend health check failed: ${response.status}`);
+                    setStatus('backend-status', 'error', 'Failed');
+                }
+            } catch (error) {
+                log('backend-log', `✗ Backend connection failed: ${error.message}`);
+                setStatus('backend-status', 'error', 'Connection Failed');
+            }
+        }
+
+        async function testAPIAuth() {
+            log('auth-log', 'Testing API authentication...');
+            setStatus('auth-status', 'pending', 'Testing...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/messages/users/search?q=test`);
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    log('auth-log', '✓ API correctly requires authentication');
+                    log('auth-log', `Error message: ${data.error}`);
+                    setStatus('auth-status', 'success', 'Auth Required');
+                } else {
+                    log('auth-log', `✗ Unexpected response: ${response.status}`);
+                    setStatus('auth-status', 'error', 'Unexpected Response');
+                }
+            } catch (error) {
+                log('auth-log', `✗ API test failed: ${error.message}`);
+                setStatus('auth-status', 'error', 'Test Failed');
+            }
+        }
+
+        async function testUserSearch() {
+            const token = document.getElementById('auth-token').value;
+            const query = document.getElementById('search-query').value;
+            
+            if (!token) {
+                log('search-log', '✗ Please enter a JWT token');
+                setStatus('search-status', 'error', 'No Token');
+                return;
+            }
+            
+            log('search-log', 'Testing user search with authentication...');
+            setStatus('search-status', 'pending', 'Testing...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/messages/users/search?q=${query}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('search-log', `✓ User search successful`);
+                    log('search-log', `Found ${data.data.length} users`);
+                    setStatus('search-status', 'success', 'Search Works');
+                } else {
+                    log('search-log', `✗ User search failed: ${response.status}`);
+                    log('search-log', `Error: ${data.error || 'Unknown error'}`);
+                    setStatus('search-status', 'error', 'Search Failed');
+                }
+            } catch (error) {
+                log('search-log', `✗ Search request failed: ${error.message}`);
+                setStatus('search-status', 'error', 'Request Failed');
+            }
+        }
+
+        function testSocketConnection() {
+            const token = document.getElementById('socket-token').value;
+            
+            if (!token) {
+                log('socket-log', '✗ Please enter a JWT token');
+                setStatus('socket-status', 'error', 'No Token');
+                return;
+            }
+            
+            log('socket-log', 'Testing Socket.io connection...');
+            setStatus('socket-status', 'pending', 'Connecting...');
+            
+            socket = io('http://localhost:5000', {
+                auth: {
+                    token: token
+                },
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                log('socket-log', '✓ Socket.io connected successfully');
+                setStatus('socket-status', 'success', 'Connected');
+                document.getElementById('disconnect-btn').disabled = false;
+                
+                // Test joining a thread
+                socket.emit('user_online');
+                log('socket-log', 'Sent user_online event');
+            });
+
+            socket.on('connect_error', (error) => {
+                log('socket-log', `✗ Socket connection failed: ${error.message}`);
+                setStatus('socket-status', 'error', 'Connection Failed');
+            });
+
+            socket.on('error', (error) => {
+                log('socket-log', `✗ Socket error: ${error.message || error}`);
+                setStatus('socket-status', 'error', 'Socket Error');
+            });
+
+            socket.on('disconnect', () => {
+                log('socket-log', '⚠ Socket disconnected');
+                setStatus('socket-status', 'pending', 'Disconnected');
+                document.getElementById('disconnect-btn').disabled = true;
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('socket-log', 'Socket disconnected manually');
+            }
+        }
+
+        async function testFrontend() {
+            log('frontend-log', 'Testing frontend accessibility...');
+            setStatus('frontend-status', 'pending', 'Testing...');
+            
+            try {
+                const response = await fetch(FRONTEND_BASE);
+                
+                if (response.ok) {
+                    log('frontend-log', '✓ Frontend is accessible');
+                    log('frontend-log', `Status: ${response.status} ${response.statusText}`);
+                    setStatus('frontend-status', 'success', 'Accessible');
+                } else {
+                    log('frontend-log', `✗ Frontend returned error: ${response.status}`);
+                    setStatus('frontend-status', 'error', 'Error Response');
+                }
+            } catch (error) {
+                log('frontend-log', `✗ Frontend connection failed: ${error.message}`);
+                setStatus('frontend-status', 'error', 'Connection Failed');
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            setTimeout(() => {
+                testBackendHealth();
+                setTimeout(() => {
+                    testAPIAuth();
+                    setTimeout(() => {
+                        testFrontend();
+                    }, 1000);
+                }, 1000);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

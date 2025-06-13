@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePayment = exports.reviewPayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getAllPayments = exports.getDuePayments = exports.submitPayment = void 0;
+exports.getPaymentById = exports.deletePayment = exports.reviewPayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getAllPayments = exports.getDuePayments = exports.submitPayment = void 0;
 const payment_model_1 = __importStar(require("../models/payment.model"));
 const due_model_1 = __importStar(require("../models/due.model"));
 const pharmacy_model_1 = __importDefault(require("../models/pharmacy.model"));
@@ -114,23 +114,46 @@ exports.submitPayment = (0, async_middleware_1.default)((req, res, next) => __aw
         let receiptUrl, receiptPublicId;
         try {
             if (!req.file) {
-                console.error('Missing file in request');
-                return next(new errorResponse_1.default('Receipt file is missing or invalid', 400));
+                console.error('Missing file in request. Request body:', req.body);
+                return next(new errorResponse_1.default('Receipt file is missing or invalid. Make sure to upload a file with field name "receipt".', 400));
             }
             console.log('Complete file object:', JSON.stringify(req.file, null, 2));
             // Make sure we have a valid path - Multer may use different properties
-            const filePath = req.file.path ||
-                req.file.destination + '/' + req.file.filename;
+            const filePath = req.file.path || '';
+            if (!filePath || typeof filePath !== 'string') {
+                console.error('Invalid file path:', filePath);
+                return next(new errorResponse_1.default('Invalid file path for receipt upload', 400));
+            }
+            // Check if file exists on disk
+            try {
+                const fs = require('fs');
+                const fileExists = fs.existsSync(filePath);
+                console.log(`File ${filePath} exists: ${fileExists}`);
+                if (!fileExists) {
+                    return next(new errorResponse_1.default(`File not found at path: ${filePath}`, 400));
+                }
+            }
+            catch (fsError) {
+                console.error('Error checking file existence:', fsError);
+            }
             // Upload to Cloudinary if available
             if (typeof cloudinary_1.uploadToCloudinary === 'function') {
                 console.log('Uploading to Cloudinary:', filePath);
-                const result = yield (0, cloudinary_1.uploadToCloudinary)(filePath, 'payment-receipts');
-                receiptUrl = result.secure_url;
-                receiptPublicId = result.public_id;
-                console.log('Cloudinary upload successful:', {
-                    receiptUrl,
-                    receiptPublicId,
-                });
+                try {
+                    const result = yield (0, cloudinary_1.uploadToCloudinary)(filePath, 'payment-receipts');
+                    receiptUrl = result.secure_url;
+                    receiptPublicId = result.public_id;
+                    console.log('Cloudinary upload successful:', {
+                        receiptUrl,
+                        receiptPublicId,
+                    });
+                }
+                catch (cloudinaryError) {
+                    console.error('Cloudinary upload error:', cloudinaryError);
+                    // Fallback to local path on cloudinary error
+                    receiptUrl = `/static/receipts/${req.file.filename}`;
+                    receiptPublicId = req.file.filename;
+                }
             }
             else {
                 // Fallback if Cloudinary is not available
@@ -462,5 +485,38 @@ exports.deletePayment = (0, async_middleware_1.default)((req, res, next) => __aw
     res.status(200).json({
         success: true,
         data: {},
+    });
+}));
+// @desc    Get single payment by ID
+// @route   GET /api/payments/:id
+// @access  Private
+exports.getPaymentById = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const payment = yield payment_model_1.default.findById(req.params.id)
+        .populate({
+        path: 'dueId',
+        select: 'title amount totalAmount dueDate description',
+        populate: {
+            path: 'dueTypeId',
+            select: 'name description',
+        },
+    })
+        .populate('pharmacyId', 'name registrationNumber')
+        .populate('submittedBy', 'firstName lastName email')
+        .populate('approvedBy', 'firstName lastName email');
+    if (!payment) {
+        return next(new errorResponse_1.default(`Payment not found with id of ${req.params.id}`, 404));
+    }
+    // Check authorization - user can only view their own payments or admins can view all
+    const pharmacy = yield pharmacy_model_1.default.findById(payment.pharmacyId);
+    if (req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin' &&
+        req.user.role !== 'treasurer' &&
+        req.user.role !== 'financial_secretary' &&
+        (pharmacy === null || pharmacy === void 0 ? void 0 : pharmacy.userId.toString()) !== req.user._id.toString()) {
+        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to view this payment`, 403));
+    }
+    res.status(200).json({
+        success: true,
+        data: payment,
     });
 }));

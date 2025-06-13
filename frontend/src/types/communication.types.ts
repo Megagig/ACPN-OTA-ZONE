@@ -38,6 +38,7 @@ export interface Communication {
   senderName: string;
   recipientType: RecipientType;
   specificRecipients?: string[]; // Array of user IDs
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
   scheduledFor?: string;
   sentAt?: string;
   attachments?: string[]; // Array of attachment URLs
