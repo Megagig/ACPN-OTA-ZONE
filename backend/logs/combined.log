@@ -21042,3 +21042,19 @@
 2025-06-14T11:01:19.739Z [info]: Redis client ready and accepting commands
 2025-06-14T11:09:23.324Z [info]: Redis client connected
 2025-06-14T11:09:23.330Z [info]: Redis client ready and accepting commands
+2025-06-14T11:12:39.575Z [debug]: Cache MISS (19ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T11:12:39.576Z [debug]: Cache MISS (17ms): member-dashboard
+2025-06-14T11:12:39.577Z [debug]: Cache MISS (7ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T11:12:39.579Z [debug]: Cache MISS (5ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-14T11:12:39.911Z [debug]: Cache SET with TTL=300s (5ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-14T11:12:40.161Z [debug]: Cache HIT (0ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-14T11:12:40.289Z [debug]: Cache SET with TTL=180s (5ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T11:12:40.305Z [debug]: Cache SET with TTL=300s (7ms): member-dashboard
+2025-06-14T11:12:40.475Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T11:12:40.497Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T11:12:40.523Z [debug]: Cache HIT (16ms): member-dashboard
+2025-06-14T11:12:40.698Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T11:19:10.575Z [info]: Redis client connected
+2025-06-14T11:19:10.587Z [info]: Redis client ready and accepting commands
+2025-06-14T11:23:06.765Z [info]: Redis client connected
+2025-06-14T11:23:06.770Z [info]: Redis client ready and accepting commands

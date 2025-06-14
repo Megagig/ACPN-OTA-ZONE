@@ -80,7 +80,7 @@ export interface SearchUsersResponse {
 }
 
 class MessageService {
-  private baseURL = '/api/messages';
+  private baseURL = 'messages';
 
   // Get all threads for current user
   async getThreads(page = 1, limit = 20): Promise<MessageThread[]> {
