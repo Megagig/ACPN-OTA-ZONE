@@ -428,9 +428,7 @@ const AnnouncementsInterface = () => {
                 <button
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
                   onClick={() =>
-                    navigate(
-                      `/communications/${selectedAnnouncement._id}/details`
-                    )
+                    navigate(`/communications/${selectedAnnouncement._id}`)
                   }
                 >
                   <i className="fas fa-chart-line mr-2"></i>

@@ -20991,3 +20991,16 @@
 2025-06-13T19:32:17.548Z [info]: Redis reconnecting... attempt 8. Next retry in 800ms
 2025-06-13T19:32:17.590Z [warn]: Redis client connection closed
 2025-06-13T19:32:17.591Z [warn]: Redis client reconnecting in 800ms
+2025-06-14T09:45:02.975Z [info]: Redis client connected
+2025-06-14T09:45:02.986Z [info]: Redis client ready and accepting commands
+2025-06-14T09:45:45.458Z [debug]: Cache MISS (6ms): events-stats
+2025-06-14T09:45:45.459Z [debug]: Cache MISS (2ms): events:{"limit":"20","page":"1"}
+2025-06-14T09:45:46.448Z [debug]: Cache SET with TTL=120s (7ms): events:{"limit":"20","page":"1"}
+2025-06-14T09:45:46.615Z [debug]: Cache HIT (5ms): events:{"limit":"20","page":"1"}
+2025-06-14T09:45:46.616Z [debug]: Cache SET with TTL=300s (4ms): events-stats
+2025-06-14T09:45:46.798Z [debug]: Cache HIT (3ms): events-stats
+2025-06-14T09:48:59.285Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-14T09:48:59.292Z [debug]: Cache HIT (1ms): events-stats
+2025-06-14T09:48:59.463Z [debug]: Cache HIT (1ms): events-stats
+2025-06-14T09:49:00.523Z [debug]: Cache SET with TTL=120s (4ms): events:{"limit":"20","page":"1"}
+2025-06-14T09:49:00.706Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
