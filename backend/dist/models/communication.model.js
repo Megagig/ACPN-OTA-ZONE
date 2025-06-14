@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RecipientType = exports.MessageType = void 0;
+exports.CommunicationStatus = exports.RecipientType = exports.MessageType = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var MessageType;
 (function (MessageType) {
@@ -47,6 +47,12 @@ var RecipientType;
     RecipientType["ADMIN"] = "admin";
     RecipientType["SPECIFIC"] = "specific";
 })(RecipientType || (exports.RecipientType = RecipientType = {}));
+var CommunicationStatus;
+(function (CommunicationStatus) {
+    CommunicationStatus["DRAFT"] = "draft";
+    CommunicationStatus["SENT"] = "sent";
+    CommunicationStatus["SCHEDULED"] = "scheduled";
+})(CommunicationStatus || (exports.CommunicationStatus = CommunicationStatus = {}));
 const communicationSchema = new mongoose_1.Schema({
     subject: {
         type: String,
@@ -67,9 +73,16 @@ const communicationSchema = new mongoose_1.Schema({
         enum: Object.values(RecipientType),
         required: true,
     },
+    status: {
+        type: String,
+        enum: Object.values(CommunicationStatus),
+        default: CommunicationStatus.DRAFT,
+    },
     sentDate: {
         type: Date,
-        default: Date.now,
+    },
+    scheduledFor: {
+        type: Date,
     },
     messageType: {
         type: String,

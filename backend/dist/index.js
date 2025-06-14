@@ -6,11 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const http_1 = __importDefault(require("http"));
 const db_1 = __importDefault(require("./config/db"));
 const express_fileupload_1 = __importDefault(require("express-fileupload")); // Import express-fileupload
 const path_1 = __importDefault(require("path"));
 const ensureAssets_1 = __importDefault(require("./utils/ensureAssets"));
 require("./config/redis"); // Import Redis configuration
+const socket_service_1 = __importDefault(require("./services/socket.service"));
 // Load environment variables
 dotenv_1.default.config();
 // Connect to MongoDB
@@ -132,8 +134,14 @@ process.on('uncaughtException', (err) => {
 });
 app.use(error_middleware_1.notFound);
 app.use(error_middleware_1.errorHandler);
+// Create HTTP server
+const server = http_1.default.createServer(app);
+// Initialize Socket.io
+const socketService = new socket_service_1.default(server);
+global.socketService = socketService;
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Socket.io enabled for real-time messaging`);
 });
 exports.default = app;

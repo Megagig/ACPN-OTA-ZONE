@@ -8,6 +8,9 @@ import {
   markAsRead,
   deleteCommunication,
   getCommunicationStats,
+  sendCommunication,
+  scheduleCommunication,
+  getCommunicationRecipients,
 } from '../controllers/communication.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models/user.model';
@@ -40,5 +43,10 @@ router
 router.route('/').post(createCommunication);
 
 router.route('/:id').get(getCommunication).delete(deleteCommunication);
+
+// Communication action routes
+router.route('/:id/send').post(sendCommunication);
+router.route('/:id/schedule').post(scheduleCommunication);
+router.route('/:id/recipients').get(getCommunicationRecipients);
 
 export default router;

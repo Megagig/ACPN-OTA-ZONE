@@ -12,12 +12,20 @@ export enum RecipientType {
   SPECIFIC = 'specific',
 }
 
+export enum CommunicationStatus {
+  DRAFT = 'draft',
+  SENT = 'sent',
+  SCHEDULED = 'scheduled',
+}
+
 export interface ICommunication extends Document {
   subject: string;
   content: string;
   senderUserId: mongoose.Types.ObjectId;
   recipientType: RecipientType;
-  sentDate: Date;
+  status: CommunicationStatus;
+  sentDate?: Date;
+  scheduledFor?: Date;
   messageType: MessageType;
   attachmentUrl?: string;
   createdAt: Date;
@@ -45,9 +53,16 @@ const communicationSchema = new Schema<ICommunication>(
       enum: Object.values(RecipientType),
       required: true,
     },
+    status: {
+      type: String,
+      enum: Object.values(CommunicationStatus),
+      default: CommunicationStatus.DRAFT,
+    },
     sentDate: {
       type: Date,
-      default: Date.now,
+    },
+    scheduledFor: {
+      type: Date,
     },
     messageType: {
       type: String,

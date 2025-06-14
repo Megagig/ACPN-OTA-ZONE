@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCommunicationStats = exports.deleteCommunication = exports.markAsRead = exports.createCommunication = exports.getCommunication = exports.getUserSentCommunications = exports.getUserInbox = exports.getAllAdminCommunications = void 0;
+exports.getCommunicationRecipients = exports.scheduleCommunication = exports.sendCommunication = exports.getCommunicationStats = exports.deleteCommunication = exports.markAsRead = exports.createCommunication = exports.getCommunication = exports.getUserSentCommunications = exports.getUserInbox = exports.getAllAdminCommunications = void 0;
 const communication_model_1 = __importStar(require("../models/communication.model"));
 const communicationRecipient_model_1 = __importDefault(require("../models/communicationRecipient.model"));
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -404,6 +404,11 @@ exports.getCommunicationStats = (0, async_middleware_1.default)((req, res) => __
         { $group: { _id: '$messageType', count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
     ]);
+    // Get counts by status
+    const statusCounts = yield communication_model_1.default.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+    ]);
     // Get monthly communication counts (for current year)
     const currentYear = new Date().getFullYear();
     const monthlyCommunications = yield communication_model_1.default.aggregate([
@@ -480,6 +485,7 @@ exports.getCommunicationStats = (0, async_middleware_1.default)((req, res) => __
         success: true,
         data: {
             messageTypeCounts,
+            statusCounts,
             monthlyCommunications,
             readRateStats: readRateStats.length > 0
                 ? {
@@ -499,5 +505,117 @@ exports.getCommunicationStats = (0, async_middleware_1.default)((req, res) => __
             readRateByType,
             recentCommunications,
         },
+    });
+}));
+// @desc    Send a draft communication
+// @route   POST /api/communications/:id/send
+// @access  Private/Admin/Secretary
+exports.sendCommunication = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const communication = yield communication_model_1.default.findById(req.params.id).populate({
+        path: 'senderUserId',
+        select: 'firstName lastName email',
+    });
+    if (!communication) {
+        return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
+    }
+    // Check if user is authorized to send
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
+    const isSender = communication.senderUserId.toString() === req.user._id.toString();
+    if (!isAdmin && !isSender) {
+        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to send this communication`, 403));
+    }
+    // Check if communication is in draft status
+    if (communication.status !== 'draft') {
+        return next(new errorResponse_1.default(`Communication is already ${communication.status}`, 400));
+    }
+    // Update communication status and send date
+    communication.status = 'sent';
+    communication.sentDate = new Date();
+    yield communication.save();
+    // Create recipient records if they don't exist
+    const existingRecipients = yield communicationRecipient_model_1.default.find({
+        communicationId: communication._id,
+    });
+    if (existingRecipients.length === 0) {
+        let recipientUsers = [];
+        if (communication.recipientType === 'all') {
+            recipientUsers = yield user_model_1.default.find({ isActive: true }).select('_id');
+        }
+        else if (communication.recipientType === 'admin') {
+            recipientUsers = yield user_model_1.default.find({
+                isActive: true,
+                role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
+            }).select('_id');
+        }
+        if (recipientUsers.length > 0) {
+            const recipientRecords = recipientUsers.map((user) => ({
+                communicationId: communication._id,
+                userId: user._id,
+                readStatus: false,
+            }));
+            yield communicationRecipient_model_1.default.insertMany(recipientRecords);
+        }
+    }
+    res.status(200).json({
+        success: true,
+        data: communication,
+    });
+}));
+// @desc    Schedule a communication
+// @route   POST /api/communications/:id/schedule
+// @access  Private/Admin/Secretary
+exports.scheduleCommunication = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { scheduledDate } = req.body;
+    if (!scheduledDate) {
+        return next(new errorResponse_1.default('Scheduled date is required', 400));
+    }
+    const communication = yield communication_model_1.default.findById(req.params.id);
+    if (!communication) {
+        return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
+    }
+    // Check if user is authorized to schedule
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
+    const isSender = communication.senderUserId.toString() === req.user._id.toString();
+    if (!isAdmin && !isSender) {
+        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to schedule this communication`, 403));
+    }
+    // Check if communication is in draft status
+    if (communication.status !== 'draft') {
+        return next(new errorResponse_1.default(`Communication is already ${communication.status}`, 400));
+    }
+    // Update communication status and scheduled date
+    communication.status = 'scheduled';
+    communication.scheduledFor = new Date(scheduledDate);
+    yield communication.save();
+    res.status(200).json({
+        success: true,
+        data: communication,
+    });
+}));
+// @desc    Get communication recipients
+// @route   GET /api/communications/:id/recipients
+// @access  Private/Admin/Secretary
+exports.getCommunicationRecipients = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const communication = yield communication_model_1.default.findById(req.params.id);
+    if (!communication) {
+        return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
+    }
+    // Check if user is authorized to view recipients
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
+    const isSender = communication.senderUserId.toString() === req.user._id.toString();
+    if (!isAdmin && !isSender) {
+        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to view recipients`, 403));
+    }
+    // Get recipients with user details
+    const recipients = yield communicationRecipient_model_1.default.find({
+        communicationId: communication._id,
+    }).populate({
+        path: 'userId',
+        select: 'firstName lastName email phone',
+    });
+    res.status(200).json({
+        success: true,
+        count: recipients.length,
+        data: recipients,
     });
 }));

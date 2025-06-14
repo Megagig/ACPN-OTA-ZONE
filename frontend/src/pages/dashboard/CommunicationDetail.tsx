@@ -83,15 +83,20 @@ const CommunicationDetail = () => {
   };
 
   const handleSend = async () => {
+    if (!id || !communication) return;
+
     if (
       window.confirm('Are you sure you want to send this communication now?')
     ) {
       setIsSending(true);
       try {
-        const result = await communicationService.sendCommunication(id!);
-        setCommunication((prev) => (prev ? { ...prev, ...result } : null));
+        const updatedComm = await communicationService.sendCommunication(id);
+        setCommunication(updatedComm);
+        // Optionally show success message
+        alert('Communication sent successfully!');
       } catch (error) {
         console.error('Error sending communication:', error);
+        alert('Failed to send communication. Please try again.');
       } finally {
         setIsSending(false);
       }
@@ -343,7 +348,7 @@ const CommunicationDetail = () => {
                       >
                         <i className="fas fa-file-alt text-muted-foreground mr-2"></i>
                         <span className="text-sm text-foreground truncate flex-1">
-                          Attachment {index + 1}
+                          {attachment || `Attachment ${index + 1}`}
                         </span>
                         <button
                           type="button"

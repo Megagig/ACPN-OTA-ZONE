@@ -89,7 +89,11 @@ const mapFrontendRecipientTypeToBackend = (frontendType?: string): string => {
 };
 
 const mapBackendStatusToFrontend = (backendComm: any): string => {
-  // Since backend doesn't have explicit status, infer from data
+  // Backend now has explicit status field
+  if (backendComm.status) {
+    return backendComm.status;
+  }
+  // Fallback to old logic if status field doesn't exist
   if (backendComm.sentDate) {
     return 'sent';
   }
@@ -136,11 +140,13 @@ export const deleteCommunication = async (id: string): Promise<void> => {
   await api.delete(`/communications/${id}`);
 };
 
+// Send a draft communication
 export const sendCommunication = async (id: string): Promise<Communication> => {
   const response = await api.post(`/communications/${id}/send`);
   return transformBackendToFrontend(response.data.data);
 };
 
+// Schedule a communication
 export const scheduleCommunication = async (
   id: string,
   scheduledDate: string
@@ -190,13 +196,31 @@ export const getCommunicationSummary =
       byType[frontendType] = (byType[frontendType] || 0) + item.count;
     });
 
-    // Since backend doesn't track draft/scheduled status explicitly,
-    // we'll use placeholder values or derive from sent status
+    // Backend now tracks draft/scheduled/sent status
+    const statusCounts = backendData.statusCounts || [];
+    let sentCount = 0;
+    let draftCount = 0;
+    let scheduledCount = 0;
+
+    statusCounts.forEach((item: any) => {
+      switch (item._id) {
+        case 'sent':
+          sentCount = item.count;
+          break;
+        case 'draft':
+          draftCount = item.count;
+          break;
+        case 'scheduled':
+          scheduledCount = item.count;
+          break;
+      }
+    });
+
     return {
       total,
-      sent: total, // All communications in backend are considered sent
-      draft: 0, // Backend doesn't track drafts separately
-      scheduled: 0, // Backend doesn't track scheduled separately
+      sent: sentCount,
+      draft: draftCount,
+      scheduled: scheduledCount,
       byType: byType as Record<CommunicationType, number>,
       recentCommunications,
     };

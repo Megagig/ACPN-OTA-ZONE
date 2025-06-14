@@ -519,6 +519,12 @@ export const getCommunicationStats = asyncHandler(
       { $sort: { _id: 1 } },
     ]);
 
+    // Get counts by status
+    const statusCounts = await Communication.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+
     // Get monthly communication counts (for current year)
     const currentYear = new Date().getFullYear();
     const monthlyCommunications = await Communication.aggregate([
@@ -599,6 +605,7 @@ export const getCommunicationStats = asyncHandler(
       success: true,
       data: {
         messageTypeCounts,
+        statusCounts,
         monthlyCommunications,
         readRateStats:
           readRateStats.length > 0
@@ -622,6 +629,199 @@ export const getCommunicationStats = asyncHandler(
         readRateByType,
         recentCommunications,
       },
+    });
+  }
+);
+
+// @desc    Send a draft communication
+// @route   POST /api/communications/:id/send
+// @access  Private/Admin/Secretary
+export const sendCommunication = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const communication = await Communication.findById(req.params.id).populate({
+      path: 'senderUserId',
+      select: 'firstName lastName email',
+    });
+
+    if (!communication) {
+      return next(
+        new ErrorResponse(
+          `Communication not found with id of ${req.params.id}`,
+          404
+        )
+      );
+    }
+
+    // Check if user is authorized to send
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
+      req.user.role
+    );
+    const isSender =
+      communication.senderUserId.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isSender) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to send this communication`,
+          403
+        )
+      );
+    }
+
+    // Check if communication is in draft status
+    if (communication.status !== 'draft') {
+      return next(
+        new ErrorResponse(
+          `Communication is already ${communication.status}`,
+          400
+        )
+      );
+    }
+
+    // Update communication status and send date
+    communication.status = 'sent' as any;
+    communication.sentDate = new Date();
+    await communication.save();
+
+    // Create recipient records if they don't exist
+    const existingRecipients = await CommunicationRecipient.find({
+      communicationId: communication._id,
+    });
+
+    if (existingRecipients.length === 0) {
+      let recipientUsers = [];
+
+      if (communication.recipientType === 'all') {
+        recipientUsers = await User.find({ isActive: true }).select('_id');
+      } else if (communication.recipientType === 'admin') {
+        recipientUsers = await User.find({
+          isActive: true,
+          role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
+        }).select('_id');
+      }
+
+      if (recipientUsers.length > 0) {
+        const recipientRecords = recipientUsers.map((user) => ({
+          communicationId: communication._id,
+          userId: user._id,
+          readStatus: false,
+        }));
+
+        await CommunicationRecipient.insertMany(recipientRecords);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: communication,
+    });
+  }
+);
+
+// @desc    Schedule a communication
+// @route   POST /api/communications/:id/schedule
+// @access  Private/Admin/Secretary
+export const scheduleCommunication = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { scheduledDate } = req.body;
+
+    if (!scheduledDate) {
+      return next(new ErrorResponse('Scheduled date is required', 400));
+    }
+
+    const communication = await Communication.findById(req.params.id);
+
+    if (!communication) {
+      return next(
+        new ErrorResponse(
+          `Communication not found with id of ${req.params.id}`,
+          404
+        )
+      );
+    }
+
+    // Check if user is authorized to schedule
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
+      req.user.role
+    );
+    const isSender =
+      communication.senderUserId.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isSender) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to schedule this communication`,
+          403
+        )
+      );
+    }
+
+    // Check if communication is in draft status
+    if (communication.status !== 'draft') {
+      return next(
+        new ErrorResponse(
+          `Communication is already ${communication.status}`,
+          400
+        )
+      );
+    }
+
+    // Update communication status and scheduled date
+    communication.status = 'scheduled' as any;
+    communication.scheduledFor = new Date(scheduledDate);
+    await communication.save();
+
+    res.status(200).json({
+      success: true,
+      data: communication,
+    });
+  }
+);
+
+// @desc    Get communication recipients
+// @route   GET /api/communications/:id/recipients
+// @access  Private/Admin/Secretary
+export const getCommunicationRecipients = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const communication = await Communication.findById(req.params.id);
+
+    if (!communication) {
+      return next(
+        new ErrorResponse(
+          `Communication not found with id of ${req.params.id}`,
+          404
+        )
+      );
+    }
+
+    // Check if user is authorized to view recipients
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
+      req.user.role
+    );
+    const isSender =
+      communication.senderUserId.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isSender) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to view recipients`,
+          403
+        )
+      );
+    }
+
+    // Get recipients with user details
+    const recipients = await CommunicationRecipient.find({
+      communicationId: communication._id,
+    }).populate({
+      path: 'userId',
+      select: 'firstName lastName email phone',
+    });
+
+    res.status(200).json({
+      success: true,
+      count: recipients.length,
+      data: recipients,
     });
   }
 );

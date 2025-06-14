@@ -24,4 +24,8 @@ router
 // Mixed routes
 router.route('/').post(communication_controller_1.createCommunication);
 router.route('/:id').get(communication_controller_1.getCommunication).delete(communication_controller_1.deleteCommunication);
+// Communication action routes
+router.route('/:id/send').post(communication_controller_1.sendCommunication);
+router.route('/:id/schedule').post(communication_controller_1.scheduleCommunication);
+router.route('/:id/recipients').get(communication_controller_1.getCommunicationRecipients);
 exports.default = router;
