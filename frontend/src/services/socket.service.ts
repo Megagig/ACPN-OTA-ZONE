@@ -7,16 +7,21 @@ class SocketService {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      
+
+      console.log(`Connecting to socket server at ${serverUrl}`);
+
       this.socket = io(serverUrl, {
         auth: {
-          token: token
+          token: token,
         },
-        transports: ['websocket', 'polling']
+        transports: ['websocket', 'polling'],
       });
 
       this.socket.on('connect', () => {
-        console.log('Connected to messaging server');
+        console.log(
+          'Connected to messaging server with socket ID:',
+          this.socket?.id
+        );
         this.isConnected = true;
         this.socket?.emit('user_online');
         resolve();
@@ -67,7 +72,7 @@ class SocketService {
     if (this.socket && this.isConnected) {
       this.socket.emit('send_message', {
         threadId,
-        message
+        message,
       });
     }
   }

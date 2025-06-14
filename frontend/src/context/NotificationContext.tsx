@@ -180,6 +180,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   // Handle real-time notification updates
   const handleNewNotification = useCallback(
     (notification: UserNotification) => {
+      console.log('Received new notification via Socket.io:', notification);
       // Add new notification to the list
       setNotifications((prev) => [notification, ...prev]);
 
@@ -197,15 +198,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   // Initialize socket listeners when user is authenticated
   useEffect(() => {
     if (user && socketService.getConnectionStatus()) {
+      console.log('Setting up real-time notification listeners');
       // Listen for new notifications
       socketService.getSocket()?.on('new_notification', handleNewNotification);
 
       return () => {
         // Clean up socket listeners
+        console.log('Cleaning up notification listeners');
         socketService
           .getSocket()
           ?.off('new_notification', handleNewNotification);
       };
+    } else {
+      console.log(
+        'Socket not connected or user not authenticated in NotificationContext'
+      );
     }
   }, [user, handleNewNotification]);
 

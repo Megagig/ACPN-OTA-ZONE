@@ -59,17 +59,25 @@ class SocketService {
     this.io.on(
       'connection',
       (socket: Socket & { userId?: string; user?: any }) => {
-        console.log(`User ${socket.userId} connected to messaging`);
+        console.log(
+          `User ${socket.userId} connected to messaging with socket ID: ${socket.id}`
+        );
 
         // Store the user's socket connection
         if (socket.userId) {
           this.connectedUsers.set(socket.userId, socket.id);
+          console.log(`Mapped user ${socket.userId} to socket ID ${socket.id}`);
 
           // Join user to their personal room
           socket.join(`user:${socket.userId}`);
+          console.log(
+            `User ${socket.userId} joined room: user:${socket.userId}`
+          );
 
           // Join user to all their thread rooms
           this.joinUserThreads(socket);
+        } else {
+          console.log('Socket connected but userId is undefined');
         }
 
         // Handle joining a specific thread
@@ -215,10 +223,16 @@ class SocketService {
 
   // Public methods for emitting events from controllers
   public emitToUser(userId: string, event: string, data: any) {
+    // Emit to specific socket ID if available
     const socketId = this.connectedUsers.get(userId);
     if (socketId) {
       this.io.to(socketId).emit(event, data);
     }
+
+    // Also emit to user's room (in case they have multiple connections)
+    this.io.to(`user:${userId}`).emit(event, data);
+
+    console.log(`Emitting ${event} to user ${userId}`);
   }
 
   public emitToThread(threadId: string, event: string, data: any) {

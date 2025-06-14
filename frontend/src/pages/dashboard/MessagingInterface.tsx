@@ -239,20 +239,17 @@ const MessagingInterface = () => {
   // Socket.io integration
   useEffect(() => {
     const initializeSocket = async () => {
-      const token = localStorage.getItem('token');
-      if (token && user) {
-        try {
-          await socketService.connect(token);
+      if (user && socketService.getConnectionStatus()) {
+        // Setup real-time message listener
+        socketService.onNewMessage(handleNewMessage);
 
-          // Setup real-time message listener
-          socketService.onNewMessage(handleNewMessage);
-
-          // Setup typing indicators
-          socketService.onUserTyping(handleUserTyping);
-          socketService.onUserStoppedTyping(handleUserStoppedTyping);
-        } catch (error) {
-          console.error('Failed to connect to messaging server:', error);
-        }
+        // Setup typing indicators
+        socketService.onUserTyping(handleUserTyping);
+        socketService.onUserStoppedTyping(handleUserStoppedTyping);
+      } else {
+        console.log(
+          'Socket not connected or user not authenticated in Messaging Interface'
+        );
       }
     };
 

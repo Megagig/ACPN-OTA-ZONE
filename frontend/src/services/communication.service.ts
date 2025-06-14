@@ -12,6 +12,13 @@ import type {
 
 // Transformation functions to map between frontend and backend formats
 const transformBackendToFrontend = (backendComm: any): Communication => {
+  // Check if sender exists in the communication object and has firstName and lastName
+  const senderUser = backendComm.senderUserId || backendComm.sender;
+  const senderName =
+    senderUser && (senderUser.firstName || senderUser.lastName)
+      ? `${senderUser.firstName || ''} ${senderUser.lastName || ''}`.trim()
+      : backendComm.senderName || 'Unknown';
+
   return {
     _id: backendComm._id,
     title: backendComm.subject, // Backend uses 'subject', frontend expects 'title'
@@ -20,14 +27,12 @@ const transformBackendToFrontend = (backendComm: any): Communication => {
       backendComm.messageType
     ) as CommunicationType,
     status: mapBackendStatusToFrontend(backendComm) as CommunicationStatus,
-    sender: backendComm.senderUserId?._id || backendComm.senderUserId,
-    senderName: backendComm.senderUserId
-      ? `${backendComm.senderUserId.firstName} ${backendComm.senderUserId.lastName}`
-      : 'Unknown',
+    sender: senderUser?._id || senderUser || backendComm.sender || '',
+    senderName: senderName,
     recipientType: mapBackendRecipientTypeToFrontend(
       backendComm.recipientType
     ) as RecipientType,
-    priority: 'normal', // Default priority if not provided
+    priority: backendComm.priority || 'normal',
     sentAt: backendComm.sentDate,
     attachments: backendComm.attachmentUrl ? [backendComm.attachmentUrl] : [],
     createdAt: backendComm.createdAt,
@@ -89,14 +94,20 @@ const mapFrontendRecipientTypeToBackend = (frontendType?: string): string => {
 };
 
 const mapBackendStatusToFrontend = (backendComm: any): string => {
-  // Backend now has explicit status field
-  if (backendComm.status) {
-    return backendComm.status;
+  // If status field exists and is not empty, use it directly
+  if (backendComm.status && backendComm.status.trim() !== '') {
+    return backendComm.status.toLowerCase();
   }
-  // Fallback to old logic if status field doesn't exist
+
+  // Fallback logic for backwards compatibility
   if (backendComm.sentDate) {
     return 'sent';
   }
+
+  if (backendComm.scheduledFor) {
+    return 'scheduled';
+  }
+
   return 'draft';
 };
 
@@ -231,7 +242,13 @@ export const getUserInbox = async (
   params?: Record<string, unknown>
 ): Promise<Communication[]> => {
   const response = await api.get('/communications/inbox', { params });
-  return response.data.data.map(transformBackendToFrontend);
+
+  // Transform each item to ensure proper mapping
+  return response.data.data.map((item: any) => {
+    // If the item already has the communication as a property, extract it
+    const commData = item.communicationId || item;
+    return transformBackendToFrontend(commData);
+  });
 };
 
 // Get user's sent communications

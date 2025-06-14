@@ -745,18 +745,32 @@ export const sendCommunication = asyncHandler(
 
         // Emit real-time notifications if socket service is available
         if (global.socketService) {
+          console.log(
+            `Attempting to send notifications to ${recipients.length} recipients`
+          );
           recipients.forEach((recipient) => {
             const notification = createdNotifications.find(
               (n) => n.userId.toString() === recipient.userId.toString()
             );
             if (notification) {
+              console.log(
+                `Emitting notification to user ${recipient.userId.toString()}`
+              );
               global.socketService.emitToUser(
                 recipient.userId.toString(),
                 'new_notification',
                 notification
               );
+            } else {
+              console.log(
+                `No notification found for user ${recipient.userId.toString()}`
+              );
             }
           });
+        } else {
+          console.log(
+            'Socket service not available for real-time notifications'
+          );
         }
       }
     } catch (notificationError) {

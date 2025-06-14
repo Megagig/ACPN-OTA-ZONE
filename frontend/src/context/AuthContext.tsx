@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/auth.service';
+import socketService from '../services/socket.service';
 import type { LoginCredentials } from '../types/auth.types';
 
 interface AuthContextType {
@@ -21,12 +22,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
           setIsAuthenticated(true);
+
+          // Initialize socket connection
+          const token = localStorage.getItem('token');
+          if (token) {
+            try {
+              await socketService.connect(token);
+              console.log('Socket connection established from AuthContext');
+            } catch (socketError) {
+              console.error('Failed to connect to socket:', socketError);
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
@@ -44,6 +56,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await authService.login(credentials);
       setUser(response.user);
       setIsAuthenticated(true);
+
+      // Connect to socket after successful login
+      if (response.token) {
+        try {
+          await socketService.connect(response.token);
+          console.log('Socket connection established after login');
+        } catch (socketError) {
+          console.error(
+            'Failed to connect to socket after login:',
+            socketError
+          );
+        }
+      }
+
       return response;
     } catch (error) {
       console.error('Login error:', error);
@@ -52,6 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    // Disconnect socket
+    socketService.disconnect();
+
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);

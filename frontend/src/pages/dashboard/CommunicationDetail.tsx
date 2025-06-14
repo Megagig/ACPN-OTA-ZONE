@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import communicationService from '../../services/communication.service';
 import type {
   Communication,
@@ -72,34 +73,89 @@ const CommunicationDetail = () => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this communication?')) {
-      try {
-        await communicationService.deleteCommunication(id!);
-        navigate('/communications/list');
-      } catch (error) {
-        console.error('Error deleting communication:', error);
+    const toastId = toast.info(
+      <div>
+        <p>Are you sure you want to delete this communication?</p>
+        <div className="mt-2 flex justify-end space-x-2">
+          <button
+            onClick={() => {
+              toast.dismiss(toastId);
+              performDelete();
+            }}
+            className="bg-red-600 text-white px-2 py-1 rounded text-sm"
+          >
+            Yes, Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(toastId)}
+            className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeButton: false,
+        closeOnClick: false,
       }
+    );
+  };
+
+  const performDelete = async () => {
+    try {
+      await communicationService.deleteCommunication(id!);
+      toast.success('Communication deleted successfully!');
+      navigate('/communications/list');
+    } catch (error) {
+      console.error('Error deleting communication:', error);
+      toast.error('Failed to delete communication. Please try again.');
     }
   };
 
   const handleSend = async () => {
     if (!id || !communication) return;
 
-    if (
-      window.confirm('Are you sure you want to send this communication now?')
-    ) {
-      setIsSending(true);
-      try {
-        const updatedComm = await communicationService.sendCommunication(id);
-        setCommunication(updatedComm);
-        // Optionally show success message
-        alert('Communication sent successfully!');
-      } catch (error) {
-        console.error('Error sending communication:', error);
-        alert('Failed to send communication. Please try again.');
-      } finally {
-        setIsSending(false);
+    const toastId = toast.info(
+      <div>
+        <p>Are you sure you want to send this communication now?</p>
+        <div className="mt-2 flex justify-end space-x-2">
+          <button
+            onClick={() => {
+              toast.dismiss(toastId);
+              performSend();
+            }}
+            className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+          >
+            Yes, Send
+          </button>
+          <button
+            onClick={() => toast.dismiss(toastId)}
+            className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeButton: false,
+        closeOnClick: false,
       }
+    );
+  };
+
+  const performSend = async () => {
+    setIsSending(true);
+    try {
+      const updatedComm = await communicationService.sendCommunication(id!);
+      setCommunication(updatedComm);
+      toast.success('Communication sent successfully!');
+    } catch (error) {
+      console.error('Error sending communication:', error);
+      toast.error('Failed to send communication. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -117,9 +173,11 @@ const CommunicationDetail = () => {
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
+    // Normalize status to handle any case variations
+    const normalizedStatus = status?.toLowerCase() || 'draft';
     let colorClasses = '';
 
-    switch (status) {
+    switch (normalizedStatus) {
       case 'sent':
         colorClasses =
           'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
@@ -144,7 +202,7 @@ const CommunicationDetail = () => {
       <span
         className={`${colorClasses} text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
       >
-        {status}
+        {normalizedStatus}
       </span>
     );
   };
@@ -229,7 +287,7 @@ const CommunicationDetail = () => {
             <StatusBadge status={communication.status} />
           </div>
           <p className="text-muted-foreground">
-            Sent by {communication.senderName} on{' '}
+            Sent by {communication.senderName || 'Unknown'} on{' '}
             {formatDate(communication.sentAt || communication.createdAt)}
           </p>
         </div>
