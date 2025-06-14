@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { EventService } from '../../services/event.service';
 import documentService from '../../services/document.service';
 import pharmacyService from '../../services/pharmacy.service';
 import memberDashboardService from '../../services/memberDashboard.service';
+import NotificationWidget from '../../components/notifications/NotificationWidget';
+import LoginNotificationModal from '../../components/notifications/LoginNotificationModal';
 
 // Types
 import type { Event } from '../../types/event.types';
@@ -32,8 +35,10 @@ interface MemberDashboardStats {
 const MemberDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { unreadCount } = useNotification();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [stats, setStats] = useState<MemberDashboardStats>({
     totalDue: 0,
     totalPaid: 0,
@@ -49,6 +54,26 @@ const MemberDashboard: React.FC = () => {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+
+  // Check for login notifications
+  useEffect(() => {
+    const checkLoginNotifications = async () => {
+      if (user && unreadCount > 0) {
+        // Check if this is a recent login (within last 5 minutes)
+        const loginTime = sessionStorage.getItem('loginTime');
+        const now = new Date().getTime();
+
+        if (loginTime && now - parseInt(loginTime) < 5 * 60 * 1000) {
+          // Show modal for recent logins with unread notifications
+          setShowLoginModal(true);
+          // Clear the login time so modal doesn't show again
+          sessionStorage.removeItem('loginTime');
+        }
+      }
+    };
+
+    checkLoginNotifications();
+  }, [user, unreadCount]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -371,6 +396,9 @@ const MemberDashboard: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Notifications Widget */}
+        <NotificationWidget />
 
         {/* Quick Access */}
         <div className="bg-card rounded-lg shadow p-5 border border-border hover:border-primary/40 transition-colors">
@@ -791,6 +819,12 @@ const MemberDashboard: React.FC = () => {
           )}
         </ul>
       </div>
+
+      {/* Login Notification Modal */}
+      <LoginNotificationModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </div>
   );
 };

@@ -21016,3 +21016,29 @@
 2025-06-14T10:10:12.636Z [info]: Redis client ready and accepting commands
 2025-06-14T10:10:36.479Z [info]: Redis client connected
 2025-06-14T10:10:36.484Z [info]: Redis client ready and accepting commands
+2025-06-14T10:15:50.638Z [debug]: Cache MISS (4ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T10:15:50.647Z [debug]: Cache MISS (10ms): member-dashboard
+2025-06-14T10:15:50.676Z [debug]: Cache MISS (13ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T10:15:50.677Z [debug]: Cache MISS (2ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-14T10:15:51.013Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-14T10:15:51.189Z [debug]: Cache HIT (5ms): pharmacy-user:68333de4143d8f57d7506d27
+2025-06-14T10:15:51.325Z [debug]: Cache SET with TTL=180s (6ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T10:15:51.394Z [debug]: Cache SET with TTL=300s (43ms): member-dashboard
+2025-06-14T10:15:51.496Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T10:15:51.539Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T10:15:51.579Z [debug]: Cache HIT (0ms): member-dashboard
+2025-06-14T10:15:52.216Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T10:27:12.073Z [info]: Redis client connected
+2025-06-14T10:27:12.084Z [info]: Redis client ready and accepting commands
+2025-06-14T10:28:06.659Z [info]: Redis client connected
+2025-06-14T10:28:06.667Z [info]: Redis client ready and accepting commands
+2025-06-14T10:28:27.588Z [info]: Redis client connected
+2025-06-14T10:28:27.596Z [info]: Redis client ready and accepting commands
+2025-06-14T10:53:41.827Z [info]: Redis client connected
+2025-06-14T10:53:41.834Z [info]: Redis client ready and accepting commands
+2025-06-14T10:54:27.489Z [info]: Redis client connected
+2025-06-14T10:54:27.495Z [info]: Redis client ready and accepting commands
+2025-06-14T11:01:19.712Z [info]: Redis client connected
+2025-06-14T11:01:19.739Z [info]: Redis client ready and accepting commands
+2025-06-14T11:09:23.324Z [info]: Redis client connected
+2025-06-14T11:09:23.330Z [info]: Redis client ready and accepting commands

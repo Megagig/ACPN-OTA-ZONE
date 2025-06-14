@@ -18,12 +18,20 @@ export enum CommunicationStatus {
   SCHEDULED = 'scheduled',
 }
 
+export enum CommunicationPriority {
+  LOW = 'low',
+  NORMAL = 'normal',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
 export interface ICommunication extends Document {
   subject: string;
   content: string;
   senderUserId: mongoose.Types.ObjectId;
   recipientType: RecipientType;
   status: CommunicationStatus;
+  priority: CommunicationPriority;
   sentDate?: Date;
   scheduledFor?: Date;
   messageType: MessageType;
@@ -57,6 +65,11 @@ const communicationSchema = new Schema<ICommunication>(
       type: String,
       enum: Object.values(CommunicationStatus),
       default: CommunicationStatus.DRAFT,
+    },
+    priority: {
+      type: String,
+      enum: Object.values(CommunicationPriority),
+      default: CommunicationPriority.NORMAL,
     },
     sentDate: {
       type: Date,

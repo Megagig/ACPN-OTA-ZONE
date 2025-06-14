@@ -54,6 +54,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       { name: 'Elections', path: '/elections', icon: 'vote-yea' },
       { name: 'Polls', path: '/polls', icon: 'poll' },
       { name: 'Communications', path: '/communications', icon: 'envelope' },
+      { name: 'Notifications', path: '/notifications', icon: 'bell' },
       { name: 'Finances', path: '/finances', icon: 'money-bill' },
       {
         name: 'Financial Management',
@@ -77,6 +78,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       },
       { name: 'Elections', path: '/elections', icon: 'vote-yea' },
       { name: 'Messages', path: '/messages', icon: 'envelope' },
+      { name: 'Notifications', path: '/notifications', icon: 'bell' },
     ];
 
     if (['admin', 'superadmin'].includes(user?.role)) {
@@ -101,6 +103,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
         { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },
         { name: 'Communications', path: '/communications', icon: 'envelope' },
+        { name: 'Notifications', path: '/notifications', icon: 'bell' },
         { name: 'Documents', path: '/documents', icon: 'file-alt' },
       ];
     } else {

@@ -4,6 +4,7 @@ import Communication, {
   RecipientType,
 } from '../models/communication.model';
 import CommunicationRecipient from '../models/communicationRecipient.model';
+import UserNotification from '../models/userNotification.model';
 import User from '../models/user.model';
 import asyncHandler from '../middleware/async.middleware';
 import ErrorResponse from '../utils/errorResponse';
@@ -709,6 +710,58 @@ export const sendCommunication = asyncHandler(
 
         await CommunicationRecipient.insertMany(recipientRecords);
       }
+    }
+
+    // Create notifications for all recipients
+    try {
+      const recipients = await CommunicationRecipient.find({
+        communicationId: communication._id,
+      });
+
+      if (recipients.length > 0) {
+        const notifications = recipients.map((recipient) => ({
+          userId: recipient.userId,
+          communicationId: communication._id,
+          type:
+            communication.messageType === 'announcement'
+              ? 'announcement'
+              : 'communication',
+          title: communication.subject,
+          message: communication.content.substring(0, 500), // Truncate if too long
+          priority: communication.priority || 'normal',
+          data: {
+            senderName: communication.senderUserId
+              ? `${(communication.senderUserId as any).firstName} ${(communication.senderUserId as any).lastName}`
+              : 'System',
+            messageType: communication.messageType,
+            sentDate: communication.sentDate,
+          },
+          // Set expiration for 30 days from now
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        }));
+
+        const createdNotifications =
+          await UserNotification.insertMany(notifications);
+
+        // Emit real-time notifications if socket service is available
+        if (global.socketService) {
+          recipients.forEach((recipient) => {
+            const notification = createdNotifications.find(
+              (n) => n.userId.toString() === recipient.userId.toString()
+            );
+            if (notification) {
+              global.socketService.emitToUser(
+                recipient.userId.toString(),
+                'new_notification',
+                notification
+              );
+            }
+          });
+        }
+      }
+    } catch (notificationError) {
+      console.error('Error creating notifications:', notificationError);
+      // Don't fail the communication sending if notification creation fails
     }
 
     res.status(200).json({

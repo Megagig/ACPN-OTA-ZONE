@@ -6,10 +6,13 @@ import messageService, {
 } from '../../services/message.service';
 import socketService from '../../services/socket.service';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 
 const MessagingInterface = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { notifications, unreadCount, fetchNotifications, markAsRead } =
+    useNotification();
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(
@@ -31,6 +34,7 @@ const MessagingInterface = () => {
 
   useEffect(() => {
     fetchThreads();
+    fetchNotifications(); // Fetch recent notifications
   }, []);
 
   useEffect(() => {
@@ -326,8 +330,20 @@ const MessagingInterface = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Messages</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Communications</h1>
         <div className="flex space-x-2">
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
+            onClick={() => navigate('/notifications')}
+          >
+            <i className="fas fa-bell mr-2"></i>
+            View All Notifications
+            {unreadCount > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                {unreadCount}
+              </span>
+            )}
+          </button>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
             onClick={() => setShowNewThreadForm(true)}
@@ -344,6 +360,58 @@ const MessagingInterface = () => {
           </button>
         </div>
       </div>
+
+      {/* Recent Notifications Section */}
+      {notifications.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-blue-800">
+              <i className="fas fa-bell mr-2"></i>
+              Recent Notifications
+            </h3>
+            <button
+              onClick={() => navigate('/notifications')}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              View All →
+            </button>
+          </div>
+          <div className="space-y-2">
+            {notifications.slice(0, 3).map((notification) => (
+              <div
+                key={notification._id}
+                className={`p-3 rounded-md border ${
+                  notification.isRead
+                    ? 'bg-white border-gray-200'
+                    : 'bg-blue-100 border-blue-300'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {notification.title}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(notification.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {!notification.isRead && (
+                    <button
+                      onClick={() => markAsRead(notification._id)}
+                      className="ml-3 text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Mark as read
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* New Thread Form Modal */}
       {showNewThreadForm && (

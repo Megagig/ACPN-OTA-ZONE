@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const Login: React.FC = () => {
@@ -11,7 +10,6 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
-  const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,6 +23,8 @@ const Login: React.FC = () => {
 
     try {
       await login({ email, password });
+      // Set login timestamp for notification modal
+      sessionStorage.setItem('loginTime', new Date().getTime().toString());
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(

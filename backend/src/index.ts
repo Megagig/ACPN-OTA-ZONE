@@ -73,6 +73,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 import memberDashboardRoutes from './routes/memberDashboard.routes';
 import cacheRoutes from './routes/cache.routes';
 import messageRoutes from './routes/message.routes';
+import notificationRoutes from './routes/notification.routes';
 
 // Register paymentRoutes (which uses multer) BEFORE global fileupload or general body parsers
 app.use('/api/payments', paymentRoutes);
@@ -125,6 +126,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/member-dashboard', memberDashboardRoutes);
 app.use('/api/cache', cacheRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.

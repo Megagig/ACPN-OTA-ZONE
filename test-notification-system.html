@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification System Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin-bottom: 30px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .test-section h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      button {
+        background: #007cba;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+      button:hover {
+        background: #005a8b;
+      }
+      .result {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔔 Notification System Test</h1>
+      <div id="status"></div>
+
+      <div class="test-section">
+        <h3>1. Backend API Connection Test</h3>
+        <button onclick="testBackendConnection()">
+          Test Backend Connection
+        </button>
+        <div id="backend-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>2. Authentication Test</h3>
+        <input
+          type="email"
+          id="email"
+          placeholder="Email"
+          value="test@acpnota.com"
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="Password"
+          value="password123"
+        />
+        <button onclick="testLogin()">Login</button>
+        <div id="auth-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>3. Notification API Tests</h3>
+        <button onclick="testGetNotifications()">Get Notifications</button>
+        <button onclick="testGetUnreadNotifications()">
+          Get Unread Notifications
+        </button>
+        <button onclick="testNotificationStats()">
+          Get Notification Stats
+        </button>
+        <div id="notification-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>4. Communication → Notification Test</h3>
+        <button onclick="testCommunicationSend()">
+          Send Test Communication
+        </button>
+        <div id="communication-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>5. Real-time Test</h3>
+        <button onclick="testSocketConnection()">Test Socket Connection</button>
+        <button onclick="listenForNotifications()">
+          Listen for Notifications
+        </button>
+        <div id="socket-result" class="result"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script>
+      const API_BASE = 'http://localhost:5000/api';
+      let authToken = '';
+      let socket = null;
+
+      function updateResult(elementId, message, type = 'info') {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `result ${type}`;
+      }
+
+      async function testBackendConnection() {
+        try {
+          updateResult(
+            'backend-result',
+            'Testing backend connection...',
+            'info'
+          );
+          const response = await fetch(`${API_BASE}/auth/test`, {
+            method: 'GET',
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            updateResult(
+              'backend-result',
+              `✅ Backend connected successfully!\nStatus: ${
+                response.status
+              }\nResponse: ${JSON.stringify(data, null, 2)}`,
+              'success'
+            );
+          } else {
+            updateResult(
+              'backend-result',
+              `❌ Backend connection failed!\nStatus: ${
+                response.status
+              }\nError: ${await response.text()}`,
+              'error'
+            );
+          }
+        } catch (error) {
+          updateResult(
+            'backend-result',
+            `❌ Backend connection error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      async function testLogin() {
+        try {
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+
+          updateResult('auth-result', 'Attempting login...', 'info');
+
+          const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            authToken = data.token;
+            updateResult(
+              'auth-result',
+              `✅ Login successful!\nUser: ${data.user.firstName} ${
+                data.user.lastName
+              }\nRole: ${data.user.role}\nToken: ${authToken.substring(
+                0,
+                20
+              )}...`,
+              'success'
+            );
+          } else {
+            updateResult(
+              'auth-result',
+              `❌ Login failed!\nError: ${data.message || 'Unknown error'}`,
+              'error'
+            );
+          }
+        } catch (error) {
+          updateResult(
+            'auth-result',
+            `❌ Login error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      async function testGetNotifications() {
+        if (!authToken) {
+          updateResult(
+            'notification-result',
+            '❌ Please login first!',
+            'error'
+          );
+          return;
+        }
+
+        try {
+          updateResult(
+            'notification-result',
+            'Fetching notifications...',
+            'info'
+          );
+
+          const response = await fetch(`${API_BASE}/notifications`, {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            updateResult(
+              'notification-result',
+              `✅ Notifications fetched successfully!\nCount: ${
+                data.count
+              }\nUnread: ${data.unreadCount}\nTotal: ${
+                data.pagination.total
+              }\nNotifications: ${JSON.stringify(data.data, null, 2)}`,
+              'success'
+            );
+          } else {
+            updateResult(
+              'notification-result',
+              `❌ Failed to fetch notifications!\nError: ${
+                data.message || 'Unknown error'
+              }`,
+              'error'
+            );
+          }
+        } catch (error) {
+          updateResult(
+            'notification-result',
+            `❌ Notification fetch error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      async function testGetUnreadNotifications() {
+        if (!authToken) {
+          updateResult(
+            'notification-result',
+            '❌ Please login first!',
+            'error'
+          );
+          return;
+        }
+
+        try {
+          updateResult(
+            'notification-result',
+            'Fetching unread notifications...',
+            'info'
+          );
+
+          const response = await fetch(`${API_BASE}/notifications/unread`, {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            updateResult(
+              'notification-result',
+              `✅ Unread notifications fetched successfully!\nCount: ${
+                data.count
+              }\nUnread: ${data.unreadCount}\nNotifications: ${JSON.stringify(
+                data.data,
+                null,
+                2
+              )}`,
+              'success'
+            );
+          } else {
+            updateResult(
+              'notification-result',
+              `❌ Failed to fetch unread notifications!\nError: ${
+                data.message || 'Unknown error'
+              }`,
+              'error'
+            );
+          }
+        } catch (error) {
+          updateResult(
+            'notification-result',
+            `❌ Unread notification fetch error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      async function testNotificationStats() {
+        if (!authToken) {
+          updateResult(
+            'notification-result',
+            '❌ Please login first!',
+            'error'
+          );
+          return;
+        }
+
+        try {
+          updateResult(
+            'notification-result',
+            'Fetching notification stats...',
+            'info'
+          );
+
+          const response = await fetch(`${API_BASE}/notifications/stats`, {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            updateResult(
+              'notification-result',
+              `✅ Notification stats fetched successfully!\nStats: ${JSON.stringify(
+                data.data,
+                null,
+                2
+              )}`,
+              'success'
+            );
+          } else {
+            updateResult(
+              'notification-result',
+              `❌ Failed to fetch notification stats!\nError: ${
+                data.message || 'Unknown error'
+              }`,
+              'error'
+            );
+          }
+        } catch (error) {
+          updateResult(
+            'notification-result',
+            `❌ Notification stats fetch error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      async function testCommunicationSend() {
+        if (!authToken) {
+          updateResult(
+            'communication-result',
+            '❌ Please login first!',
+            'error'
+          );
+          return;
+        }
+
+        try {
+          updateResult(
+            'communication-result',
+            'Sending test communication...',
+            'info'
+          );
+
+          // First create a communication
+          const communicationResponse = await fetch(
+            `${API_BASE}/communications`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                subject: 'Test Notification Communication',
+                content:
+                  'This is a test communication to verify the notification system is working correctly.',
+                messageType: 'announcement',
+                recipientType: 'all',
+                priority: 'high',
+              }),
+            }
+          );
+
+          const communicationData = await communicationResponse.json();
+
+          if (communicationResponse.ok) {
+            // Now send the communication
+            const sendResponse = await fetch(
+              `${API_BASE}/communications/${communicationData.data._id}/send`,
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${authToken}`,
+                },
+              }
+            );
+
+            const sendData = await sendResponse.json();
+
+            if (sendResponse.ok) {
+              updateResult(
+                'communication-result',
+                `✅ Test communication sent successfully!\nCommunication ID: ${communicationData.data._id}\nRecipients: ${sendData.recipientCount}\nNotifications should be created automatically!`,
+                'success'
+              );
+            } else {
+              updateResult(
+                'communication-result',
+                `❌ Failed to send communication!\nError: ${
+                  sendData.message || 'Unknown error'
+                }`,
+                'error'
+              );
+            }
+          } else {
+            updateResult(
+              'communication-result',
+              `❌ Failed to create communication!\nError: ${
+                communicationData.message || 'Unknown error'
+              }`,
+              'error'
+            );
+          }
+        } catch (error) {
+          updateResult(
+            'communication-result',
+            `❌ Communication send error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      async function testSocketConnection() {
+        if (!authToken) {
+          updateResult('socket-result', '❌ Please login first!', 'error');
+          return;
+        }
+
+        try {
+          updateResult(
+            'socket-result',
+            'Connecting to socket server...',
+            'info'
+          );
+
+          socket = io('http://localhost:5000', {
+            auth: {
+              token: authToken,
+            },
+          });
+
+          socket.on('connect', () => {
+            updateResult(
+              'socket-result',
+              `✅ Socket connected successfully!\nSocket ID: ${socket.id}`,
+              'success'
+            );
+          });
+
+          socket.on('connect_error', (error) => {
+            updateResult(
+              'socket-result',
+              `❌ Socket connection error: ${error.message}`,
+              'error'
+            );
+          });
+
+          socket.on('disconnect', () => {
+            updateResult('socket-result', '🔌 Socket disconnected', 'info');
+          });
+        } catch (error) {
+          updateResult(
+            'socket-result',
+            `❌ Socket connection error: ${error.message}`,
+            'error'
+          );
+        }
+      }
+
+      function listenForNotifications() {
+        if (!socket) {
+          updateResult(
+            'socket-result',
+            '❌ Please connect to socket first!',
+            'error'
+          );
+          return;
+        }
+
+        updateResult(
+          'socket-result',
+          '👂 Listening for real-time notifications...',
+          'info'
+        );
+
+        socket.on('new_notification', (notification) => {
+          updateResult(
+            'socket-result',
+            `🔔 New notification received!\nNotification: ${JSON.stringify(
+              notification,
+              null,
+              2
+            )}`,
+            'success'
+          );
+        });
+
+        socket.on('notification_update', (data) => {
+          updateResult(
+            'socket-result',
+            `🔄 Notification updated!\nData: ${JSON.stringify(data, null, 2)}`,
+            'info'
+          );
+        });
+      }
+
+      // Initialize page
+      document.addEventListener('DOMContentLoaded', () => {
+        updateResult(
+          'status',
+          '🚀 Notification System Test Page Loaded\nReady to test the notification system implementation!',
+          'info'
+        );
+      });
+    </script>
+  </body>
+</html>
