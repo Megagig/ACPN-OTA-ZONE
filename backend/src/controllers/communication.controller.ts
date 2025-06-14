@@ -1160,7 +1160,8 @@ export const updateCommunication = asyncHandler(
       // Add new recipients
       const recipients = recipientIds.map((recipientId: string) => ({
         communicationId: id,
-        recipientUserId: recipientId,
+        userId: recipientId,
+        readStatus: false,
       }));
 
       await CommunicationRecipient.insertMany(recipients);

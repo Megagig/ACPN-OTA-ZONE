@@ -21283,3 +21283,13 @@
 2025-06-14T15:35:21.940Z [info]: Redis client ready and accepting commands
 2025-06-14T15:36:03.687Z [info]: Redis client connected
 2025-06-14T15:36:03.692Z [info]: Redis client ready and accepting commands
+2025-06-14T15:38:57.499Z [info]: Redis client connected
+2025-06-14T15:38:57.504Z [info]: Redis client ready and accepting commands
+2025-06-14T15:39:35.745Z [debug]: Cache MISS (0ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:39:35.755Z [debug]: Cache MISS (1ms): events-stats
+2025-06-14T15:39:36.714Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:39:36.877Z [debug]: Cache SET with TTL=300s (4ms): events-stats
+2025-06-14T15:39:36.909Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:39:37.066Z [debug]: Cache HIT (1ms): events-stats
+2025-06-14T15:50:15.372Z [info]: Redis client connected
+2025-06-14T15:50:15.377Z [info]: Redis client ready and accepting commands
