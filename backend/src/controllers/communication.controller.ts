@@ -878,3 +878,90 @@ export const getCommunicationRecipients = asyncHandler(
     });
   }
 );
+
+// @desc    Update communication
+// @route   PUT /api/communications/:id
+// @access  Private
+export const updateCommunication = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.params;
+    const {
+      subject,
+      content,
+      messageType,
+      recipientIds,
+      recipientType,
+      scheduledDate,
+    } = req.body;
+
+    // Find the communication
+    const communication = await Communication.findById(id);
+
+    if (!communication) {
+      return next(
+        new ErrorResponse(`Communication not found with id ${id}`, 404)
+      );
+    }
+
+    // Check if user is authorized to update this communication
+    if (
+      communication.senderUserId.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin'
+    ) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to update this communication`,
+          403
+        )
+      );
+    }
+
+    // Check if communication is already sent
+    if (communication.status === 'sent') {
+      return next(
+        new ErrorResponse(
+          'Cannot update a communication that has already been sent',
+          400
+        )
+      );
+    }
+
+    // Update only provided fields
+    const updateFields: any = {};
+    if (subject !== undefined) updateFields.subject = subject;
+    if (content !== undefined) updateFields.content = content;
+    if (messageType !== undefined) updateFields.messageType = messageType;
+    if (recipientType !== undefined) updateFields.recipientType = recipientType;
+    if (scheduledDate !== undefined) updateFields.scheduledDate = scheduledDate;
+
+    // Update the communication
+    const updatedCommunication = await Communication.findByIdAndUpdate(
+      id,
+      updateFields,
+      { new: true, runValidators: true }
+    ).populate({
+      path: 'senderUserId',
+      select: 'firstName lastName email',
+    });
+
+    // If recipientIds are provided, update recipients
+    if (recipientIds && Array.isArray(recipientIds)) {
+      // Remove existing recipients
+      await CommunicationRecipient.deleteMany({ communicationId: id });
+
+      // Add new recipients
+      const recipients = recipientIds.map((recipientId: string) => ({
+        communicationId: id,
+        recipientUserId: recipientId,
+      }));
+
+      await CommunicationRecipient.insertMany(recipients);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedCommunication,
+    });
+  }
+);

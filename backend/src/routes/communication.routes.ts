@@ -5,6 +5,7 @@ import {
   getUserSentCommunications,
   getCommunication,
   createCommunication,
+  updateCommunication,
   markAsRead,
   deleteCommunication,
   getCommunicationStats,
@@ -42,7 +43,11 @@ router
 // Mixed routes
 router.route('/').post(createCommunication);
 
-router.route('/:id').get(getCommunication).delete(deleteCommunication);
+router
+  .route('/:id')
+  .get(getCommunication)
+  .put(updateCommunication)
+  .delete(deleteCommunication);
 
 // Communication action routes
 router.route('/:id/send').post(sendCommunication);
