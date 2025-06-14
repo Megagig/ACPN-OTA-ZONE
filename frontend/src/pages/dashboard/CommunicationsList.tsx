@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import communicationService from '../../services/communication.service';
 import type {
   Communication,
@@ -36,18 +37,80 @@ const CommunicationsList = () => {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this communication?')) {
-      try {
-        await communicationService.deleteCommunication(id);
-        setCommunications(communications.filter((comm) => comm._id !== id));
-      } catch (error) {
-        console.error('Error deleting communication:', error);
+
+    const toastId = toast.info(
+      <div>
+        <p>Are you sure you want to delete this communication?</p>
+        <div className="mt-2 flex justify-end space-x-2">
+          <button
+            onClick={() => {
+              toast.dismiss(toastId);
+              performDelete(id);
+            }}
+            className="bg-red-600 text-white px-2 py-1 rounded text-sm"
+          >
+            Yes, Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(toastId)}
+            className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeButton: false,
+        closeOnClick: false,
       }
+    );
+  };
+
+  const performDelete = async (id: string) => {
+    try {
+      await communicationService.deleteCommunication(id);
+      setCommunications(communications.filter((comm) => comm._id !== id));
+      toast.success('Communication deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting communication:', error);
+      toast.error('Failed to delete communication. Please try again.');
     }
   };
 
   const handleSend = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
+    const toastId = toast.info(
+      <div>
+        <p>Are you sure you want to send this communication now?</p>
+        <div className="mt-2 flex justify-end space-x-2">
+          <button
+            onClick={() => {
+              toast.dismiss(toastId);
+              performSend(id);
+            }}
+            className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+          >
+            Yes, Send
+          </button>
+          <button
+            onClick={() => toast.dismiss(toastId)}
+            className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeButton: false,
+        closeOnClick: false,
+      }
+    );
+  };
+
+  const performSend = async (id: string) => {
     try {
       const updatedComm = await communicationService.sendCommunication(id);
       setCommunications(
@@ -55,8 +118,10 @@ const CommunicationsList = () => {
           comm._id === id ? { ...comm, ...updatedComm } : comm
         )
       );
+      toast.success('Communication sent successfully!');
     } catch (error) {
       console.error('Error sending communication:', error);
+      toast.error('Failed to send communication. Please try again.');
     }
   };
 
