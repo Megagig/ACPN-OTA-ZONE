@@ -26,7 +26,7 @@ const CommunicationsList = () => {
   const fetchCommunications = async () => {
     setIsLoading(true);
     try {
-      const data = await communicationService.getCommunications();
+      const data = await communicationService.getUserInbox();
       setCommunications(data);
     } catch (error) {
       console.error('Error fetching communications:', error);

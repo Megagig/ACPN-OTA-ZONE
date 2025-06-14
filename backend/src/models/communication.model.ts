@@ -30,6 +30,7 @@ export interface ICommunication extends Document {
   content: string;
   senderUserId: mongoose.Types.ObjectId;
   recipientType: RecipientType;
+  specificRecipients?: mongoose.Types.ObjectId[];
   status: CommunicationStatus;
   priority: CommunicationPriority;
   sentDate?: Date;
@@ -61,6 +62,12 @@ const communicationSchema = new Schema<ICommunication>(
       enum: Object.values(RecipientType),
       required: true,
     },
+    specificRecipients: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     status: {
       type: String,
       enum: Object.values(CommunicationStatus),

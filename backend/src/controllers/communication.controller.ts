@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import Communication, {
   MessageType,
   RecipientType,
@@ -385,6 +386,12 @@ export const createCommunication = asyncHandler(
         return next(new ErrorResponse(`Some recipient IDs are invalid`, 400));
       }
 
+      // Save specific recipients to the communication document
+      communication.specificRecipients = existingUsers.map(
+        (user) => user._id as mongoose.Types.ObjectId
+      );
+      await communication.save();
+
       recipientUsers = existingUsers;
     }
 
@@ -684,277 +691,227 @@ export const sendCommunication = asyncHandler(
     communication.sentDate = new Date();
     await communication.save();
 
-    // Create recipient records if they don't exist
-    const existingRecipients = await CommunicationRecipient.find({
-      communicationId: communication._id,
-    });
-
-    let recipientUsers = [];
-    if (existingRecipients.length === 0) {
-      console.log(
-        `No existing recipients for communication ${communication._id}, creating new ones`
-      );
-
-      if (communication.recipientType === 'all') {
-        try {
-          recipientUsers = await User.find({ isActive: true }).select('_id');
-          console.log(
-            `Found ${recipientUsers.length} active users for 'all' recipient type`
-          );
-
-          // Safety check - if we don't have any users, something is wrong
-          if (recipientUsers.length === 0) {
-            // Get total user count to help with debugging
-            const totalUsers = await User.countDocuments();
-            console.log(
-              `Warning: Found 0 active users out of ${totalUsers} total users`
-            );
-          }
-        } catch (error) {
-          console.error('Error finding active users:', error);
-          recipientUsers = [];
-        }
-      } else if (communication.recipientType === 'admin') {
-        try {
-          recipientUsers = await User.find({
-            isActive: true,
-            role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
-          }).select('_id');
-          console.log(
-            `Found ${recipientUsers.length} admin users for 'admin' recipient type`
-          );
-
-          // Safety check - if we don't have any admin users, something might be wrong
-          if (recipientUsers.length === 0) {
-            // Get admin user count to help with debugging
-            const totalAdmins = await User.countDocuments({
-              role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
-            });
-            console.log(
-              `Warning: Found 0 active admin users out of ${totalAdmins} total admin users`
-            );
-          }
-        } catch (error) {
-          console.error('Error finding admin users:', error);
-          recipientUsers = [];
-        }
-      } else if (communication.recipientType === 'specific') {
-        // For specific recipients, check if we have IDs in the request body
-        if (req.body.recipientIds && Array.isArray(req.body.recipientIds)) {
-          // Handle specific recipients from request body
-          recipientUsers = await User.find({
-            _id: { $in: req.body.recipientIds },
-            isActive: true,
-          }).select('_id');
-          console.log(
-            `Found ${recipientUsers.length} specific users out of ${req.body.recipientIds.length} requested IDs from request body`
-          );
-        } else {
-          // If no recipient IDs in the request body, try to find them in existing CommunicationRecipient records
-          // This happens when sending a draft that was already created with recipients
-          console.log(
-            'No recipient IDs in request body, looking for existing recipients in communication'
-          );
-
-          const existingRecipientRecords = await CommunicationRecipient.find({
-            communicationId: communication._id,
-          });
-
-          if (existingRecipientRecords.length > 0) {
-            // Extract user IDs from existing recipient records - need to convert to strings for mongoose
-            const userIds = existingRecipientRecords.map((record) =>
-              record.userId.toString()
-            );
-            console.log('Found existing recipient user IDs:', userIds);
-
-            recipientUsers = await User.find({
-              _id: { $in: userIds },
-              isActive: true,
-            }).select('_id');
-            console.log(
-              `Found ${recipientUsers.length} specific users from existing recipient records`
-            );
-          } else {
-            // If we still don't have recipients, try to get them from the original communication creation
-            // Note: This is likely an empty array but we're checking just in case
-            console.log(
-              'No existing recipient records, checking for all active users as fallback'
-            );
-            recipientUsers = await User.find({ isActive: true }).select('_id');
-            console.log(
-              `Using ${recipientUsers.length} active users as fallback for specific recipient type`
-            );
-          }
-        }
-      } else {
-        console.log(
-          `No matching recipient type or missing recipient IDs for type: ${communication.recipientType}`
-        );
-      }
-
-      if (recipientUsers.length > 0) {
-        // Log recipient users before creating records
-        console.log(
-          'Creating recipient records for these users:',
-          recipientUsers.map((u) => u._id.toString())
-        );
-
-        const recipientRecords = recipientUsers.map((user) => ({
-          communicationId: communication._id,
-          userId: user._id,
-          readStatus: false,
-        }));
-
-        try {
-          const createdRecipients =
-            await CommunicationRecipient.insertMany(recipientRecords);
-          console.log(
-            `Successfully created ${createdRecipients.length} recipient records`
-          );
-        } catch (error) {
-          console.error('Error creating recipient records:', error);
-          // Continue even if there's an error, we don't want to fail the entire send operation
-        }
-      } else {
-        console.log('No recipients found to create records for');
-      }
-    } else {
-      console.log(
-        `Found ${existingRecipients.length} existing recipients for communication ${communication._id}`
-      );
-    }
-
-    // Create notifications for all recipients
     try {
+      // Get all recipients with populated user details
       const recipients = await CommunicationRecipient.find({
         communicationId: communication._id,
       }).populate('userId', 'firstName lastName email role');
 
-      console.log(
-        `Found ${recipients.length} recipients for communication ${communication._id}`
-      );
+      if (recipients.length === 0) {
+        // If no recipients exist, create them based on recipientType
+        let userQuery: any = { isActive: true };
+
+        if (communication.recipientType === 'all') {
+          userQuery = { isActive: true };
+        } else if (communication.recipientType === 'admin') {
+          userQuery = {
+            isActive: true,
+            role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
+          };
+        } else if (
+          communication.recipientType === 'specific' &&
+          communication.specificRecipients?.length
+        ) {
+          userQuery = {
+            isActive: true,
+            _id: { $in: communication.specificRecipients },
+          };
+        }
+
+        // Get users with all necessary fields
+        const recipientUsers = await User.find(userQuery).select(
+          '_id firstName lastName email role'
+        );
+
+        if (recipientUsers.length > 0) {
+          // Create recipient records
+          const recipientRecords = recipientUsers.map((user) => ({
+            communicationId: communication._id,
+            userId: user._id,
+            readStatus: false,
+          }));
+
+          await CommunicationRecipient.insertMany(recipientRecords);
+
+          // Refresh recipients list with populated user data
+          const refreshedRecipients = await CommunicationRecipient.find({
+            communicationId: communication._id,
+          }).populate('userId', 'firstName lastName email role');
+
+          recipients.push(...refreshedRecipients);
+        }
+      }
 
       if (recipients.length > 0) {
-        // Extract sender information
+        // Get sender info
         const senderInfo = communication.senderUserId
-          ? `${(communication.senderUserId as any).firstName || ''} ${
-              (communication.senderUserId as any).lastName || ''
-            }`.trim()
+          ? `${(communication.senderUserId as any).firstName || ''} ${(communication.senderUserId as any).lastName || ''}`.trim()
           : 'System';
 
-        console.log(`Sender information: ${senderInfo}`);
-
-        // Create notification objects for each recipient
-        const notifications = recipients.map((recipient) => {
-          const recipientUser = recipient.userId as any;
-          console.log(
-            `Creating notification for recipient: ${recipientUser._id} (${recipientUser.firstName} ${recipientUser.lastName})`
-          );
-
-          return {
-            userId: recipient.userId,
-            communicationId: communication._id,
-            type:
-              communication.messageType === 'announcement'
-                ? 'announcement'
-                : 'communication',
-            title: communication.subject,
-            message: communication.content.substring(0, 500), // Truncate if too long
-            priority: communication.priority || 'normal',
-            isRead: false,
-            isDisplayed: false,
-            data: {
-              senderName: senderInfo,
-              messageType: communication.messageType,
-              sentDate: communication.sentDate,
-            },
-            // Set expiration for 30 days from now
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          };
-        });
-
-        // Check for existing notifications to avoid duplicates
-        const existingNotifications = await UserNotification.find({
+        // Delete any existing notifications to avoid duplicates
+        await UserNotification.deleteMany({
           communicationId: communication._id,
         });
 
-        if (existingNotifications.length > 0) {
-          console.log(
-            `Found ${existingNotifications.length} existing notifications for this communication, skipping creation`
-          );
-        } else {
-          const createdNotifications =
-            await UserNotification.insertMany(notifications);
-          console.log(`Created ${createdNotifications.length} notifications`);
+        // Create notifications for each recipient
+        const notifications = recipients.map((recipient) => ({
+          userId: recipient.userId._id, // Correctly access the populated userId._id
+          communicationId: communication._id,
+          type:
+            communication.messageType === 'announcement'
+              ? 'announcement'
+              : 'communication',
+          title: communication.subject,
+          message: communication.content.substring(0, 500), // Truncate if too long
+          priority: communication.priority || 'normal',
+          isRead: false,
+          isDisplayed: false,
+          data: {
+            senderName: senderInfo,
+            messageType: communication.messageType,
+            sentDate: communication.sentDate,
+          },
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days expiry
+        }));
 
-          // Emit real-time notifications if socket service is available
-          if (global.socketService) {
-            console.log(
-              `Attempting to send notifications to ${recipients.length} recipients via socket`
+        // Create notifications in the database
+        const createdNotifications =
+          await UserNotification.insertMany(notifications);
+
+        // Send real-time notifications via socket
+        if (global.socketService) {
+          recipients.forEach((recipient) => {
+            const notification = createdNotifications.find(
+              (n) => n.userId.toString() === recipient.userId._id.toString()
             );
-            recipients.forEach((recipient) => {
-              const notification = createdNotifications.find(
-                (n) => n.userId.toString() === recipient.userId.toString()
+            if (notification) {
+              global.socketService.emitToUser(
+                recipient.userId._id.toString(),
+                'new_notification',
+                notification
               );
-              if (notification) {
-                console.log(
-                  `Emitting notification to user ${recipient.userId.toString()}`
-                );
-                global.socketService.emitToUser(
-                  recipient.userId.toString(),
-                  'new_notification',
-                  notification
-                );
-              } else {
-                console.log(
-                  `No notification found for user ${recipient.userId.toString()}`
-                );
-              }
-            });
-          } else {
-            console.log(
-              'Socket service not available for real-time notifications'
-            );
-          }
+            }
+          });
         }
+
+        // Return success response
+        res.status(200).json({
+          success: true,
+          message: 'Communication sent successfully',
+          data: {
+            communication,
+            recipientCount: recipients.length,
+            notificationCount: createdNotifications.length,
+          },
+        });
+      } else {
+        // No recipients found
+        res.status(200).json({
+          success: true,
+          message: 'Communication sent, but no recipients found',
+          data: {
+            communication,
+            recipientCount: 0,
+            notificationCount: 0,
+          },
+        });
       }
-    } catch (notificationError) {
-      console.error('Error creating notifications:', notificationError);
-      // Don't fail the communication sending if notification creation fails
+    } catch (error: any) {
+      console.error('Error sending communication:', error);
+      return next(
+        new ErrorResponse(`Error sending communication: ${error.message}`, 500)
+      );
+    }
+  }
+);
+
+// @desc    Update a communication
+// @route   PUT /api/communications/:id
+// @access  Private
+export const updateCommunication = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    let communication = await Communication.findById(req.params.id);
+
+    if (!communication) {
+      return next(
+        new ErrorResponse(
+          `Communication not found with id of ${req.params.id}`,
+          404
+        )
+      );
     }
 
-    // Get fresh communication data to ensure we return the most up-to-date status
-    const updatedCommunication = await Communication.findById(
-      communication._id
-    ).populate({
-      path: 'senderUserId',
-      select: 'firstName lastName email',
-    });
+    // Check if user is authorized to update
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
+      req.user.role
+    );
+    const isSender =
+      communication.senderUserId.toString() === req.user._id.toString();
 
-    console.log(
-      'Communication sent successfully, returning with status:',
-      updatedCommunication?.status
+    if (!isAdmin && !isSender) {
+      return next(
+        new ErrorResponse(
+          `User ${req.user._id} is not authorized to update this communication`,
+          403
+        )
+      );
+    }
+
+    // Check if communication can be updated (only in draft status)
+    if (communication.status !== 'draft') {
+      return next(
+        new ErrorResponse(
+          `Cannot update a communication that has been ${communication.status}`,
+          400
+        )
+      );
+    }
+
+    // Handle specific recipients update
+    if (
+      req.body.recipientType === 'specific' &&
+      req.body.recipientIds &&
+      Array.isArray(req.body.recipientIds)
+    ) {
+      // Validate all recipients exist
+      const existingUsers = await User.find({
+        _id: { $in: req.body.recipientIds },
+        isActive: true,
+      }).select('_id');
+
+      if (existingUsers.length !== req.body.recipientIds.length) {
+        return next(new ErrorResponse(`Some recipient IDs are invalid`, 400));
+      }
+
+      // Update specific recipients
+      req.body.specificRecipients = existingUsers.map(
+        (user) => user._id as mongoose.Types.ObjectId
+      );
+    }
+
+    // Update communication
+    communication = await Communication.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
     res.status(200).json({
       success: true,
-      data: updatedCommunication,
+      data: communication,
     });
   }
 );
 
-// @desc    Schedule a communication
+// @desc    Schedule a communication for later sending
 // @route   POST /api/communications/:id/schedule
-// @access  Private/Admin/Secretary
+// @access  Private
 export const scheduleCommunication = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { scheduledDate } = req.body;
-
-    if (!scheduledDate) {
-      return next(new ErrorResponse('Scheduled date is required', 400));
-    }
-
-    const communication = await Communication.findById(req.params.id);
+    let communication = await Communication.findById(req.params.id);
 
     if (!communication) {
       return next(
@@ -991,21 +948,77 @@ export const scheduleCommunication = asyncHandler(
       );
     }
 
+    // Validate scheduled date
+    const { scheduledDate } = req.body;
+    if (!scheduledDate) {
+      return next(new ErrorResponse('Scheduled date is required', 400));
+    }
+
+    const scheduledFor = new Date(scheduledDate);
+    if (scheduledFor <= new Date()) {
+      return next(
+        new ErrorResponse('Scheduled date must be in the future', 400)
+      );
+    }
+
     // Update communication status and scheduled date
     communication.status = 'scheduled' as any;
-    communication.scheduledFor = new Date(scheduledDate);
+    communication.scheduledFor = scheduledFor;
     await communication.save();
+
+    // Create recipients for scheduled communication (same logic as sending)
+    let recipients: any[] = [];
+
+    if (communication.recipientType === RecipientType.ALL) {
+      // Get all active users
+      const allUsers = await User.find({ isActive: true }).select('_id');
+      recipients = allUsers.map((user) => ({
+        communicationId: communication._id,
+        userId: user._id,
+      }));
+    } else if (communication.recipientType === RecipientType.ADMIN) {
+      // Get all admin users
+      const adminUsers = await User.find({
+        role: { $in: ['admin', 'superadmin', 'secretary'] },
+        isActive: true,
+      }).select('_id');
+      recipients = adminUsers.map((user) => ({
+        communicationId: communication._id,
+        userId: user._id,
+      }));
+    } else if (communication.recipientType === RecipientType.SPECIFIC) {
+      // Use specific recipients
+      if (
+        communication.specificRecipients &&
+        communication.specificRecipients.length > 0
+      ) {
+        recipients = communication.specificRecipients.map((userId) => ({
+          communicationId: communication._id,
+          userId: userId,
+        }));
+      }
+    }
+
+    // Clear existing recipients and create new ones for scheduled communication
+    await CommunicationRecipient.deleteMany({
+      communicationId: communication._id,
+    });
+
+    if (recipients.length > 0) {
+      await CommunicationRecipient.insertMany(recipients);
+    }
 
     res.status(200).json({
       success: true,
+      message: `Communication scheduled for ${scheduledFor.toISOString()}`,
       data: communication,
     });
   }
 );
 
-// @desc    Get communication recipients
+// @desc    Get recipients of a communication
 // @route   GET /api/communications/:id/recipients
-// @access  Private/Admin/Secretary
+// @access  Private
 export const getCommunicationRecipients = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const communication = await Communication.findById(req.params.id);
@@ -1029,147 +1042,46 @@ export const getCommunicationRecipients = asyncHandler(
     if (!isAdmin && !isSender) {
       return next(
         new ErrorResponse(
-          `User ${req.user._id} is not authorized to view recipients`,
+          `User ${req.user._id} is not authorized to view recipients for this communication`,
           403
         )
       );
     }
 
     // Get recipients with user details
-    console.log(`Finding recipients for communication: ${communication._id}`);
-
     const recipients = await CommunicationRecipient.find({
       communicationId: communication._id,
-    }).populate({
-      path: 'userId',
-      select: 'firstName lastName email phone',
-    });
+    })
+      .populate({
+        path: 'userId',
+        select: 'firstName lastName email role',
+      })
+      .sort({ createdAt: 1 });
 
-    console.log(
-      `Found ${recipients.length} recipients for communication: ${communication._id}`
-    );
+    // Get summary stats
+    const totalRecipients = recipients.length;
+    const readCount = recipients.filter((r) => r.readStatus === true).length;
 
-    // For each recipient, log more details to help with debugging
-    if (recipients.length > 0) {
-      console.log('Sample recipient data structure:', {
-        recipientId: recipients[0]._id,
-        userId: recipients[0].userId,
-        readStatus: recipients[0].readStatus,
-      });
-    }
-
-    // If no recipients found, log this unusual situation
-    if (recipients.length === 0) {
-      console.log(
-        'No recipients found for a communication that should have them. Communication details:',
-        {
-          id: communication._id,
+    res.status(200).json({
+      success: true,
+      data: {
+        communication: {
+          _id: communication._id,
           subject: communication.subject,
           recipientType: communication.recipientType,
           status: communication.status,
-        }
-      );
-
-      // Check if there are any recipients in the database at all (for debugging)
-      const totalRecipients = await CommunicationRecipient.countDocuments();
-      console.log(`Total recipient records in database: ${totalRecipients}`);
-    } else {
-      // Log the first few recipients for debugging
-      console.log('First recipient:', JSON.stringify(recipients[0], null, 2));
-    }
-
-    res.status(200).json({
-      success: true,
-      count: recipients.length,
-      data: recipients,
-    });
-  }
-);
-
-// @desc    Update communication
-// @route   PUT /api/communications/:id
-// @access  Private
-export const updateCommunication = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { id } = req.params;
-    const {
-      subject,
-      content,
-      messageType,
-      recipientIds,
-      recipientType,
-      scheduledDate,
-    } = req.body;
-
-    // Find the communication
-    const communication = await Communication.findById(id);
-
-    if (!communication) {
-      return next(
-        new ErrorResponse(`Communication not found with id ${id}`, 404)
-      );
-    }
-
-    // Check if user is authorized to update this communication
-    if (
-      communication.senderUserId.toString() !== req.user._id.toString() &&
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin'
-    ) {
-      return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to update this communication`,
-          403
-        )
-      );
-    }
-
-    // Check if communication is already sent
-    if (communication.status === 'sent') {
-      return next(
-        new ErrorResponse(
-          'Cannot update a communication that has already been sent',
-          400
-        )
-      );
-    }
-
-    // Update only provided fields
-    const updateFields: any = {};
-    if (subject !== undefined) updateFields.subject = subject;
-    if (content !== undefined) updateFields.content = content;
-    if (messageType !== undefined) updateFields.messageType = messageType;
-    if (recipientType !== undefined) updateFields.recipientType = recipientType;
-    if (scheduledDate !== undefined) updateFields.scheduledDate = scheduledDate;
-
-    // Update the communication
-    const updatedCommunication = await Communication.findByIdAndUpdate(
-      id,
-      updateFields,
-      { new: true, runValidators: true }
-    ).populate({
-      path: 'senderUserId',
-      select: 'firstName lastName email',
-    });
-
-    // If recipientIds are provided, update recipients
-    if (recipientIds && Array.isArray(recipientIds)) {
-      // Remove existing recipients
-      await CommunicationRecipient.deleteMany({ communicationId: id });
-
-      // Add new recipients
-      const recipients = recipientIds.map((recipientId: string) => ({
-        communicationId: id,
-        userId: recipientId,
-        readStatus: false,
-      }));
-
-      await CommunicationRecipient.insertMany(recipients);
-    }
-
-    res.status(200).json({
-      success: true,
-      data: updatedCommunication,
+          sentDate: communication.sentDate,
+          scheduledFor: communication.scheduledFor,
+        },
+        recipients,
+        stats: {
+          total: totalRecipients,
+          read: readCount,
+          unread: totalRecipients - readCount,
+          readRate:
+            totalRecipients > 0 ? (readCount / totalRecipients) * 100 : 0,
+        },
+      },
     });
   }
 );
