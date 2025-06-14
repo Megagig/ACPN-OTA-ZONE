@@ -76,9 +76,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!user) return;
 
     try {
+      console.log('Fetching unread notifications...');
       const response = await notificationService.getUnreadNotifications();
+      console.log('Unread notifications response:', response);
       setNotifications(response.data);
       setUnreadCount(response.unreadCount);
+      // Don't return response to match Promise<void> signature
     } catch (error) {
       console.error('Error fetching unread notifications:', error);
     }
@@ -194,6 +197,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     },
     [refreshStats]
   );
+
+  // Initial load of notifications when user is authenticated
+  useEffect(() => {
+    if (user) {
+      console.log('User authenticated, loading notifications');
+      fetchNotifications();
+      refreshStats();
+    } else {
+      // Clear notifications when user logs out
+      setNotifications([]);
+      setUnreadCount(0);
+      setStats(null);
+    }
+  }, [user, fetchNotifications, refreshStats]);
 
   // Initialize socket listeners when user is authenticated
   useEffect(() => {

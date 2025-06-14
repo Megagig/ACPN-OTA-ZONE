@@ -43,7 +43,7 @@ const transformBackendToFrontend = (backendComm: any): Communication => {
 const transformFrontendToBackend = (
   frontendComm: Partial<Communication>
 ): any => {
-  return {
+  const transformed: any = {
     subject: frontendComm.title,
     content: frontendComm.content,
     messageType: mapFrontendTypeToBackend(frontendComm.type),
@@ -52,6 +52,16 @@ const transformFrontendToBackend = (
     ),
     attachmentUrl: frontendComm.attachments?.[0], // Backend supports single attachment
   };
+
+  // If there are specific recipients, include them
+  if (
+    frontendComm.specificRecipients &&
+    frontendComm.specificRecipients.length > 0
+  ) {
+    transformed.recipientIds = frontendComm.specificRecipients;
+  }
+
+  return transformed;
 };
 
 // Type mapping functions

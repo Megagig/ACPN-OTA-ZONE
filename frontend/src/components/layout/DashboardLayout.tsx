@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../ui/ThemeToggle';
+import NotificationBell from '../ui/NotificationBell';
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -262,9 +263,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <i className={`fas fa-${sidebarOpen ? 'times' : 'bars'}`}></i>
           </button>
           <div className="flex items-center ml-auto space-x-4">
-            <button className="text-foreground/70 hover:text-primary">
-              <i className="fas fa-bell"></i>
-            </button>
+            <NotificationBell />
             <button className="text-foreground/70 hover:text-primary">
               <i className="fas fa-envelope"></i>
             </button>

@@ -689,16 +689,42 @@ export const sendCommunication = asyncHandler(
       communicationId: communication._id,
     });
 
+    let recipientUsers = [];
     if (existingRecipients.length === 0) {
-      let recipientUsers = [];
+      console.log(
+        `No existing recipients for communication ${communication._id}, creating new ones`
+      );
 
       if (communication.recipientType === 'all') {
         recipientUsers = await User.find({ isActive: true }).select('_id');
+        console.log(
+          `Found ${recipientUsers.length} active users for 'all' recipient type`
+        );
       } else if (communication.recipientType === 'admin') {
         recipientUsers = await User.find({
           isActive: true,
           role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
         }).select('_id');
+        console.log(
+          `Found ${recipientUsers.length} admin users for 'admin' recipient type`
+        );
+      } else if (
+        communication.recipientType === 'specific' &&
+        req.body.recipientIds &&
+        Array.isArray(req.body.recipientIds)
+      ) {
+        // Handle specific recipients
+        recipientUsers = await User.find({
+          _id: { $in: req.body.recipientIds },
+          isActive: true,
+        }).select('_id');
+        console.log(
+          `Found ${recipientUsers.length} specific users out of ${req.body.recipientIds.length} requested IDs`
+        );
+      } else {
+        console.log(
+          `No matching recipient type or missing recipient IDs for type: ${communication.recipientType}`
+        );
       }
 
       if (recipientUsers.length > 0) {
@@ -708,69 +734,110 @@ export const sendCommunication = asyncHandler(
           readStatus: false,
         }));
 
-        await CommunicationRecipient.insertMany(recipientRecords);
+        const createdRecipients =
+          await CommunicationRecipient.insertMany(recipientRecords);
+        console.log(`Created ${createdRecipients.length} recipient records`);
+      } else {
+        console.log('No recipients found to create records for');
       }
+    } else {
+      console.log(
+        `Found ${existingRecipients.length} existing recipients for communication ${communication._id}`
+      );
     }
 
     // Create notifications for all recipients
     try {
       const recipients = await CommunicationRecipient.find({
         communicationId: communication._id,
-      });
+      }).populate('userId', 'firstName lastName email role');
+
+      console.log(
+        `Found ${recipients.length} recipients for communication ${communication._id}`
+      );
 
       if (recipients.length > 0) {
-        const notifications = recipients.map((recipient) => ({
-          userId: recipient.userId,
+        // Extract sender information
+        const senderInfo = communication.senderUserId
+          ? `${(communication.senderUserId as any).firstName || ''} ${
+              (communication.senderUserId as any).lastName || ''
+            }`.trim()
+          : 'System';
+
+        console.log(`Sender information: ${senderInfo}`);
+
+        // Create notification objects for each recipient
+        const notifications = recipients.map((recipient) => {
+          const recipientUser = recipient.userId as any;
+          console.log(
+            `Creating notification for recipient: ${recipientUser._id} (${recipientUser.firstName} ${recipientUser.lastName})`
+          );
+
+          return {
+            userId: recipient.userId,
+            communicationId: communication._id,
+            type:
+              communication.messageType === 'announcement'
+                ? 'announcement'
+                : 'communication',
+            title: communication.subject,
+            message: communication.content.substring(0, 500), // Truncate if too long
+            priority: communication.priority || 'normal',
+            isRead: false,
+            isDisplayed: false,
+            data: {
+              senderName: senderInfo,
+              messageType: communication.messageType,
+              sentDate: communication.sentDate,
+            },
+            // Set expiration for 30 days from now
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          };
+        });
+
+        // Check for existing notifications to avoid duplicates
+        const existingNotifications = await UserNotification.find({
           communicationId: communication._id,
-          type:
-            communication.messageType === 'announcement'
-              ? 'announcement'
-              : 'communication',
-          title: communication.subject,
-          message: communication.content.substring(0, 500), // Truncate if too long
-          priority: communication.priority || 'normal',
-          data: {
-            senderName: communication.senderUserId
-              ? `${(communication.senderUserId as any).firstName} ${(communication.senderUserId as any).lastName}`
-              : 'System',
-            messageType: communication.messageType,
-            sentDate: communication.sentDate,
-          },
-          // Set expiration for 30 days from now
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        }));
+        });
 
-        const createdNotifications =
-          await UserNotification.insertMany(notifications);
-
-        // Emit real-time notifications if socket service is available
-        if (global.socketService) {
+        if (existingNotifications.length > 0) {
           console.log(
-            `Attempting to send notifications to ${recipients.length} recipients`
+            `Found ${existingNotifications.length} existing notifications for this communication, skipping creation`
           );
-          recipients.forEach((recipient) => {
-            const notification = createdNotifications.find(
-              (n) => n.userId.toString() === recipient.userId.toString()
-            );
-            if (notification) {
-              console.log(
-                `Emitting notification to user ${recipient.userId.toString()}`
-              );
-              global.socketService.emitToUser(
-                recipient.userId.toString(),
-                'new_notification',
-                notification
-              );
-            } else {
-              console.log(
-                `No notification found for user ${recipient.userId.toString()}`
-              );
-            }
-          });
         } else {
-          console.log(
-            'Socket service not available for real-time notifications'
-          );
+          const createdNotifications =
+            await UserNotification.insertMany(notifications);
+          console.log(`Created ${createdNotifications.length} notifications`);
+
+          // Emit real-time notifications if socket service is available
+          if (global.socketService) {
+            console.log(
+              `Attempting to send notifications to ${recipients.length} recipients via socket`
+            );
+            recipients.forEach((recipient) => {
+              const notification = createdNotifications.find(
+                (n) => n.userId.toString() === recipient.userId.toString()
+              );
+              if (notification) {
+                console.log(
+                  `Emitting notification to user ${recipient.userId.toString()}`
+                );
+                global.socketService.emitToUser(
+                  recipient.userId.toString(),
+                  'new_notification',
+                  notification
+                );
+              } else {
+                console.log(
+                  `No notification found for user ${recipient.userId.toString()}`
+                );
+              }
+            });
+          } else {
+            console.log(
+              'Socket service not available for real-time notifications'
+            );
+          }
         }
       }
     } catch (notificationError) {

@@ -21150,3 +21150,11 @@
 2025-06-14T12:00:09.053Z [debug]: Cache SET with TTL=120s (6ms): events:{"limit":"5","page":"1","status":"published"}
 2025-06-14T12:00:09.108Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
 2025-06-14T12:00:09.237Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T12:30:41.998Z [info]: Redis client connected
+2025-06-14T12:30:42.017Z [info]: Redis client ready and accepting commands
+2025-06-14T12:31:56.702Z [info]: Redis client connected
+2025-06-14T12:31:56.722Z [info]: Redis client ready and accepting commands
+2025-06-14T12:47:12.086Z [info]: Redis client connected
+2025-06-14T12:47:12.102Z [info]: Redis client ready and accepting commands
+2025-06-14T12:48:35.330Z [info]: Redis client connected
+2025-06-14T12:48:35.345Z [info]: Redis client ready and accepting commands

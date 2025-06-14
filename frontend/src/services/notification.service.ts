@@ -79,6 +79,7 @@ class NotificationService {
       const response = await api.get(`${this.baseURL}/unread`, {
         params: { limit },
       });
+      console.log('Unread notifications fetched:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching unread notifications:', error);
