@@ -36,6 +36,13 @@ api.interceptors.request.use(
 // Response interceptor for handling common errors
 api.interceptors.response.use(
   (response) => {
+    // Log API responses for debugging
+    if (response.config.url?.includes('/communications')) {
+      console.log(
+        `API Response [${response.config.method}] ${response.config.url}:`,
+        response.data
+      );
+    }
     return response;
   },
   async (error) => {

@@ -104,6 +104,13 @@ const mapFrontendRecipientTypeToBackend = (frontendType?: string): string => {
 };
 
 const mapBackendStatusToFrontend = (backendComm: any): string => {
+  console.log(
+    'Mapping status from backend comm:',
+    backendComm.status,
+    'sentDate:',
+    backendComm.sentDate
+  );
+
   // If status field exists and is not empty, use it directly
   if (backendComm.status && backendComm.status.trim() !== '') {
     return backendComm.status.toLowerCase();
@@ -132,7 +139,11 @@ export const getCommunications = async (
 export const getCommunicationById = async (
   id: string
 ): Promise<Communication> => {
-  const response = await api.get(`/communications/${id}`);
+  // Support for query parameters in ID (for cache-busting)
+  const cleanId = id.includes('?') ? id.split('?')[0] : id;
+  const queryParams = id.includes('?') ? id.substring(id.indexOf('?')) : '';
+
+  const response = await api.get(`/communications/${cleanId}${queryParams}`);
   return transformBackendToFrontend(response.data.data);
 };
 
@@ -163,8 +174,12 @@ export const deleteCommunication = async (id: string): Promise<void> => {
 
 // Send a draft communication
 export const sendCommunication = async (id: string): Promise<Communication> => {
+  console.log('Sending communication request for ID:', id);
   const response = await api.post(`/communications/${id}/send`);
-  return transformBackendToFrontend(response.data.data);
+  console.log('Send communication raw response:', response.data);
+  const transformed = transformBackendToFrontend(response.data.data);
+  console.log('Send communication transformed response:', transformed);
+  return transformed;
 };
 
 // Schedule a communication

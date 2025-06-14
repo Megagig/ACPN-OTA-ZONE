@@ -21158,3 +21158,128 @@
 2025-06-14T12:47:12.102Z [info]: Redis client ready and accepting commands
 2025-06-14T12:48:35.330Z [info]: Redis client connected
 2025-06-14T12:48:35.345Z [info]: Redis client ready and accepting commands
+2025-06-14T12:55:09.473Z [debug]: Cache MISS (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T12:55:09.491Z [debug]: Cache MISS (9ms): member-dashboard
+2025-06-14T12:55:09.503Z [debug]: Cache MISS (3ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T12:55:09.519Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-14T12:55:09.834Z [debug]: Cache SET with TTL=300s (5ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-14T12:55:10.035Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-14T12:55:10.162Z [debug]: Cache SET with TTL=180s (6ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T12:55:10.164Z [debug]: Cache SET with TTL=300s (5ms): member-dashboard
+2025-06-14T12:55:10.277Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T12:55:10.351Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T12:55:10.368Z [debug]: Cache HIT (4ms): member-dashboard
+2025-06-14T12:55:10.458Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T12:56:00.677Z [info]: Redis reconnecting... attempt 1. Next retry in 100ms
+2025-06-14T12:56:00.678Z [warn]: Redis client connection closed
+2025-06-14T12:56:00.678Z [warn]: Redis client reconnecting in 100ms
+2025-06-14T12:56:01.024Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:01.025Z [info]: Redis reconnecting... attempt 2. Next retry in 200ms
+2025-06-14T12:56:01.025Z [warn]: Redis client connection closed
+2025-06-14T12:56:01.185Z [warn]: Redis client reconnecting in 200ms
+2025-06-14T12:56:01.312Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:01.386Z [info]: Redis reconnecting... attempt 3. Next retry in 300ms
+2025-06-14T12:56:01.387Z [warn]: Redis client connection closed
+2025-06-14T12:56:01.387Z [warn]: Redis client reconnecting in 300ms
+2025-06-14T12:56:01.704Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:01.770Z [info]: Redis reconnecting... attempt 4. Next retry in 400ms
+2025-06-14T12:56:01.771Z [warn]: Redis client connection closed
+2025-06-14T12:56:01.771Z [warn]: Redis client reconnecting in 400ms
+2025-06-14T12:56:02.190Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:02.192Z [info]: Redis reconnecting... attempt 5. Next retry in 500ms
+2025-06-14T12:56:02.193Z [warn]: Redis client connection closed
+2025-06-14T12:56:02.206Z [warn]: Redis client reconnecting in 500ms
+2025-06-14T12:56:02.704Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:02.705Z [info]: Redis reconnecting... attempt 6. Next retry in 600ms
+2025-06-14T12:56:02.707Z [warn]: Redis client connection closed
+2025-06-14T12:56:02.722Z [warn]: Redis client reconnecting in 600ms
+2025-06-14T12:56:03.310Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:03.314Z [info]: Redis reconnecting... attempt 7. Next retry in 700ms
+2025-06-14T12:56:03.316Z [warn]: Redis client connection closed
+2025-06-14T12:56:03.316Z [warn]: Redis client reconnecting in 700ms
+2025-06-14T12:56:04.061Z [error]: Redis client error: Error: connect ECONNREFUSED 127.0.0.1:6379
+2025-06-14T12:56:04.087Z [info]: Redis reconnecting... attempt 8. Next retry in 800ms
+2025-06-14T12:56:04.103Z [warn]: Redis client connection closed
+2025-06-14T12:56:04.141Z [warn]: Redis client reconnecting in 800ms
+2025-06-14T15:01:34.663Z [info]: Redis client connected
+2025-06-14T15:01:34.668Z [info]: Redis client ready and accepting commands
+2025-06-14T15:05:22.961Z [debug]: Cache MISS (0ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:05:22.965Z [debug]: Cache MISS (1ms): events-stats
+2025-06-14T15:05:23.906Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:05:24.184Z [debug]: Cache SET with TTL=300s (4ms): events-stats
+2025-06-14T15:05:24.185Z [debug]: Cache HIT (4ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:05:24.352Z [debug]: Cache HIT (0ms): events-stats
+2025-06-14T15:06:35.475Z [debug]: Cache MISS (8ms): member-dashboard
+2025-06-14T15:06:35.476Z [debug]: Cache MISS (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T15:06:35.493Z [debug]: Cache MISS (6ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T15:06:35.614Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-14T15:06:35.934Z [debug]: Cache SET with TTL=300s (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-14T15:06:36.100Z [debug]: Cache HIT (4ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-14T15:06:36.190Z [debug]: Cache SET with TTL=300s (2ms): member-dashboard
+2025-06-14T15:06:36.205Z [debug]: Cache SET with TTL=180s (6ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T15:06:36.400Z [debug]: Cache HIT (1ms): member-dashboard
+2025-06-14T15:06:36.401Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-14T15:06:42.881Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T15:06:43.133Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-14T15:11:41.772Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:11:41.772Z [debug]: Cache MISS (0ms): events-stats
+2025-06-14T15:11:42.813Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:11:42.972Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:11:42.994Z [debug]: Cache SET with TTL=300s (1ms): events-stats
+2025-06-14T15:11:43.188Z [debug]: Cache HIT (0ms): events-stats
+2025-06-14T15:11:56.121Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:11:56.277Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-14T15:12:06.009Z [debug]: Cache MISS (1ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:12:09.421Z [debug]: Cache SET with TTL=180s (1ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:12:09.615Z [debug]: Cache HIT (1ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:12:09.629Z [debug]: Cache MISS (0ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"10","page":"1"}
+2025-06-14T15:12:10.505Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"10","page":"1"}
+2025-06-14T15:12:10.709Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"10","page":"1"}
+2025-06-14T15:13:42.532Z [debug]: Cache HIT (1ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:13:42.695Z [debug]: Cache HIT (2ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:13:42.845Z [debug]: Cache MISS (1ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-14T15:13:43.320Z [debug]: Cache SET with TTL=600s (0ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-14T15:13:43.595Z [debug]: Cache HIT (9ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-14T15:13:43.597Z [debug]: Cache MISS (6ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:13:44.241Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:13:44.411Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:14:19.335Z [debug]: Cache HIT (11ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:14:19.540Z [debug]: Cache HIT (8ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:14:19.542Z [debug]: Cache HIT (2ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:14:19.813Z [debug]: Cache HIT (2ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:15:03.582Z [debug]: Cache HIT (1ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:15:03.754Z [debug]: Cache HIT (2ms): events:683af7e202848fd0da9ff976
+2025-06-14T15:15:03.800Z [debug]: Cache MISS (2ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:15:04.457Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:15:04.711Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:17.252Z [info]: Redis client connected
+2025-06-14T15:16:17.257Z [info]: Redis client ready and accepting commands
+2025-06-14T15:16:33.739Z [debug]: Cache MISS (4ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:42.416Z [debug]: Cache SET with TTL=60s (6ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:43.998Z [debug]: Cache HIT (0ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:44.106Z [debug]: Cache HIT (0ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:44.137Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:44.353Z [debug]: Cache HIT (4ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:44.574Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:44.846Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:45.034Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:45.214Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:16:45.378Z [debug]: Cache HIT (1ms): event-registrations:683af7e202848fd0da9ff976:{"limit":"20","page":"1"}
+2025-06-14T15:18:27.933Z [info]: Redis client connected
+2025-06-14T15:18:27.938Z [info]: Redis client ready and accepting commands
+2025-06-14T15:22:08.668Z [info]: Redis client connected
+2025-06-14T15:22:08.673Z [info]: Redis client ready and accepting commands
+2025-06-14T15:27:05.859Z [info]: Redis client connected
+2025-06-14T15:27:05.864Z [info]: Redis client ready and accepting commands
+2025-06-14T15:29:03.092Z [info]: Redis client connected
+2025-06-14T15:29:03.098Z [info]: Redis client ready and accepting commands
+2025-06-14T15:29:28.427Z [info]: Redis client connected
+2025-06-14T15:29:28.433Z [info]: Redis client ready and accepting commands
+2025-06-14T15:29:53.093Z [info]: Redis client connected
+2025-06-14T15:29:53.111Z [info]: Redis client ready and accepting commands
+2025-06-14T15:30:27.780Z [info]: Redis client connected
+2025-06-14T15:30:27.786Z [info]: Redis client ready and accepting commands
+2025-06-14T15:35:21.935Z [info]: Redis client connected
+2025-06-14T15:35:21.940Z [info]: Redis client ready and accepting commands
+2025-06-14T15:36:03.687Z [info]: Redis client connected
+2025-06-14T15:36:03.692Z [info]: Redis client ready and accepting commands

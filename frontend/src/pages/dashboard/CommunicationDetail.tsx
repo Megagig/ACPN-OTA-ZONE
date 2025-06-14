@@ -36,25 +36,65 @@ const CommunicationDetail = () => {
   const fetchCommunicationDetails = async (commId: string) => {
     setIsLoading(true);
     try {
-      // Fetch communication
-      const commData = await communicationService.getCommunicationById(commId);
+      console.log('Fetching communication details for ID:', commId);
+
+      // Fetch communication with cache-busting query param to ensure fresh data
+      const timestamp = new Date().getTime();
+      const commData = await communicationService.getCommunicationById(
+        `${commId}?_t=${timestamp}`
+      );
+      console.log('Fetched communication data:', commData);
       setCommunication(commData);
 
       // Fetch recipients
+      console.log('Fetching recipients for communication ID:', commId);
       const recipientsData =
         await communicationService.getCommunicationRecipients(commId);
-      setRecipients(recipientsData);
+      console.log('Received recipient data:', recipientsData);
+
+      // Transform recipient data to match expected structure
+      const transformedRecipients = recipientsData.map((recipient: any) => {
+        // Backend sends 'userId' but our frontend type expects 'user'
+        const userData = recipient.userId || recipient.user;
+        return {
+          _id: recipient._id,
+          communication:
+            recipient.communicationId || recipient.communication || '',
+          user: userData?._id?.toString() || userData?.toString() || '',
+          userName:
+            userData && typeof userData !== 'string'
+              ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
+              : 'Unknown User',
+          email:
+            userData && typeof userData !== 'string'
+              ? userData.email
+              : undefined,
+          phone:
+            userData && typeof userData !== 'string'
+              ? userData.phone
+              : undefined,
+          deliveryStatus: recipient.deliveryStatus || 'delivered', // Default to delivered if not provided
+          readStatus: recipient.readStatus || false,
+          readAt: recipient.readTime || recipient.readAt,
+          deliveredAt: recipient.deliveredAt || undefined,
+          createdAt: recipient.createdAt || undefined,
+          updatedAt: recipient.updatedAt || undefined,
+        };
+      }) as CommunicationRecipient[];
+
+      console.log('Transformed recipients:', transformedRecipients);
+      setRecipients(transformedRecipients);
 
       // Calculate stats
-      const total = recipientsData.length;
-      const delivered = recipientsData.filter(
+      const total = transformedRecipients.length;
+      const delivered = transformedRecipients.filter(
         (r) => r.deliveryStatus === 'delivered'
       ).length;
-      const read = recipientsData.filter((r) => r.readStatus).length;
-      const failed = recipientsData.filter(
+      const read = transformedRecipients.filter((r) => r.readStatus).length;
+      const failed = transformedRecipients.filter(
         (r) => r.deliveryStatus === 'failed'
       ).length;
-      const pending = recipientsData.filter(
+      const pending = transformedRecipients.filter(
         (r) => r.deliveryStatus === 'pending'
       ).length;
 
@@ -148,8 +188,13 @@ const CommunicationDetail = () => {
   const performSend = async () => {
     setIsSending(true);
     try {
+      console.log('Sending communication with id:', id);
       const updatedComm = await communicationService.sendCommunication(id!);
-      setCommunication(updatedComm);
+      console.log('Response from send communication:', updatedComm);
+
+      // Force refresh the communication details
+      await fetchCommunicationDetails(id!);
+
       toast.success('Communication sent successfully!');
     } catch (error) {
       console.error('Error sending communication:', error);

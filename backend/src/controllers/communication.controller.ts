@@ -696,31 +696,96 @@ export const sendCommunication = asyncHandler(
       );
 
       if (communication.recipientType === 'all') {
-        recipientUsers = await User.find({ isActive: true }).select('_id');
-        console.log(
-          `Found ${recipientUsers.length} active users for 'all' recipient type`
-        );
+        try {
+          recipientUsers = await User.find({ isActive: true }).select('_id');
+          console.log(
+            `Found ${recipientUsers.length} active users for 'all' recipient type`
+          );
+
+          // Safety check - if we don't have any users, something is wrong
+          if (recipientUsers.length === 0) {
+            // Get total user count to help with debugging
+            const totalUsers = await User.countDocuments();
+            console.log(
+              `Warning: Found 0 active users out of ${totalUsers} total users`
+            );
+          }
+        } catch (error) {
+          console.error('Error finding active users:', error);
+          recipientUsers = [];
+        }
       } else if (communication.recipientType === 'admin') {
-        recipientUsers = await User.find({
-          isActive: true,
-          role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
-        }).select('_id');
-        console.log(
-          `Found ${recipientUsers.length} admin users for 'admin' recipient type`
-        );
-      } else if (
-        communication.recipientType === 'specific' &&
-        req.body.recipientIds &&
-        Array.isArray(req.body.recipientIds)
-      ) {
-        // Handle specific recipients
-        recipientUsers = await User.find({
-          _id: { $in: req.body.recipientIds },
-          isActive: true,
-        }).select('_id');
-        console.log(
-          `Found ${recipientUsers.length} specific users out of ${req.body.recipientIds.length} requested IDs`
-        );
+        try {
+          recipientUsers = await User.find({
+            isActive: true,
+            role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
+          }).select('_id');
+          console.log(
+            `Found ${recipientUsers.length} admin users for 'admin' recipient type`
+          );
+
+          // Safety check - if we don't have any admin users, something might be wrong
+          if (recipientUsers.length === 0) {
+            // Get admin user count to help with debugging
+            const totalAdmins = await User.countDocuments({
+              role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
+            });
+            console.log(
+              `Warning: Found 0 active admin users out of ${totalAdmins} total admin users`
+            );
+          }
+        } catch (error) {
+          console.error('Error finding admin users:', error);
+          recipientUsers = [];
+        }
+      } else if (communication.recipientType === 'specific') {
+        // For specific recipients, check if we have IDs in the request body
+        if (req.body.recipientIds && Array.isArray(req.body.recipientIds)) {
+          // Handle specific recipients from request body
+          recipientUsers = await User.find({
+            _id: { $in: req.body.recipientIds },
+            isActive: true,
+          }).select('_id');
+          console.log(
+            `Found ${recipientUsers.length} specific users out of ${req.body.recipientIds.length} requested IDs from request body`
+          );
+        } else {
+          // If no recipient IDs in the request body, try to find them in existing CommunicationRecipient records
+          // This happens when sending a draft that was already created with recipients
+          console.log(
+            'No recipient IDs in request body, looking for existing recipients in communication'
+          );
+
+          const existingRecipientRecords = await CommunicationRecipient.find({
+            communicationId: communication._id,
+          });
+
+          if (existingRecipientRecords.length > 0) {
+            // Extract user IDs from existing recipient records - need to convert to strings for mongoose
+            const userIds = existingRecipientRecords.map((record) =>
+              record.userId.toString()
+            );
+            console.log('Found existing recipient user IDs:', userIds);
+
+            recipientUsers = await User.find({
+              _id: { $in: userIds },
+              isActive: true,
+            }).select('_id');
+            console.log(
+              `Found ${recipientUsers.length} specific users from existing recipient records`
+            );
+          } else {
+            // If we still don't have recipients, try to get them from the original communication creation
+            // Note: This is likely an empty array but we're checking just in case
+            console.log(
+              'No existing recipient records, checking for all active users as fallback'
+            );
+            recipientUsers = await User.find({ isActive: true }).select('_id');
+            console.log(
+              `Using ${recipientUsers.length} active users as fallback for specific recipient type`
+            );
+          }
+        }
       } else {
         console.log(
           `No matching recipient type or missing recipient IDs for type: ${communication.recipientType}`
@@ -728,15 +793,28 @@ export const sendCommunication = asyncHandler(
       }
 
       if (recipientUsers.length > 0) {
+        // Log recipient users before creating records
+        console.log(
+          'Creating recipient records for these users:',
+          recipientUsers.map((u) => u._id.toString())
+        );
+
         const recipientRecords = recipientUsers.map((user) => ({
           communicationId: communication._id,
           userId: user._id,
           readStatus: false,
         }));
 
-        const createdRecipients =
-          await CommunicationRecipient.insertMany(recipientRecords);
-        console.log(`Created ${createdRecipients.length} recipient records`);
+        try {
+          const createdRecipients =
+            await CommunicationRecipient.insertMany(recipientRecords);
+          console.log(
+            `Successfully created ${createdRecipients.length} recipient records`
+          );
+        } catch (error) {
+          console.error('Error creating recipient records:', error);
+          // Continue even if there's an error, we don't want to fail the entire send operation
+        }
       } else {
         console.log('No recipients found to create records for');
       }
@@ -845,9 +923,22 @@ export const sendCommunication = asyncHandler(
       // Don't fail the communication sending if notification creation fails
     }
 
+    // Get fresh communication data to ensure we return the most up-to-date status
+    const updatedCommunication = await Communication.findById(
+      communication._id
+    ).populate({
+      path: 'senderUserId',
+      select: 'firstName lastName email',
+    });
+
+    console.log(
+      'Communication sent successfully, returning with status:',
+      updatedCommunication?.status
+    );
+
     res.status(200).json({
       success: true,
-      data: communication,
+      data: updatedCommunication,
     });
   }
 );
@@ -945,12 +1036,47 @@ export const getCommunicationRecipients = asyncHandler(
     }
 
     // Get recipients with user details
+    console.log(`Finding recipients for communication: ${communication._id}`);
+
     const recipients = await CommunicationRecipient.find({
       communicationId: communication._id,
     }).populate({
       path: 'userId',
       select: 'firstName lastName email phone',
     });
+
+    console.log(
+      `Found ${recipients.length} recipients for communication: ${communication._id}`
+    );
+
+    // For each recipient, log more details to help with debugging
+    if (recipients.length > 0) {
+      console.log('Sample recipient data structure:', {
+        recipientId: recipients[0]._id,
+        userId: recipients[0].userId,
+        readStatus: recipients[0].readStatus,
+      });
+    }
+
+    // If no recipients found, log this unusual situation
+    if (recipients.length === 0) {
+      console.log(
+        'No recipients found for a communication that should have them. Communication details:',
+        {
+          id: communication._id,
+          subject: communication.subject,
+          recipientType: communication.recipientType,
+          status: communication.status,
+        }
+      );
+
+      // Check if there are any recipients in the database at all (for debugging)
+      const totalRecipients = await CommunicationRecipient.countDocuments();
+      console.log(`Total recipient records in database: ${totalRecipients}`);
+    } else {
+      // Log the first few recipients for debugging
+      console.log('First recipient:', JSON.stringify(recipients[0], null, 2));
+    }
 
     res.status(200).json({
       success: true,
