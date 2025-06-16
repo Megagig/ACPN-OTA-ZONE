@@ -492,6 +492,15 @@ const PharmacyDues: React.FC = () => {
     }).format(amount);
   };
 
+  // Filter dues: show non-recurring, or recurring if dueDate <= today
+  const today = new Date();
+  const filteredDues = dues.filter((due) => {
+    if (!due.isRecurring) return true;
+    const dueDate = new Date(due.dueDate);
+    // Show if dueDate is today or in the past
+    return dueDate <= today;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -720,7 +729,7 @@ const PharmacyDues: React.FC = () => {
       {/* Dues Table */}
       <div className="mt-8 bg-card shadow rounded-lg p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4">Dues</h2>
-        {dues.length > 0 ? (
+        {filteredDues.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
@@ -746,7 +755,7 @@ const PharmacyDues: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {dues.map((due) => (
+                {filteredDues.map((due) => (
                   <tr key={due._id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {due.title}
