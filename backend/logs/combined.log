@@ -22908,3 +22908,331 @@
 2025-06-16T13:41:06.528Z [debug]: Cache SET with TTL=300s (3ms): pharmacy-user:6833569d29263eb70fd8ab90
 2025-06-16T13:41:06.862Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","paymentStatus":"pending","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
 2025-06-16T13:41:07.597Z [debug]: Cache SET with TTL=300s (7ms): dues-all:{"limit":"10","page":"1","paymentStatus":"pending","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T13:44:41.595Z [debug]: Cache MISS (3ms): dues-analytics
+2025-06-16T13:44:41.596Z [debug]: Cache MISS (3ms): payments-pending
+2025-06-16T13:44:41.596Z [debug]: Cache MISS (1ms): payments-admin:{"status":"all"}
+2025-06-16T13:44:41.943Z [debug]: Cache SET with TTL=600s (4ms): dues-analytics
+2025-06-16T13:44:41.945Z [debug]: Cache SET with TTL=60s (1ms): payments-pending
+2025-06-16T13:44:42.097Z [debug]: Cache HIT (1ms): dues-analytics
+2025-06-16T13:44:42.115Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-16T13:44:42.257Z [debug]: Cache SET with TTL=180s (1ms): payments-admin:{"status":"all"}
+2025-06-16T13:44:42.471Z [debug]: Cache HIT (0ms): payments-admin:{"status":"all"}
+2025-06-16T13:44:59.561Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T13:44:59.836Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T13:45:11.879Z [debug]: Cache HIT (2ms): dues-analytics
+2025-06-16T13:45:11.879Z [debug]: Cache HIT (1ms): payments-admin:{"status":"all"}
+2025-06-16T13:45:11.887Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-16T13:45:12.093Z [debug]: Cache HIT (14ms): payments-admin:{"status":"all"}
+2025-06-16T13:45:12.095Z [debug]: Cache HIT (6ms): payments-pending
+2025-06-16T13:45:12.098Z [debug]: Cache HIT (6ms): dues-analytics
+2025-06-16T13:52:18.388Z [debug]: Cache MISS (12ms): events:{"limit":"20","page":"1"}
+2025-06-16T13:52:18.389Z [debug]: Cache MISS (2ms): events-stats
+2025-06-16T13:52:19.660Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T13:52:19.820Z [debug]: Cache SET with TTL=300s (2ms): events-stats
+2025-06-16T13:52:19.844Z [debug]: Cache HIT (5ms): events:{"limit":"20","page":"1"}
+2025-06-16T13:52:20.048Z [debug]: Cache HIT (1ms): events-stats
+2025-06-16T13:52:31.623Z [debug]: Cache MISS (4ms): due-types-all
+2025-06-16T13:52:32.030Z [debug]: Cache SET with TTL=1800s (2ms): due-types-all
+2025-06-16T13:52:32.397Z [debug]: Cache HIT (4ms): due-types-all
+2025-06-16T13:53:26.764Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T13:53:27.031Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T13:53:37.670Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T13:53:37.979Z [debug]: Cache HIT (3ms): due-types-all
+2025-06-16T13:55:27.148Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T13:55:27.445Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T13:57:19.371Z [debug]: Cache HIT (3ms): due-types-all
+2025-06-16T13:57:19.682Z [debug]: Cache HIT (5ms): due-types-all
+2025-06-16T14:00:32.570Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T14:01:29.903Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T14:01:30.345Z [debug]: Cache HIT (8ms): due-types-all
+2025-06-16T14:02:00.560Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T14:03:51.979Z [debug]: Cache HIT (4ms): due-types-all
+2025-06-16T14:03:52.142Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T14:04:38.791Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:04:39.083Z [debug]: Cache HIT (3ms): due-types-all
+2025-06-16T14:08:14.625Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T14:08:43.585Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:08:52.812Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:08:52.990Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:09:11.829Z [debug]: Cache HIT (5ms): due-types-all
+2025-06-16T14:09:12.004Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T14:28:36.296Z [debug]: Cache MISS (1ms): due-types-all
+2025-06-16T14:28:36.891Z [debug]: Cache SET with TTL=1800s (0ms): due-types-all
+2025-06-16T14:28:37.413Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:29:14.997Z [debug]: Cache MISS (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T14:29:15.402Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T14:29:15.598Z [debug]: Cache HIT (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T14:29:15.638Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T14:29:16.432Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T14:29:16.630Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T14:29:37.462Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:29:37.944Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T14:31:37.622Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:31:37.623Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:31:38.941Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:34:10.419Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"3","search":""}
+2025-06-16T14:34:11.244Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"3","search":""}
+2025-06-16T14:34:38.074Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"3","search":""}
+2025-06-16T14:34:45.996Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"3","search":""}
+2025-06-16T14:35:02.508Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:35:02.512Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:35:02.703Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:35:02.704Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:35:15.220Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:38:55.558Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T14:38:55.558Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:38:56.607Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:39:04.429Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T14:39:04.434Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:39:36.140Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:42:33.558Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:42:44.568Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:42:56.417Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:42:56.418Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:42:56.585Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:42:56.595Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:43:51.438Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T14:43:51.439Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:44:47.684Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:44:49.662Z [debug]: Cache SET with TTL=300s (3ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:44:55.536Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:45:15.443Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:45:38.505Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:45:43.044Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:45:49.036Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:46:17.332Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:46:43.171Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:46:54.425Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T14:46:54.425Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T14:52:25.744Z [info]: Redis client connected
+2025-06-16T14:52:25.791Z [info]: Redis client ready and accepting commands
+2025-06-16T14:52:50.548Z [info]: Redis client connected
+2025-06-16T14:52:50.573Z [info]: Redis client ready and accepting commands
+2025-06-16T14:53:43.236Z [info]: Redis client connected
+2025-06-16T14:53:43.243Z [info]: Redis client ready and accepting commands
+2025-06-16T15:04:50.110Z [info]: Redis client connected
+2025-06-16T15:04:50.116Z [info]: Redis client ready and accepting commands
+2025-06-16T15:04:59.675Z [debug]: Cache MISS (3ms): due-types-all
+2025-06-16T15:04:59.678Z [debug]: Cache MISS (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:00.024Z [debug]: Cache SET with TTL=1800s (2ms): due-types-all
+2025-06-16T15:05:00.201Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T15:05:00.348Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:00.504Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:02.975Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:05:03.338Z [debug]: Cache SET with TTL=300s (5ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:05:03.527Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:05:03.534Z [debug]: Cache HIT (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:05:04.211Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:05:04.398Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:05:26.896Z [debug]: Cache DEL (6ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:26.898Z [debug]: Cache DEL by pattern (7ms): dues:*, No keys matched
+2025-06-16T15:05:27.089Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:30.174Z [debug]: Cache DEL (3ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:30.175Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:05:30.378Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:34.746Z [debug]: Cache DEL (1ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:34.747Z [debug]: Cache DEL by pattern (2ms): dues:*, No keys matched
+2025-06-16T15:05:34.931Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:37.418Z [debug]: Cache DEL (1ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:37.420Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T15:05:37.598Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:42.174Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:42.175Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:05:42.369Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:45.439Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:45.442Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:05:45.621Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:52.023Z [debug]: Cache DEL (1ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:52.024Z [debug]: Cache DEL by pattern (2ms): dues:*, No keys matched
+2025-06-16T15:05:52.207Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:55.295Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:55.297Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:05:55.484Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:05:59.349Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:05:59.351Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T15:05:59.550Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:03.871Z [debug]: Cache DEL (3ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:06:03.873Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:06:04.072Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:21.054Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:06:21.055Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T15:06:21.255Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:24.224Z [debug]: Cache DEL (1ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:06:24.225Z [debug]: Cache DEL by pattern (2ms): dues:*, No keys matched
+2025-06-16T15:06:24.413Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:28.481Z [debug]: Cache DEL (4ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:06:28.484Z [debug]: Cache DEL by pattern (7ms): dues:*, No keys matched
+2025-06-16T15:06:28.712Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:31.198Z [debug]: Cache DEL (1ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:06:31.199Z [debug]: Cache DEL by pattern (2ms): dues:*, No keys matched
+2025-06-16T15:06:31.389Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:42.571Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:42.572Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T15:06:42.810Z [debug]: Cache HIT (7ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:06:42.812Z [debug]: Cache HIT (2ms): due-types-all
+2025-06-16T15:07:13.236Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:07:13.237Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T15:07:13.409Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:07:24.740Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"2","search":""}
+2025-06-16T15:07:25.423Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"2","search":""}
+2025-06-16T15:07:47.899Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:15.027Z [debug]: Cache DEL (3ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:08:15.030Z [debug]: Cache DEL by pattern (5ms): dues:*, No keys matched
+2025-06-16T15:08:15.242Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:19.424Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e268, Keys removed: 0
+2025-06-16T15:08:19.426Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:08:19.613Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:23.089Z [debug]: Cache DEL (1ms): dues:683494d93b5bd66e0c88e267, Keys removed: 0
+2025-06-16T15:08:23.089Z [debug]: Cache DEL by pattern (1ms): dues:*, No keys matched
+2025-06-16T15:08:23.266Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:26.419Z [debug]: Cache DEL (2ms): dues:6834dea64c873405321f3955, Keys removed: 0
+2025-06-16T15:08:26.422Z [debug]: Cache DEL by pattern (5ms): dues:*, No keys matched
+2025-06-16T15:08:26.633Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:29.019Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e266, Keys removed: 0
+2025-06-16T15:08:29.020Z [debug]: Cache DEL by pattern (2ms): dues:*, No keys matched
+2025-06-16T15:08:29.208Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:31.257Z [debug]: Cache DEL (3ms): dues:6834dea64c873405321f3954, Keys removed: 0
+2025-06-16T15:08:31.259Z [debug]: Cache DEL by pattern (5ms): dues:*, No keys matched
+2025-06-16T15:08:31.451Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:33.415Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e265, Keys removed: 0
+2025-06-16T15:08:33.416Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T15:08:33.610Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:35.849Z [debug]: Cache DEL (1ms): dues:6834dea64c873405321f3953, Keys removed: 0
+2025-06-16T15:08:35.851Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T15:08:36.065Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:38.175Z [debug]: Cache DEL (2ms): dues:683494d93b5bd66e0c88e265, Keys removed: 0
+2025-06-16T15:08:38.177Z [debug]: Cache DEL by pattern (4ms): dues:*, No keys matched
+2025-06-16T15:08:38.363Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:45.329Z [debug]: Cache HIT (3ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:45.344Z [debug]: Cache HIT (8ms): due-types-all
+2025-06-16T15:08:45.523Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:08:45.535Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T15:08:56.654Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"o"}
+2025-06-16T15:08:57.316Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":"o"}
+2025-06-16T15:08:57.906Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"ov"}
+2025-06-16T15:08:58.547Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":"ov"}
+2025-06-16T15:08:58.910Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"ove"}
+2025-06-16T15:08:59.135Z [debug]: Cache MISS (4ms): dues-all:{"limit":"10","page":"1","search":"over"}
+2025-06-16T15:08:59.547Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":"ove"}
+2025-06-16T15:08:59.785Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":"over"}
+2025-06-16T15:09:01.829Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overc"}
+2025-06-16T15:09:02.046Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overco"}
+2025-06-16T15:09:02.274Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"overcom"}
+2025-06-16T15:09:02.468Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overcome"}
+2025-06-16T15:09:02.488Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","search":"overc"}
+2025-06-16T15:09:02.663Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","search":"overco"}
+2025-06-16T15:09:02.692Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer"}
+2025-06-16T15:09:02.912Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","search":"overcom"}
+2025-06-16T15:09:03.333Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer"}
+2025-06-16T15:09:03.486Z [debug]: Cache SET with TTL=300s (0ms): dues-all:{"limit":"10","page":"1","search":"overcome"}
+2025-06-16T15:09:09.659Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer "}
+2025-06-16T15:09:10.286Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","search":"overcomer "}
+2025-06-16T15:09:10.667Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer p"}
+2025-06-16T15:09:10.968Z [debug]: Cache MISS (2ms): dues-all:{"limit":"10","page":"1","search":"overcomer ph"}
+2025-06-16T15:09:11.106Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer pha"}
+2025-06-16T15:09:11.283Z [debug]: Cache SET with TTL=300s (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer p"}
+2025-06-16T15:09:11.353Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer phar"}
+2025-06-16T15:09:11.510Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharm"}
+2025-06-16T15:09:11.594Z [debug]: Cache SET with TTL=300s (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer ph"}
+2025-06-16T15:09:11.701Z [debug]: Cache MISS (2ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharma"}
+2025-06-16T15:09:11.885Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharmac"}
+2025-06-16T15:09:12.013Z [debug]: Cache SET with TTL=300s (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer phar"}
+2025-06-16T15:09:12.139Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharmacy"}
+2025-06-16T15:09:12.170Z [debug]: Cache SET with TTL=300s (8ms): dues-all:{"limit":"10","page":"1","search":"overcomer pha"}
+2025-06-16T15:09:12.172Z [debug]: Cache SET with TTL=300s (5ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharm"}
+2025-06-16T15:09:12.375Z [debug]: Cache SET with TTL=300s (9ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharma"}
+2025-06-16T15:09:12.534Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharmac"}
+2025-06-16T15:09:12.801Z [debug]: Cache SET with TTL=300s (6ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharmacy"}
+2025-06-16T15:13:42.052Z [info]: Redis client connected
+2025-06-16T15:13:42.059Z [info]: Redis client ready and accepting commands
+2025-06-16T15:14:44.865Z [debug]: Cache DEL by pattern (23ms): dues:*, No keys matched
+2025-06-16T15:14:45.050Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharmacy"}
+2025-06-16T15:14:45.743Z [debug]: Cache SET with TTL=300s (5ms): dues-all:{"limit":"10","page":"1","search":"overcomer pharmacy"}
+2025-06-16T15:15:28.143Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:15:28.485Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:15:28.659Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:15:28.666Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:15:29.332Z [debug]: Cache SET with TTL=300s (4ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:15:29.535Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:16:22.260Z [debug]: Cache MISS (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:16:22.272Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T15:16:22.702Z [debug]: Cache HIT (0ms): due-types-all
+2025-06-16T15:16:23.533Z [debug]: Cache SET with TTL=300s (6ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:16:23.727Z [debug]: Cache HIT (0ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:21:41.432Z [info]: Redis client connected
+2025-06-16T15:21:41.439Z [info]: Redis client ready and accepting commands
+2025-06-16T15:24:13.198Z [debug]: Cache MISS (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:24:13.576Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:24:13.754Z [debug]: Cache HIT (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:24:13.755Z [debug]: Cache MISS (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:24:14.501Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:24:14.681Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:25:54.063Z [debug]: Cache DEL by pattern (5ms): dues:*, No keys matched
+2025-06-16T15:25:54.270Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:25:54.922Z [debug]: Cache SET with TTL=300s (1ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:26:10.177Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:26:10.339Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:26:10.354Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:26:10.539Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:26:30.244Z [debug]: Cache MISS (3ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T15:26:30.245Z [debug]: Cache MISS (2ms): member-dashboard
+2025-06-16T15:26:30.257Z [debug]: Cache MISS (13ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T15:26:30.258Z [debug]: Cache HIT (7ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:26:30.443Z [debug]: Cache HIT (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:26:30.971Z [debug]: Cache SET with TTL=180s (13ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T15:26:31.111Z [debug]: Cache SET with TTL=120s (4ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T15:26:31.129Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T15:26:31.285Z [debug]: Cache HIT (0ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T15:26:31.292Z [debug]: Cache SET with TTL=300s (2ms): member-dashboard
+2025-06-16T15:26:31.476Z [debug]: Cache HIT (0ms): member-dashboard
+2025-06-16T15:26:45.330Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:26:45.515Z [debug]: Cache HIT (4ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:26:45.520Z [debug]: Cache HIT (6ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:26:45.735Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:28:32.943Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T15:28:33.142Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T15:41:28.488Z [info]: Redis client connected
+2025-06-16T15:41:28.496Z [info]: Redis client ready and accepting commands
+2025-06-16T15:42:04.261Z [debug]: Cache MISS (3ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:42:04.262Z [debug]: Cache MISS (1ms): due-types-all
+2025-06-16T15:42:04.599Z [debug]: Cache SET with TTL=1800s (2ms): due-types-all
+2025-06-16T15:42:04.757Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T15:42:05.012Z [debug]: Cache SET with TTL=300s (3ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:42:05.215Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:42:22.011Z [debug]: Cache HIT (6ms): due-types-all
+2025-06-16T15:42:22.013Z [debug]: Cache HIT (5ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:42:22.267Z [debug]: Cache HIT (5ms): due-types-all
+2025-06-16T15:42:22.272Z [debug]: Cache HIT (6ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:42:31.334Z [debug]: Cache MISS (28ms): events-stats
+2025-06-16T15:42:31.389Z [debug]: Cache MISS (82ms): events:{"limit":"20","page":"1"}
+2025-06-16T15:42:32.766Z [debug]: Cache SET with TTL=120s (7ms): events:{"limit":"20","page":"1"}
+2025-06-16T15:42:32.956Z [debug]: Cache SET with TTL=300s (2ms): events-stats
+2025-06-16T15:42:32.976Z [debug]: Cache HIT (11ms): events:{"limit":"20","page":"1"}
+2025-06-16T15:42:33.145Z [debug]: Cache HIT (1ms): events-stats
+2025-06-16T15:42:50.983Z [debug]: Cache MISS (9ms): payments-pending
+2025-06-16T15:42:50.985Z [debug]: Cache MISS (7ms): payments-admin:{"status":"all"}
+2025-06-16T15:42:50.986Z [debug]: Cache MISS (4ms): dues-analytics
+2025-06-16T15:42:51.518Z [debug]: Cache SET with TTL=600s (3ms): dues-analytics
+2025-06-16T15:42:51.800Z [debug]: Cache HIT (6ms): dues-analytics
+2025-06-16T15:42:51.802Z [debug]: Cache SET with TTL=60s (4ms): payments-pending
+2025-06-16T15:42:51.818Z [debug]: Cache SET with TTL=180s (5ms): payments-admin:{"status":"all"}
+2025-06-16T15:42:52.108Z [debug]: Cache HIT (6ms): payments-pending
+2025-06-16T15:42:52.110Z [debug]: Cache HIT (5ms): payments-admin:{"status":"all"}
+2025-06-16T15:42:54.971Z [debug]: Cache MISS (3ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T15:42:54.980Z [debug]: Cache HIT (10ms): payments-pending
+2025-06-16T15:42:55.993Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T15:45:45.792Z [debug]: Cache MISS (7ms): users:{"limit":"10","page":"1"}
+2025-06-16T15:45:46.211Z [debug]: Cache SET with TTL=300s (12ms): users:{"limit":"10","page":"1"}
+2025-06-16T15:45:46.517Z [debug]: Cache HIT (1ms): users:{"limit":"10","page":"1"}
+2025-06-16T15:45:55.090Z [debug]: Cache HIT (4ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:45:55.094Z [debug]: Cache HIT (5ms): due-types-all
+2025-06-16T15:45:55.301Z [debug]: Cache HIT (2ms): dues-all:{"limit":"10","page":"1","search":""}
+2025-06-16T15:45:55.301Z [debug]: Cache HIT (1ms): due-types-all
+2025-06-16T15:46:04.218Z [debug]: Cache MISS (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-16T15:46:04.627Z [debug]: Cache SET with TTL=60s (2ms): users-pending:{"limit":"10","page":"1"}
+2025-06-16T15:46:04.934Z [debug]: Cache HIT (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-16T15:46:24.438Z [debug]: Cache MISS (18ms): events:{"limit":"20","page":"1"}
+2025-06-16T15:46:24.441Z [debug]: Cache HIT (13ms): events-stats
+2025-06-16T15:46:24.672Z [debug]: Cache HIT (1ms): events-stats
+2025-06-16T15:46:25.418Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T15:46:25.722Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}

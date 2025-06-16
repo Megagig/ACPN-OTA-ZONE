@@ -39,6 +39,7 @@ export interface IDue extends Document {
   nextDueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted: boolean;
 }
 
 const penaltySchema = new Schema<IPenalty>({
@@ -163,6 +164,10 @@ const dueSchema = new Schema<IDue>(
     },
     nextDueDate: {
       type: Date,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

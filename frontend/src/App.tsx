@@ -37,6 +37,7 @@ import UserEdit from './pages/admin/UserEdit';
 import RolesManagement from './pages/admin/RolesManagement';
 import PermissionsManagement from './pages/admin/PermissionsManagement';
 import CacheMonitoring from './pages/admin/CacheMonitoring';
+import AdminDuesManagement from './pages/admin/AdminDuesManagement';
 
 // Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
@@ -225,6 +226,10 @@ function App() {
                           element={<CacheMonitoring />}
                         />
                         <Route path="/settings" element={<AdminSettings />} />
+                        <Route
+                          path="/admin/dues-management"
+                          element={<AdminDuesManagement />}
+                        />
                       </Route>
 
                       {/* Treasurer Routes */}

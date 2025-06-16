@@ -18,11 +18,13 @@ export const getAllDues = asyncHandler(
     const startIndex = (page - 1) * limit;
 
     // Build query
-    const query: any = {};
+    const query: any = { isDeleted: { $ne: true } }; // Only fetch non-deleted dues
 
     // Filter by payment status if provided
     if (req.query.paymentStatus) {
       query.paymentStatus = req.query.paymentStatus;
+    } else {
+      query.paymentStatus = { $in: ['pending', 'partially_paid'] };
     }
 
     // Filter by year if provided
@@ -57,7 +59,7 @@ export const getAllDues = asyncHandler(
       .sort({ dueDate: -1 });
 
     // Get total count
-    const total = await Due.countDocuments(query);
+    const total = await Due.countDocuments({ isDeleted: { $ne: true } });
 
     res.status(200).json({
       success: true,
@@ -110,7 +112,14 @@ export const getPharmacyDues = asyncHandler(
       : [];
 
     // Build query
-    let query = Due.find({ pharmacyId: req.params.pharmacyId });
+    const statusFilter = req.query.paymentStatus;
+    let queryObj: any = { pharmacyId: req.params.pharmacyId, isDeleted: { $ne: true } };
+    if (statusFilter) {
+      queryObj.paymentStatus = statusFilter;
+    } else {
+      queryObj.paymentStatus = { $in: ['pending', 'partially_paid'] };
+    }
+    let query = Due.find(queryObj);
 
     // Apply population if requested
     if (populateFields.includes('dueTypeId') || req.query.populate === 'true') {
@@ -204,19 +213,36 @@ export const createDue = asyncHandler(
       );
     }
 
-    // Check if a due already exists for this pharmacy and year
+    // Check if a due already exists for this pharmacy and year (not deleted)
     const existingDue = await Due.findOne({
       pharmacyId: req.params.pharmacyId,
       year: req.body.year,
+      isDeleted: { $ne: true }
     });
 
+    let due;
     if (existingDue) {
-      return next(
-        new ErrorResponse(`Due already exists for this pharmacy and year`, 400)
+      // Update existing due instead of creating new one
+      due = await Due.findByIdAndUpdate(
+        existingDue._id,
+        { 
+          ...req.body, 
+          isDeleted: false,
+          paymentStatus: PaymentStatus.PENDING,
+          amountPaid: 0,
+          balance: req.body.amount
+        },
+        { new: true, runValidators: true }
       );
+    } else {
+      // Create new due with explicit PENDING status
+      due = await Due.create({
+        ...req.body,
+        paymentStatus: PaymentStatus.PENDING,
+        amountPaid: 0,
+        balance: req.body.amount
+      });
     }
-
-    const due = await Due.create(req.body);
 
     res.status(201).json({
       success: true,
@@ -291,8 +317,10 @@ export const deleteDue = asyncHandler(
       );
     }
 
-    await due.deleteOne();
+    due.isDeleted = true;
+    await due.save();
 
+    // Cache clearing is handled by clearCacheMiddleware in the routes
     res.status(200).json({
       success: true,
       data: {},
@@ -1022,7 +1050,7 @@ export const getDuesByType = asyncHandler(
     const limit = parseInt(req.query.limit as string) || 10;
     const startIndex = (page - 1) * limit;
 
-    const dues = await Due.find({ dueTypeId: typeId })
+    const dues = await Due.find({ dueTypeId: typeId, isDeleted: { $ne: true } })
       .populate('pharmacyId', 'name registrationNumber')
       .populate('dueTypeId', 'name description')
       .skip(startIndex)
@@ -1053,6 +1081,7 @@ export const getOverdueDues = asyncHandler(
     const query = {
       dueDate: { $lt: currentDate },
       paymentStatus: { $ne: PaymentStatus.PAID },
+      isDeleted: { $ne: true },
     };
 
     const dues = await Due.find(query)
@@ -1101,7 +1130,7 @@ export const getPharmacyPaymentHistory = asyncHandler(
       .sort({ createdAt: -1 });
 
     // Also get all dues to include those without payments
-    const dues = await Due.find({ pharmacyId })
+    const dues = await Due.find({ pharmacyId, isDeleted: { $ne: true } })
       .populate('dueTypeId', 'name description defaultAmount isRecurring')
       .sort({ dueDate: -1 });
 

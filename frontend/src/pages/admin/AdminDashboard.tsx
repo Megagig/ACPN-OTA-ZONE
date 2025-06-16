@@ -5,6 +5,7 @@ import AdminEventWidget from '../../components/admin/AdminEventWidget';
 import AdminOverview from '../../components/admin/AdminOverview';
 import UserManagement from '../../components/admin/UserManagement';
 import AdminSettings from '../../components/admin/AdminSettings';
+import { useNavigate } from 'react-router-dom';
 
 // Admin dashboard tabs - using string literal union type
 type AdminTab =
@@ -17,6 +18,7 @@ type AdminTab =
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const navigate = useNavigate();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -66,6 +68,12 @@ const AdminDashboard: React.FC = () => {
               <option value="users">User Management</option>
               <option value="settings">Settings</option>
             </select>
+            <button
+              onClick={() => navigate('/admin/dues-management')}
+              className="w-full mt-2 px-3 py-2 bg-blue-600 text-white rounded-md"
+            >
+              Dues Management
+            </button>
           </div>
 
           {/* Desktop Tab Navigation */}
@@ -132,6 +140,12 @@ const AdminDashboard: React.FC = () => {
               } flex-1 min-w-0 py-3 px-2 text-center border-b-2 font-medium text-xs lg:text-sm whitespace-nowrap`}
             >
               Settings
+            </button>
+            <button
+              onClick={() => navigate('/admin/dues-management')}
+              className="flex-1 min-w-0 py-3 px-2 text-center border-b-2 font-medium text-xs lg:text-sm whitespace-nowrap border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-400"
+            >
+              Dues Management
             </button>
           </nav>
         </div>

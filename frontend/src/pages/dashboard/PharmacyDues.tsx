@@ -49,12 +49,13 @@ const PharmacyDues: React.FC = () => {
       if (pharmacyData) {
         setPharmacy(pharmacyData);
 
-        // Use the new API to get dues
+        // Always fetch dues with paymentStatus 'pending' or 'partially_paid' unless filterStatus is set
+        const statusFilter = filterStatus !== 'all' ? filterStatus : undefined;
         const response = await financialService.getRealDues({
           pharmacyId: pharmacyData._id,
           page: currentPage,
           limit: itemsPerPage,
-          ...(filterStatus !== 'all' && { paymentStatus: filterStatus }),
+          paymentStatus: statusFilter || 'pending,partially_paid',
         });
 
         setDues((response.dues as unknown as PharmacyDue[]) || []);
