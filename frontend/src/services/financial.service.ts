@@ -687,7 +687,7 @@ export const getAllPayments = async (params?: {
   limit?: number;
   status?: string;
 }): Promise<{
-  payments: Payment[];
+  data: Payment[];
   pagination: {
     page: number;
     limit: number;
@@ -958,6 +958,15 @@ export const generateCertificatePDF = async (
   }
 };
 
+export const recordPayment = async (formData: FormData): Promise<any> => {
+  const response = await api.post('/payments/record', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data.data;
+};
+
 // All exported functions
 const financialService = {
   // Financial Records
@@ -1043,6 +1052,9 @@ const financialService = {
   // Clearance Certificate PDF
   getClearanceCertificate,
   generateCertificatePDF,
+
+  // Record Payment
+  recordPayment,
 };
 
 export default financialService;

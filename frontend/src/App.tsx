@@ -129,6 +129,7 @@ import ComponentPreview from './pages/dashboard/ComponentPreview';
 // Public Pages
 import LandingPage from './pages/LandingPage';
 import DueForm from './pages/dashboard/DueForm';
+import RecordPaymentForm from './pages/dashboard/RecordPaymentForm';
 
 function App() {
   return (
@@ -382,6 +383,10 @@ function App() {
                         <Route
                           path="/finances/outstanding-dues"
                           element={<OutstandingDues />}
+                        />
+                        <Route
+                          path="/finances/payments/new"
+                          element={<RecordPaymentForm />}
                         />
                       </Route>
 

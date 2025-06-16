@@ -82,6 +82,40 @@ const getStatusBadge = (status: Payment['approvalStatus'] | undefined) => {
   }
 };
 
+// Helper function to get Payment Type label
+const getPaymentTypeLabel = (payment: Payment): string => {
+  if ((payment as any).paymentType) {
+    switch ((payment as any).paymentType) {
+      case 'due': return 'Dues';
+      case 'donation': return 'Donation';
+      case 'event_fee': return 'Event Fee';
+      case 'registration_fee': return 'Registration Fee';
+      case 'conference_fee': return 'Conference Fee';
+      case 'accommodation': return 'Accommodation';
+      case 'seminar': return 'Seminar';
+      case 'transportation': return 'Transportation';
+      case 'building': return 'Building';
+      case 'other': return 'Other';
+      default: return (payment as any).paymentType;
+    }
+  }
+  return 'N/A';
+};
+
+// Helper function to get Payment Title/Description
+const getPaymentTitle = (payment: Payment): string => {
+  if ((payment as any).paymentType === 'due') {
+    return getDueTitle(payment);
+  }
+  if ((payment as any).paymentType === 'donation') {
+    return (payment as any).meta?.purpose || (payment as any).meta?.description || 'Donation';
+  }
+  if ((payment as any).paymentType === 'event_fee') {
+    return (payment as any).meta?.eventId || 'Event Fee';
+  }
+  return (payment as any).meta?.purpose || (payment as any).meta?.description || 'N/A';
+};
+
 const PaymentHistory: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -107,29 +141,23 @@ const PaymentHistory: React.FC = () => {
       const response = await getAllPayments({
         page: currentPage,
         limit: ITEMS_PER_PAGE,
-        // search: debouncedSearchTerm, // Removed this line
       });
 
-      if (response && Array.isArray(response.payments)) {
-        setPayments(response.payments);
-        setTotalItems(response.pagination?.total || response.payments.length);
+      if (response && response.data && Array.isArray(response.data)) {
+        setPayments(response.data);
+        setTotalItems(response.pagination?.total || response.data.length);
       } else {
-        console.warn(
-          'Unexpected response structure from getAllPayments:',
-          response
-        );
+        console.warn('Unexpected response structure from getAllPayments:', response);
         setPayments([]);
         setTotalItems(0);
       }
     } catch (err: any) {
       console.error('Failed to fetch payment history:', err);
-      setError(
-        err.message || 'Failed to fetch payment history. Please try again.'
-      );
+      setError(err.message || 'Failed to fetch payment history. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [currentPage, debouncedSearchTerm]);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchPayments();
@@ -294,13 +322,13 @@ const PaymentHistory: React.FC = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Due Title
+                  Payment Type
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Pharmacy
+                  Title/Purpose
                 </th>
                 <th
                   scope="col"
@@ -318,13 +346,13 @@ const PaymentHistory: React.FC = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Receipt
+                  Transaction ID
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Transaction ID
+                  Receipt
                 </th>
               </tr>
             </thead>
@@ -341,14 +369,11 @@ const PaymentHistory: React.FC = () => {
                         payment.createdAt
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {getDueTitle(payment)} {/* Pass the whole payment object */}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {typeof payment.pharmacyId === 'object' &&
-                    payment.pharmacyId?.name
-                      ? payment.pharmacyId.name
-                      : 'N/A'}
+                    {getPaymentTypeLabel(payment)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    {getPaymentTitle(payment)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {payment.amount?.toLocaleString(undefined, {
@@ -358,12 +383,14 @@ const PaymentHistory: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {getStatusBadge(payment.approvalStatus)}
-                    {/* Changed to approvalStatus */}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {payment.paymentReference || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {payment.receiptUrl ? ( // Changed to receiptUrl
+                    {payment.receiptUrl ? (
                       <a
-                        href={payment.receiptUrl} // Changed to receiptUrl
+                        href={payment.receiptUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -373,10 +400,6 @@ const PaymentHistory: React.FC = () => {
                     ) : (
                       <span className="text-gray-400">No Receipt</span>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {payment.paymentReference || 'N/A'}
-                    {/* Changed to paymentReference */}
                   </td>
                 </tr>
               ))}

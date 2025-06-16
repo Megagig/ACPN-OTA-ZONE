@@ -13,8 +13,22 @@ export enum PaymentApprovalStatus {
   DENIED = 'denied',
 }
 
+export enum PaymentType {
+  DUE = 'due',
+  DONATION = 'donation',
+  EVENT_FEE = 'event_fee',
+  REGISTRATION_FEE = 'registration_fee',
+  CONFERENCE_FEE = 'conference_fee',
+  ACCOMMODATION = 'accommodation',
+  SEMINAR = 'seminar',
+  TRANSPORTATION = 'transportation',
+  BUILDING = 'building',
+  OTHER = 'other',
+}
+
 export interface IPayment extends Document {
-  dueId: mongoose.Types.ObjectId;
+  paymentType: PaymentType;
+  dueId?: mongoose.Types.ObjectId;
   pharmacyId: mongoose.Types.ObjectId;
   amount: number;
   paymentMethod: PaymentMethod;
@@ -29,14 +43,23 @@ export interface IPayment extends Document {
   submittedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  meta?: Record<string, any>;
 }
 
 const paymentSchema = new Schema<IPayment>(
   {
+    paymentType: {
+      type: String,
+      enum: Object.values(PaymentType),
+      required: true,
+      default: PaymentType.DUE,
+    },
     dueId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Due',
-      required: true,
+      required: function (this: IPayment) {
+        return this.paymentType === PaymentType.DUE;
+      },
     },
     pharmacyId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -89,6 +112,10 @@ const paymentSchema = new Schema<IPayment>(
     submittedAt: {
       type: Date,
       default: Date.now,
+    },
+    meta: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
   },
   {
