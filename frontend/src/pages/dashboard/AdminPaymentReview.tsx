@@ -200,25 +200,25 @@ const AdminPaymentReview: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-2 sm:p-4 md:p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 Payment Review Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage and review all pharmacy payment submissions</p>
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">Manage and review all pharmacy payment submissions</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search payments..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm text-sm"
                 />
               </div>
             </div>
@@ -226,13 +226,13 @@ const AdminPaymentReview: React.FC = () => {
         </div>
         {/* Payments List */}
         <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg overflow-hidden">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
+          <div className="border-b border-gray-200 overflow-x-auto">
+            <nav className="flex flex-wrap space-x-0 sm:space-x-8 px-2 sm:px-6">
               {['all', 'pending', 'approved', 'rejected'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => { setActiveTab(tab as 'all' | 'pending' | 'approved' | 'rejected'); setCurrentPage(1); }}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  className={`py-3 px-2 sm:py-4 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     activeTab === tab
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -245,7 +245,7 @@ const AdminPaymentReview: React.FC = () => {
               ))}
             </nav>
           </div>
-          <div className="p-6">
+          <div className="p-2 sm:p-6">
             {paymentsLoading ? (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -265,44 +265,44 @@ const AdminPaymentReview: React.FC = () => {
                     key={payment._id}
                     className="bg-white/50 backdrop-blur-sm rounded-xl border border-white/30 hover:border-blue-200 hover:shadow-lg transition-all duration-300 overflow-hidden group"
                   >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">
+                    <div className="p-4 sm:p-6">
+                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2 md:gap-0">
+                        <div className="flex-1 w-full">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                               {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
                                 ? payment.pharmacyId.name
                                 : typeof payment.pharmacyId === 'string'
                                 ? payment.pharmacyId
                                 : 'Unknown Pharmacy'}
                             </h3>
-                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(payment.approvalStatus)}`}>
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(payment.approvalStatus)}`}> 
                               <div className="flex items-center space-x-1">
                                 {getStatusIcon(payment.approvalStatus)}
                                 <span className="capitalize">{payment.approvalStatus}</span>
                               </div>
                             </div>
                           </div>
-                          <p className="text-gray-600 text-sm">{getPaymentTitle(payment)}</p>
+                          <p className="text-gray-600 text-xs sm:text-sm">{getPaymentTitle(payment)}</p>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-gray-900">
+                        <div className="text-right min-w-[120px]">
+                          <div className="text-lg sm:text-2xl font-bold text-gray-900">
                             {formatCurrency(payment.amount)}
                           </div>
-                          <div className="flex items-center text-gray-500 text-sm mt-1">
+                          <div className="flex items-center text-gray-500 text-xs sm:text-sm mt-1">
                             <Calendar className="w-4 h-4 mr-1" />
                             {formatDate(payment.submittedAt)}
                           </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-4">
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
                           {getPaymentMethodIcon(payment.paymentMethod || '')}
                           <span className="capitalize">
                             {(payment.paymentMethod || '').replace('_', ' ')}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
                           <User className="w-4 h-4" />
                           <span>
                             {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
@@ -310,7 +310,7 @@ const AdminPaymentReview: React.FC = () => {
                               : 'Unknown'}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
                           <Receipt className="w-4 h-4" />
                           <a
                             href={payment.receiptUrl}
@@ -322,10 +322,10 @@ const AdminPaymentReview: React.FC = () => {
                           </a>
                         </div>
                       </div>
-                      <div className="flex items-center justify-end space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                           onClick={() => openReviewModal(payment)}
-                          className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
+                          className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
                           disabled={isReviewing || isDeleting}
                         >
                           {isReviewing ? <span className="animate-spin mr-2"><Clock className="w-4 h-4" /></span> : <Eye className="w-4 h-4 mr-2" />}
@@ -333,7 +333,7 @@ const AdminPaymentReview: React.FC = () => {
                         </button>
                         <button
                           onClick={() => openDeleteModal(payment)}
-                          className="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors duration-200"
+                          className="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-xs sm:text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors duration-200"
                           disabled={isReviewing || isDeleting}
                         >
                           {isDeleting ? <span className="animate-spin mr-2"><Clock className="w-4 h-4" /></span> : <Trash2 className="w-4 h-4 mr-2" />}
@@ -347,21 +347,21 @@ const AdminPaymentReview: React.FC = () => {
             )}
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-6 space-x-2">
+              <div className="flex flex-col sm:flex-row justify-center items-center mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="px-4 py-2 text-sm font-medium text-gray-700">
+                <span className="px-4 py-2 text-xs sm:text-sm font-medium text-gray-700">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -372,7 +372,7 @@ const AdminPaymentReview: React.FC = () => {
       </div>
       {/* Review Modal */}
       {showReviewModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">Review Payment</h2>
@@ -447,10 +447,10 @@ const AdminPaymentReview: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="p-6 border-t border-gray-200 flex space-x-3">
+            <div className="p-6 border-t border-gray-200 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={closeModals}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
                 disabled={isReviewing}
               >
                 Cancel
@@ -458,7 +458,7 @@ const AdminPaymentReview: React.FC = () => {
               <button
                 onClick={handleReviewSubmit}
                 disabled={isReviewing || (reviewData.action === 'reject' && !reviewData.rejectionReason)}
-                className="flex-1 px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="flex-1 px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {isReviewing ? 'Processing...' : 'Submit Review'}
               </button>
@@ -468,7 +468,7 @@ const AdminPaymentReview: React.FC = () => {
       )}
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center space-x-3 mb-4">
@@ -487,17 +487,17 @@ const AdminPaymentReview: React.FC = () => {
                   for <span className="font-medium">{formatCurrency(selectedPayment.amount)}</span>.
                 </p>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={closeModals}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
                   disabled={isDeleting}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeletePayment}
-                  className="flex-1 px-4 py-2 bg-red-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-red-700 transition-colors duration-200"
+                  className="flex-1 px-4 py-2 bg-red-600 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white hover:bg-red-700 transition-colors duration-200"
                   disabled={isDeleting}
                 >
                   {isDeleting ? 'Deleting...' : 'Delete Payment'}
