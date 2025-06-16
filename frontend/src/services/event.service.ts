@@ -196,14 +196,8 @@ export class EventService {
     return response.data.data;
   }
 
-  static async getUserRegistrations(
-    userId?: string,
-    page = 1,
-    limit = 10
-  ): Promise<PaginatedResponse<EventRegistration>> {
-    const url = userId
-      ? `/events/user/${userId}/registrations`
-      : '/events/my-registrations';
+  static async getUserRegistrations(page = 1, limit = 10) {
+    const url = '/events/my-registrations';
     const response = await apiClient.get(`${url}?page=${page}&limit=${limit}`);
     return response.data;
   }

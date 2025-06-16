@@ -10,11 +10,19 @@ class SocketService {
 
       console.log(`Connecting to socket server at ${serverUrl}`);
 
+      // Disconnect existing socket if any
+      if (this.socket) {
+        this.socket.disconnect();
+        this.socket = null;
+      }
+
       this.socket = io(serverUrl, {
         auth: {
           token: token,
         },
-        transports: ['websocket', 'polling'],
+        transports: ['websocket'],
+        reconnection: false,
+        timeout: 10000,
       });
 
       this.socket.on('connect', () => {

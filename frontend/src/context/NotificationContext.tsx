@@ -202,15 +202,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   useEffect(() => {
     if (user) {
       console.log('User authenticated, loading notifications');
+      // Only fetch notifications once when user is authenticated
       fetchNotifications();
-      refreshStats();
     } else {
       // Clear notifications when user logs out
       setNotifications([]);
       setUnreadCount(0);
       setStats(null);
     }
-  }, [user, fetchNotifications, refreshStats]);
+  }, [user, fetchNotifications]);
 
   // Initialize socket listeners when user is authenticated
   useEffect(() => {
@@ -232,19 +232,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       );
     }
   }, [user, handleNewNotification]);
-
-  // Fetch initial data when user logs in
-  useEffect(() => {
-    if (user) {
-      fetchUnreadNotifications();
-      refreshStats();
-    } else {
-      // Clear data when user logs out
-      setNotifications([]);
-      setUnreadCount(0);
-      setStats(null);
-    }
-  }, [user, fetchUnreadNotifications, refreshStats]);
 
   const value: NotificationContextType = {
     notifications,

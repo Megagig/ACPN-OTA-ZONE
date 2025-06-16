@@ -538,7 +538,7 @@ function App() {
                         element={<MemberEventsList />}
                       />
                       <Route
-                        path="/member/events/:id"
+                        path="/member/events/:eventId"
                         element={<MemberEventDetails />}
                       />
                       <Route
