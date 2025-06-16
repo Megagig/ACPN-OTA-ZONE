@@ -39,19 +39,6 @@ import {
   AlertTitle,
 } from '../../components/shadcn/alert';
 import { Textarea } from '../../components/shadcn/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/shadcn/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../../components/shadcn/dropdown-menu';
 import { toast } from 'react-toastify';
 
 const AdminPaymentReview: React.FC = () => {
@@ -102,13 +89,19 @@ const AdminPaymentReview: React.FC = () => {
   } = useDeletePayment();
 
   // Derived data
-  const payments = paymentsData?.payments || [];
+  const payments = paymentsData?.data || [];
   const totalPages = paymentsData?.pagination?.totalPages || 1;
   const pendingCount = pendingPaymentsData?.length || 0;
 
   // Loading and error states
   const isLoading = paymentsLoading || pendingLoading;
   const error = paymentsError || pendingError || reviewError || deleteError;
+
+  // Debug logging
+  if (error) {
+    console.error('AdminPaymentReview error:', error);
+  }
+  console.log('AdminPaymentReview payments:', payments);
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -220,6 +213,36 @@ const AdminPaymentReview: React.FC = () => {
     }
   };
 
+  // Get payment type display name
+  const getPaymentTypeDisplay = (type: string) => {
+    switch (type) {
+      case 'event_fee':
+        return 'Event Fee';
+      case 'transportation':
+        return 'Transportation';
+      case 'due':
+        return 'Dues';
+      case 'donation':
+        return 'Donation';
+      default:
+        return type.replace('_', ' ');
+    }
+  };
+
+  // Get payment title/description
+  const getPaymentTitle = (payment: Payment) => {
+    if ((payment as any).paymentType === 'event_fee') {
+      const participant = (payment as any).meta?.participant;
+      const eventId = (payment as any).meta?.eventId;
+      return participant ? `${eventId || 'Event'} - ${participant}` : (eventId || 'Event Fee');
+    }
+    if ((payment as any).paymentType === 'transportation') {
+      const participant = (payment as any).meta?.participant;
+      return participant ? `Transportation - ${participant}` : 'Transportation';
+    }
+    return (payment as any).meta?.purpose || (payment as any).meta?.description || 'N/A';
+  };
+
   // Status badge color mapping
   const getStatusBadgeColor = (status: PaymentApprovalStatus) => {
     switch (status) {
@@ -234,398 +257,222 @@ const AdminPaymentReview: React.FC = () => {
     }
   };
 
-  // Render function for tab content (table and pagination)
-  const renderTabContent = () => (
-    <>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-border">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Pharmacy
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Due
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Method
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-background divide-y divide-border">
-            {isLoading ? (
-              // Loading skeleton
-              Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-32" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-28" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-20" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-28" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-20" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-8 w-20" />
-                  </td>
-                </tr>
-              ))
-            ) : payments.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-4 text-center text-muted-foreground"
-                >
-                  No payments found for this category
-                </td>
-              </tr>
-            ) : (
-              payments.map((payment: Payment) => (
-                <tr key={payment._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {typeof payment.pharmacyId === 'object' &&
-                    payment.pharmacyId?.name
-                      ? payment.pharmacyId.name
-                      : payment.pharmacyId?.toString() || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {typeof payment.dueId === 'object' && payment.dueId?.title
-                      ? payment.dueId.title
-                      : payment.dueInfo?.title ||
-                        payment.dueId?.toString() ||
-                        'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {formatCurrency(payment.amount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {getPaymentMethodDisplay(payment.paymentMethod || '')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {formatDate(payment.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge
-                      className={getStatusBadgeColor(
-                        (payment.approvalStatus ||
-                          payment.status) as PaymentApprovalStatus
-                      )}
-                    >
-                      {payment.approvalStatus || payment.status}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          Actions
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem>
-                          <a
-                            href={payment.receiptUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cursor-pointer w-full" // Ensure link takes full width
-                          >
-                            View Receipt
-                          </a>
-                        </DropdownMenuItem>
-
-                        {payment.approvalStatus ===
-                          PaymentApprovalStatus.PENDING && (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => openReviewModal(payment)}
-                            >
-                              Review Payment
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => openDeleteModal(payment)}
-                              className="text-red-600 dark:text-red-400"
-                            >
-                              Delete Payment
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
-    </>
-  );
-
   if (error) {
     return (
-      <Alert className="mb-6">
+      <Alert className="mb-6" variant="error">
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>
-          Failed to load payments: {(error as Error).message}
+          {typeof error === 'string' && error}
+          {error && typeof error === 'object' && 'message' in error && (error as any).message}
+          {!error && 'Unknown error occurred.'}
         </AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Payment Review</h1>
-          <p className="text-muted-foreground">
-            Manage and review payment submissions
-          </p>
-        </div>
-        <div className="mt-4 md:mt-0">
-          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-            {pendingCount} Pending Payments
-          </Badge>
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Admin Payment Review</h1>
+      <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
+        <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value={PaymentApprovalStatus.PENDING}>Pending</TabsTrigger>
+          <TabsTrigger value={PaymentApprovalStatus.APPROVED}>Approved</TabsTrigger>
+          <TabsTrigger value={PaymentApprovalStatus.REJECTED}>Rejected</TabsTrigger>
+        </TabsList>
+        <TabsContent value={activeTab}>
+          <div className="space-y-4">
+            {isLoading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : payments.length === 0 ? (
+              <Alert>
+                <AlertTitle>No Payments Found</AlertTitle>
+                <AlertDescription>There are no payments to review.</AlertDescription>
+              </Alert>
+            ) : (
+              <div className="space-y-4">
+                {payments.map((payment: Payment) => (
+                  <Card key={payment._id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle>
+                            {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+                              ? payment.pharmacyId.name
+                              : typeof payment.pharmacyId === 'string'
+                              ? payment.pharmacyId
+                              : 'Unknown Pharmacy'}
+                          </CardTitle>
+                          <CardDescription>
+                            {formatDate(payment.submittedAt || '')}
+                          </CardDescription>
+                        </div>
+                        <Badge className={getStatusBadgeColor(payment.approvalStatus)}>
+                          {payment.approvalStatus}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm font-medium text-gray-500">Payment Type:</span>
+                            <span className="ml-2">{getPaymentTypeDisplay((payment as any).paymentType)}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500">Title:</span>
+                            <span className="ml-2">{getPaymentTitle(payment)}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500">Amount:</span>
+                            <span className="ml-2">{formatCurrency(payment.amount)}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500">Method:</span>
+                            <span className="ml-2">{getPaymentMethodDisplay(payment.paymentMethod || '')}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm font-medium text-gray-500">Submitted By:</span>
+                            <span className="ml-2">
+                              {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+                                ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
+                                : 'Unknown'}
+                            </span>
+                          </div>
+                          {payment.receiptUrl && (
+                            <div>
+                              <span className="text-sm font-medium text-gray-500">Receipt:</span>
+                              <a
+                                href={payment.receiptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-2 text-blue-600 hover:text-blue-800"
+                              >
+                                View Receipt
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-4 flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => openReviewModal(payment)}
+                        >
+                          Review
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => openDeleteModal(payment)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+      <div className="mt-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Payment Management</CardTitle>
-          <CardDescription>
-            Review, approve, and reject payment submissions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            defaultValue={PaymentApprovalStatus.PENDING}
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value={PaymentApprovalStatus.PENDING}>
-                Pending
-              </TabsTrigger>
-              <TabsTrigger value={PaymentApprovalStatus.APPROVED}>
-                Approved
-              </TabsTrigger>
-              <TabsTrigger value={PaymentApprovalStatus.REJECTED}>
-                Rejected
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all">{renderTabContent()}</TabsContent>
-            <TabsContent value={PaymentApprovalStatus.PENDING}>
-              {renderTabContent()}
-            </TabsContent>
-            <TabsContent value={PaymentApprovalStatus.APPROVED}>
-              {renderTabContent()}
-            </TabsContent>
-            <TabsContent value={PaymentApprovalStatus.REJECTED}>
-              {renderTabContent()}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
       {/* Review Modal */}
-      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Review Payment</DialogTitle>
-            <DialogDescription>
-              Review the payment details and approve or reject the submission.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedPayment && (
+      {showReviewModal && selectedPayment && (
+        <Dialog isOpen={showReviewModal} onClose={() => setShowReviewModal(false)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Review Payment</DialogTitle>
+              <DialogDescription>
+                Review the payment details and choose to approve or reject.
+              </DialogDescription>
+            </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Amount
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {formatCurrency(selectedPayment.amount)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Method
-                  </p>
-                  <p className="text-lg">
-                    {getPaymentMethodDisplay(
-                      selectedPayment.paymentMethod || ''
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Date
-                  </p>
-                  <p className="text-lg">
-                    {formatDate(selectedPayment.createdAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Reference
-                  </p>
-                  <p className="text-lg">
-                    {selectedPayment.paymentReference || 'N/A'}
-                  </p>
-                </div>
-              </div>
-
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Receipt
-                </p>
-                <a
-                  href={selectedPayment.receiptUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-muted px-4 py-2 rounded-md text-foreground hover:bg-accent transition-colors"
-                >
-                  View Receipt
-                </a>
+                <h3 className="font-medium mb-2">Payment Details</h3>
+                <div className="space-y-2">
+                  <p>Amount: {formatCurrency(selectedPayment.amount)}</p>
+                  <p>Method: {getPaymentMethodDisplay(selectedPayment.paymentMethod || '')}</p>
+                  <p>Type: {getPaymentTypeDisplay((selectedPayment as any).paymentType)}</p>
+                  <p>Title: {getPaymentTitle(selectedPayment)}</p>
+                </div>
               </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Decision
-                </p>
-                <Select
-                  value={reviewData.action}
-                  onValueChange={(value: string) =>
-                    setReviewData({
-                      ...reviewData,
-                      action: value as 'approve' | 'reject',
-                    })
-                  }
+              <div className="space-y-2">
+                <Button
+                  variant={reviewData.action === 'approve' ? 'default' : 'outline'}
+                  onClick={() => setReviewData({ ...reviewData, action: 'approve' })}
+                  className="w-full"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select decision" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="approve">Approve</SelectItem>
-                    <SelectItem value="reject">Reject</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {reviewData.action === 'reject' && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Reason for Rejection
-                  </p>
+                  Approve
+                </Button>
+                <Button
+                  variant={reviewData.action === 'reject' ? 'destructive' : 'outline'}
+                  onClick={() => setReviewData({ ...reviewData, action: 'reject' })}
+                  className="w-full"
+                >
+                  Reject
+                </Button>
+                {reviewData.action === 'reject' && (
                   <Textarea
+                    placeholder="Enter rejection reason..."
                     value={reviewData.rejectionReason}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setReviewData({
-                        ...reviewData,
-                        rejectionReason: e.target.value,
-                      })
+                    onChange={(e) =>
+                      setReviewData({ ...reviewData, rejectionReason: e.target.value })
                     }
-                    placeholder="Provide a reason for rejection"
-                    rows={3}
+                    className="mt-2"
                   />
-                  {reviewData.action === 'reject' &&
-                    !reviewData.rejectionReason && (
-                      <p className="text-sm text-red-500 mt-1">
-                        Rejection reason is required
-                      </p>
-                    )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={closeModals}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleReviewSubmit}
-              disabled={
-                isReviewing ||
-                (reviewData.action === 'reject' && !reviewData.rejectionReason)
-              }
-              className={
-                reviewData.action === 'approve'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
-              }
-            >
-              {isReviewing
-                ? 'Processing...'
-                : reviewData.action === 'approve'
-                ? 'Approve Payment'
-                : 'Reject Payment'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={closeModals}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReviewSubmit}
+                disabled={isReviewing || (reviewData.action === 'reject' && !reviewData.rejectionReason)}
+              >
+                {isReviewing ? 'Processing...' : 'Submit'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Delete Confirmation Modal */}
-      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this payment? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={closeModals}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeletePayment}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Payment'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {showDeleteModal && selectedPayment && (
+        <Dialog isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Payment</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this payment? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={closeModals}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeletePayment}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

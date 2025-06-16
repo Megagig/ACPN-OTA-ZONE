@@ -916,16 +916,33 @@ export const getFinancialAnalytics = async (): Promise<FinancialAnalytics> => {
   };
 };
 
-export const getFinancialReports = async (): Promise<FinancialReport[]> => {
-  return [
-    {
-      id: '1',
-      type: 'Monthly',
-      period: 'June 2024',
-      totalAmount: 500000,
-      generatedAt: new Date(),
-    },
-  ];
+export const getFinancialReports = async (params: {
+  reportType?: 'yearly' | 'monthly' | 'custom';
+  year?: number;
+  month?: number;
+  startDate?: string;
+  endDate?: string;
+}): Promise<any> => {
+  const queryParams = new URLSearchParams();
+  
+  if (params.reportType) {
+    queryParams.append('reportType', params.reportType);
+  }
+  if (params.year) {
+    queryParams.append('year', params.year.toString());
+  }
+  if (params.month) {
+    queryParams.append('month', params.month.toString());
+  }
+  if (params.startDate) {
+    queryParams.append('startDate', params.startDate);
+  }
+  if (params.endDate) {
+    queryParams.append('endDate', params.endDate);
+  }
+
+  const response = await api.get(`${BASE_URL}/financial-records/reports?${queryParams.toString()}`);
+  return response.data.data;
 };
 
 // Get clearance certificate for a paid due

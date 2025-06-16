@@ -23500,3 +23500,60 @@
 2025-06-16T17:13:53.008Z [debug]: Cache SET with TTL=300s (4ms): dues-all
 2025-06-16T17:13:53.311Z [debug]: Cache HIT (1ms): dues-all
 2025-06-16T17:13:55.561Z [debug]: Cache HIT (0ms): payments-admin
+2025-06-16T17:16:54.661Z [debug]: Cache HIT (1ms): dues-all
+2025-06-16T17:16:54.968Z [debug]: Cache HIT (1ms): dues-all
+2025-06-16T17:17:03.161Z [debug]: Cache MISS (0ms): payments-admin
+2025-06-16T17:17:03.896Z [debug]: Cache SET with TTL=180s (3ms): payments-admin
+2025-06-16T17:17:53.337Z [debug]: Cache HIT (4ms): dues-analytics
+2025-06-16T17:17:53.338Z [debug]: Cache MISS (4ms): payments-pending
+2025-06-16T17:17:53.340Z [debug]: Cache MISS (5ms): payments-admin:{"status":"all"}
+2025-06-16T17:17:53.528Z [debug]: Cache HIT (0ms): dues-analytics
+2025-06-16T17:17:53.833Z [debug]: Cache SET with TTL=60s (3ms): payments-pending
+2025-06-16T17:17:53.984Z [debug]: Cache HIT (0ms): payments-pending
+2025-06-16T17:17:54.128Z [debug]: Cache SET with TTL=180s (1ms): payments-admin:{"status":"all"}
+2025-06-16T17:17:54.303Z [debug]: Cache HIT (0ms): payments-admin:{"status":"all"}
+2025-06-16T17:17:58.895Z [debug]: Cache MISS (1ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:17:58.896Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-16T17:17:59.568Z [debug]: Cache SET with TTL=180s (1ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:26:04.831Z [debug]: Cache MISS (2ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:26:04.832Z [debug]: Cache MISS (2ms): payments-pending
+2025-06-16T17:26:05.344Z [debug]: Cache SET with TTL=60s (0ms): payments-pending
+2025-06-16T17:26:05.348Z [debug]: Cache SET with TTL=180s (0ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:26:58.485Z [debug]: Cache HIT (2ms): payments-pending
+2025-06-16T17:26:58.485Z [debug]: Cache HIT (1ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:28:08.764Z [debug]: Cache HIT (3ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:28:08.765Z [debug]: Cache MISS (2ms): payments-pending
+2025-06-16T17:28:09.247Z [debug]: Cache SET with TTL=60s (4ms): payments-pending
+2025-06-16T17:28:39.436Z [debug]: Cache HIT (0ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:28:44.909Z [debug]: Cache MISS (3ms): dues-analytics
+2025-06-16T17:28:44.910Z [debug]: Cache MISS (3ms): payments-admin:{"status":"all"}
+2025-06-16T17:28:44.911Z [debug]: Cache HIT (2ms): payments-pending
+2025-06-16T17:28:45.087Z [debug]: Cache HIT (2ms): payments-pending
+2025-06-16T17:28:45.239Z [debug]: Cache SET with TTL=600s (1ms): dues-analytics
+2025-06-16T17:28:45.437Z [debug]: Cache HIT (1ms): dues-analytics
+2025-06-16T17:28:45.629Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"status":"all"}
+2025-06-16T17:28:45.930Z [debug]: Cache HIT (0ms): payments-admin:{"status":"all"}
+2025-06-16T17:28:51.361Z [debug]: Cache HIT (4ms): payments-pending
+2025-06-16T17:31:09.419Z [debug]: Cache MISS (1ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:31:09.538Z [debug]: Cache MISS (1ms): payments-pending
+2025-06-16T17:31:13.818Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:31:13.819Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-16T17:31:24.698Z [debug]: Cache HIT (9ms): payments-pending
+2025-06-16T17:31:24.700Z [debug]: Cache HIT (8ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:34:47.715Z [debug]: Cache MISS (3ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:34:47.721Z [debug]: Cache MISS (6ms): payments-pending
+2025-06-16T17:34:49.439Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-16T17:34:49.440Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:34:54.386Z [debug]: Cache HIT (9ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:34:54.387Z [debug]: Cache HIT (7ms): payments-pending
+2025-06-16T17:44:44.491Z [debug]: Cache MISS (3ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:44:44.496Z [debug]: Cache MISS (6ms): payments-pending
+2025-06-16T17:44:45.035Z [debug]: Cache SET with TTL=60s (5ms): payments-pending
+2025-06-16T17:44:45.036Z [debug]: Cache SET with TTL=180s (3ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:45:15.473Z [debug]: Cache HIT (1ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:45:15.483Z [debug]: Cache HIT (4ms): payments-pending
+2025-06-16T17:46:38.678Z [debug]: Cache MISS (3ms): payments-pending
+2025-06-16T17:46:38.680Z [debug]: Cache HIT (3ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T17:46:39.496Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-16T17:46:54.194Z [debug]: Cache HIT (0ms): payments-pending
+2025-06-16T17:46:58.709Z [debug]: Cache HIT (0ms): payments-admin:{"limit":"10","page":"1","status":"pending"}

@@ -111,9 +111,15 @@ const getPaymentTitle = (payment: Payment): string => {
     return (payment as any).meta?.purpose || (payment as any).meta?.description || 'Donation';
   }
   if ((payment as any).paymentType === 'event_fee') {
-    return (payment as any).meta?.eventId || 'Event Fee';
+    const participant = (payment as any).meta?.participant;
+    const eventId = (payment as any).meta?.eventId;
+    return participant ? `${eventId || 'Event'} - ${participant}` : (eventId || 'Event Fee');
   }
-  return (payment as any).meta?.purpose || (payment as any).meta?.description || 'N/A';
+  if ((payment as any).paymentType === 'transportation') {
+    const participant = (payment as any).meta?.participant;
+    return participant ? `Transportation - ${participant}` : 'Transportation';
+  }
+  return (payment as any).meta?.purpose || (payment as any).meta?.description || (payment as any).meta?.participant || 'N/A';
 };
 
 const PaymentHistory: React.FC = () => {
