@@ -1,338 +1,237 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import financialService from '../../services/financial.service';
-import type { FinancialReport } from '../../types/financial.types';
+import { formatCurrency } from '../../utils/formatters';
+import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Input } from '../../components/ui/input';
+import { Calendar } from '../../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { CalendarIcon, Download, Filter } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
-const FinancialReports = () => {
-  const navigate = useNavigate();
-  const [reports, setReports] = useState<FinancialReport[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reportType, setReportType] = useState('yearly');
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
-  const [endDate, setEndDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+interface FinancialReport {
+  id: string;
+  type: string;
+  period: string;
+  totalAmount: number;
+  generatedAt: string;
+  summary?: Record<string, number>;
+}
 
-  useEffect(() => {
-    fetchReports();
-  }, [reportType, year, month, startDate, endDate]);
+const FinancialReports: React.FC = () => {
+  const [reportType, setReportType] = useState<'yearly' | 'monthly' | 'custom'>('monthly');
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
-  const fetchReports = async () => {
-    setIsLoading(true);
-    setError(null);
+  const { data: reports, isLoading, error, refetch } = useQuery<FinancialReport[]>({
+    queryKey: ['financialReports', reportType, year, month, startDate, endDate],
+    queryFn: () => financialService.getFinancialReports({
+      reportType,
+      ...(reportType === 'custom'
+        ? {
+            startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+            endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+          }
+        : {
+            year,
+            month,
+          }),
+    }),
+    enabled: reportType !== 'custom' || (!!startDate && !!endDate),
+  });
+
+  const handleDownload = async (reportId: string) => {
     try {
-      const data = await financialService.getFinancialReports();
-      setReports(data);
-    } catch (err) {
-      console.error('Error fetching financial reports:', err);
-      setError('Failed to load reports data. Please try again.');
-    } finally {
-      setIsLoading(false);
+      const response = await financialService.downloadReport(reportId);
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `financial-report-${reportId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading report:', error);
     }
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
+  const handleFilter = () => {
+    refetch();
   };
 
-  // Generate years for dropdown
-  const years = Array.from(
-    { length: 5 },
-    (_, i) => new Date().getFullYear() - i
-  );
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  // Generate months for dropdown
-  const months = [
-    { value: 1, label: 'January' },
-    { value: 2, label: 'February' },
-    { value: 3, label: 'March' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'May' },
-    { value: 6, label: 'June' },
-    { value: 7, label: 'July' },
-    { value: 8, label: 'August' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'October' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' },
-  ];
+  console.log('reports:', reports);
 
-  // Format date
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString('en-NG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">Error loading financial reports. Please try again later.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Financial Reports
-        </h1>
-        <div className="flex space-x-2">
-          <button
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
-            onClick={() => window.print()}
-          >
-            <i className="fas fa-print mr-2"></i>
-            Print Report
-          </button>
-          <button
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
-            onClick={() => alert('Export feature coming soon!')}
-          >
-            <i className="fas fa-file-export mr-2"></i>
-            Export CSV
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 p-4 mb-6 rounded-md">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-card rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Report Settings</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Report Type
-            </label>
-            <select
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground"
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-            >
-              <option value="yearly">Yearly Report</option>
-              <option value="monthly">Monthly Report</option>
-              <option value="custom">Custom Date Range</option>
-            </select>
-          </div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Financial Reports</h1>
+        <div className="flex gap-4">
+          <Select value={reportType} onValueChange={(value: 'yearly' | 'monthly' | 'custom') => setReportType(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select report type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yearly">Yearly</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="custom">Custom Period</SelectItem>
+            </SelectContent>
+          </Select>
 
           {reportType === 'yearly' && (
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Year
-              </label>
-              <select
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground"
+            <Input
+              type="number"
                 value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setYear(parseInt(e.target.value))}
+              className="w-[120px]"
+              placeholder="Year"
+            />
           )}
 
           {reportType === 'monthly' && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Year
-                </label>
-                <select
-                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground"
+              <Input
+                type="number"
                   value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}
-                >
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Month
-                </label>
-                <select
-                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setYear(parseInt(e.target.value))}
+                className="w-[120px]"
+                placeholder="Year"
+              />
+              <Input
+                type="number"
                   value={month}
-                  onChange={(e) => setMonth(Number(e.target.value))}
-                >
-                  {months.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonth(parseInt(e.target.value))}
+                className="w-[120px]"
+                placeholder="Month"
+                min={1}
+                max={12}
+              />
             </>
           )}
 
           {reportType === 'custom' && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
+              <Popover>
+                <PopoverTrigger>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[240px] justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[240px] justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </>
           )}
-        </div>
 
-        <div className="mt-4">
-          <button
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
-            onClick={fetchReports}
-          >
-            <i className="fas fa-sync-alt mr-2"></i>
-            Generate Report
-          </button>
+          <Button onClick={handleFilter} className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filter
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-card rounded-lg shadow-md p-4">
-          <h3 className="text-lg font-semibold mb-2">Total Income</h3>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {isLoading ? (
-              <span className="animate-pulse">...</span>
-            ) : (
-              formatCurrency(12345678) // This would be actual data from API
-            )}
-          </p>
+      <div className="grid gap-6">
+        {Array.isArray(reports) && reports.map((report) => (
+          <Card key={report.id}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {report.type} Report - {report.period}
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDownload(report.id)}
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Total Amount</span>
+                  <span className="text-lg font-semibold">{formatCurrency(report.totalAmount)}</span>
         </div>
-        <div className="bg-card rounded-lg shadow-md p-4">
-          <h3 className="text-lg font-semibold mb-2">Total Expenses</h3>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-            {isLoading ? (
-              <span className="animate-pulse">...</span>
-            ) : (
-              formatCurrency(5678901) // This would be actual data from API
-            )}
-          </p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Generated At</span>
+                  <span className="text-sm">{format(new Date(report.generatedAt), 'PPP')}</span>
         </div>
-        <div className="bg-card rounded-lg shadow-md p-4">
-          <h3 className="text-lg font-semibold mb-2">Net Balance</h3>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {isLoading ? (
-              <span className="animate-pulse">...</span>
-            ) : (
-              formatCurrency(6666777) // This would be actual data from API
-            )}
-          </p>
+                {report.summary && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Summary</h4>
+                    <div className="grid gap-2">
+                      {Object.entries(report.summary).map(([key, value]) => (
+                        <div key={key} className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">{key}</span>
+                          <span className="text-sm">{formatCurrency(value)}</span>
         </div>
-      </div>
-
-      <div className="bg-card rounded-lg shadow-md overflow-hidden">
-        <div className="p-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Detailed Reports</h2>
-        </div>
-
-        {isLoading ? (
-          <div className="p-6 animate-pulse space-y-4">
-            {[...Array(5)].map((_, index) => (
-              <div key={index} className="h-12 bg-muted rounded"></div>
             ))}
           </div>
-        ) : reports.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="mb-4 text-muted-foreground">
-              <i className="fas fa-chart-line text-5xl"></i>
             </div>
-            <h3 className="text-lg font-semibold mb-2">No reports available</h3>
-            <p className="text-muted-foreground">
-              Try changing the report criteria or date range.
-            </p>
+                )}
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Report Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Period
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Total Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Generated At
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
-                {reports.map((report) => (
-                  <tr key={report.id} className="hover:bg-muted/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground capitalize">
-                      {report.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {report.period}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                      {formatCurrency(report.totalAmount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(report.generatedAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        className="text-primary hover:text-primary/80 mr-3 transition-colors"
-                        onClick={() => {
-                          // View details logic
-                          alert('View details coming soon!');
-                        }}
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      <button
-                        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 mr-3 transition-colors"
-                        onClick={() => {
-                          // Download logic
-                          alert('Download feature coming soon!');
-                        }}
-                      >
-                        <i className="fas fa-download"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            </CardContent>
+          </Card>
+        ))}
+
+        {(!Array.isArray(reports) || reports.length === 0) && (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No financial reports found for the selected period.</p>
           </div>
         )}
       </div>
