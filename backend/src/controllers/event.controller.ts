@@ -1581,3 +1581,55 @@ export const cancelEvent = asyncHandler(
     });
   }
 );
+
+// @desc    Bulk register all members for an event
+// @route   POST /api/events/:id/bulk-register
+// @access  Private (Admin only)
+export const bulkRegisterAllMembers = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const eventId = req.params.id;
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return next(new ErrorResponse(`Event not found with id of ${eventId}`, 404));
+    }
+
+    // Find all users with role 'member'
+    const members = await User.find({ role: 'member', isActive: true });
+    let createdCount = 0;
+    let alreadyRegisteredCount = 0;
+    let errors: any[] = [];
+
+    for (const member of members) {
+      const existing = await EventRegistration.findOne({ eventId, userId: member._id });
+      if (existing) {
+        alreadyRegisteredCount++;
+        continue;
+      }
+      try {
+        await EventRegistration.create({
+          eventId,
+          userId: member._id,
+          status: RegistrationStatus.REGISTERED,
+          paymentStatus: event.registrationFee ? 'pending' : 'waived',
+        });
+        createdCount++;
+      } catch (err: unknown) {
+        let errorMsg = 'Unknown error';
+        if (err instanceof Error) {
+          errorMsg = err.message;
+        } else if (typeof err === 'string') {
+          errorMsg = err;
+        }
+        errors.push({ userId: member._id, error: errorMsg });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Bulk registration complete. ${createdCount} new registrations, ${alreadyRegisteredCount} already registered.`,
+      createdCount,
+      alreadyRegisteredCount,
+      errors,
+    });
+  }
+);

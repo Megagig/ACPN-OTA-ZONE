@@ -308,6 +308,11 @@ export class EventService {
     const response = await apiClient.get('/events/summary');
     return response.data.data;
   }
+
+  static async bulkRegisterAllMembers(eventId: string): Promise<any> {
+    const response = await apiClient.post(`/events/${eventId}/bulk-register`);
+    return response.data;
+  }
 }
 
 // Default export for legacy compatibility

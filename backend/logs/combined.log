@@ -22390,3 +22390,63 @@
 2025-06-16T09:26:21.060Z [debug]: Cache HIT (0ms): events:{"limit":"12","page":"1","status":"published"}
 2025-06-16T09:28:22.624Z [debug]: Cache MISS (0ms): events:683f31a371499b51dfd7f9ca
 2025-06-16T09:28:24.571Z [debug]: Cache SET with TTL=180s (2ms): events:683f31a371499b51dfd7f9ca
+2025-06-16T09:36:54.123Z [debug]: Cache MISS (1ms): events-stats
+2025-06-16T09:36:54.134Z [debug]: Cache MISS (3ms): events:{"limit":"20","page":"1"}
+2025-06-16T09:37:01.066Z [debug]: Cache SET with TTL=300s (1ms): events-stats
+2025-06-16T09:37:01.346Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T09:39:59.368Z [debug]: Cache MISS (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T09:40:00.965Z [debug]: Cache SET with TTL=120s (4ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T09:40:01.217Z [debug]: Cache HIT (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T09:40:07.251Z [debug]: Cache MISS (1ms): events:683f31a371499b51dfd7f9ca
+2025-06-16T09:40:08.581Z [debug]: Cache SET with TTL=180s (2ms): events:683f31a371499b51dfd7f9ca
+2025-06-16T09:40:08.891Z [debug]: Cache HIT (5ms): events:683f31a371499b51dfd7f9ca
+2025-06-16T09:40:09.501Z [debug]: Cache MISS (1ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T09:40:10.037Z [debug]: Cache SET with TTL=60s (2ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T09:40:10.293Z [debug]: Cache HIT (1ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T09:41:27.048Z [debug]: Cache HIT (5ms): events:683f31a371499b51dfd7f9ca
+2025-06-16T09:41:27.335Z [debug]: Cache HIT (4ms): events:683f31a371499b51dfd7f9ca
+2025-06-16T09:41:27.340Z [debug]: Cache MISS (5ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T09:41:27.941Z [debug]: Cache SET with TTL=60s (4ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T09:41:28.255Z [debug]: Cache HIT (7ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T09:41:45.210Z [debug]: Cache MISS (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T09:41:46.685Z [debug]: Cache SET with TTL=120s (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T09:41:47.087Z [debug]: Cache HIT (0ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T09:41:47.185Z [debug]: Cache MISS (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T09:41:48.024Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T09:41:48.322Z [debug]: Cache HIT (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T09:41:48.324Z [debug]: Cache MISS (2ms): penalties-user
+2025-06-16T09:41:48.624Z [debug]: Cache SET with TTL=300s (2ms): penalties-user
+2025-06-16T09:41:48.932Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T09:45:22.944Z [debug]: Cache MISS (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T09:45:24.624Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T09:45:24.887Z [debug]: Cache HIT (0ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T09:46:42.104Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T09:46:43.872Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T09:46:44.154Z [debug]: Cache HIT (3ms): events:{"limit":"20","page":"1"}
+2025-06-16T09:47:17.356Z [debug]: Cache MISS (0ms): events:684fda0204ac13593b50d6c7
+2025-06-16T09:47:18.766Z [debug]: Cache SET with TTL=180s (2ms): events:684fda0204ac13593b50d6c7
+2025-06-16T09:47:19.076Z [debug]: Cache HIT (4ms): events:684fda0204ac13593b50d6c7
+2025-06-16T09:47:19.080Z [debug]: Cache MISS (5ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"10","page":"1"}
+2025-06-16T09:47:20.102Z [debug]: Cache SET with TTL=60s (4ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"10","page":"1"}
+2025-06-16T09:47:20.323Z [debug]: Cache HIT (4ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"10","page":"1"}
+2025-06-16T09:47:29.856Z [debug]: Cache HIT (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T09:47:30.136Z [debug]: Cache HIT (4ms): events:684fda0204ac13593b50d6c7
+2025-06-16T09:47:30.144Z [debug]: Cache MISS (1ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-16T09:47:32.189Z [debug]: Cache SET with TTL=600s (2ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-16T09:47:32.439Z [debug]: Cache HIT (4ms): pharmacies:{"limit":"50","page":"1","registrationStatus":"active"}
+2025-06-16T09:47:32.442Z [debug]: Cache MISS (3ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T09:47:33.511Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T09:47:33.823Z [debug]: Cache HIT (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T09:51:24.224Z [debug]: Cache MISS (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T09:51:28.524Z [debug]: Cache SET with TTL=120s (2ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T09:51:28.835Z [debug]: Cache HIT (6ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T09:51:28.839Z [debug]: Cache MISS (5ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T09:51:29.754Z [debug]: Cache SET with TTL=300s (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T09:51:29.979Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T09:51:29.988Z [debug]: Cache MISS (1ms): penalties-user
+2025-06-16T09:51:30.198Z [debug]: Cache SET with TTL=300s (2ms): penalties-user
+2025-06-16T09:51:30.468Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:04:10.370Z [info]: Redis client connected
+2025-06-16T11:04:10.377Z [info]: Redis client ready and accepting commands
+2025-06-16T11:04:23.624Z [info]: Redis client connected
+2025-06-16T11:04:23.631Z [info]: Redis client ready and accepting commands
