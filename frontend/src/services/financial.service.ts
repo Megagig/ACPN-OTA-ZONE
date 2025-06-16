@@ -500,6 +500,10 @@ export const getPendingPayments = async (): Promise<any> => {
 };
 
 export const getAllPayments = async (params?: { status?: string }): Promise<any> => {
+  if (params?.status === 'pending') {
+    const response = await api.get(`/payments/admin/pending`);
+    return response.data.data;
+  }
   const response = await api.get(`/payments/admin/all`, { params });
   return response.data.data;
 };
