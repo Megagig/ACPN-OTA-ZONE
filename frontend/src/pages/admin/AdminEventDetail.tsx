@@ -8,6 +8,17 @@ import type {
 } from '../../types/event.types';
 import type { User } from '../../types/auth.types';
 import { useToast } from '../../hooks/useToast';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../../components/shadcn/alert-dialog';
+import { TrashIcon } from 'lucide-react';
 
 // Interface for populated EventRegistration from backend
 interface UIEventRegistration extends Omit<EventRegistration, 'userId'> {
@@ -37,6 +48,8 @@ const AdminEventDetail = () => {
     }
     return 'details';
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -365,6 +378,33 @@ const AdminEventDetail = () => {
     }
   };
 
+  const handleDeleteEvent = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      await eventService.deleteEvent(id);
+      toast({
+        title: 'Success',
+        description: 'Event deleted successfully',
+      });
+      setDeleteDialogOpen(false);
+      navigate('/admin/events');
+    } catch (error: unknown) {
+      console.error('Failed to delete event:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete event',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -463,6 +503,14 @@ const AdminEventDetail = () => {
           >
             <i className="fas fa-users mr-2"></i>
             Mark Attendance
+          </button>
+          <button
+            className="bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 text-white px-4 py-2 rounded-md text-sm shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-background"
+            onClick={handleDeleteEvent}
+            disabled={isDeleting}
+          >
+            <TrashIcon className="w-4 h-4 mr-2" />
+            {isDeleting ? 'Deleting...' : 'Delete Event'}
           </button>
         </div>
       </div>
@@ -776,6 +824,25 @@ const AdminEventDetail = () => {
           </div>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent variant="destructive">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this event? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction loading={isDeleting} onClick={confirmDeleteEvent} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

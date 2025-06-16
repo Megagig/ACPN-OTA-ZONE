@@ -49,6 +49,16 @@ import type {
   EventStatus,
   EventFilters,
 } from '../../types/event.types';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../../components/shadcn/alert-dialog';
 
 const eventTypeLabels: Record<EventType, string> = {
   conference: 'Conference',
@@ -79,6 +89,8 @@ const AdminEventsList: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; eventId: string | null; eventTitle: string }>({ open: false, eventId: null, eventTitle: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadEvents = useCallback(async () => {
     try {
@@ -113,20 +125,19 @@ const AdminEventsList: React.FC = () => {
   }, [loadEvents]);
 
   const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
+    setDeleteDialog({ open: true, eventId, eventTitle });
+  };
 
+  const confirmDeleteEvent = async () => {
+    if (!deleteDialog.eventId) return;
+    setIsDeleting(true);
     try {
-      await eventService.deleteEvent(eventId);
+      await eventService.deleteEvent(deleteDialog.eventId);
       toast({
         title: 'Success',
         description: 'Event deleted successfully',
       });
+      setDeleteDialog({ open: false, eventId: null, eventTitle: '' });
       loadEvents();
     } catch (error: unknown) {
       console.error('Failed to delete event:', error);
@@ -135,6 +146,8 @@ const AdminEventsList: React.FC = () => {
         description: 'Failed to delete event',
         variant: 'destructive',
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -673,6 +686,25 @@ const AdminEventsList: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={deleteDialog.open} onOpenChange={open => setDeleteDialog(d => ({ ...d, open }))}>
+        <AlertDialogContent variant="destructive">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDialog.eventTitle}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setDeleteDialog({ open: false, eventId: null, eventTitle: '' })}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction loading={isDeleting} onClick={confirmDeleteEvent} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

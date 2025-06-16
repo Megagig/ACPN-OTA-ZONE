@@ -22450,3 +22450,204 @@
 2025-06-16T11:04:10.377Z [info]: Redis client ready and accepting commands
 2025-06-16T11:04:23.624Z [info]: Redis client connected
 2025-06-16T11:04:23.631Z [info]: Redis client ready and accepting commands
+2025-06-16T11:10:03.768Z [debug]: Cache MISS (5ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:10:05.806Z [debug]: Cache SET with TTL=180s (3ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:10:06.252Z [debug]: Cache HIT (5ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:10:06.255Z [debug]: Cache MISS (3ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:10:07.141Z [debug]: Cache SET with TTL=60s (5ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:10:07.461Z [debug]: Cache HIT (14ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:10:07.463Z [debug]: Cache MISS (11ms): users:{"role":"member","status":"active"}
+2025-06-16T11:10:08.068Z [debug]: Cache SET with TTL=300s (5ms): users:{"role":"member","status":"active"}
+2025-06-16T11:10:08.371Z [debug]: Cache HIT (4ms): users:{"role":"member","status":"active"}
+2025-06-16T11:10:24.033Z [debug]: Cache HIT (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:10:24.240Z [debug]: Cache HIT (3ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:10:24.241Z [debug]: Cache HIT (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:10:24.454Z [debug]: Cache HIT (8ms): users:{"role":"member","status":"active"}
+2025-06-16T11:10:24.459Z [debug]: Cache HIT (9ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:10:24.752Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:10:35.234Z [debug]: Cache MISS (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:10:36.155Z [debug]: Cache SET with TTL=120s (5ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:10:36.323Z [debug]: Cache HIT (0ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:10:36.333Z [debug]: Cache MISS (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:10:37.039Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:10:37.341Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:10:37.354Z [debug]: Cache MISS (1ms): penalties-user
+2025-06-16T11:10:37.545Z [debug]: Cache SET with TTL=300s (3ms): penalties-user
+2025-06-16T11:10:37.749Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:10:44.508Z [debug]: Cache HIT (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:10:44.714Z [debug]: Cache HIT (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:10:44.916Z [debug]: Cache HIT (0ms): users:{"role":"member","status":"active"}
+2025-06-16T11:11:31.449Z [debug]: Cache HIT (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:11:31.657Z [debug]: Cache MISS (0ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:11:32.605Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:11:32.841Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:11:39.433Z [debug]: Cache HIT (0ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:11:39.793Z [debug]: Cache HIT (0ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:11:40.037Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:12:23.575Z [debug]: Cache HIT (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:12:23.758Z [debug]: Cache HIT (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:12:23.782Z [debug]: Cache HIT (3ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:12:24.048Z [debug]: Cache HIT (3ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:12:24.049Z [debug]: Cache HIT (2ms): penalties-user
+2025-06-16T11:12:24.354Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:12:39.202Z [debug]: Cache MISS (0ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:12:40.125Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:12:40.345Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:12:40.465Z [debug]: Cache HIT (0ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:12:40.689Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:13:49.551Z [debug]: Cache MISS (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T11:13:50.582Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T11:13:50.881Z [debug]: Cache HIT (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T11:13:57.896Z [debug]: Cache MISS (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:13:59.848Z [debug]: Cache SET with TTL=180s (3ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:14:00.042Z [debug]: Cache HIT (4ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:14:00.044Z [debug]: Cache MISS (3ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T11:14:00.506Z [debug]: Cache SET with TTL=60s (2ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T11:14:00.814Z [debug]: Cache HIT (0ms): registrations-user:{"limit":"100","page":"1"}
+2025-06-16T11:14:09.726Z [debug]: Cache MISS (4ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:14:10.857Z [debug]: Cache SET with TTL=120s (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:14:11.161Z [debug]: Cache HIT (4ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:14:11.166Z [debug]: Cache HIT (6ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:14:11.467Z [debug]: Cache HIT (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:14:11.470Z [debug]: Cache HIT (4ms): penalties-user
+2025-06-16T11:14:11.666Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:17:02.059Z [debug]: Cache MISS (0ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:17:02.881Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:17:03.188Z [debug]: Cache MISS (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:17:03.702Z [debug]: Cache SET with TTL=300s (3ms): users:{"role":"member","status":"active"}
+2025-06-16T11:17:28.614Z [debug]: Cache HIT (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:17:28.889Z [debug]: Cache HIT (0ms): users:{"role":"member","status":"active"}
+2025-06-16T11:17:37.323Z [debug]: Cache MISS (0ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:17:38.329Z [debug]: Cache SET with TTL=120s (6ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:17:38.515Z [debug]: Cache HIT (0ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:17:38.527Z [debug]: Cache MISS (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:17:41.253Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:17:41.489Z [debug]: Cache HIT (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:17:41.491Z [debug]: Cache MISS (3ms): penalties-user
+2025-06-16T11:17:41.699Z [debug]: Cache SET with TTL=300s (2ms): penalties-user
+2025-06-16T11:17:42.004Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:18:29.201Z [debug]: Cache MISS (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:18:29.960Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:18:30.227Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:18:42.823Z [debug]: Cache MISS (0ms): events:683edd859906fb0fcef13693
+2025-06-16T11:18:43.893Z [debug]: Cache SET with TTL=180s (2ms): events:683edd859906fb0fcef13693
+2025-06-16T11:18:44.074Z [debug]: Cache HIT (1ms): events:683edd859906fb0fcef13693
+2025-06-16T11:18:44.094Z [debug]: Cache MISS (0ms): event-registrations:683edd859906fb0fcef13693:{"limit":"10","page":"1"}
+2025-06-16T11:18:45.246Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:683edd859906fb0fcef13693:{"limit":"10","page":"1"}
+2025-06-16T11:18:45.486Z [debug]: Cache HIT (1ms): event-registrations:683edd859906fb0fcef13693:{"limit":"10","page":"1"}
+2025-06-16T11:18:48.422Z [debug]: Cache HIT (2ms): events:683edd859906fb0fcef13693
+2025-06-16T11:18:48.798Z [debug]: Cache MISS (5ms): event-registrations:683edd859906fb0fcef13693:{"limit":"20","page":"1"}
+2025-06-16T11:18:48.800Z [debug]: Cache HIT (3ms): events:683edd859906fb0fcef13693
+2025-06-16T11:18:49.683Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:683edd859906fb0fcef13693:{"limit":"20","page":"1"}
+2025-06-16T11:18:49.891Z [debug]: Cache HIT (5ms): users:{"role":"member","status":"active"}
+2025-06-16T11:18:49.893Z [debug]: Cache HIT (3ms): event-registrations:683edd859906fb0fcef13693:{"limit":"20","page":"1"}
+2025-06-16T11:18:50.126Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:19:14.819Z [debug]: Cache HIT (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:19:15.261Z [debug]: Cache HIT (5ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:19:15.262Z [debug]: Cache HIT (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:19:15.445Z [debug]: Cache HIT (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:19:15.453Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:19:15.642Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:19:43.750Z [debug]: Cache HIT (2ms): event-registrations:683edd859906fb0fcef13693:{"limit":"20","page":"1"}
+2025-06-16T11:19:44.057Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:19:59.728Z [debug]: Cache MISS (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:20:00.660Z [debug]: Cache SET with TTL=120s (6ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:20:00.961Z [debug]: Cache HIT (7ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:20:00.963Z [debug]: Cache HIT (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:20:01.161Z [debug]: Cache HIT (3ms): penalties-user
+2025-06-16T11:20:01.166Z [debug]: Cache HIT (5ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:20:01.671Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:20:24.878Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:20:25.118Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:20:31.161Z [debug]: Cache MISS (0ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:20:32.188Z [debug]: Cache SET with TTL=180s (2ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:20:32.355Z [debug]: Cache MISS (6ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:20:32.357Z [debug]: Cache HIT (5ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:20:33.209Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:20:33.511Z [debug]: Cache HIT (1ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:20:44.679Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:20:45.717Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:20:46.092Z [debug]: Cache HIT (3ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:20:52.461Z [debug]: Cache HIT (1ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:20:52.669Z [debug]: Cache HIT (3ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:20:52.673Z [debug]: Cache HIT (4ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:20:52.973Z [debug]: Cache HIT (1ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:21:06.287Z [debug]: Cache HIT (3ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:21:06.597Z [debug]: Cache MISS (5ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"20","page":"1"}
+2025-06-16T11:21:06.599Z [debug]: Cache HIT (3ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:21:07.411Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"20","page":"1"}
+2025-06-16T11:21:07.794Z [debug]: Cache HIT (4ms): users:{"role":"member","status":"active"}
+2025-06-16T11:21:07.798Z [debug]: Cache HIT (5ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"20","page":"1"}
+2025-06-16T11:21:08.194Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:21:29.733Z [debug]: Cache HIT (6ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:21:29.917Z [debug]: Cache HIT (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:21:29.937Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:21:30.105Z [debug]: Cache HIT (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:21:30.137Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:21:30.324Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:21:40.196Z [debug]: Cache HIT (1ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"20","page":"1"}
+2025-06-16T11:21:40.475Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:21:55.812Z [debug]: Cache HIT (8ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:21:56.061Z [debug]: Cache HIT (10ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:21:56.064Z [debug]: Cache HIT (6ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:21:56.269Z [debug]: Cache HIT (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:21:56.271Z [debug]: Cache HIT (3ms): penalties-user
+2025-06-16T11:21:56.568Z [debug]: Cache HIT (6ms): penalties-user
+2025-06-16T11:22:09.778Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:22:09.939Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:22:28.920Z [debug]: Cache DEL (3ms): events:684b107ddaae11bf3fa7563b, Keys removed: 0
+2025-06-16T11:22:28.923Z [debug]: Cache DEL by pattern (5ms): events:*, Keys matched: 2, Keys removed: 2
+2025-06-16T11:22:29.142Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:22:30.565Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:22:41.339Z [debug]: Cache MISS (10ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:22:42.410Z [debug]: Cache SET with TTL=120s (2ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:22:42.647Z [debug]: Cache HIT (4ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:22:42.650Z [debug]: Cache MISS (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:22:43.770Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:22:44.078Z [debug]: Cache HIT (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:22:44.080Z [debug]: Cache MISS (3ms): penalties-user
+2025-06-16T11:22:44.381Z [debug]: Cache SET with TTL=300s (2ms): penalties-user
+2025-06-16T11:22:44.584Z [debug]: Cache HIT (0ms): penalties-user
+2025-06-16T11:30:45.459Z [debug]: Cache DEL (3ms): events:683f31a371499b51dfd7f9ca, Keys removed: 0
+2025-06-16T11:30:45.464Z [debug]: Cache DEL by pattern (7ms): events:*, No keys matched
+2025-06-16T11:30:45.772Z [debug]: Cache MISS (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:30:48.306Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:37:18.918Z [debug]: Cache MISS (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:37:20.566Z [debug]: Cache SET with TTL=120s (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:37:20.832Z [debug]: Cache HIT (4ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:37:20.835Z [debug]: Cache MISS (3ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:37:22.061Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:37:22.366Z [debug]: Cache HIT (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:37:22.374Z [debug]: Cache MISS (8ms): penalties-user
+2025-06-16T11:37:22.668Z [debug]: Cache SET with TTL=300s (2ms): penalties-user
+2025-06-16T11:37:22.872Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:41:38.674Z [debug]: Cache MISS (1ms): events:{"eventType":"conference","limit":"20","page":"1"}
+2025-06-16T11:41:39.732Z [debug]: Cache SET with TTL=120s (1ms): events:{"eventType":"conference","limit":"20","page":"1"}
+2025-06-16T11:42:12.148Z [debug]: Cache MISS (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:42:13.256Z [debug]: Cache SET with TTL=180s (2ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:42:13.481Z [debug]: Cache HIT (1ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:42:13.906Z [debug]: Cache MISS (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"10","page":"1"}
+2025-06-16T11:42:15.634Z [debug]: Cache SET with TTL=60s (2ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"10","page":"1"}
+2025-06-16T11:42:16.557Z [debug]: Cache HIT (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"10","page":"1"}
+2025-06-16T11:42:41.433Z [debug]: Cache HIT (0ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:42:41.642Z [debug]: Cache HIT (4ms): events:684fda0204ac13593b50d6c7
+2025-06-16T11:42:41.646Z [debug]: Cache MISS (4ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:42:43.036Z [debug]: Cache SET with TTL=60s (4ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:42:43.228Z [debug]: Cache MISS (0ms): users:{"role":"member","status":"active"}
+2025-06-16T11:42:44.411Z [debug]: Cache SET with TTL=300s (5ms): users:{"role":"member","status":"active"}
+2025-06-16T11:42:44.711Z [debug]: Cache HIT (1ms): event-registrations:684fda0204ac13593b50d6c7:{"limit":"20","page":"1"}
+2025-06-16T11:42:44.940Z [debug]: Cache HIT (1ms): users:{"role":"member","status":"active"}
+2025-06-16T11:44:54.464Z [debug]: Cache MISS (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-16T11:44:54.871Z [debug]: Cache SET with TTL=60s (3ms): users-pending:{"limit":"10","page":"1"}
+2025-06-16T11:44:55.070Z [debug]: Cache HIT (1ms): users-pending:{"limit":"10","page":"1"}
+2025-06-16T11:44:58.175Z [debug]: Cache MISS (1ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-16T11:44:58.612Z [debug]: Cache SET with TTL=300s (2ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-16T11:44:58.964Z [debug]: Cache HIT (0ms): users:{"limit":"10","page":"1","status":"active"}
+2025-06-16T11:45:09.902Z [debug]: Cache MISS (3ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:45:09.904Z [debug]: Cache MISS (2ms): events-stats
+2025-06-16T11:45:10.917Z [debug]: Cache SET with TTL=300s (5ms): events-stats
+2025-06-16T11:45:10.942Z [debug]: Cache SET with TTL=120s (17ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:45:11.258Z [debug]: Cache HIT (7ms): events-stats
+2025-06-16T11:45:11.259Z [debug]: Cache HIT (5ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:45:34.084Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:45:34.310Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
