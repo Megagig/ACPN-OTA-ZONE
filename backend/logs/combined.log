@@ -22651,3 +22651,185 @@
 2025-06-16T11:45:11.259Z [debug]: Cache HIT (5ms): events:{"limit":"20","page":"1"}
 2025-06-16T11:45:34.084Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
 2025-06-16T11:45:34.310Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:45:54.565Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:46:22.726Z [debug]: Cache MISS (1ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:46:23.752Z [debug]: Cache SET with TTL=180s (2ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:46:24.235Z [debug]: Cache HIT (1ms): events:683f226b71499b51dfd7ec44
+2025-06-16T11:46:24.249Z [debug]: Cache MISS (1ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:46:25.082Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:46:25.251Z [debug]: Cache HIT (0ms): event-registrations:683f226b71499b51dfd7ec44:{"limit":"10","page":"1"}
+2025-06-16T11:46:35.631Z [debug]: Cache DEL (2ms): events:683f226b71499b51dfd7ec44, Keys removed: 1
+2025-06-16T11:46:35.633Z [debug]: Cache DEL by pattern (4ms): events:*, Keys matched: 1, Keys removed: 1
+2025-06-16T11:46:35.937Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:46:37.006Z [debug]: Cache SET with TTL=120s (5ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:46:37.269Z [debug]: Cache HIT (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T11:46:47.406Z [debug]: Cache MISS (5ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T11:46:48.633Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T11:46:48.833Z [debug]: Cache HIT (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T11:47:07.987Z [debug]: Cache MISS (5ms): events:{"eventType":"meetings","limit":"12","page":"1","status":"published"}
+2025-06-16T11:47:09.214Z [debug]: Cache SET with TTL=120s (2ms): events:{"eventType":"meetings","limit":"12","page":"1","status":"published"}
+2025-06-16T11:51:23.685Z [debug]: Cache MISS (6ms): dues-analytics
+2025-06-16T11:51:23.687Z [debug]: Cache MISS (5ms): payments-pending
+2025-06-16T11:51:23.698Z [debug]: Cache MISS (14ms): payments-admin:{"status":"all"}
+2025-06-16T11:51:24.207Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-16T11:51:24.213Z [debug]: Cache SET with TTL=600s (2ms): dues-analytics
+2025-06-16T11:51:24.382Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-16T11:51:24.434Z [debug]: Cache HIT (4ms): dues-analytics
+2025-06-16T11:51:24.530Z [debug]: Cache SET with TTL=180s (2ms): payments-admin:{"status":"all"}
+2025-06-16T11:51:24.806Z [debug]: Cache HIT (1ms): payments-admin:{"status":"all"}
+2025-06-16T11:51:37.042Z [debug]: Cache MISS (0ms): dues-all:{"populate":"dueTypeId"}
+2025-06-16T11:51:40.135Z [debug]: Cache SET with TTL=300s (50ms): dues-all:{"populate":"dueTypeId"}
+2025-06-16T11:51:40.474Z [debug]: Cache HIT (1ms): dues-all:{"populate":"dueTypeId"}
+2025-06-16T11:52:12.628Z [debug]: Cache MISS (0ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:52:14.100Z [debug]: Cache SET with TTL=120s (2ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:52:14.282Z [debug]: Cache HIT (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:52:14.291Z [debug]: Cache MISS (9ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:52:15.291Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:52:15.497Z [debug]: Cache HIT (3ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:52:15.501Z [debug]: Cache MISS (5ms): penalties-user
+2025-06-16T11:52:15.698Z [debug]: Cache SET with TTL=300s (2ms): penalties-user
+2025-06-16T11:52:16.006Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:56:12.551Z [debug]: Cache MISS (1ms): events:{"endDate":"2025-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2024-01-01T08:00:00.000Z"}
+2025-06-16T11:56:13.062Z [debug]: Cache SET with TTL=120s (2ms): events:{"endDate":"2025-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2024-01-01T08:00:00.000Z"}
+2025-06-16T11:56:13.371Z [debug]: Cache HIT (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:56:13.677Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:56:27.196Z [debug]: Cache MISS (4ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:56:30.664Z [debug]: Cache SET with TTL=120s (2ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T11:56:30.971Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T11:56:31.281Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T11:57:41.126Z [debug]: Cache HIT (3ms): dues-analytics
+2025-06-16T11:57:41.126Z [debug]: Cache MISS (2ms): payments-pending
+2025-06-16T11:57:41.127Z [debug]: Cache MISS (2ms): payments-admin:{"status":"all"}
+2025-06-16T11:57:41.304Z [debug]: Cache HIT (1ms): dues-analytics
+2025-06-16T11:57:41.434Z [debug]: Cache SET with TTL=60s (0ms): payments-pending
+2025-06-16T11:57:41.612Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-16T11:57:42.868Z [debug]: Cache SET with TTL=180s (3ms): payments-admin:{"status":"all"}
+2025-06-16T11:57:43.071Z [debug]: Cache HIT (1ms): payments-admin:{"status":"all"}
+2025-06-16T11:57:48.788Z [debug]: Cache MISS (1ms): due-types-all
+2025-06-16T11:57:48.803Z [debug]: Cache MISS (1ms): pharmacies:{"limit":"100","page":"1","registrationStatus":"active"}
+2025-06-16T11:57:49.185Z [debug]: Cache SET with TTL=1800s (5ms): due-types-all
+2025-06-16T11:57:49.425Z [debug]: Cache HIT (6ms): due-types-all
+2025-06-16T11:57:49.426Z [debug]: Cache SET with TTL=600s (3ms): pharmacies:{"limit":"100","page":"1","registrationStatus":"active"}
+2025-06-16T11:57:49.735Z [debug]: Cache HIT (8ms): pharmacies:{"limit":"100","page":"1","registrationStatus":"active"}
+2025-06-16T11:58:49.126Z [debug]: Cache DEL by pattern (3ms): dues:*, No keys matched
+2025-06-16T11:59:02.432Z [debug]: Cache MISS (0ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T11:59:03.049Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T11:59:03.352Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T11:59:03.353Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T11:59:04.284Z [debug]: Cache SET with TTL=300s (3ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T11:59:04.588Z [debug]: Cache HIT (3ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T11:59:28.776Z [debug]: Cache MISS (28ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T11:59:28.778Z [debug]: Cache MISS (27ms): member-dashboard
+2025-06-16T11:59:28.779Z [debug]: Cache MISS (8ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T11:59:28.781Z [debug]: Cache HIT (6ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T11:59:28.984Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T11:59:29.467Z [debug]: Cache SET with TTL=180s (2ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T11:59:29.508Z [debug]: Cache SET with TTL=300s (12ms): member-dashboard
+2025-06-16T11:59:29.684Z [debug]: Cache HIT (4ms): member-dashboard
+2025-06-16T11:59:29.690Z [debug]: Cache HIT (6ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T11:59:30.899Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T11:59:31.207Z [debug]: Cache HIT (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:00:03.382Z [debug]: Cache MISS (0ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T12:00:05.262Z [debug]: Cache SET with TTL=120s (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T12:00:05.522Z [debug]: Cache HIT (9ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T12:00:05.525Z [debug]: Cache MISS (9ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T12:00:06.867Z [debug]: Cache SET with TTL=300s (2ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T12:00:07.050Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T12:00:07.062Z [debug]: Cache MISS (1ms): penalties-user
+2025-06-16T12:00:07.248Z [debug]: Cache SET with TTL=300s (0ms): penalties-user
+2025-06-16T12:00:07.558Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T12:02:18.018Z [debug]: Cache HIT (5ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:02:18.201Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:02:19.007Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T12:02:19.205Z [debug]: Cache HIT (3ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T12:08:50.514Z [debug]: Cache MISS (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:08:50.517Z [debug]: Cache MISS (3ms): member-dashboard
+2025-06-16T12:08:50.671Z [debug]: Cache MISS (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:08:51.287Z [debug]: Cache SET with TTL=300s (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:08:51.435Z [debug]: Cache MISS (3ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:08:51.600Z [debug]: Cache HIT (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:08:51.757Z [debug]: Cache SET with TTL=300s (5ms): member-dashboard
+2025-06-16T12:08:51.941Z [debug]: Cache HIT (1ms): member-dashboard
+2025-06-16T12:08:52.246Z [debug]: Cache SET with TTL=180s (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:08:52.411Z [debug]: Cache HIT (1ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:08:52.420Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:08:52.569Z [debug]: Cache HIT (0ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:08:56.252Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:08:56.442Z [debug]: Cache HIT (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:08:56.443Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T12:08:57.961Z [debug]: Cache SET with TTL=300s (5ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T12:08:58.146Z [debug]: Cache HIT (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T12:09:10.252Z [debug]: Cache HIT (12ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:09:10.255Z [debug]: Cache HIT (3ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:09:10.265Z [debug]: Cache HIT (4ms): member-dashboard
+2025-06-16T12:09:10.266Z [debug]: Cache HIT (2ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:09:10.446Z [debug]: Cache HIT (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:09:10.447Z [debug]: Cache HIT (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:09:10.464Z [debug]: Cache HIT (2ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:09:10.466Z [debug]: Cache HIT (2ms): member-dashboard
+2025-06-16T12:09:30.114Z [debug]: Cache MISS (0ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T12:09:30.874Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T12:09:31.071Z [debug]: Cache HIT (0ms): events:{"limit":"12","page":"1","status":"published"}
+2025-06-16T12:09:39.486Z [debug]: Cache HIT (0ms): member-dashboard
+2025-06-16T12:09:39.492Z [debug]: Cache HIT (3ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:09:39.493Z [debug]: Cache HIT (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:09:39.494Z [debug]: Cache HIT (2ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:09:39.681Z [debug]: Cache HIT (3ms): member-dashboard
+2025-06-16T12:09:39.681Z [debug]: Cache HIT (2ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:09:39.687Z [debug]: Cache HIT (2ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:09:39.688Z [debug]: Cache HIT (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:09:45.073Z [debug]: Cache MISS (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T12:09:45.852Z [debug]: Cache SET with TTL=120s (3ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T12:09:46.019Z [debug]: Cache HIT (1ms): events:{"endDate":"2026-01-01T07:59:59.000Z","limit":"100","page":"1","startDate":"2025-01-01T08:00:00.000Z"}
+2025-06-16T12:09:46.039Z [debug]: Cache MISS (0ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T12:09:46.808Z [debug]: Cache SET with TTL=300s (4ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T12:09:46.979Z [debug]: Cache HIT (1ms): history-user:{"limit":"10","page":"1"}
+2025-06-16T12:09:46.980Z [debug]: Cache MISS (1ms): penalties-user
+2025-06-16T12:09:47.141Z [debug]: Cache SET with TTL=300s (0ms): penalties-user
+2025-06-16T12:09:47.294Z [debug]: Cache HIT (1ms): penalties-user
+2025-06-16T12:09:53.588Z [debug]: Cache HIT (7ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:09:53.590Z [debug]: Cache HIT (5ms): member-dashboard
+2025-06-16T12:09:53.606Z [debug]: Cache HIT (19ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:09:53.608Z [debug]: Cache HIT (13ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:09:53.797Z [debug]: Cache HIT (4ms): events:{"limit":"5","page":"1","status":"published"}
+2025-06-16T12:09:53.799Z [debug]: Cache HIT (3ms): member-dashboard
+2025-06-16T12:09:53.815Z [debug]: Cache HIT (4ms): member-payments:{"limit":"5","page":"1"}
+2025-06-16T12:09:53.817Z [debug]: Cache HIT (2ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T12:10:12.849Z [debug]: Cache MISS (2ms): dues-analytics
+2025-06-16T12:10:12.853Z [debug]: Cache MISS (1ms): payments-pending
+2025-06-16T12:10:12.858Z [debug]: Cache MISS (0ms): payments-admin:{"status":"all"}
+2025-06-16T12:10:13.168Z [debug]: Cache SET with TTL=600s (1ms): dues-analytics
+2025-06-16T12:10:13.170Z [debug]: Cache SET with TTL=60s (2ms): payments-pending
+2025-06-16T12:10:13.331Z [debug]: Cache HIT (0ms): dues-analytics
+2025-06-16T12:10:13.336Z [debug]: Cache HIT (0ms): payments-pending
+2025-06-16T12:10:13.469Z [debug]: Cache SET with TTL=180s (1ms): payments-admin:{"status":"all"}
+2025-06-16T12:10:13.640Z [debug]: Cache HIT (0ms): payments-admin:{"status":"all"}
+2025-06-16T12:10:20.003Z [debug]: Cache HIT (1ms): payments-pending
+2025-06-16T12:10:20.004Z [debug]: Cache MISS (1ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T12:10:20.318Z [debug]: Cache SET with TTL=180s (4ms): payments-admin:{"limit":"10","page":"1","status":"pending"}
+2025-06-16T12:11:56.245Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T12:11:56.254Z [debug]: Cache MISS (0ms): events-stats
+2025-06-16T12:11:57.178Z [debug]: Cache SET with TTL=120s (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T12:11:57.329Z [debug]: Cache SET with TTL=300s (1ms): events-stats
+2025-06-16T12:11:57.343Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T12:11:57.492Z [debug]: Cache HIT (0ms): events-stats
+2025-06-16T12:12:05.397Z [debug]: Cache MISS (0ms): events:683db6f50883577b55d041eb
+2025-06-16T12:12:06.225Z [debug]: Cache SET with TTL=180s (1ms): events:683db6f50883577b55d041eb
+2025-06-16T12:12:06.424Z [debug]: Cache HIT (1ms): events:683db6f50883577b55d041eb
+2025-06-16T12:12:06.426Z [debug]: Cache MISS (2ms): event-registrations:683db6f50883577b55d041eb:{"limit":"10","page":"1"}
+2025-06-16T12:12:07.092Z [debug]: Cache SET with TTL=60s (1ms): event-registrations:683db6f50883577b55d041eb:{"limit":"10","page":"1"}
+2025-06-16T12:12:07.243Z [debug]: Cache HIT (0ms): event-registrations:683db6f50883577b55d041eb:{"limit":"10","page":"1"}
+2025-06-16T12:12:14.155Z [debug]: Cache DEL (3ms): events:683db6f50883577b55d041eb, Keys removed: 1
+2025-06-16T12:12:14.159Z [debug]: Cache DEL by pattern (6ms): events:*, Keys matched: 1, Keys removed: 1
+2025-06-16T12:12:14.404Z [debug]: Cache MISS (1ms): events:{"limit":"20","page":"1"}
+2025-06-16T12:12:15.193Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"20","page":"1"}
+2025-06-16T12:12:15.363Z [debug]: Cache HIT (0ms): events:{"limit":"20","page":"1"}
+2025-06-16T12:12:29.344Z [debug]: Cache MISS (0ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:30.136Z [debug]: Cache SET with TTL=120s (2ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:30.327Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:39.314Z [debug]: Cache HIT (1ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:39.502Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:48.100Z [debug]: Cache HIT (1ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:48.255Z [debug]: Cache HIT (1ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:51.004Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}
+2025-06-16T12:12:51.175Z [debug]: Cache HIT (0ms): events:{"limit":"10","page":"1"}

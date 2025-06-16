@@ -424,24 +424,35 @@ const PharmacyDues: React.FC = () => {
     setShowCertificateModal(true);
   };
 
-  const getStatusBadge = (paymentStatus: string) => {
-    switch (paymentStatus) {
-      case 'paid':
+  // Utility to get the best payment date
+  const getPaymentDate = (payment: any): string => {
+    return (
+      payment.paymentDate ||
+      payment.approvedAt ||
+      payment.submittedAt ||
+      payment.createdAt ||
+      'N/A'
+    );
+  };
+
+  // Utility to get the best payment status
+  const getPaymentStatus = (payment: any): string => {
+    return payment.approvalStatus || payment.status || 'pending';
+  };
+
+  // Utility to get status badge with professional styling
+  const getStatusBadge = (status: any, rejectionReason?: any) => {
+    switch (status) {
+      case 'approved':
         return (
           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-            Paid
+            Approved
           </span>
         );
-      case 'partially_paid':
+      case 'rejected':
         return (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-            Partially Paid
-          </span>
-        );
-      case 'overdue':
-        return (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
-            Overdue
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300" title={rejectionReason || ''}>
+            Rejected{rejectionReason ? `: ${rejectionReason}` : ''}
           </span>
         );
       case 'pending':
@@ -704,6 +715,84 @@ const PharmacyDues: React.FC = () => {
             Payment History
           </button>
         </div>
+      </div>
+
+      {/* Dues Table */}
+      <div className="mt-8 bg-card shadow rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-foreground mb-4">Dues</h2>
+        {dues.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Due Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Balance
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {dues.map((due) => (
+                  <tr key={due._id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {due.title}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {formatDate(due.dueDate)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {formatCurrency(due.totalAmount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {formatCurrency(due.balance)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {getStatusBadge(due.paymentStatus)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        {due.balance > 0 && (
+                          <button
+                            onClick={() => handleDueSelection(due)}
+                            className="text-primary hover:text-primary/80"
+                          >
+                            <i className="fas fa-money-bill-wave mr-1"></i>
+                            Pay
+                          </button>
+                        )}
+                        {due.paymentStatus === 'paid' && (
+                          <button
+                            onClick={() => downloadClearanceCertificate(due._id)}
+                            className="text-primary hover:text-primary/80"
+                          >
+                            <i className="fas fa-certificate mr-1"></i>
+                            Certificate
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No dues found.</p>
+        )}
       </div>
 
       {/* Payment Modal */}
@@ -1105,7 +1194,7 @@ const PharmacyDues: React.FC = () => {
                   {payments.map((payment) => (
                     <tr key={payment._id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {formatDate(payment.paymentDate)}
+                        {formatDate(getPaymentDate(payment))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {payment.dueInfo?.title ||
@@ -1121,7 +1210,7 @@ const PharmacyDues: React.FC = () => {
                         {payment.paymentMethod}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {getStatusBadge(payment.approvalStatus)}
+                        {getStatusBadge(getPaymentStatus(payment), payment.rejectionReason)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {payment.receiptUrl ? (
