@@ -22904,3 +22904,7 @@
 2025-06-16T13:35:22.197Z [debug]: Cache SET with TTL=300s (2ms): pharmacy-user:6833569d29263eb70fd8ab90
 2025-06-16T13:35:22.507Z [debug]: Cache MISS (1ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
 2025-06-16T13:35:24.046Z [debug]: Cache SET with TTL=300s (2ms): dues-all:{"limit":"10","page":"1","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T13:41:06.163Z [debug]: Cache MISS (1ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T13:41:06.528Z [debug]: Cache SET with TTL=300s (3ms): pharmacy-user:6833569d29263eb70fd8ab90
+2025-06-16T13:41:06.862Z [debug]: Cache MISS (0ms): dues-all:{"limit":"10","page":"1","paymentStatus":"pending","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
+2025-06-16T13:41:07.597Z [debug]: Cache SET with TTL=300s (7ms): dues-all:{"limit":"10","page":"1","paymentStatus":"pending","pharmacyId":"68339f2a11fc07fbd6fb7e92","populate":"dueTypeId"}
