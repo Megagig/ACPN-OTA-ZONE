@@ -177,7 +177,8 @@ export const sendCommunication = async (id: string): Promise<Communication> => {
   console.log('Sending communication request for ID:', id);
   const response = await api.post(`/communications/${id}/send`);
   console.log('Send communication raw response:', response.data);
-  const transformed = transformBackendToFrontend(response.data.data);
+  // The backend returns { success: true, data: { communication: {...} } }
+  const transformed = transformBackendToFrontend(response.data.data.communication);
   console.log('Send communication transformed response:', transformed);
   return transformed;
 };
@@ -199,7 +200,7 @@ export const getCommunicationRecipients = async (
   const response = await api.get(
     `/communications/${communicationId}/recipients`
   );
-  return response.data.data;
+  return response.data.data || []; // Ensure we return an array
 };
 
 export const getCommunicationSummary =

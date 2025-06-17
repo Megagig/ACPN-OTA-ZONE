@@ -57,17 +57,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(response.user);
       setIsAuthenticated(true);
 
-      // Connect to socket after successful login
+      // Connect to socket after successful login with retry logic
       if (response.token) {
-        try {
-          await socketService.connect(response.token);
-          console.log('Socket connection established after login');
-        } catch (socketError) {
-          console.error(
-            'Failed to connect to socket after login:',
-            socketError
-          );
-        }
+        const connectWithRetry = async (retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            try {
+              await socketService.connect(response.token);
+              console.log('Socket connection established after login');
+              return;
+            } catch (socketError) {
+              console.error(
+                `Socket connection attempt ${i + 1}/${retries} failed:`,
+                socketError
+              );
+
+              if (i === retries - 1) {
+                console.error(
+                  'All socket connection attempts failed. Continuing without real-time features.'
+                );
+              } else {
+                // Wait before retrying (exponential backoff)
+                await new Promise((resolve) =>
+                  setTimeout(resolve, Math.pow(2, i) * 1000)
+                );
+              }
+            }
+          }
+        };
+
+        // Don't block login on socket connection failure
+        connectWithRetry().catch((error) => {
+          console.error('Socket connection failed completely:', error);
+        });
       }
 
       return response;

@@ -35,16 +35,7 @@ const LoginNotificationModal: React.FC<LoginNotificationModalProps> = ({
       );
       const response = await notificationService.getUnreadNotifications();
 
-      // Filter for high priority or recent notifications for login display
-      const loginRelevant = response.data.filter(
-        (notif: UserNotification) =>
-          notif.priority === 'high' ||
-          notif.priority === 'urgent' ||
-          new Date().getTime() - new Date(notif.createdAt).getTime() <
-            24 * 60 * 60 * 1000 // Last 24 hours
-      );
-
-      setLoginNotifications(loginRelevant);
+      setLoginNotifications(response.data);
     } catch (error) {
       console.error('Error fetching login notifications:', error);
     } finally {

@@ -36,7 +36,6 @@ import UserDetail from './pages/admin/UserDetail';
 import UserEdit from './pages/admin/UserEdit';
 import RolesManagement from './pages/admin/RolesManagement';
 import PermissionsManagement from './pages/admin/PermissionsManagement';
-import CacheMonitoring from './pages/admin/CacheMonitoring';
 
 // Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
@@ -122,8 +121,6 @@ import PharmacyDues from './pages/dashboard/PharmacyDues';
 
 // Test Components
 // import TestApiConnection from './components/TestApiConnection';
-
-import ComponentPreview from './pages/dashboard/ComponentPreview';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -219,10 +216,6 @@ function App() {
                         <Route
                           path="/admin/pharmacies/:id"
                           element={<PharmacyDetail />}
-                        />
-                        <Route
-                          path="/admin/cache-monitoring"
-                          element={<CacheMonitoring />}
                         />
                         <Route path="/settings" element={<AdminSettings />} />
                       </Route>
@@ -610,12 +603,6 @@ function App() {
                       <Route
                         path="/polls/:id/respond"
                         element={<PollResponse />}
-                      />
-
-                      {/* Component Preview */}
-                      <Route
-                        path="/component-preview"
-                        element={<ComponentPreview />}
                       />
 
                       {/* API Connection Test */}

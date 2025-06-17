@@ -3,19 +3,51 @@ import { io, Socket } from 'socket.io-client';
 class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
+  private connectionTimeout: NodeJS.Timeout | null = null;
+  private maxRetries = 3;
+  private retryCount = 0;
 
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      // If already connecting or connected, resolve immediately
+      if (this.isConnected && this.socket?.connected) {
+        console.log('Socket already connected');
+        resolve();
+        return;
+      }
 
-      console.log(`Connecting to socket server at ${serverUrl}`);
+      // Disconnect existing socket if any
+      if (this.socket) {
+        this.socket.disconnect();
+      }
+
+      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      console.log(
+        `Connecting to socket server at ${serverUrl} (attempt ${
+          this.retryCount + 1
+        }/${this.maxRetries})`
+      );
 
       this.socket = io(serverUrl, {
         auth: {
           token: token,
         },
         transports: ['websocket', 'polling'],
+        timeout: 10000, // 10 second timeout
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 1000,
       });
+
+      // Set connection timeout
+      this.connectionTimeout = setTimeout(() => {
+        console.error('Socket connection timeout');
+        this.isConnected = false;
+        if (this.socket) {
+          this.socket.disconnect();
+        }
+        reject(new Error('Connection timeout'));
+      }, 15000); // 15 second timeout
 
       this.socket.on('connect', () => {
         console.log(
@@ -23,34 +55,65 @@ class SocketService {
           this.socket?.id
         );
         this.isConnected = true;
+        this.retryCount = 0; // Reset retry count on successful connection
+
+        if (this.connectionTimeout) {
+          clearTimeout(this.connectionTimeout);
+          this.connectionTimeout = null;
+        }
+
         this.socket?.emit('user_online');
         resolve();
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
+        console.error('Socket connection error:', error.message || error);
         this.isConnected = false;
+
+        if (this.connectionTimeout) {
+          clearTimeout(this.connectionTimeout);
+          this.connectionTimeout = null;
+        }
+
         reject(error);
       });
 
-      this.socket.on('disconnect', () => {
-        console.log('Disconnected from messaging server');
+      this.socket.on('disconnect', (reason) => {
+        console.log('Disconnected from messaging server:', reason);
         this.isConnected = false;
+
+        if (this.connectionTimeout) {
+          clearTimeout(this.connectionTimeout);
+          this.connectionTimeout = null;
+        }
       });
 
       // Handle authentication errors
       this.socket.on('error', (error) => {
         console.error('Socket error:', error);
+        this.isConnected = false;
+
+        if (this.connectionTimeout) {
+          clearTimeout(this.connectionTimeout);
+          this.connectionTimeout = null;
+        }
+
         reject(new Error(error.message || 'Socket connection failed'));
       });
     });
   }
 
   disconnect() {
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+      this.connectionTimeout = null;
+    }
+
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.retryCount = 0;
     }
   }
 

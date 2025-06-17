@@ -1,214 +1,136 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
-import Communication, {
-  MessageType,
-  RecipientType,
-  CommunicationStatus,
-} from '../models/communication.model';
-import CommunicationRecipient from '../models/communicationRecipient.model';
-import UserNotification from '../models/userNotification.model';
-import User from '../models/user.model';
-import asyncHandler from '../middleware/async.middleware';
-import ErrorResponse from '../utils/errorResponse';
-
-// @desc    Get all communications (admin view)
-// @route   GET /api/communications/admin
-// @access  Private/Admin/Secretary
-export const getAllAdminCommunications = asyncHandler(
+import { CommunicationRecipient, Communication, User, UserNotification } from '../models';
+import { asyncHandler } from '../middleware';
+import { ErrorResponse } from '../utils';
+// @desc    Get all communications
+// @route   GET /api/communications
+// @access  Private
+export const getCommunications = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // Only admin and secretary can view all communications
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
+    const { page = 1, limit = 10, status, messageType, recipientType, searchQuery, sortField = 'sentDate', sortDirection = 'desc' } = req.query;
+
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
+    const isSender = req.user.role === 'sender';
+    const isRecipient = req.user.role === 'recipient';
+
+    // Build query based on user role
+    let query: any = {};
+    if (isAdmin) {
+      // Admin can see all communications
+      query = {};
+    } else if (isSender) {
+      // Sender can see their own communications
+      query = { senderUserId: req.user._id };
+    } else if (isRecipient) {
+      // Recipient can see communications they're part of
+      query = {
+        'recipients.userId': req.user._id,
+      };
+    } else {
       return next(
-        new ErrorResponse(
-          `User ${req.user._id} is not authorized to view all communications`,
-          403
-        )
+        new ErrorResponse('Unauthorized access', 403)
       );
     }
 
-    // Implement pagination, filtering and sorting
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const startIndex = (page - 1) * limit;
-
-    // Build query
-    const query: any = {};
-
-    // Filter by message type if provided
-    if (req.query.messageType) {
-      query.messageType = req.query.messageType;
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
     }
 
-    // Filter by date range if provided
-    if (req.query.startDate && req.query.endDate) {
-      query.sentDate = {
-        $gte: new Date(req.query.startDate as string),
-        $lte: new Date(req.query.endDate as string),
-      };
+    // Add message type filter if provided
+    if (messageType) {
+      query.messageType = messageType;
     }
 
-    // Search by subject or content
-    if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search as string, 'i');
-      query.$or = [{ subject: searchRegex }, { content: searchRegex }];
+    // Add recipient type filter if provided
+    if (recipientType) {
+      query.recipientType = recipientType;
     }
 
+    // Add search query if provided
+    if (searchQuery) {
+      query.$text = { $search: searchQuery };
+    }
+
+    // Calculate pagination
+    const pageNumber = parseInt(page as string, 10);
+    const limitNumber = parseInt(limit as string, 10);
+    const skipNumber = (pageNumber - 1) * limitNumber;
+
+    // Get total count
+    const total = await Communication.countDocuments(query);
+
+    // Get communications with pagination and sorting
     const communications = await Communication.find(query)
       .populate({
         path: 'senderUserId',
         select: 'firstName lastName email',
       })
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ sentDate: -1 });
+      .sort({ [sortField]: sortDirection === 'asc' ? 1 : -1 })
+      .skip(skipNumber)
+      .limit(limitNumber);
 
-    // Get total count
-    const total = await Communication.countDocuments(query);
+    // Get recipient counts for each communication
+    const communicationIds = communications.map((comm) => comm._id);
+    const recipientCounts = await CommunicationRecipient.aggregate([
+        {
+          $project: {
+            messageType: '$_id',
+            totalRecipients: 1,
+            totalRead: {
+              $sum: { $cond: [{ $eq: ['$readStatus', true], 1, 0] },
+            },
+            readRate: {
+              $cond: [
+                { $gt: ['$$totalRecipients', 0],
+                { $multiply: [{ $divide: ['$totalRead', '$totalRecipients'], 100 },
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { messageType: 1 } },
+    ]);
 
-    // For each communication, get recipient count
-    const communicationsWithCounts = await Promise.all(
-      communications.map(async (communication) => {
-        const recipientCount = await CommunicationRecipient.countDocuments({
-          communicationId: communication._id,
-        });
-
-        const readCount = await CommunicationRecipient.countDocuments({
-          communicationId: communication._id,
+    // Get read counts for each communication
+    const readCounts = await CommunicationRecipient.aggregate([
+      {
+        $match: {
+          communicationId: { $in: communicationIds },
           readStatus: true,
-        });
+        },
+      },
+      {
+        $group: {
+          _id: '$communicationId',
+          count: { $sum: 1,
+        },
+      },
+    });
 
-        const communicationObj = communication.toObject();
-        return {
-          ...communicationObj,
-          recipientCount,
-          readCount,
-          readPercentage:
-            recipientCount > 0
-              ? Math.round((readCount / recipientCount) * 100)
-              : 0,
-        };
-      })
+    // Create a map for recipient counts
+    const recipientMap = recipientCounts.reduce(
+      (acc, curr) => {
+        acc[curr._id.toString()] = curr.count;
+        return acc;
+      },
+      {} as Record<string, number>
     );
 
-    res.status(200).json({
-      success: true,
-      count: communications.length,
-      pagination: {
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-        total,
+    // Create a map for read counts
+    const readMap = readCounts.reduce(
+      (acc, curr) => {
+        acc[curr._id.toString()] = curr.count;
+        return acc;
       },
-      data: communicationsWithCounts,
-    });
-  }
-);
-
-// @desc    Get user's inbox
-// @route   GET /api/communications/inbox
-// @access  Private
-export const getUserInbox = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    // Implement pagination
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const startIndex = (page - 1) * limit;
-
-    // Get all communications where the user is a recipient
-    const recipientRecords = await CommunicationRecipient.find({
-      userId: req.user._id,
-    })
-      .populate({
-        path: 'communicationId',
-        populate: {
-          path: 'senderUserId',
-          select: 'firstName lastName email',
-        },
-      })
-      .sort({ 'communicationId.sentDate': -1 })
-      .skip(startIndex)
-      .limit(limit);
-
-    // Get total count
-    const total = await CommunicationRecipient.countDocuments({
-      userId: req.user._id,
-    });
+      {} as Record<string, number>
+    );
 
     // Format the response
-    const inbox = recipientRecords.map((record) => {
-      const communication = record.communicationId as any;
-      return {
-        _id: communication._id,
-        subject: communication.subject,
-        content: communication.content,
-        sentDate: communication.sentDate,
-        messageType: communication.messageType,
-        attachmentUrl: communication.attachmentUrl,
-        sender: communication.senderUserId,
-        readStatus: record.readStatus,
-        readTime: record.readTime,
-      };
-    });
-
-    // Get unread count
-    const unreadCount = await CommunicationRecipient.countDocuments({
-      userId: req.user._id,
-      readStatus: false,
-    });
-
-    res.status(200).json({
-      success: true,
-      count: inbox.length,
-      unreadCount,
-      pagination: {
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-        total,
-      },
-      data: inbox,
-    });
-  }
-);
-
-// @desc    Get user's sent communications
-// @route   GET /api/communications/sent
-// @access  Private
-export const getUserSentCommunications = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    // Implement pagination
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const startIndex = (page - 1) * limit;
-
-    // Get all communications sent by the user
-    const communications = await Communication.find({
-      senderUserId: req.user._id,
-    })
-      .sort({ sentDate: -1 })
-      .skip(startIndex)
-      .limit(limit);
-
-    // Get total count
-    const total = await Communication.countDocuments({
-      senderUserId: req.user._id,
-    });
-
-    // For each communication, get recipient count and read count
-    const sentItems = await Promise.all(
+    const formattedCommunications = await Promise.all(
       communications.map(async (communication) => {
-        const recipientCount = await CommunicationRecipient.countDocuments({
-          communicationId: communication._id,
-        });
-
-        const readCount = await CommunicationRecipient.countDocuments({
-          communicationId: communication._id,
-          readStatus: true,
-        });
+        const recipientCount = recipientMap[communication._id.toString()] || 0;
+        const readCount = readMap[communication._id.toString()] || 0;
 
         const communicationObj = communication.toObject();
         return {
@@ -225,14 +147,14 @@ export const getUserSentCommunications = asyncHandler(
 
     res.status(200).json({
       success: true,
-      count: sentItems.length,
+      count: formattedCommunications.length,
       pagination: {
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: Math.ceil(total / limitNumber),
         total,
       },
-      data: sentItems,
+      data: formattedCommunications,
     });
   }
 );
@@ -246,7 +168,7 @@ export const getCommunication = asyncHandler(
       path: 'senderUserId',
       select: 'firstName lastName email',
     });
-
+    const { user } = req;
     if (!communication) {
       return next(
         new ErrorResponse(
@@ -257,9 +179,7 @@ export const getCommunication = asyncHandler(
     }
 
     // Check if user is the sender, an admin, or a recipient
-    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
-      req.user.role
-    );
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender =
       communication.senderUserId.toString() === req.user._id.toString();
 
@@ -297,6 +217,10 @@ export const getCommunication = asyncHandler(
           select: 'firstName lastName email',
         })
         .sort({ readStatus: 1, createdAt: 1 });
+      recipientRecord.readStatus = true;
+      recipientRecord.readTime = new Date();
+      await recipientRecord.save();
+    }
     }
 
     res.status(200).json({
@@ -315,12 +239,10 @@ export const getCommunication = asyncHandler(
 // @access  Private/Admin/Secretary
 export const createCommunication = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // Validate if user can send messages
+    // Validate user role
     if (
-      req.body.messageType === MessageType.ANNOUNCEMENT &&
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
+      req.body.messageType === 'announcement' &&
+      !['admin', 'superadmin', 'secretary'].includes(req.user.role)
     ) {
       return next(
         new ErrorResponse(
@@ -331,10 +253,8 @@ export const createCommunication = asyncHandler(
     }
 
     if (
-      req.body.messageType === MessageType.NEWSLETTER &&
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
+      req.body.messageType === 'newsletter' &&
+      !['admin', 'superadmin', 'secretary'].includes(req.user.role)
     ) {
       return next(
         new ErrorResponse(
@@ -344,40 +264,34 @@ export const createCommunication = asyncHandler(
       );
     }
 
-    // Add sender to req.body
+    // Add sender to request body
     req.body.senderUserId = req.user._id;
 
     // Create the communication
-    const communication = await Communication.create({
-      ...req.body,
-      senderUserId: req.user._id, // Ensure sender is set from logged-in user
-      status: CommunicationStatus.DRAFT, // Explicitly set status to draft
-    });
+    const communication = await Communication.create(req.body);
 
-    // Add recipients based on recipientType
+    // Create recipients based on recipientType
     let recipientUsers = [];
 
-    if (req.body.recipientType === RecipientType.ALL) {
-      // Add all users as recipients
+    if (req.body.recipientType === 'all') {
+      // Add all active users
       recipientUsers = await User.find({ isActive: true }).select('_id');
-    } else if (req.body.recipientType === RecipientType.ADMIN) {
-      // Add only admin users as recipients
+    } else if (req.body.recipientType === 'admin') {
+      // Add only admin users
       recipientUsers = await User.find({
         isActive: true,
-        role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
+        role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'],
       }).select('_id');
-    } else if (req.body.recipientType === RecipientType.SPECIFIC) {
-      // Add only specific users as recipients
+    } else if (req.body.recipientType === 'specific') {
+      // Add specific users
       if (
         !req.body.recipientIds ||
         !Array.isArray(req.body.recipientIds) ||
         req.body.recipientIds.length === 0
       ) {
         return next(
-          new ErrorResponse(
-            `Recipient IDs are required for specific recipient type`,
-            400
-          )
+          new ErrorResponse('Recipient IDs are required for specific recipient type',
+          400
         );
       }
 
@@ -388,7 +302,7 @@ export const createCommunication = asyncHandler(
       }).select('_id');
 
       if (existingUsers.length !== req.body.recipientIds.length) {
-        return next(new ErrorResponse(`Some recipient IDs are invalid`, 400));
+        return next(new ErrorResponse('Some recipient IDs are invalid', 400));
       }
 
       // Save specific recipients to the communication document
@@ -400,12 +314,11 @@ export const createCommunication = asyncHandler(
       recipientUsers = existingUsers;
     }
 
-    // Batch create recipient records
+    // Create recipient records
     if (recipientUsers.length > 0) {
       const recipientRecords = recipientUsers.map((user) => ({
         communicationId: communication._id,
         userId: user._id,
-        readStatus: false,
       }));
 
       await CommunicationRecipient.insertMany(recipientRecords);
@@ -468,7 +381,7 @@ export const markAsRead = asyncHandler(
 // @route   DELETE /api/communications/:id
 // @access  Private/Admin
 export const deleteCommunication = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> > {
     const communication = await Communication.findById(req.params.id);
 
     if (!communication) {
@@ -481,7 +394,7 @@ export const deleteCommunication = asyncHandler(
     }
 
     // Check if user is admin or the sender
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+    const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
     const isSender =
       communication.senderUserId.toString() === req.user._id.toString();
 
@@ -515,11 +428,7 @@ export const deleteCommunication = asyncHandler(
 export const getCommunicationStats = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     // Only admin can view communication statistics
-    if (
-      req.user.role !== 'admin' &&
-      req.user.role !== 'superadmin' &&
-      req.user.role !== 'secretary'
-    ) {
+    if (!['admin', 'superadmin'].includes(req.user.role)) {
       throw new ErrorResponse(
         `User ${req.user._id} is not authorized to view communication statistics`,
         403
@@ -528,13 +437,13 @@ export const getCommunicationStats = asyncHandler(
 
     // Get total counts by message type
     const messageTypeCounts = await Communication.aggregate([
-      { $group: { _id: '$messageType', count: { $sum: 1 } } },
+      { $group: { _id: '$messageType', count: { $sum: 1 } },
       { $sort: { _id: 1 } },
     ]);
 
     // Get counts by status
     const statusCounts = await Communication.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $group: { _id: '$status', count: { $sum: 1 } }
       { $sort: { _id: 1 } },
     ]);
 
@@ -565,7 +474,7 @@ export const getCommunicationStats = asyncHandler(
           _id: 'total',
           totalRecipients: { $sum: 1 },
           totalRead: {
-            $sum: { $cond: [{ $eq: ['$readStatus', true] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ['$readStatus', true], $sum: 1, 0] },
           },
         },
       },
@@ -587,7 +496,7 @@ export const getCommunicationStats = asyncHandler(
           _id: '$communication.messageType',
           totalRecipients: { $sum: 1 },
           totalRead: {
-            $sum: { $cond: [{ $eq: ['$readStatus', true] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ['$readStatus', true], $sum: 1, 0] },
           },
         },
       },
@@ -597,7 +506,7 @@ export const getCommunicationStats = asyncHandler(
           totalRecipients: 1,
           totalRead: 1,
           readRate: {
-            $multiply: [{ $divide: ['$totalRead', '$totalRecipients'] }, 100],
+            $multiply: [{ $divide: ['$totalRead', '$totalRecipients'], $gt: ['$$totalRecipients', 0], $multiply: [{ $divide: ['$totalRead', '$totalRecipients'], 100 },
           },
         },
       },
@@ -651,18 +560,23 @@ export const getCommunicationStats = asyncHandler(
 // @access  Private/Admin/Secretary
 export const sendCommunication = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const communication = await Communication.findById(req.params.id);
+    const communication = await Communication.findById(req.params.id).populate({
+      path: 'senderUserId',
+      select: 'firstName lastName email',
+    });
 
     if (!communication) {
       return next(
-        new ErrorResponse(`Communication not found with id of ${req.params.id}`, 404)
-      );
-    }
+        new ErrorResponse(
+          `Communication not found with id of ${req.params.id}`,
+          404
+    );
 
-    // Authorization checks
+    // Check if user is authorized to send
     const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender =
       communication.senderUserId.toString() === req.user._id.toString();
+
     if (!isAdmin && !isSender) {
       return next(
         new ErrorResponse(
@@ -672,84 +586,150 @@ export const sendCommunication = asyncHandler(
       );
     }
 
+    // Check if communication is in draft status
     if (communication.status !== 'draft') {
       return next(
-        new ErrorResponse(`Communication is already ${communication.status}`, 400)
+        new ErrorResponse(
+          `Communication is already ${communication.status}`,
+          400
+        )
       );
     }
 
+    // Update communication status and send date
+    communication.status = 'sent' as any;
+    communication.sentDate = new Date();
+    await communication.save();
+
     try {
-      // 1. Determine recipient users
-      let recipientUsers: any[] = [];
-      const userQuery: any = { isActive: true };
+      // Get all recipients with populated user details
+      const recipients = await CommunicationRecipient.find({
+        communicationId: communication._id,
+      }).populate('userId', 'firstName lastName email role');
 
-      switch (communication.recipientType) {
-        case RecipientType.ALL:
-          recipientUsers = await User.find(userQuery).select('_id');
-          break;
-        case RecipientType.ADMIN:
-          userQuery.role = { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] };
-          recipientUsers = await User.find(userQuery).select('_id');
-          break;
-        case RecipientType.SPECIFIC:
-          if (communication.specificRecipients?.length) {
-            userQuery._id = { $in: communication.specificRecipients };
-            recipientUsers = await User.find(userQuery).select('_id');
-          }
-          break;
+      if (recipients.length === 0) {
+        // If no recipients exist, create them based on recipientType
+        let userQuery: any = { isActive: true };
+
+        if (communication.recipientType === 'all') {
+          userQuery = { isActive: true };
+        } else if (communication.recipientType === 'admin') {
+          userQuery = {
+            isActive: true,
+            role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'],
+          };
+        } else if (
+          communication.recipientType === 'specific' &&
+          communication.specificRecipients?.length
+        ) {
+          userQuery = {
+            isActive: true,
+            _id: { $in: communication.specificRecipients,
+          };
+        }
+
+        // Get users with all necessary fields
+        const recipientUsers = await User.find(userQuery).select(
+          '_id firstName lastName email role'
+        );
+
+        if (recipientUsers.length > 0) {
+          // Create recipient records
+          const recipientRecords = recipientUsers.map((user) => ({
+            communicationId: communication._id,
+            userId: user._id,
+          }));
+
+          await CommunicationRecipient.insertMany(recipientRecords);
+
+          // Refresh recipients list with populated user data
+          const refreshedRecipients = await CommunicationRecipient.find({
+            communicationId: communication._id,
+          }).populate('userId', 'firstName lastName email role');
+
+          recipients.push(...refreshedRecipients);
+        }
       }
 
-      // 2. Update communication status and save
-      communication.status = 'sent' as any;
-      communication.sentDate = new Date();
-      await communication.save();
+      if (recipients.length > 0) {
+        // Get sender info
+        const senderInfo = communication.senderUserId
+          ? `${(communication.senderUserId as any).firstName || ''} ${(communication.senderUserId as any).lastName || ''}`.trim()
+          : 'System';
 
-      let createdNotifications: any[] = [];
-
-      // 3. Process recipients and notifications
-      if (recipientUsers.length > 0) {
-        const recipientIds = recipientUsers.map((user) => user._id);
-
-        // Create recipient records in bulk, ensuring a clean slate
-        await CommunicationRecipient.deleteMany({ communicationId: communication._id });
-        const recipientRecords = recipientIds.map((userId) => ({
+        // Delete any existing notifications to avoid duplicates
+        await UserNotification.deleteMany({
           communicationId: communication._id,
-          userId: userId,
-        }));
-        await CommunicationRecipient.insertMany(recipientRecords);
+        });
 
-        // Create notifications in bulk
-        const sender = await User.findById(communication.senderUserId).select('firstName lastName');
-        const senderInfo = sender ? `${sender.firstName} ${sender.lastName}`.trim() : 'System';
-
-        const notificationsToCreate = recipientIds.map((userId) => ({
-          userId: userId,
-          type: 'communication',
-          title: `New Communication: ${communication.subject}`,
-          message: `You have received a new communication from ${senderInfo}.`,
+        // Create notifications for each recipient
+        const notifications = recipients.map((recipient) => ({
+          userId: recipient.userId._id,
+          communicationId: communication._id,
+          type:
+            communication.messageType === 'announcement'
+              ? 'announcement'
+              : 'communication',
+          title: communication.subject,
+          message: communication.content.substring(0, 500),
           priority: communication.priority || 'normal',
-          referenceId: communication._id,
-          referenceModel: 'Communication',
+          isRead: false,
+          isDisplayed: false,
+          data: {
+            senderName: senderInfo,
+            messageType: communication.messageType,
+            sentDate: communication.sentDate,
+          },
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         }));
 
-        await UserNotification.deleteMany({ referenceId: communication._id, referenceModel: 'Communication' });
-        createdNotifications = await UserNotification.insertMany(notificationsToCreate);
-      }
+        // Create notifications in the database
+        const createdNotifications =
+          await UserNotification.insertMany(notifications);
 
-      // Return success response
-      res.status(200).json({
-        success: true,
-        message: 'Communication sent successfully',
-        data: {
-          communication,
-          recipientCount: recipientUsers.length,
-          notificationCount: createdNotifications.length,
-        },
-      });
+        // Send real-time notifications via socket
+        if (global.socketService) {
+          recipients.forEach((recipient) => {
+            const notification = createdNotifications.find(
+              (n) => n.userId.toString() === recipient.userId._id.toString()
+            );
+            if (notification) {
+              global.socketService.emitToUser(
+                recipient.userId._id.toString(),
+                'new_notification',
+                notification
+              );
+            }
+          });
+        }
+
+        // Return success response
+        res.status(200).json({
+          success: true,
+          message: 'Communication sent successfully',
+          data: {
+            communication,
+            recipientCount: recipients.length,
+            notificationCount: createdNotifications.length,
+          },
+        });
+      } else {
+        // No recipients found
+        res.status(200).json({
+          success: true,
+          message: 'Communication sent, but no recipients found',
+          data: {
+            communication,
+            recipientCount: 0,
+            notificationCount: 0,
+          },
+        });
+      }
     } catch (error: any) {
       console.error('Error sending communication:', error);
       return next(
-        new ErrorResponse(`Error sending communication: ${error.message}`, 500)
+        new ErrorResponse(`Error sending communication: ${error.message}`,
+        500
       );
     }
   }
@@ -772,9 +752,7 @@ export const updateCommunication = asyncHandler(
     }
 
     // Check if user is authorized to update
-    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
-      req.user.role
-    );
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender =
       communication.senderUserId.toString() === req.user._id.toString();
 
@@ -810,7 +788,7 @@ export const updateCommunication = asyncHandler(
       }).select('_id');
 
       if (existingUsers.length !== req.body.recipientIds.length) {
-        return next(new ErrorResponse(`Some recipient IDs are invalid`, 400));
+        return next(new ErrorResponse('Some recipient IDs are invalid', 400);
       }
 
       // Update specific recipients
@@ -853,9 +831,7 @@ export const scheduleCommunication = asyncHandler(
     }
 
     // Check if user is authorized to schedule
-    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(
-      req.user.role
-    );
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender =
       communication.senderUserId.toString() === req.user._id.toString();
 
@@ -881,13 +857,13 @@ export const scheduleCommunication = asyncHandler(
     // Validate scheduled date
     const { scheduledDate } = req.body;
     if (!scheduledDate) {
-      return next(new ErrorResponse('Scheduled date is required', 400));
+      return next(new ErrorResponse('Scheduled date is required', 400);
     }
 
     const scheduledFor = new Date(scheduledDate);
     if (scheduledFor <= new Date()) {
       return next(
-        new ErrorResponse('Scheduled date must be in the future', 400)
+        new ErrorResponse('Scheduled date must be in the future', 400
       );
     }
 
@@ -899,24 +875,24 @@ export const scheduleCommunication = asyncHandler(
     // Create recipients for scheduled communication (same logic as sending)
     let recipients: any[] = [];
 
-    if (communication.recipientType === RecipientType.ALL) {
+    if (communication.recipientType === 'all') {
       // Get all active users
       const allUsers = await User.find({ isActive: true }).select('_id');
       recipients = allUsers.map((user) => ({
         communicationId: communication._id,
         userId: user._id,
       }));
-    } else if (communication.recipientType === RecipientType.ADMIN) {
+    } else if (communication.recipientType === 'admin') {
       // Get all admin users
       const adminUsers = await User.find({
-        role: { $in: ['admin', 'superadmin', 'secretary'] },
+        role: { $in: ['admin', 'superadmin', 'secretary'],
         isActive: true,
       }).select('_id');
       recipients = adminUsers.map((user) => ({
         communicationId: communication._id,
         userId: user._id,
       }));
-    } else if (communication.recipientType === RecipientType.SPECIFIC) {
+    } else if (communication.recipientType === 'specific') {
       // Use specific recipients
       if (
         communication.specificRecipients &&
@@ -950,7 +926,7 @@ export const scheduleCommunication = asyncHandler(
 // @route   GET /api/communications/:id/recipients
 // @access  Private
 export const getCommunicationRecipients = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const communication = await Communication.findById(req.params.id);
 
     if (!communication) {
@@ -962,7 +938,7 @@ export const getCommunicationRecipients = asyncHandler(
       );
     }
 
-    // Authorization check
+    // Check if user is authorized to view recipients
     const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender =
       communication.senderUserId.toString() === req.user._id.toString();
@@ -976,9 +952,9 @@ export const getCommunicationRecipients = asyncHandler(
       );
     }
 
-    // Get recipients with populated user details
+    // Get recipients with user details
     const recipients = await CommunicationRecipient.find({
-      communicationId: req.params.id,
+      communicationId: communication._id,
     })
       .populate({
         path: 'userId',
@@ -986,20 +962,32 @@ export const getCommunicationRecipients = asyncHandler(
       })
       .sort({ createdAt: 1 });
 
-    // Transform data for the frontend, ensuring a 'user' property exists
-    const transformedRecipients = recipients
-      .filter(r => r.userId) // Ensure user exists
-      .map(r => {
-        const recipientObj = r.toObject();
-        return {
-          ...recipientObj,
-          user: recipientObj.userId, // Nest the populated user object
-        };
-      });
+    // Get summary stats
+    const totalRecipients = recipients.length;
+    const readCount = recipients.filter((r) => r.readStatus === true).length;
 
     res.status(200).json({
       success: true,
-      data: transformedRecipients,
+      data: {
+        communication: {
+          _id: communication._id,
+          subject: communication.subject,
+          recipientType: communication.recipientType,
+          status: communication.status,
+          sentDate: communication.sentDate,
+          scheduledFor: communication.scheduledFor,
+        },
+        recipients,
+        stats: {
+          total: totalRecipients,
+          read: readCount,
+          unread: totalRecipients - readCount,
+          readRate:
+            totalRecipients > 0
+              ? (readCount / totalRecipients) * 100
+              : 0,
+        },
+      },
     });
   }
 );

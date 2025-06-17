@@ -71,7 +71,6 @@ import roleRoutes from './routes/role.routes';
 import userManagementRoutes from './routes/userManagement.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import memberDashboardRoutes from './routes/memberDashboard.routes';
-import cacheRoutes from './routes/cache.routes';
 import messageRoutes from './routes/message.routes';
 import notificationRoutes from './routes/notification.routes';
 
@@ -124,7 +123,6 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/user-management', userManagementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/member-dashboard', memberDashboardRoutes);
-app.use('/api/cache', cacheRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 

@@ -169,50 +169,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 ))}
               </nav>
             </div>
-
-            {/* Utilities Section */}
-            {['admin', 'superadmin'].includes(user?.role) && (
-              <div className="py-4">
-                <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  UTILITIES
-                </p>
-                <nav className="mt-2 space-y-1">
-                  <Link
-                    to="/test-api"
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      location.pathname === '/test-api'
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-foreground/70 hover:bg-accent hover:text-foreground'
-                    }`}
-                  >
-                    <i className="fas fa-network-wired mr-3 text-muted-foreground"></i>
-                    API Connection Test
-                  </Link>
-                  <Link
-                    to="/component-preview"
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      location.pathname === '/component-preview'
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-foreground/70 hover:bg-accent hover:text-foreground'
-                    }`}
-                  >
-                    <i className="fas fa-palette mr-3 text-muted-foreground"></i>
-                    Component Preview
-                  </Link>
-                  <Link
-                    to="/admin/cache-monitoring"
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      location.pathname === '/admin/cache-monitoring'
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-foreground/70 hover:bg-accent hover:text-foreground'
-                    }`}
-                  >
-                    <i className="fas fa-memory mr-3 text-muted-foreground"></i>
-                    Cache Monitoring
-                  </Link>
-                </nav>
-              </div>
-            )}
           </div>
 
           {/* User Profile Section */}

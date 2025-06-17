@@ -260,6 +260,8 @@ const MemberDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {showLoginModal && <LoginNotificationModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />}
+
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg p-6 shadow-lg">
         <div className="flex flex-col md:flex-row justify-between items-center">
