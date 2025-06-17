@@ -117,7 +117,7 @@ const UsersManagement: React.FC = () => {
       user.firstName?.toLowerCase().includes(searchLower) ||
       user.lastName?.toLowerCase().includes(searchLower) ||
       user.email?.toLowerCase().includes(searchLower) ||
-      user.pcnNumber?.toLowerCase().includes(searchLower)
+      user.pcnLicense?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -314,7 +314,7 @@ const UsersManagement: React.FC = () => {
                           {user.firstName} {user.lastName}
                         </td>
                         <td className="p-2">{user.email}</td>
-                        <td className="p-2">{user.pcnNumber}</td>
+                        <td className="p-2">{user.pcnLicense}</td>
                         <td className="p-2">
                           <span className="capitalize">{user.role}</span>
                         </td>

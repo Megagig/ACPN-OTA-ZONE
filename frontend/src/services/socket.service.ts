@@ -28,6 +28,12 @@ class SocketService {
         }/${this.maxRetries})`
       );
 
+      // Disconnect existing socket if any
+      if (this.socket) {
+        this.socket.disconnect();
+        this.socket = null;
+      }
+
       this.socket = io(serverUrl, {
         auth: {
           token: token,

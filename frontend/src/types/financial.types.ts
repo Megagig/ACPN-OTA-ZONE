@@ -312,3 +312,15 @@ export interface PaymentSubmission {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type PaymentType =
+  | 'due'
+  | 'donation'
+  | 'event_fee'
+  | 'registration_fee'
+  | 'conference_fee'
+  | 'accommodation'
+  | 'seminar'
+  | 'transportation'
+  | 'building'
+  | 'other';

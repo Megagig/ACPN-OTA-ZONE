@@ -1,185 +1,85 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Button,
-  Card,
-  CardBody,
-  Heading,
-  Text,
-  Box,
-  HStack,
-  VStack,
-  Select,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
-  Input,
-  Flex,
-  useToast,
-  Checkbox,
-  Spinner,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  useDisclosure,
-} from '@chakra-ui/react';
-import {
-  FaCalendarCheck,
-  FaUserCheck,
-  FaDownload,
-  FaExclamationTriangle,
-} from 'react-icons/fa';
-import eventService from '../../services/event.service';
-import type {
-  Event,
-  EventAttendance,
-  EventFilters,
-  EventType,
-  AttendanceMarkingData,
-} from '../../types/event.types';
-import type { User } from '../../types/auth.types';
+import attendanceService from '../../services/attendanceService';
+import type { Event, AttendeeWithUser } from '../../services/attendanceService';
+import { toast } from 'react-toastify';
 
-interface AttendeeWithUser {
+interface User {
   _id: string;
-  eventId: string;
-  userId: User;
-  status: string;
-  paymentStatus: string;
-  paymentReference?: string;
-  registeredAt: string;
-  createdAt?: string;
-  updatedAt?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 const AttendanceManagement: React.FC = () => {
   const navigate = useNavigate();
-  const toast = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<AttendeeWithUser[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [year, setYear] = useState<number>(new Date().getFullYear());
-  const [attendanceStatus, setAttendanceStatus] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [attendanceStatus, setAttendanceStatus] = useState<{[key: string]: boolean}>({});
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [eventType, setEventType] = useState<string>('all');
-  const [calculatingPenalties, setCalculatingPenalties] =
-    useState<boolean>(false);
+  const [calculatingPenalties, setCalculatingPenalties] = useState<boolean>(false);
   const [sendingWarnings, setSendingWarnings] = useState<boolean>(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isWarningOpen,
-    onOpen: onWarningOpen,
-    onClose: onWarningClose,
-  } = useDisclosure();
-  const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isWarningOpen, setIsWarningOpen] = useState<boolean>(false);
+  
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   const years = Array.from(
     { length: 5 },
     (_, i) => new Date().getFullYear() - i
   );
 
-  const fetchEvents = useCallback(async () => {
+  // Fetch events when year changes
+  useEffect(() => {
+    fetchEvents();
+  }, [year]);
+
+  const fetchEvents = async () => {
     try {
       setLoading(true);
-      const filters: EventFilters = {};
-      if (eventType !== 'all') {
-        filters.eventType = eventType as EventType;
-      }
-
-      const response = await eventService.getAllEvents(filters);
-      const yearEvents =
-        response.data?.filter((event: Event) => {
-          const eventYear = new Date(event.startDate).getFullYear();
-          return eventYear === year;
-        }) || [];
-
-      setEvents(yearEvents);
-
-      if (yearEvents.length > 0 && !selectedEvent) {
-        // Only auto-select if no event is currently selected
-        setSelectedEvent(yearEvents[0]);
-      } else if (yearEvents.length === 0) {
-        setSelectedEvent(null);
-        setAttendees([]);
+      const fetchedEvents = await attendanceService.getEvents(year);
+      setEvents(fetchedEvents);
+      if (fetchedEvents.length > 0 && !selectedEvent) {
+        setSelectedEvent(fetchedEvents[0]);
       }
     } catch (error) {
+      toast.error('Failed to fetch events');
       console.error('Error fetching events:', error);
-      toast({
-        title: 'Error fetching events',
-        description: 'Unable to load events. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
     } finally {
       setLoading(false);
     }
-  }, [year, eventType, toast, selectedEvent]);
+  };
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
-  const handleEventSelection = useCallback(
-    async (event: Event) => {
-      try {
-        setLoading(true);
-        setSelectedEvent(event);
-
-        // Get attendance data from the event
-        const attendanceData = await eventService.getEventAttendance(event._id);
-
-        // Get all registrations with attendance status
-        const registrationsResponse = await eventService.getEventRegistrations(
-          event._id
-        );
-        const attendeesList = registrationsResponse.data || [];
-
-        // Map attendance status
-        const attendanceMap: { [key: string]: boolean } = {};
-        if (attendanceData && attendanceData.data) {
-          attendanceData.data.forEach((record: EventAttendance) => {
-            if (record.userId && typeof record.userId === 'object') {
-              attendanceMap[(record.userId as User)._id] = !!record.attendedAt;
-            } else if (typeof record.userId === 'string') {
-              attendanceMap[record.userId] = !!record.attendedAt;
-            }
-          });
+  const handleEventSelection = async (event: Event) => {
+    setSelectedEvent(event);
+    setLoading(true);
+    
+    try {
+      const fetchedAttendees = await attendanceService.getEventAttendees(event._id);
+      setAttendees(fetchedAttendees);
+      
+      // Initialize attendance status from fetched attendees, skipping any with null userId
+      const initialStatus = fetchedAttendees.reduce((acc, attendee) => {
+        if (attendee.userId && attendee.userId._id) {
+          return {
+            ...acc,
+            [attendee.userId._id]: attendee.attended
+          };
         }
-
-        setAttendanceStatus(attendanceMap);
-        setAttendees(attendeesList as unknown as AttendeeWithUser[]);
-      } catch (error) {
-        console.error('Error fetching event details:', error);
-        toast({
-          title: 'Error',
-          description: 'Unable to load event details. Please try again.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [toast]
-  );
-
-  // Auto-load event data when selectedEvent changes
-  useEffect(() => {
-    if (selectedEvent) {
-      handleEventSelection(selectedEvent);
+        return acc;
+      }, {});
+      setAttendanceStatus(initialStatus);
+    } catch (error) {
+      toast.error('Failed to fetch attendees');
+      console.error('Error fetching attendees:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [selectedEvent, handleEventSelection]);
+  };
 
   const handleAttendanceChange = (userId: string, attended: boolean) => {
     setAttendanceStatus((prev) => ({
@@ -193,37 +93,16 @@ const AttendanceManagement: React.FC = () => {
 
     try {
       setLoading(true);
-
-      const attendanceList: AttendanceMarkingData[] = Object.entries(
-        attendanceStatus
-      )
-        .filter(([, attended]) => attended) // Only mark attended users
-        .map(([userId]) => ({
-          userId,
-          eventId: selectedEvent._id,
-        }));
-
-      await eventService.markAttendance(selectedEvent._id, attendanceList);
-
-      toast({
-        title: 'Attendance saved',
-        description: 'Attendance has been successfully recorded.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      // Refresh attendance data
-      handleEventSelection(selectedEvent);
+      const attendanceData = Object.entries(attendanceStatus).map(([userId, present]) => ({
+        userId,
+        attended: present
+      }));
+      
+      await attendanceService.updateAttendance(selectedEvent._id, attendanceData);
+      toast.success('Attendance has been successfully recorded!');
     } catch (error) {
+      toast.error('Unable to save attendance. Please try again.');
       console.error('Error saving attendance:', error);
-      toast({
-        title: 'Error',
-        description: 'Unable to save attendance. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
     } finally {
       setLoading(false);
     }
@@ -232,28 +111,12 @@ const AttendanceManagement: React.FC = () => {
   const handleCalculatePenalties = async () => {
     try {
       setCalculatingPenalties(true);
-
-      // Call API to calculate penalties for the current year
-      await eventService.calculateMeetingPenalties(year);
-
-      toast({
-        title: 'Penalties calculated',
-        description: `Penalties for ${year} have been calculated successfully.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      onClose();
+      await attendanceService.calculatePenalties(year);
+      setIsOpen(false);
+      toast.success(`Penalties for ${year} have been calculated successfully.`);
     } catch (error) {
+      toast.error('Unable to calculate penalties. Please try again.');
       console.error('Error calculating penalties:', error);
-      toast({
-        title: 'Error',
-        description: 'Unable to calculate penalties. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
     } finally {
       setCalculatingPenalties(false);
     }
@@ -262,28 +125,12 @@ const AttendanceManagement: React.FC = () => {
   const handleSendWarnings = async () => {
     try {
       setSendingWarnings(true);
-
-      // Call API to send attendance warnings for the current year
-      await eventService.sendAttendanceWarnings(year);
-
-      toast({
-        title: 'Warnings sent',
-        description: `Attendance warnings for ${year} have been sent successfully.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      onWarningClose();
+      await attendanceService.sendWarnings(year);
+      setIsWarningOpen(false);
+      toast.success(`Attendance warnings for ${year} have been sent successfully.`);
     } catch (error) {
+      toast.error('Unable to send warnings. Please try again.');
       console.error('Error sending warnings:', error);
-      toast({
-        title: 'Error',
-        description: 'Unable to send warnings. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
     } finally {
       setSendingWarnings(false);
     }
@@ -294,9 +141,7 @@ const AttendanceManagement: React.FC = () => {
 
     return attendees.filter((attendee) => {
       const user = attendee.userId;
-      const name = `${user?.firstName || ''} ${
-        user?.lastName || ''
-      }`.toLowerCase();
+      const name = `${user?.firstName || ''} ${user?.lastName || ''}`.toLowerCase();
       const email = (user?.email || '').toLowerCase();
       const searchLower = searchTerm.toLowerCase();
 
@@ -304,110 +149,100 @@ const AttendanceManagement: React.FC = () => {
     });
   };
 
-  const exportAttendanceCSV = () => {
+  const exportAttendanceCSV = async () => {
     if (!selectedEvent || !attendees.length) return;
-
-    const headers = ['Name', 'Email', 'Registration Date', 'Attendance Status'];
-    const data = attendees.map((attendee) => {
-      const user = attendee.userId;
-      const name = `${user?.firstName || ''} ${user?.lastName || ''}`;
-      const email = user?.email || '';
-      const registrationDate = new Date(
-        attendee.registeredAt || ''
-      ).toLocaleDateString();
-      const status = attendanceStatus[user?._id] ? 'Present' : 'Absent';
-
-      return [name, email, registrationDate, status];
-    });
-
-    const csvContent = [headers, ...data]
-      .map((row) => row.map((cell) => `"${cell}"`).join(','))
-      .join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${selectedEvent.title}_attendance.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    try {
+      const blob = await attendanceService.exportAttendanceCSV(selectedEvent._id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedEvent.title}-attendance.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast.error('Failed to export attendance data');
+      console.error('Error exporting attendance:', error);
+    }
   };
 
   const filteredAttendees = filterAttendees();
 
+  const getEventTypeColor = (type: string) => {
+    switch (type) {
+      case 'meetings': return 'bg-blue-100 text-blue-800';
+      case 'conference': return 'bg-purple-100 text-purple-800';
+      case 'workshop': return 'bg-yellow-100 text-yellow-800';
+      case 'training': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <Box className="p-5">
-      <Flex justify="space-between" align="center" mb={6}>
-        <Box>
-          <Heading size="lg">Attendance Management</Heading>
-          <Text color="gray.500">
-            Track and manage attendance for events and meetings
-          </Text>
-        </Box>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <div className="mb-6 md:mb-0">
+            <h1 className="text-3xl font-bold text-gray-800">Attendance Management</h1>
+            <p className="text-gray-600 mt-2">Track and manage attendance for events and meetings</p>
+          </div>
 
-        <HStack spacing={4}>
-          <Button
-            leftIcon={<FaCalendarCheck />}
-            colorScheme="blue"
-            onClick={() => navigate('/admin/events')}
-          >
-            Event Management
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200 shadow-md"
+              onClick={() => navigate('/admin/events')}
+            >
+              <span>Event Management</span>
+            </button>
 
-          {/* Only show these buttons for the current year */}
-          {year === new Date().getFullYear() && (
-            <>
-              <Button
-                leftIcon={<FaExclamationTriangle />}
-                colorScheme="orange"
-                onClick={onWarningOpen}
-              >
-                Send Warnings
-              </Button>
+            {year === new Date().getFullYear() && (
+              <>
+                <button
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition duration-200 shadow-md"
+                  onClick={() => setIsWarningOpen(true)}
+                >
+                  <span>Send Warnings</span>
+                </button>
 
-              <Button
-                leftIcon={<FaUserCheck />}
-                colorScheme="green"
-                onClick={onOpen}
-              >
-                Calculate Penalties
-              </Button>
-            </>
-          )}
-        </HStack>
-      </Flex>
+                <button
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200 shadow-md"
+                  onClick={() => setIsOpen(true)}
+                >
+                  <span>Calculate Penalties</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
 
-      <Card mb={6}>
-        <CardBody>
-          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-            <HStack spacing={4}>
-              <Box>
-                <Text fontWeight="medium" mb={1}>
-                  Filter by Year
-                </Text>
-                <Select
+        {/* Filters Card */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Year</label>
+                <select
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
-                  width="150px"
+                  className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
                   {years.map((y) => (
                     <option key={y} value={y}>
                       {y}
                     </option>
                   ))}
-                </Select>
-              </Box>
+                </select>
+              </div>
 
-              <Box>
-                <Text fontWeight="medium" mb={1}>
-                  Event Type
-                </Text>
-                <Select
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                <select
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
-                  width="180px"
+                  className="w-full sm:w-44 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
                   <option value="all">All Events</option>
                   <option value="meetings">Meetings Only</option>
@@ -416,260 +251,293 @@ const AttendanceManagement: React.FC = () => {
                   <option value="seminar">Seminars</option>
                   <option value="training">Training</option>
                   <option value="social">Social</option>
-                </Select>
-              </Box>
-            </HStack>
+                </select>
+              </div>
+            </div>
 
             {selectedEvent && (
-              <HStack spacing={4}>
-                <Box>
-                  <Text fontWeight="medium" mb={1}>
-                    Search Attendees
-                  </Text>
-                  <Input
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search Attendees</label>
+                  <input
+                    type="text"
                     placeholder="Search by name or email"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    width="250px"
+                    className="w-full sm:w-60 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                </Box>
+                </div>
 
-                <Button
-                  leftIcon={<FaDownload />}
+                <button
+                  className="flex items-center gap-2 px-4 py-2 mt-6 sm:mt-0 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition duration-200"
                   onClick={exportAttendanceCSV}
-                  variant="outline"
-                  colorScheme="blue"
                   disabled={!selectedEvent || !attendees.length}
                 >
-                  Export CSV
-                </Button>
-              </HStack>
+                  <span>Export CSV</span>
+                </button>
+              </div>
             )}
-          </Flex>
-        </CardBody>
-      </Card>
+          </div>
+        </div>
 
-      <Flex direction={{ base: 'column', md: 'row' }} gap={6}>
-        <Card width={{ base: '100%', md: '350px' }}>
-          <CardBody>
-            <Heading size="md" mb={4}>
-              Events
-            </Heading>
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Events Panel */}
+          <div className="w-full lg:w-1/3">
+            <div className="bg-white rounded-xl shadow-md p-6 h-full">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Events</h2>
 
-            {loading && !selectedEvent ? (
-              <Flex justify="center" py={8}>
-                <Spinner />
-              </Flex>
-            ) : events.length === 0 ? (
-              <Text color="gray.500" textAlign="center" py={4}>
-                No events found for the selected filters
-              </Text>
-            ) : (
-              <VStack
-                spacing={3}
-                align="stretch"
-                maxHeight="600px"
-                overflow="auto"
-              >
-                {events.map((event) => (
-                  <Box
-                    key={event._id}
-                    p={3}
-                    borderWidth={1}
-                    borderRadius="md"
-                    cursor="pointer"
-                    bg={selectedEvent?._id === event._id ? 'blue.50' : 'white'}
-                    borderColor={
-                      selectedEvent?._id === event._id ? 'blue.500' : 'gray.200'
-                    }
-                    _hover={{ bg: 'gray.50' }}
-                    onClick={() => handleEventSelection(event)}
-                  >
-                    <Text fontWeight="medium">{event.title}</Text>
-                    <Text fontSize="sm" color="gray.500">
-                      {new Date(event.startDate).toLocaleDateString()}
-                    </Text>
-                    <Flex mt={2} gap={2} wrap="wrap">
-                      <Badge
-                        colorScheme={
-                          event.eventType === 'meetings' ? 'green' : 'blue'
-                        }
-                      >
-                        {event.eventType}
-                      </Badge>
-                      <Badge colorScheme="purple">
-                        {event.attendees?.length || 0} attendees
-                      </Badge>
-                    </Flex>
-                  </Box>
-                ))}
-              </VStack>
-            )}
-          </CardBody>
-        </Card>
-
-        <Card flex={1}>
-          <CardBody>
-            <Flex justify="space-between" align="center" mb={4}>
-              <Heading size="md">
-                {selectedEvent
-                  ? `${selectedEvent.title} Attendance`
-                  : 'Select an Event'}
-              </Heading>
-
-              {selectedEvent && (
-                <Button
-                  colorScheme="green"
-                  onClick={handleSaveAttendance}
-                  isLoading={loading}
-                >
-                  Save Attendance
-                </Button>
+              {loading && !selectedEvent ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : events.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No events found for the selected filters
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                  {events.map((event) => (
+                    <div
+                      key={event._id}
+                      className={`p-4 border rounded-lg cursor-pointer transition duration-200 hover:shadow-md ${
+                        selectedEvent?._id === event._id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 bg-white'
+                      }`}
+                      onClick={() => handleEventSelection(event)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-semibold text-gray-800">{event.title}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ${getEventTypeColor(event.eventType)}`}>
+                          {event.eventType}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(event.startDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                      <div className="flex items-center mt-3 text-sm text-gray-500">
+                        <span className="flex items-center mr-4">
+                          <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
+                          {event.attendees?.length || 0} attendees
+                        </span>
+                        <span className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
+                          Completed
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-            </Flex>
+            </div>
+          </div>
 
-            {loading && selectedEvent ? (
-              <Flex justify="center" py={8}>
-                <Spinner />
-              </Flex>
-            ) : !selectedEvent ? (
-              <Text color="gray.500" textAlign="center" py={8}>
-                Select an event to manage attendance
-              </Text>
-            ) : filteredAttendees.length === 0 ? (
-              <Text color="gray.500" textAlign="center" py={8}>
-                No attendees found for this event
-              </Text>
-            ) : (
-              <Box overflowX="auto">
-                <Table variant="simple">
-                  <Thead>
-                    <Tr>
-                      <Th>Name</Th>
-                      <Th>Email</Th>
-                      <Th>Registration Date</Th>
-                      <Th>Present</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {filteredAttendees.map((attendee) => {
-                      const user = attendee.userId;
-                      return (
-                        <Tr key={user?._id || attendee._id}>
-                          <Td>
-                            {user?.firstName} {user?.lastName}
-                          </Td>
-                          <Td>{user?.email}</Td>
-                          <Td>
-                            {new Date(
-                              attendee.registeredAt || ''
-                            ).toLocaleDateString()}
-                          </Td>
-                          <Td>
-                            <Checkbox
-                              isChecked={!!attendanceStatus[user?._id]}
-                              onChange={(e) =>
-                                handleAttendanceChange(
-                                  user?._id,
-                                  e.target.checked
-                                )
-                              }
-                              colorScheme="green"
-                            />
-                          </Td>
-                        </Tr>
-                      );
-                    })}
-                  </Tbody>
-                </Table>
-              </Box>
-            )}
-          </CardBody>
-        </Card>
-      </Flex>
+          {/* Attendance Panel */}
+          <div className="w-full lg:w-2/3">
+            <div className="bg-white rounded-xl shadow-md p-6 h-full">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 sm:mb-0">
+                  {selectedEvent ? `${selectedEvent.title} Attendance` : 'Select an Event'}
+                </h2>
 
-      {/* Confirmation Dialog for Calculating Penalties */}
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Calculate Attendance Penalties
-            </AlertDialogHeader>
+                {selectedEvent && (
+                  <button
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200 shadow-md disabled:opacity-50"
+                    onClick={handleSaveAttendance}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save Attendance'
+                    )}
+                  </button>
+                )}
+              </div>
 
-            <AlertDialogBody>
-              This will calculate penalties for members who didn't meet the 50%
-              attendance threshold for meetings in {year}.
-              <br />
-              <br />
-              The penalty will be half of the total annual dues for each member
-              below the threshold.
-              <br />
-              <br />
-              Are you sure you want to continue?
-            </AlertDialogBody>
+              {loading && selectedEvent ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : !selectedEvent ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <p>Select an event to manage attendance</p>
+                </div>
+              ) : filteredAttendees.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                  </div>
+                  <p>No attendees found for this event</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Registration Date
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Present
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredAttendees.map((attendee) => {
+                        const user = attendee.userId;
+                        if (!user) return null; // Skip rendering if user is null
+                        return (
+                          <tr key={user._id || attendee._id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {user.firstName} {user.lastName}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(attendee.markedAt || '').toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <div className="flex justify-center">
+                                <input
+                                  type="checkbox"
+                                  checked={!!attendanceStatus[user._id]}
+                                  onChange={(e) =>
+                                    handleAttendanceChange(
+                                      user._id,
+                                      e.target.checked
+                                    )
+                                  }
+                                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                colorScheme="red"
-                onClick={handleCalculatePenalties}
-                ml={3}
-                isLoading={calculatingPenalties}
-              >
-                Calculate Penalties
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+      {/* Calculate Penalties Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Calculate Attendance Penalties</h3>
+              <p className="text-gray-600 mb-4">
+                This will calculate penalties for members who didn't meet the 50%
+                attendance threshold for meetings in {year}.
+              </p>
+              <p className="text-gray-600 mb-4">
+                The penalty will be half of the total annual dues for each member
+                below the threshold.
+              </p>
+              <p className="text-gray-600 mb-6">Are you sure you want to continue?</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  ref={cancelRef}
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCalculatePenalties}
+                  disabled={calculatingPenalties}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200 disabled:opacity-50"
+                >
+                  {calculatingPenalties ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Calculating...
+                    </span>
+                  ) : (
+                    'Calculate Penalties'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Confirmation Dialog for Sending Attendance Warnings */}
-      <AlertDialog
-        isOpen={isWarningOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onWarningClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Send Attendance Warnings
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              This will send warning notifications to members who are currently
-              below the 50% attendance threshold for meetings in {year}.
-              <br />
-              <br />
-              The warnings will help members avoid penalties by encouraging them
-              to attend remaining meetings this year.
-              <br />
-              <br />
-              Are you sure you want to send these warnings?
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onWarningClose}>
-                Cancel
-              </Button>
-              <Button
-                colorScheme="orange"
-                onClick={handleSendWarnings}
-                ml={3}
-                isLoading={sendingWarnings}
-              >
-                Send Warnings
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-    </Box>
+      {/* Send Warnings Modal */}
+      {isWarningOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Send Attendance Warnings</h3>
+              <p className="text-gray-600 mb-4">
+                This will send warning notifications to members who are currently
+                below the 50% attendance threshold for meetings in {year}.
+              </p>
+              <p className="text-gray-600 mb-4">
+                The warnings will help members avoid penalties by encouraging them
+                to attend remaining meetings this year.
+              </p>
+              <p className="text-gray-600 mb-6">Are you sure you want to send these warnings?</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  ref={cancelRef}
+                  onClick={() => setIsWarningOpen(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendWarnings}
+                  disabled={sendingWarnings}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition duration-200 disabled:opacity-50"
+                >
+                  {sendingWarnings ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Sending...
+                    </span>
+                  ) : (
+                    'Send Warnings'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

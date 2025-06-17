@@ -420,19 +420,11 @@ export const markDueAsPaid = async (dueId: string): Promise<Due> => {
   return response.data.data;
 };
 
-// Analytics API
+// Dues Analytics API
 export const getDueAnalytics = async (
   year?: number
-): Promise<{
-  totalDues: number;
-  paidDues: number;
-  unpaidDues: number;
-  totalAmount: number;
-  collectedAmount: number;
-  outstandingAmount: number;
-  monthlyData: Array<{ month: string; amount: number; count: number }>;
-}> => {
-  const response = await api.get(`${BASE_URL}/dues/analytics/all`, {
+): Promise<any> => {
+  const response = await api.get(`/dues/analytics/all`, {
     params: { year },
   });
   return response.data.data;
@@ -440,16 +432,9 @@ export const getDueAnalytics = async (
 
 export const getPharmacyDueAnalytics = async (
   pharmacyId: string
-): Promise<{
-  totalDues: number;
-  paidDues: number;
-  unpaidDues: number;
-  totalAmount: number;
-  paidAmount: number;
-  outstandingAmount: number;
-}> => {
+): Promise<any> => {
   const response = await api.get(
-    `${BASE_URL}/dues/analytics/pharmacy/${pharmacyId}`
+    `/dues/analytics/pharmacy/${pharmacyId}`
   );
   return response.data.data;
 };
@@ -506,6 +491,21 @@ export const getPharmacyPaymentHistory = async (
     `${BASE_URL}/dues/pharmacy/${pharmacyId}/history`
   );
   return response.data;
+};
+
+// Payments Admin Endpoints
+export const getPendingPayments = async (): Promise<any> => {
+  const response = await api.get(`/payments/admin/pending`);
+  return response.data.data;
+};
+
+export const getAllPayments = async (params?: { status?: string }): Promise<any> => {
+  if (params?.status === 'pending') {
+    const response = await api.get(`/payments/admin/pending`);
+    return response.data.data;
+  }
+  const response = await api.get(`/payments/admin/all`, { params });
+  return response.data.data;
 };
 
 // Payment Management API
@@ -644,11 +644,6 @@ export const getPaymentsByDue = async (dueId: string): Promise<Payment[]> => {
   return response.data.data;
 };
 
-export const getPendingPayments = async (): Promise<Payment[]> => {
-  const response = await api.get(`${BASE_URL}/payments/admin/pending`);
-  return response.data.data;
-};
-
 export const getPaymentById = async (paymentId: string): Promise<Payment> => {
   const response = await api.get(`${BASE_URL}/payments/${paymentId}`);
   return response.data.data;
@@ -680,23 +675,6 @@ export const rejectPayment = async (
 
 export const deletePayment = async (paymentId: string): Promise<void> => {
   await api.delete(`${BASE_URL}/payments/${paymentId}`);
-};
-
-export const getAllPayments = async (params?: {
-  page?: number;
-  limit?: number;
-  status?: string;
-}): Promise<{
-  payments: Payment[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}> => {
-  const response = await api.get(`${BASE_URL}/payments/admin/all`, { params });
-  return response.data;
 };
 
 export const reviewPayment = async (
@@ -916,16 +894,33 @@ export const getFinancialAnalytics = async (): Promise<FinancialAnalytics> => {
   };
 };
 
-export const getFinancialReports = async (): Promise<FinancialReport[]> => {
-  return [
-    {
-      id: '1',
-      type: 'Monthly',
-      period: 'June 2024',
-      totalAmount: 500000,
-      generatedAt: new Date(),
-    },
-  ];
+export const getFinancialReports = async (params: {
+  reportType?: 'yearly' | 'monthly' | 'custom';
+  year?: number;
+  month?: number;
+  startDate?: string;
+  endDate?: string;
+}): Promise<any> => {
+  const queryParams = new URLSearchParams();
+  
+  if (params.reportType) {
+    queryParams.append('reportType', params.reportType);
+  }
+  if (params.year) {
+    queryParams.append('year', params.year.toString());
+  }
+  if (params.month) {
+    queryParams.append('month', params.month.toString());
+  }
+  if (params.startDate) {
+    queryParams.append('startDate', params.startDate);
+  }
+  if (params.endDate) {
+    queryParams.append('endDate', params.endDate);
+  }
+
+  const response = await api.get(`/financial-records/reports?${queryParams.toString()}`);
+  return response.data.data;
 };
 
 // Get clearance certificate for a paid due
@@ -956,6 +951,15 @@ export const generateCertificatePDF = async (
     console.error('Error generating PDF certificate:', error);
     throw error;
   }
+};
+
+export const recordPayment = async (formData: FormData): Promise<any> => {
+  const response = await api.post('/payments/record', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data.data;
 };
 
 // All exported functions
@@ -1043,6 +1047,16 @@ const financialService = {
   // Clearance Certificate PDF
   getClearanceCertificate,
   generateCertificatePDF,
+
+  // Record Payment
+  recordPayment,
+
+  downloadReport: async (reportId: string): Promise<Blob> => {
+    const response = await api.get(`${BASE_URL}/financial-records/reports/${reportId}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 
 export default financialService;

@@ -41,6 +41,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         path: '/admin/dashboard',
         icon: 'tachometer-alt',
       },
+      {
+        name: 'Dues Management',
+        path: '/admin/dues-management',
+        icon: 'money-bill',
+      },
       { name: 'Pharmacies', path: '/admin/pharmacies', icon: 'building' },
       { name: 'Users', path: '/admin/users', icon: 'users' },
       { name: 'Roles', path: '/admin/roles', icon: 'user-tag' },

@@ -73,30 +73,50 @@ const MemberEventDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [favorite, setFavorite] = useState(false);
 
+  // Helper to fetch with timeout
+  const fetchWithTimeout = (promise: Promise<any>, ms = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms)),
+    ]);
+  };
+
   const loadEventDetails = useCallback(async () => {
-    if (!eventId) return;
+    if (!eventId) {
+      setError('No event ID provided.');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
 
     try {
-      setLoading(true);
-      setError(null);
-
-      const [eventData, registrations] = await Promise.all([
-        EventService.getEventById(eventId),
-        EventService.getUserRegistrations(user?._id, 1, 100),
-      ]);
-
+      // 1. Fetch event details with timeout
+      const eventData = await fetchWithTimeout(EventService.getEventById(eventId));
       setEvent(eventData);
 
-      // Find user's registration for this event
-      const userReg = registrations.data.find((reg) => reg.eventId === eventId);
-      setUserRegistration(userReg || null);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load event details');
+      // 2. Only fetch registrations if user is present
+      if (user) {
+        try {
+          const registrations = await fetchWithTimeout(EventService.getUserRegistrations(1, 100));
+          const userReg = registrations.data.find((reg: any) => reg.eventId === eventId);
+          setUserRegistration(userReg || null);
+        } catch (regError) {
+          console.error('Error fetching user registrations:', regError);
+          setUserRegistration(null);
+        }
+      } else {
+        setUserRegistration(null);
+      }
+    } catch (err: any) {
+      console.error('Error loading event details:', err);
+      setError(err?.message || 'Failed to load event details');
+      setEvent(null);
     } finally {
       setLoading(false);
     }
-  }, [eventId, user?._id]);
+  }, [eventId, user]);
 
   useEffect(() => {
     loadEventDetails();
@@ -253,15 +273,7 @@ const MemberEventDetails: React.FC = () => {
     };
   };
 
-  if (loading) {
-    return (
-      <Flex justify="center" align="center" minH="400px">
-        <Spinner size="xl" />
-      </Flex>
-    );
-  }
-
-  if (error && !event) {
+  if (error) {
     return (
       <Box p={4}>
         <Alert status="error" mb={3}>
@@ -277,6 +289,14 @@ const MemberEventDetails: React.FC = () => {
           Back to Events
         </Button>
       </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Flex justify="center" align="center" minH="400px">
+        <Spinner size="xl" color="blue.500" />
+      </Flex>
     );
   }
 

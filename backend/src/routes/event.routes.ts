@@ -23,6 +23,7 @@ import {
   sendAttendanceWarningsForYear,
   publishEvent,
   cancelEvent,
+  bulkRegisterAllMembers,
 } from '../controllers/event.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import {
@@ -155,5 +156,10 @@ router
     authorize(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.SECRETARY),
     cancelEvent
   );
+
+// Bulk register all members for an event (Admin only)
+router
+  .route('/:id/bulk-register')
+  .post(authorize(UserRole.ADMIN, UserRole.SUPERADMIN), bulkRegisterAllMembers);
 
 export default router;

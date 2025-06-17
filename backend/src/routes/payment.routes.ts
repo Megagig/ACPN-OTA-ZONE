@@ -21,6 +21,7 @@ import {
   reviewPayment,
   getPendingPayments,
   deletePayment,
+  recordPayment,
 } from '../controllers/payment.controller';
 
 const router = express.Router();
@@ -303,6 +304,17 @@ router.delete(
   requireAdminRole,
   clearCacheMiddleware('payments'),
   deletePayment
+);
+
+// Add a new endpoint for recording any payment type
+router.post(
+  '/record',
+  authenticateToken,
+  requireAdminRole,
+  handleUploadErrors,
+  requireAdminRole,
+  clearCacheMiddleware('payments'),
+  recordPayment
 );
 
 export default router;

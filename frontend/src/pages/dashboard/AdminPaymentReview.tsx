@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   usePayments,
   usePendingPayments,
@@ -7,62 +7,28 @@ import {
   PaymentApprovalStatus,
   type Payment,
 } from '../../hooks/usePayments';
-import { format } from 'date-fns';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '../../components/shadcn/card';
-import { Button } from '../../components/shadcn/button';
-import { Badge } from '../../components/shadcn/badge';
-import { Skeleton } from '../../components/shadcn/skeleton';
-import { Pagination } from '../../components/shadcn/pagination';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../../components/shadcn/dialog';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../../components/shadcn/tabs';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '../../components/shadcn/alert';
-import { Textarea } from '../../components/shadcn/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/shadcn/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../../components/shadcn/dropdown-menu';
+import { 
+  Eye, 
+  Check, 
+  X, 
+  Trash2, 
+  CreditCard, 
+  Calendar, 
+  User, 
+  Building, 
+  Receipt,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  FileText,
+  Search
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminPaymentReview: React.FC = () => {
-  // State for UI management
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [activeTab, setActiveTab] = useState<PaymentApprovalStatus | 'all'>(
-    PaymentApprovalStatus.PENDING
-  );
-
-  // State for payment review
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -70,8 +36,9 @@ const AdminPaymentReview: React.FC = () => {
     action: 'approve' as 'approve' | 'reject',
     rejectionReason: '',
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // React Query hooks
+  // Fetch payments from API
   const {
     data: paymentsData,
     isLoading: paymentsLoading,
@@ -79,16 +46,80 @@ const AdminPaymentReview: React.FC = () => {
     refetch: refetchPayments,
   } = usePayments(
     currentPage,
-    itemsPerPage,
-    activeTab !== 'all' ? { approvalStatus: activeTab } : {}
+    10,
+    activeTab !== 'all' ? { approvalStatus: activeTab as PaymentApprovalStatus } : {}
   );
 
-  const {
-    data: pendingPaymentsData,
-    isLoading: pendingLoading,
-    error: pendingError,
-  } = usePendingPayments(1, 5);
+  // Helper: get payments array from API response
+  let payments: Payment[] = [];
+  if (Array.isArray(paymentsData)) {
+    payments = paymentsData;
+  } else if (paymentsData) {
+    if (Array.isArray(paymentsData.data)) {
+      payments = paymentsData.data;
+    } else if (paymentsData.payments) {
+      payments = paymentsData.payments;
+    } else if (paymentsData.data && Array.isArray(paymentsData.data.payments)) {
+      payments = paymentsData.data.payments;
+    }
+  }
 
+  // Filter by search
+  const filteredPayments = payments.filter(payment => {
+    const pharmacyName = typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+      ? payment.pharmacyId.name.toLowerCase()
+      : '';
+    const submittedBy = typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+      ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`.toLowerCase()
+      : '';
+    return (
+      pharmacyName.includes(searchTerm.toLowerCase()) ||
+      submittedBy.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const totalPages = paymentsData?.pagination?.totalPages || 1;
+
+  // UI helpers
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const getPaymentMethodIcon = (method: string) => {
+    switch (method) {
+      case 'bank_transfer': return <Building className="w-4 h-4" />;
+      case 'cash': return <CreditCard className="w-4 h-4" />;
+      case 'check': return <FileText className="w-4 h-4" />;
+      default: return <CreditCard className="w-4 h-4" />;
+    }
+  };
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved': return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'pending': return <Clock className="w-5 h-5 text-yellow-500" />;
+      case 'rejected': return <XCircle className="w-5 h-5 text-red-500" />;
+      default: return <AlertCircle className="w-5 h-5 text-gray-500" />;
+    }
+  };
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'bg-green-50 text-green-700 border-green-200';
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'rejected': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+  const getPaymentTitle = (payment: Payment) => {
+    if ((payment as any).paymentType === 'event_fee') {
+      return (payment as any).meta?.eventId || 'Event Fee';
+    }
+    if ((payment as any).paymentType === 'transportation') {
+      return `Transportation - ${(payment as any).meta?.participant || 'N/A'}`;
+    }
+    return (payment as any).meta?.purpose || (payment as any).meta?.description || 'Payment';
+  };
+
+  // React Query hooks for review and delete
   const {
     mutate: reviewPayment,
     isPending: isReviewing,
@@ -101,64 +132,41 @@ const AdminPaymentReview: React.FC = () => {
     error: deleteError,
   } = useDeletePayment();
 
-  // Derived data
-  const payments = paymentsData?.payments || [];
-  const totalPages = paymentsData?.pagination?.totalPages || 1;
-  const pendingCount = pendingPaymentsData?.length || 0;
+  // Show error toasts for API errors
+  useEffect(() => {
+    if (paymentsError) {
+      toast.error(`Error loading payments: ${paymentsError.message || paymentsError}`);
+    }
+    if (reviewError) {
+      toast.error(`Error reviewing payment: ${reviewError.message || reviewError}`);
+    }
+    if (deleteError) {
+      toast.error(`Error deleting payment: ${deleteError.message || deleteError}`);
+    }
+  }, [paymentsError, reviewError, deleteError]);
 
-  // Loading and error states
-  const isLoading = paymentsLoading || pendingLoading;
-  const error = paymentsError || pendingError || reviewError || deleteError;
-
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as PaymentApprovalStatus | 'all');
-    setCurrentPage(1);
-  };
-
-  // Handle pagination
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Open review modal
+  // Modal handlers
   const openReviewModal = (payment: Payment) => {
     setSelectedPayment(payment);
-    setReviewData({
-      action: 'approve',
-      rejectionReason: '',
-    });
+    setReviewData({ action: 'approve', rejectionReason: '' });
     setShowReviewModal(true);
   };
-
-  // Open delete confirmation modal
   const openDeleteModal = (payment: Payment) => {
     setSelectedPayment(payment);
     setShowDeleteModal(true);
   };
-
-  // Close all modals
   const closeModals = () => {
     setShowReviewModal(false);
     setShowDeleteModal(false);
     setSelectedPayment(null);
-    setReviewData({
-      action: 'approve',
-      rejectionReason: '',
-    });
+    setReviewData({ action: 'approve', rejectionReason: '' });
   };
-
-  // Handle review submission
   const handleReviewSubmit = () => {
     if (!selectedPayment) return;
-
     reviewPayment(
       {
         action: reviewData.action,
-        rejectionReason:
-          reviewData.action === 'reject'
-            ? reviewData.rejectionReason
-            : undefined,
+        rejectionReason: reviewData.action === 'reject' ? reviewData.rejectionReason : undefined,
       },
       {
         onSuccess: () => {
@@ -170,462 +178,335 @@ const AdminPaymentReview: React.FC = () => {
           closeModals();
           refetchPayments();
         },
-        onError: (error) => {
-          toast.error(`Error: ${error.message}`);
+        onError: (error: any) => {
+          toast.error(`Error: ${error.message || 'Failed to review payment.'}`);
         },
       }
     );
   };
-
-  // Handle payment deletion
   const handleDeletePayment = () => {
     if (!selectedPayment) return;
-
     deletePayment(selectedPayment._id, {
       onSuccess: () => {
         toast.success('Payment deleted successfully');
         closeModals();
         refetchPayments();
       },
-      onError: (error) => {
-        toast.error(`Error: ${error.message}`);
+      onError: (error: any) => {
+        toast.error(`Error: ${error.message || 'Failed to delete payment.'}`);
       },
     });
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
-  };
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'PPP');
-  };
-
-  // Get payment method display name
-  const getPaymentMethodDisplay = (method: string) => {
-    switch (method) {
-      case 'bank_transfer':
-        return 'Bank Transfer';
-      case 'cash':
-        return 'Cash';
-      case 'check':
-        return 'Check';
-      default:
-        return method.replace('_', ' ');
-    }
-  };
-
-  // Status badge color mapping
-  const getStatusBadgeColor = (status: PaymentApprovalStatus) => {
-    switch (status) {
-      case PaymentApprovalStatus.APPROVED:
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case PaymentApprovalStatus.PENDING:
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case PaymentApprovalStatus.REJECTED:
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
-
-  // Render function for tab content (table and pagination)
-  const renderTabContent = () => (
-    <>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-border">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Pharmacy
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Due
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Method
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-background divide-y divide-border">
-            {isLoading ? (
-              // Loading skeleton
-              Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-32" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-28" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-20" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-28" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-4 w-20" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Skeleton className="h-8 w-20" />
-                  </td>
-                </tr>
-              ))
-            ) : payments.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-4 text-center text-muted-foreground"
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-950 dark:to-indigo-950">
+      <div className="container mx-auto p-2 sm:p-4 md:p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-300 dark:to-indigo-300">
+                Payment Review Dashboard
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm sm:text-base">Manage and review all pharmacy payment submissions</p>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search payments..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-slate-800/70 backdrop-blur-sm text-sm text-gray-900 dark:text-gray-100"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Payments List */}
+        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-800 shadow-lg overflow-hidden">
+          <div className="border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
+            <nav className="flex flex-wrap space-x-0 sm:space-x-8 px-2 sm:px-6">
+              {['all', 'pending', 'approved', 'rejected'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => { setActiveTab(tab as 'all' | 'pending' | 'approved' | 'rejected'); setCurrentPage(1); }}
+                  className={`py-3 px-2 sm:py-4 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200 ${
+                    activeTab === tab
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-300'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-200 dark:hover:border-gray-600'
+                  }`}
                 >
-                  No payments found for this category
-                </td>
-              </tr>
+                  <span className="flex items-center space-x-2">
+                    <span>{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
+                  </span>
+                </button>
+              ))}
+            </nav>
+          </div>
+          <div className="p-2 sm:p-6">
+            {paymentsLoading ? (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Loading payments...</h3>
+                <p className="text-gray-500 dark:text-gray-400">Please wait while payments are loaded.</p>
+              </div>
+            ) : filteredPayments.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No payments found</h3>
+                <p className="text-gray-500 dark:text-gray-400">There are no payments matching your criteria.</p>
+              </div>
             ) : (
-              payments.map((payment: Payment) => (
-                <tr key={payment._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {typeof payment.pharmacyId === 'object' &&
-                    payment.pharmacyId?.name
-                      ? payment.pharmacyId.name
-                      : payment.pharmacyId?.toString() || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {typeof payment.dueId === 'object' && payment.dueId?.title
-                      ? payment.dueId.title
-                      : payment.dueInfo?.title ||
-                        payment.dueId?.toString() ||
-                        'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {formatCurrency(payment.amount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {getPaymentMethodDisplay(payment.paymentMethod || '')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {formatDate(payment.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge
-                      className={getStatusBadgeColor(
-                        (payment.approvalStatus ||
-                          payment.status) as PaymentApprovalStatus
-                      )}
-                    >
-                      {payment.approvalStatus || payment.status}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          Actions
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem>
+              <div className="space-y-4">
+                {filteredPayments.map((payment) => (
+                  <div
+                    key={payment._id}
+                    className="bg-white/50 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/30 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-300 overflow-hidden group"
+                  >
+                    <div className="p-4 sm:p-6">
+                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2 md:gap-0">
+                        <div className="flex-1 w-full">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+                                ? payment.pharmacyId.name
+                                : typeof payment.pharmacyId === 'string'
+                                ? payment.pharmacyId
+                                : 'Unknown Pharmacy'}
+                            </h3>
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(payment.approvalStatus)}`}> 
+                              <div className="flex items-center space-x-1">
+                                {getStatusIcon(payment.approvalStatus)}
+                                <span className="capitalize">{payment.approvalStatus}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">{getPaymentTitle(payment)}</p>
+                        </div>
+                        <div className="text-right min-w-[120px]">
+                          <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            {formatCurrency(payment.amount)}
+                          </div>
+                          <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-1">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            {formatDate(payment.submittedAt)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-4">
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                          {getPaymentMethodIcon(payment.paymentMethod || '')}
+                          <span className="capitalize">
+                            {(payment.paymentMethod || '').replace('_', ' ')}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                          <User className="w-4 h-4" />
+                          <span>
+                            {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+                              ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
+                              : 'Unknown'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                          <Receipt className="w-4 h-4" />
                           <a
                             href={payment.receiptUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="cursor-pointer w-full" // Ensure link takes full width
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                           >
                             View Receipt
                           </a>
-                        </DropdownMenuItem>
-
-                        {payment.approvalStatus ===
-                          PaymentApprovalStatus.PENDING && (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => openReviewModal(payment)}
-                            >
-                              Review Payment
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => openDeleteModal(payment)}
-                              className="text-red-600 dark:text-red-400"
-                            >
-                              Delete Payment
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          onClick={() => openReviewModal(payment)}
+                          className="inline-flex items-center px-4 py-2 border border-blue-300 dark:border-blue-700 rounded-lg text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors duration-200"
+                          disabled={isReviewing || isDeleting}
+                        >
+                          {isReviewing ? <span className="animate-spin mr-2"><Clock className="w-4 h-4" /></span> : <Eye className="w-4 h-4 mr-2" />}
+                          Review
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(payment)}
+                          className="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg text-xs sm:text-sm font-medium text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 transition-colors duration-200"
+                          disabled={isReviewing || isDeleting}
+                        >
+                          {isDeleting ? <span className="animate-spin mr-2"><Clock className="w-4 h-4" /></span> : <Trash2 className="w-4 h-4 mr-2" />}
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
-    </>
-  );
-
-  if (error) {
-    return (
-      <Alert className="mb-6">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          Failed to load payments: {(error as Error).message}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Payment Review</h1>
-          <p className="text-muted-foreground">
-            Manage and review payment submissions
-          </p>
-        </div>
-        <div className="mt-4 md:mt-0">
-          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-            {pendingCount} Pending Payments
-          </Badge>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row justify-center items-center mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Payment Management</CardTitle>
-          <CardDescription>
-            Review, approve, and reject payment submissions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            defaultValue={PaymentApprovalStatus.PENDING}
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value={PaymentApprovalStatus.PENDING}>
-                Pending
-              </TabsTrigger>
-              <TabsTrigger value={PaymentApprovalStatus.APPROVED}>
-                Approved
-              </TabsTrigger>
-              <TabsTrigger value={PaymentApprovalStatus.REJECTED}>
-                Rejected
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all">{renderTabContent()}</TabsContent>
-            <TabsContent value={PaymentApprovalStatus.PENDING}>
-              {renderTabContent()}
-            </TabsContent>
-            <TabsContent value={PaymentApprovalStatus.APPROVED}>
-              {renderTabContent()}
-            </TabsContent>
-            <TabsContent value={PaymentApprovalStatus.REJECTED}>
-              {renderTabContent()}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
       {/* Review Modal */}
-      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Review Payment</DialogTitle>
-            <DialogDescription>
-              Review the payment details and approve or reject the submission.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedPayment && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Amount
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {formatCurrency(selectedPayment.amount)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Method
-                  </p>
-                  <p className="text-lg">
-                    {getPaymentMethodDisplay(
-                      selectedPayment.paymentMethod || ''
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Date
-                  </p>
-                  <p className="text-lg">
-                    {formatDate(selectedPayment.createdAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Reference
-                  </p>
-                  <p className="text-lg">
-                    {selectedPayment.paymentReference || 'N/A'}
-                  </p>
+      {showReviewModal && selectedPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Review Payment</h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Review the payment details and choose your action
+              </p>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Payment Details */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <h3 className="font-medium text-gray-900">Payment Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-medium">{selectedPayment.amount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Method:</span>
+                    <span className="capitalize">{(selectedPayment.paymentMethod || '').replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Type:</span>
+                    <span className="capitalize">{('paymentType' in selectedPayment ? (selectedPayment as any).paymentType : '').replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pharmacy:</span>
+                    <span>{typeof selectedPayment.pharmacyId === 'object' && selectedPayment.pharmacyId !== null && 'name' in selectedPayment.pharmacyId ? selectedPayment.pharmacyId.name : 'Unknown Pharmacy'}</span>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Receipt
-                </p>
-                <a
-                  href={selectedPayment.receiptUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-muted px-4 py-2 rounded-md text-foreground hover:bg-accent transition-colors"
-                >
-                  View Receipt
-                </a>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <h3 className="font-medium text-gray-900">Action</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setReviewData({ ...reviewData, action: 'approve' })}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      reviewData.action === 'approve'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-green-300'
+                    }`}
+                  >
+                    <Check className="w-5 h-5 mx-auto mb-1" />
+                    <span className="text-sm font-medium">Approve</span>
+                  </button>
+                  <button
+                    onClick={() => setReviewData({ ...reviewData, action: 'reject' })}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      reviewData.action === 'reject'
+                        ? 'border-red-500 bg-red-50 text-red-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-red-300'
+                    }`}
+                  >
+                    <X className="w-5 h-5 mx-auto mb-1" />
+                    <span className="text-sm font-medium">Reject</span>
+                  </button>
+                </div>
               </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Decision
-                </p>
-                <Select
-                  value={reviewData.action}
-                  onValueChange={(value: string) =>
-                    setReviewData({
-                      ...reviewData,
-                      action: value as 'approve' | 'reject',
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select decision" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="approve">Approve</SelectItem>
-                    <SelectItem value="reject">Reject</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+              {/* Rejection Reason */}
               {reviewData.action === 'reject' && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Reason for Rejection
-                  </p>
-                  <Textarea
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rejection Reason
+                  </label>
+                  <textarea
                     value={reviewData.rejectionReason}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setReviewData({
-                        ...reviewData,
-                        rejectionReason: e.target.value,
-                      })
-                    }
-                    placeholder="Provide a reason for rejection"
+                    onChange={(e) => setReviewData({ ...reviewData, rejectionReason: e.target.value })}
+                    placeholder="Please provide a reason for rejection..."
                     rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   />
-                  {reviewData.action === 'reject' &&
-                    !reviewData.rejectionReason && (
-                      <p className="text-sm text-red-500 mt-1">
-                        Rejection reason is required
-                      </p>
-                    )}
                 </div>
               )}
             </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={closeModals}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleReviewSubmit}
-              disabled={
-                isReviewing ||
-                (reviewData.action === 'reject' && !reviewData.rejectionReason)
-              }
-              className={
-                reviewData.action === 'approve'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
-              }
-            >
-              {isReviewing
-                ? 'Processing...'
-                : reviewData.action === 'approve'
-                ? 'Approve Payment'
-                : 'Reject Payment'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+            <div className="p-6 border-t border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+              <button
+                onClick={closeModals}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200"
+                disabled={isReviewing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReviewSubmit}
+                disabled={isReviewing || (reviewData.action === 'reject' && !reviewData.rejectionReason)}
+                className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-800 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              >
+                {isReviewing ? 'Processing...' : 'Submit Review'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Delete Confirmation Modal */}
-      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this payment? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={closeModals}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeletePayment}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Payment'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {showDeleteModal && selectedPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Delete Payment</h2>
+                  <p className="text-gray-600 text-sm">This action cannot be undone</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-700">
+                  You are about to permanently delete the payment from{' '}
+                  <span className="font-medium">{typeof selectedPayment.pharmacyId === 'object' && selectedPayment.pharmacyId !== null && 'name' in selectedPayment.pharmacyId ? selectedPayment.pharmacyId.name : 'Unknown Pharmacy'}</span>{' '}
+                  for <span className="font-medium">{formatCurrency(selectedPayment.amount)}</span>.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                <button
+                  onClick={closeModals}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeletePayment}
+                  className="flex-1 px-4 py-2 bg-red-600 dark:bg-red-800 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white hover:bg-red-700 dark:hover:bg-red-900 transition-colors duration-200"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Payment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

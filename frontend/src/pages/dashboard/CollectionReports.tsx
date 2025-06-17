@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -38,7 +38,7 @@ const CollectionReports: React.FC = () => {
   );
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const years = useMemo(() => Array.from({ length: 5 }, (_, i) => currentYear - i), [currentYear]);
 
   const processCollectionData = useCallback(
     (analytics: Record<string, unknown>): CollectionData[] => {

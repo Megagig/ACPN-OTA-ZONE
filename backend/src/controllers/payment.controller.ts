@@ -651,3 +651,76 @@ export const getPaymentById = asyncHandler(
     });
   }
 );
+
+// Add a new controller for recording any payment type
+export const recordPayment = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { paymentType, pharmacyId, amount, paymentMethod, paymentReference, dueId, eventId, description, purpose, participant, receipt, ...rest } = req.body;
+
+    if (!paymentType || !pharmacyId || !amount || !paymentMethod) {
+      return next(new ErrorResponse('Missing required fields for payment recording', 400));
+    }
+
+    // Check if pharmacy exists
+    const pharmacy = await Pharmacy.findById(pharmacyId);
+    if (!pharmacy) {
+      return next(new ErrorResponse(`Pharmacy not found with id of ${pharmacyId}`, 404));
+    }
+
+    // Handle receipt upload (assume multer middleware)
+    let receiptUrl = '', receiptPublicId = '';
+    if (req.file) {
+      // Upload to Cloudinary or use local path
+      try {
+        const result = await uploadToCloudinary(req.file.path, 'payment-receipts');
+        receiptUrl = result.secure_url;
+        receiptPublicId = result.public_id;
+      } catch (err) {
+        receiptUrl = `/static/receipts/${req.file.filename}`;
+        receiptPublicId = req.file.filename;
+      }
+    } else {
+      return next(new ErrorResponse('Receipt upload is required', 400));
+    }
+
+    // Build meta object for extra fields
+    const meta: Record<string, any> = { description, purpose, participant, eventId, ...rest };
+
+    // Dues logic
+    if (paymentType === 'due') {
+      if (!dueId) {
+        return next(new ErrorResponse('Due ID is required for due payments', 400));
+      }
+      const due = await Due.findById(dueId);
+      if (!due) {
+        return next(new ErrorResponse(`Due not found with id of ${dueId}`, 404));
+      }
+      if (due.pharmacyId.toString() !== pharmacyId) {
+        return next(new ErrorResponse('Due does not belong to this pharmacy', 400));
+      }
+      if (parseFloat(amount) > due.balance) {
+        return next(new ErrorResponse('Payment amount exceeds outstanding balance', 400));
+      }
+    }
+
+    // Create payment record
+    const payment = await Payment.create({
+      paymentType,
+      dueId: paymentType === 'due' ? dueId : undefined,
+      pharmacyId,
+      amount,
+      paymentMethod,
+      paymentReference,
+      receiptUrl,
+      receiptPublicId,
+      submittedBy: req.user._id,
+      approvalStatus: PaymentApprovalStatus.PENDING,
+      meta,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: payment,
+    });
+  }
+);

@@ -43,8 +43,7 @@ import type {
   AttendanceMarkingData,
   PaginatedResponse,
 } from '../../types/event.types';
-import * as financialService from '../../services/financial.service';
-import type { Pharmacy } from '../../types/pharmacy.types';
+import UserService from '../../services/user.service';
 
 // Type for user data populated in registration
 interface PopulatedUser {
@@ -117,6 +116,8 @@ const AdminAttendanceMarking: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const ITEMS_PER_PAGE = 20; // Smaller batch size to reduce load time
+
+  const [bulkRegistering, setBulkRegistering] = useState(false);
 
   const loadEventDetails = useCallback(async () => {
     try {
@@ -201,19 +202,6 @@ const AdminAttendanceMarking: React.FC = () => {
         }
         console.log(`Loading registrations for event: ${id}, page: ${page}`);
 
-        // First, try to load pharmacies but continue even if it fails
-        let pharmacies: Pharmacy[] = [];
-        try {
-          setLoadingStage('pharmacies');
-          pharmacies = await loadAllPharmacies();
-        } catch (error) {
-          console.error(
-            'Failed to load pharmacies, continuing with registrations only:',
-            error
-          );
-          // We'll continue with just event registrations
-        }
-
         // Then load event registrations with attendance data with retry mechanism
         setLoadingStage('registrations');
         const fetchRegistrations = async (
@@ -254,68 +242,49 @@ const AdminAttendanceMarking: React.FC = () => {
         const populatedRegistrations =
           registrationsData.data as unknown as PopulatedRegistration[];
 
-        // Create attendance users from registrations first
-        const registeredUsers: AttendanceUser[] = populatedRegistrations.map(
-          (registration) => {
-            const user = registration.userId;
-            if (!user || typeof user !== 'object') {
-              console.error('Invalid user data in registration:', registration);
-              // Create a placeholder user if data is missing
-              return {
-                _id:
-                  typeof registration.userId === 'string'
-                    ? registration.userId
-                    : 'unknown',
-                firstName: 'Unknown',
-                lastName: 'User',
-                email: 'missing@email.com',
-                registration: {
-                  ...registration,
-                  userId:
-                    typeof registration.userId === 'string'
-                      ? registration.userId
-                      : 'unknown',
-                },
-              };
-            }
+        // Fetch all members
+        const allMembers = await loadAllMembers();
 
-            return {
-              _id: user._id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email,
-              phone: user.phoneNumber,
-              pharmacy: user.pharmacy
-                ? {
-                    name: user.pharmacy.name || 'N/A',
-                    registrationNumber:
-                      user.pharmacy.registrationNumber || 'N/A',
-                  }
-                : undefined,
-              registration: {
-                ...registration,
-                userId: user._id, // Convert back to string ID for the registration object
-              },
-              attendance: registration.attendance
-                ? {
-                    _id: registration._id, // Using registration ID as attendance ID
-                    userId: user._id,
-                    eventId: id as string, // Force as string since we know it's valid
-                    attendedAt: registration.attendance.checkedInAt,
-                    markedBy: '',
-                    notes: registration.attendance.notes || '',
-                  }
-                : undefined,
+        // Merge registration and attendance data for each member
+        const allAttendees: AttendanceUser[] = allMembers.map((member: any) => {
+          const registration = populatedRegistrations.find(
+            (reg) => reg.userId._id === member._id
+          );
+          // Map registration to EventRegistration type if present
+          let mappedRegistration = undefined;
+          if (registration) {
+            mappedRegistration = {
+              _id: registration._id,
+              eventId: registration.eventId,
+              userId: registration.userId._id, // convert to string
+              status: registration.status,
+              paymentStatus: registration.paymentStatus,
+              paymentReference: registration.paymentReference,
+              registeredAt: registration.registeredAt,
+              registrationDate: registration.registrationDate,
+              createdAt: registration.createdAt,
+              updatedAt: registration.updatedAt,
             };
           }
-        );
-
-        // Now convert all pharmacies to attendance users
-        const allAttendees: AttendanceUser[] = pharmacies.map((pharmacy) =>
-          convertPharmacyToAttendanceUser(pharmacy, registeredUsers)
-        );
-
-        // Update users with all pharmacies
+          return {
+            _id: member._id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            email: member.email,
+            phone: member.phoneNumber,
+            registration: mappedRegistration,
+            attendance: registration && registration.attendance
+              ? {
+                  _id: registration._id,
+                  userId: member._id,
+                  eventId: id as string,
+                  attendedAt: registration.attendance.checkedInAt,
+                  markedBy: '',
+                  notes: registration.attendance.notes || '',
+                }
+              : undefined,
+          };
+        });
         setUsers(allAttendees);
 
         // Show success message for manual refresh
@@ -375,72 +344,8 @@ const AdminAttendanceMarking: React.FC = () => {
       }
     },
     [id, toast, hasInitialLoad]
-  ); // Load all pharmacies from the system
-  const loadAllPharmacies = useCallback(async () => {
-    try {
-      console.log('Loading all pharmacies from the system');
+  );
 
-      // Don't interfere with main loading state - use a separate loading indicator if needed
-      // setLoading(true); // Removed this line
-
-      // Load pharmacies with a smaller batch size
-      const pharmacies = await financialService.getAllPharmacies(50);
-
-      console.log(`Fetched ${pharmacies.length} pharmacies`);
-
-      // If no pharmacies are fetched, show a friendly message rather than failing
-      if (!pharmacies.length) {
-        toast({
-          title: 'Information',
-          description:
-            'No pharmacies could be loaded. Using only registered members.',
-          variant: 'default',
-        });
-      }
-
-      return pharmacies;
-    } catch (error) {
-      console.error('Error fetching all pharmacies:', error);
-      toast({
-        title: 'Warning',
-        description:
-          'Failed to load all pharmacies. Only event registrations will be shown.',
-        variant: 'warning',
-      });
-      return [];
-    }
-  }, [toast]);
-
-  // Convert pharmacy data to attendance user format
-  const convertPharmacyToAttendanceUser = (
-    pharmacy: Pharmacy,
-    existingUsers: AttendanceUser[] = []
-  ): AttendanceUser => {
-    // Check if this pharmacy already exists in users (has registered for event)
-    const existingUser = existingUsers.find(
-      (user) =>
-        user.pharmacy?.registrationNumber === pharmacy.registrationNumber
-    );
-
-    if (existingUser) {
-      return existingUser;
-    }
-
-    // Create a new attendance user from pharmacy data
-    return {
-      _id: pharmacy._id, // Use pharmacy ID as user ID for non-registered pharmacies
-      firstName: pharmacy.superintendentName?.split(' ')[0] || '',
-      lastName:
-        pharmacy.superintendentName?.split(' ').slice(1).join(' ') || '',
-      email: pharmacy.email || '',
-      phone: pharmacy.phone || '',
-      pharmacy: {
-        name: pharmacy.name || pharmacy.businessName || '',
-        registrationNumber: pharmacy.registrationNumber || '',
-      },
-      // No registration or attendance data
-    };
-  };
   const loadEventAndAttendees = useCallback(async () => {
     try {
       console.log(`Starting loadEventAndAttendees for event ID: ${id}`);
@@ -684,6 +589,34 @@ const AdminAttendanceMarking: React.FC = () => {
         user.pharmacy.registrationNumber.toLowerCase().includes(searchLower))
     );
   });
+
+  // Fetch all members for attendance marking
+  const loadAllMembers = useCallback(async () => {
+    try {
+      const response = await UserService.getUsers({ role: 'member', status: 'active' });
+      return response.data;
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load members',
+        variant: 'destructive',
+      });
+      return [];
+    }
+  }, [toast]);
+
+  const handleBulkRegisterAll = async () => {
+    setBulkRegistering(true);
+    try {
+      await EventService.bulkRegisterAllMembers(id as string);
+      toast({ title: 'Success', description: 'All members registered for event.' });
+      await loadRegistrations(1, true);
+    } catch (error) {
+      toast({ title: 'Error', description: 'Bulk registration failed.', variant: 'destructive' });
+    } finally {
+      setBulkRegistering(false);
+    }
+  };
 
   if (loading) {
     // Calculate progress based on loading stage
@@ -1053,6 +986,24 @@ const AdminAttendanceMarking: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Register All Button */}
+      <div className="mt-6 text-center">
+        <Button
+          variant="outline"
+          onClick={handleBulkRegisterAll}
+          disabled={bulkRegistering}
+        >
+          {bulkRegistering ? (
+            <>
+              <ClockIcon className="w-4 h-4 mr-2 animate-spin" />
+              Registering...
+            </>
+          ) : (
+            'Bulk Register All'
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

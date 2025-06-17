@@ -104,8 +104,8 @@ router.get('/pharmacy/:pharmacyId/history', getPharmacyPaymentHistory);
 router
   .route('/:id')
   .get(getDue)
-  .put(adminAuthorize, updateDue)
-  .delete(adminAuthorize, deleteDue);
+  .put(adminAuthorize, clearCacheMiddleware('dues'), updateDue)
+  .delete(adminAuthorize, clearCacheMiddleware('dues'), deleteDue);
 
 // Special due operations
 router.post('/:id/penalty', adminAuthorize, addPenaltyToDue);

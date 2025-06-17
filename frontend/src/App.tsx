@@ -36,6 +36,7 @@ import UserDetail from './pages/admin/UserDetail';
 import UserEdit from './pages/admin/UserEdit';
 import RolesManagement from './pages/admin/RolesManagement';
 import PermissionsManagement from './pages/admin/PermissionsManagement';
+import AdminDuesManagement from './pages/admin/AdminDuesManagement';
 
 // Financial Management Pages
 import FinancialDashboard from './pages/dashboard/FinancialDashboard';
@@ -125,6 +126,7 @@ import PharmacyDues from './pages/dashboard/PharmacyDues';
 // Public Pages
 import LandingPage from './pages/LandingPage';
 import DueForm from './pages/dashboard/DueForm';
+import RecordPaymentForm from './pages/dashboard/RecordPaymentForm';
 
 function App() {
   return (
@@ -218,6 +220,10 @@ function App() {
                           element={<PharmacyDetail />}
                         />
                         <Route path="/settings" element={<AdminSettings />} />
+                        <Route
+                          path="/admin/dues-management"
+                          element={<AdminDuesManagement />}
+                        />
                       </Route>
 
                       {/* Treasurer Routes */}
@@ -370,6 +376,10 @@ function App() {
                         <Route
                           path="/finances/outstanding-dues"
                           element={<OutstandingDues />}
+                        />
+                        <Route
+                          path="/finances/payments/new"
+                          element={<RecordPaymentForm />}
                         />
                       </Route>
 
@@ -531,7 +541,7 @@ function App() {
                         element={<MemberEventsList />}
                       />
                       <Route
-                        path="/member/events/:id"
+                        path="/member/events/:eventId"
                         element={<MemberEventDetails />}
                       />
                       <Route
@@ -604,9 +614,12 @@ function App() {
                         path="/polls/:id/respond"
                         element={<PollResponse />}
                       />
+<<<<<<< HEAD
 
                       {/* API Connection Test */}
                       {/* <Route path="/test-api" element={<TestApiConnection />} /> */}
+=======
+>>>>>>> 6fe588413d0a68fe77bcee7922e2fa3fb6a1146d
                     </Route>
                   </Route>
 
