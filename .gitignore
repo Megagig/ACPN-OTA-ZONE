@@ -1,4 +1,4 @@
 node_modules
 .env
 history.md
-backend/logs/combined.log
+combined.log
