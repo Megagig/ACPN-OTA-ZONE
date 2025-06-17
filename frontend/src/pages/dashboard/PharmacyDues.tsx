@@ -544,16 +544,14 @@ const PharmacyDues: React.FC = () => {
     // Only show this general error if modal is not open
     return (
       <div
-        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-4"
+        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-4 rounded-lg shadow-sm"
         role="alert"
       >
         <p className="font-bold">An error occurred:</p>
         <p>{error}</p>
         <button
           onClick={() => {
-            setError(null); // Clear general error
-            // Optionally, re-fetch data if appropriate
-            // fetchPharmacyAndDues();
+            setError(null);
           }}
           className="mt-2 text-sm text-destructive hover:text-destructive/80 underline"
         >
@@ -564,11 +562,11 @@ const PharmacyDues: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-2 sm:px-4 py-6 max-w-7xl">
       {/* General error display, if not handled by toast or specific UI elements */}
       {error && !showPaymentModal && (
         <div
-          className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-4"
+          className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-4 rounded-lg shadow-sm"
           role="alert"
         >
           <p className="font-bold">An error occurred:</p>
@@ -584,127 +582,124 @@ const PharmacyDues: React.FC = () => {
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div>
           <Link
             to="/my-pharmacy"
-            className="text-primary hover:text-primary/80 mb-2 inline-block"
+            className="text-primary hover:text-primary/80 mb-2 inline-flex items-center gap-2"
           >
-            <i className="fas fa-arrow-left mr-2"></i>
-            Back to Pharmacy Profile
+            <i className="fas fa-arrow-left"></i>
+            <span>Back to Pharmacy Profile</span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">
-            Dues & Payments
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground mt-2">Dues & Payments</h1>
           {pharmacy && (
-            <p className="text-muted-foreground">
-              Pharmacy: <span className="font-medium">{pharmacy.name}</span>
+            <p className="text-muted-foreground mt-1">
+              <span className="font-medium">Pharmacy:</span> {pharmacy.name}
             </p>
           )}
         </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
+          <button
+            onClick={() => setShowPaymentHistory(!showPaymentHistory)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center gap-2"
+          >
+            <i className="fas fa-history"></i>
+            Payment History
+          </button>
+        </div>
       </div>
 
-      {/* Dues Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full mr-4">
-              <i className="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
-            </div>
-            <div>
-              <h2 className="text-sm font-medium text-muted-foreground">
-                Paid Amount
-              </h2>
-              <p className="text-2xl font-semibold text-foreground">
-                {formatCurrency(
-                  (dues || [])
-                    .filter((due) => due.paymentStatus === 'paid')
-                    .reduce((sum, due) => sum + due.amountPaid, 0)
-                )}
-              </p>
-            </div>
+      {/* Summary Cards Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Paid Amount */}
+        <div className="bg-white dark:bg-card rounded-xl shadow-md p-6 flex items-center gap-4 border border-border">
+          <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+            <i className="fas fa-check-circle text-green-600 dark:text-green-400 text-2xl"></i>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Paid Amount</h2>
+            <p className="text-2xl font-bold text-foreground">
+              {formatCurrency(
+                (dues || [])
+                  .filter((due) => due.paymentStatus === 'paid')
+                  .reduce((sum, due) => sum + due.amountPaid, 0)
+              )}
+            </p>
           </div>
         </div>
-
-        <div className="bg-card rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-full mr-4">
-              <i className="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-xl"></i>
-            </div>
-            <div>
-              <h2 className="text-sm font-medium text-muted-foreground">
-                Outstanding Balance
-              </h2>
-              <p className="text-2xl font-semibold text-foreground">
-                {formatCurrency(
-                  (dues || [])
-                    .filter((due) => due.paymentStatus !== 'paid')
-                    .reduce((sum, due) => sum + due.balance, 0)
-                )}
-              </p>
-            </div>
+        {/* Outstanding Balance */}
+        <div className="bg-white dark:bg-card rounded-xl shadow-md p-6 flex items-center gap-4 border border-border">
+          <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-full">
+            <i className="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-2xl"></i>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Outstanding Balance</h2>
+            <p className="text-2xl font-bold text-foreground">
+              {formatCurrency(
+                (dues || [])
+                  .filter((due) => due.paymentStatus !== 'paid')
+                  .reduce((sum, due) => sum + due.balance, 0)
+              )}
+            </p>
           </div>
         </div>
-
-        <div className="bg-card rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-full mr-4">
-              <i className="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-xl"></i>
-            </div>
-            <div>
-              <h2 className="text-sm font-medium text-muted-foreground">
-                Penalties
-              </h2>
-              <p className="text-2xl font-semibold text-foreground">
-                {formatCurrency(
-                  (dues || []).reduce(
-                    (sum, due) =>
-                      sum +
-                      due.penalties.reduce(
-                        (penSum, penalty) => penSum + penalty.amount,
-                        0
-                      ),
-                    0
-                  )
-                )}
-              </p>
-            </div>
+        {/* Penalties */}
+        <div className="bg-white dark:bg-card rounded-xl shadow-md p-6 flex items-center gap-4 border border-border">
+          <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-full">
+            <i className="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-2xl"></i>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Penalties</h2>
+            <p className="text-2xl font-bold text-foreground">
+              {formatCurrency(
+                (dues || []).reduce(
+                  (sum, due) =>
+                    sum +
+                    due.penalties.reduce(
+                      (penSum, penalty) => penSum + penalty.amount,
+                      0
+                    ),
+                  0
+                )
+              )}
+            </p>
           </div>
         </div>
-
-        <div className="bg-card rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
-              <i className="fas fa-calendar text-blue-600 dark:text-blue-400 text-xl"></i>
-            </div>
-            <div>
-              <h2 className="text-sm font-medium text-muted-foreground">
-                Due This Month
-              </h2>
-              <p className="text-2xl font-semibold text-foreground">
-                {formatCurrency(
-                  (dues || [])
-                    .filter((due) => {
-                      const dueDate = new Date(due.dueDate);
-                      const now = new Date();
-                      return (
-                        dueDate.getMonth() === now.getMonth() &&
-                        dueDate.getFullYear() === now.getFullYear() &&
-                        due.paymentStatus !== 'paid'
-                      );
-                    })
-                    .reduce((sum, due) => sum + due.balance, 0)
-                )}
-              </p>
-            </div>
+        {/* Due This Month */}
+        <div className="bg-white dark:bg-card rounded-xl shadow-md p-6 flex items-center gap-4 border border-border">
+          <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+            <i className="fas fa-calendar text-blue-600 dark:text-blue-400 text-2xl"></i>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Due This Month</h2>
+            <p className="text-2xl font-bold text-foreground">
+              {formatCurrency(
+                (dues || [])
+                  .filter((due) => {
+                    const dueDate = new Date(due.dueDate);
+                    const now = new Date();
+                    return (
+                      dueDate.getMonth() === now.getMonth() &&
+                      dueDate.getFullYear() === now.getFullYear() &&
+                      due.paymentStatus !== 'paid'
+                    );
+                  })
+                  .reduce((sum, due) => sum + due.balance, 0)
+              )}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Filter and Actions */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-4">
+      {/* Filter and Actions Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <label htmlFor="status-filter" className="text-sm font-medium text-muted-foreground mr-2">
+            Filter by Status:
+          </label>
           <select
+            id="status-filter"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="rounded-md border border-border shadow-sm px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -716,80 +711,51 @@ const PharmacyDues: React.FC = () => {
             <option value="overdue">Overdue</option>
           </select>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setShowPaymentHistory(!showPaymentHistory)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          >
-            <i className="fas fa-history mr-2"></i>
-            Payment History
-          </button>
-        </div>
       </div>
 
-      {/* Dues Table */}
-      <div className="mt-8 bg-card shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Dues</h2>
+      {/* Dues Table Section */}
+      <div className="mt-8 bg-white dark:bg-card shadow rounded-xl p-0 overflow-x-auto border border-border">
+        <h2 className="text-xl font-semibold text-foreground mb-4 px-6 pt-6">Dues</h2>
         {filteredDues.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Balance
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Title</th>
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Due Date</th>
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Amount</th>
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Balance</th>
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {filteredDues.map((due) => (
-                  <tr key={due._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {due.title}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatDate(due.dueDate)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatCurrency(due.totalAmount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatCurrency(due.balance)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {getStatusBadge(due.paymentStatus)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                  <tr key={due._id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">{due.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(due.dueDate)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatCurrency(due.totalAmount)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatCurrency(due.balance)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(due.paymentStatus)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">
+                      <div className="flex flex-wrap gap-2">
                         {due.balance > 0 && (
                           <button
                             onClick={() => handleDueSelection(due)}
-                            className="text-primary hover:text-primary/80"
+                            className="text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded transition-colors border border-primary/20 bg-primary/5"
+                            title="Pay this due"
                           >
-                            <i className="fas fa-money-bill-wave mr-1"></i>
+                            <i className="fas fa-money-bill-wave"></i>
                             Pay
                           </button>
                         )}
                         {due.paymentStatus === 'paid' && (
                           <button
                             onClick={() => downloadClearanceCertificate(due._id)}
-                            className="text-primary hover:text-primary/80"
+                            className="text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded transition-colors border border-primary/20 bg-primary/5"
+                            title="Download Clearance Certificate"
                           >
-                            <i className="fas fa-certificate mr-1"></i>
+                            <i className="fas fa-certificate"></i>
                             Certificate
                           </button>
                         )}
@@ -801,7 +767,10 @@ const PharmacyDues: React.FC = () => {
             </table>
           </div>
         ) : (
-          <p className="text-muted-foreground">No dues found.</p>
+          <div className="p-6 text-center text-muted-foreground">
+            <i className="fas fa-info-circle text-2xl mb-2"></i>
+            <p>No dues found.</p>
+          </div>
         )}
       </div>
 
@@ -1171,69 +1140,45 @@ const PharmacyDues: React.FC = () => {
 
       {/* Payment History Section */}
       {showPaymentHistory && (
-        <div className="mt-8 bg-card shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
+        <div className="mt-8 bg-white dark:bg-card shadow rounded-xl p-6 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <i className="fas fa-history"></i>
             Payment History
           </h2>
           {payments.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Due Title
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Amount Paid
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Method
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Receipt
-                    </th>
+                    <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Date</th>
+                    <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Due Title</th>
+                    <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Amount Paid</th>
+                    <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Method</th>
+                    <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Status</th>
+                    <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Receipt</th>
                   </tr>
                 </thead>
                 <tbody className="bg-card divide-y divide-border">
                   {payments.map((payment) => (
-                    <tr key={payment._id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {formatDate(getPaymentDate(payment))}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {payment.dueInfo?.title ||
-                          (payment.dueId &&
-                          typeof (payment.dueId as any).title === 'string'
-                            ? (payment.dueId as any).title
-                            : String(payment.dueId))}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {formatCurrency(payment.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {payment.paymentMethod}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {getStatusBadge(getPaymentStatus(payment), payment.rejectionReason)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <tr key={payment._id} className="hover:bg-muted/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">{formatDate(getPaymentDate(payment))}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{payment.dueInfo?.title || (payment.dueId && typeof (payment.dueId as any).title === 'string' ? (payment.dueId as any).title : String(payment.dueId))}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{formatCurrency(payment.amount)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{payment.paymentMethod}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(getPaymentStatus(payment), payment.rejectionReason)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium">
                         {payment.receiptUrl ? (
                           <a
                             href={payment.receiptUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary hover:text-primary/80"
+                            className="text-primary hover:text-primary/80 underline"
+                            title="View Receipt"
                           >
                             View Receipt
                           </a>
                         ) : (
-                          'N/A'
+                          <span className="text-muted-foreground">N/A</span>
                         )}
                       </td>
                     </tr>
@@ -1242,7 +1187,10 @@ const PharmacyDues: React.FC = () => {
               </table>
             </div>
           ) : (
-            <p className="text-muted-foreground">No payment history found.</p>
+            <div className="p-6 text-center text-muted-foreground">
+              <i className="fas fa-info-circle text-2xl mb-2"></i>
+              <p>No payment history found.</p>
+            </div>
           )}
         </div>
       )}
