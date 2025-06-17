@@ -160,32 +160,35 @@ const DuesManagement = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-4 md:mb-0">
-          Dues Management
-        </h1>
-        <div className="flex space-x-2">
+    <div className="container mx-auto px-2 sm:px-4 py-6 max-w-7xl">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Dues Management</h1>
+          <p className="text-muted-foreground">Manage all dues and payments</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
           {activeTab === 'dues' ? (
             <button
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 flex items-center gap-2"
               onClick={() => navigate('/finances/dues/new')}
             >
-              <i className="fas fa-plus mr-2"></i>
+              <i className="fas fa-plus"></i>
               Create Due
             </button>
           ) : (
             <button
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 flex items-center gap-2"
               onClick={() => navigate('/finances/payments/new')}
             >
-              <i className="fas fa-plus mr-2"></i>
+              <i className="fas fa-plus"></i>
               Record Payment
             </button>
           )}
         </div>
       </div>
 
+      {/* Tab Navigation */}
       <div className="border-b border-border mb-6">
         <nav className="-mb-px flex">
           <button
@@ -196,7 +199,7 @@ const DuesManagement = () => {
             }`}
             onClick={() => setActiveTab('dues')}
           >
-            Dues
+            <i className="fas fa-list mr-2"></i>Dues
           </button>
           <button
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm mr-8 transition-colors ${
@@ -206,44 +209,47 @@ const DuesManagement = () => {
             }`}
             onClick={() => setActiveTab('payments')}
           >
-            Payments
+            <i className="fas fa-money-check-alt mr-2"></i>Payments
           </button>
         </nav>
       </div>
 
+      {/* Error Message */}
       {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-6">
+        <div className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4 mb-6 rounded-lg shadow-sm">
           {error}
         </div>
       )}
 
-      <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
+      {/* Table Section */}
+      <div className="bg-white dark:bg-card rounded-xl shadow-md overflow-hidden border border-border">
         {isLoading ? (
-          <div className="p-4">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-muted rounded w-1/4"></div>
-              <div className="h-10 bg-muted rounded"></div>
-              <div className="h-10 bg-muted rounded"></div>
+          <div className="p-8 flex flex-col items-center justify-center">
+            <div className="animate-spin text-primary text-3xl mb-2">
+              <i className="fas fa-circle-notch"></i>
             </div>
+            <div className="h-4 bg-muted rounded w-1/4 mb-2"></div>
+            <div className="h-10 bg-muted rounded w-full mb-2"></div>
+            <div className="h-10 bg-muted rounded w-full"></div>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/50">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                     {activeTab === 'dues' ? 'Title' : 'Due'}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                     {activeTab === 'dues' ? 'Due Date' : 'Payment Date'}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
@@ -253,9 +259,10 @@ const DuesManagement = () => {
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-6 py-4 text-center text-sm text-muted-foreground"
+                      className="px-6 py-8 text-center text-muted-foreground"
                     >
-                      No {activeTab} found
+                      <i className="fas fa-info-circle text-2xl mb-2"></i>
+                      <div>No {activeTab} found</div>
                     </td>
                   </tr>
                 ) : activeTab === 'dues' ? (
@@ -273,7 +280,7 @@ const DuesManagement = () => {
                                 {due.title}
                               </div>
                               {due.description && (
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-xs text-muted-foreground mt-1">
                                   {due.description.length > 50
                                     ? `${due.description.substring(0, 50)}...`
                                     : due.description}
@@ -300,28 +307,33 @@ const DuesManagement = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            className="text-primary hover:text-primary/80 mr-3 transition-colors"
-                            onClick={() =>
-                              navigate(`/finances/dues/${due._id}`)
-                            }
-                          >
-                            <i className="fas fa-eye"></i>
-                          </button>
-                          <button
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3 transition-colors"
-                            onClick={() =>
-                              navigate(`/finances/dues/${due._id}/edit`)
-                            }
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          <button
-                            className="text-destructive hover:text-destructive/80 transition-colors"
-                            onClick={() => handleDeleteDue(due._id)}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            <button
+                              className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded border border-primary/20 bg-primary/5"
+                              onClick={() =>
+                                navigate(`/finances/dues/${due._id}`)
+                              }
+                              title="View Due"
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
+                            <button
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded border border-blue-400/20 bg-blue-100/10"
+                              onClick={() =>
+                                navigate(`/finances/dues/${due._id}/edit`)
+                              }
+                              title="Edit Due"
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button
+                              className="text-destructive hover:text-destructive/80 transition-colors px-2 py-1 rounded border border-destructive/20 bg-destructive/5"
+                              onClick={() => handleDeleteDue(due._id)}
+                              title="Delete Due"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -365,47 +377,46 @@ const DuesManagement = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {payment._id && (
-                            <>
-                              <button
-                                className="text-primary hover:text-primary/80 mr-3 transition-colors"
-                                onClick={() =>
-                                  navigate(`/finances/payments/${payment._id}`)
-                                }
-                              >
-                                <i className="fas fa-eye"></i>
-                              </button>
-                              {(payment.status === 'pending' ||
-                                payment.approvalStatus === 'pending') && (
-                                <>
-                                  <button
-                                    className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 mr-3 transition-colors"
-                                    onClick={() =>
-                                      handlePaymentStatusChange(
-                                        payment._id,
-                                        'approved'
-                                      )
-                                    }
-                                    title="Approve"
-                                  >
-                                    <i className="fas fa-check"></i>
-                                  </button>
-                                  <button
-                                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 mr-3 transition-colors"
-                                    onClick={() =>
-                                      handlePaymentStatusChange(
-                                        payment._id,
-                                        'rejected'
-                                      )
-                                    }
-                                    title="Reject"
-                                  >
-                                    <i className="fas fa-times"></i>
-                                  </button>
-                                </>
-                              )}
-                            </>
-                          )}
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            <button
+                              className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded border border-primary/20 bg-primary/5"
+                              onClick={() =>
+                                navigate(`/finances/payments/${payment._id}`)
+                              }
+                              title="View Payment"
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
+                            {(payment.status === 'pending' ||
+                              payment.approvalStatus === 'pending') && (
+                              <>
+                                <button
+                                  className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors px-2 py-1 rounded border border-green-400/20 bg-green-100/10"
+                                  onClick={() =>
+                                    handlePaymentStatusChange(
+                                      payment._id,
+                                      'approved'
+                                    )
+                                  }
+                                  title="Approve"
+                                >
+                                  <i className="fas fa-check"></i>
+                                </button>
+                                <button
+                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors px-2 py-1 rounded border border-red-400/20 bg-red-100/10"
+                                  onClick={() =>
+                                    handlePaymentStatusChange(
+                                      payment._id,
+                                      'rejected'
+                                    )
+                                  }
+                                  title="Reject"
+                                >
+                                  <i className="fas fa-times"></i>
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
