@@ -498,14 +498,10 @@ const AdminEventsList: React.FC = () => {
                             </span>
                           </Button>
                           <Dropdown>
-                            <DropdownTrigger>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="rounded-full hover:bg-gray-100 transition-colors duration-200"
-                              >
-                                <MoreVerticalIcon className="w-4 h-4" />
-                              </Button>
+                            <DropdownTrigger
+                              className="inline-flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200 p-2"
+                            >
+                              <MoreVerticalIcon className="w-4 h-4" />
                             </DropdownTrigger>
                             <DropdownContent
                               align="end"
