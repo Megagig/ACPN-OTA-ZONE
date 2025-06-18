@@ -36,6 +36,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.use(express.static(path.join(__dirname, "../../frontend/dist"))); 
+
 // Body parsing middleware
 app.use(express.json()); // Add this line to parse JSON bodies
 

@@ -34,6 +34,7 @@ const corsOptions = {
     optionsSuccessStatus: 200,
 };
 app.use((0, cors_1.default)(corsOptions));
+app.use(express_1.default.static(path_1.default.join(__dirname, "../../frontend/dist")));
 // Body parsing middleware
 app.use(express_1.default.json()); // Add this line to parse JSON bodies
 // Create uploads directory if it doesn't exist

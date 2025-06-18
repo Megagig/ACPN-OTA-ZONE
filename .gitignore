@@ -2,3 +2,5 @@ node_modules
 .env
 history.md
 combined.log
+.vscode
+dist

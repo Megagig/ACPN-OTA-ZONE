@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
+    "build": "npm install && npx tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+   
     "seed": "node --require ts-node/register src/utils/seed.ts",
     "fix-urls": "npx ts-node scripts/fix-placeholder-urls.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
