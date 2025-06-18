@@ -3,7 +3,8 @@ services:
     name: acpn-ota-zone
     env: node
     buildCommand: |
-      cd frontend && npm install && npm install -g vite && npm run build && cd ../backend && npm install && npm run build
+      cd frontend && npm install && npm run build
+      cd ../backend && npm install && npm run build
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_VERSION
