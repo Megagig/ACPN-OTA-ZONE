@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm install && ./node_modules/.bin/tsc",
+    "build": "npm install && npx tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
    
