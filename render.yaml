@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: acpn-ota-zone
+    env: node
+    buildCommand: |
+      cd frontend && npm install && npm install -g vite && npm run build && cd ../backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: ENABLE_REDIS
+        value: false
+      - key: NODE_ENV
+        value: production 
