@@ -1,8 +1,16 @@
 import { Request, Response } from 'express';
 import Event from '../models/Event';
 import Attendee from '../models/Attendee';
-import User from '../models/User';
+import { IUser } from '../models/user.model';
 import { startOfYear, endOfYear } from 'date-fns';
+import mongoose from 'mongoose';
+
+interface IAttendee extends mongoose.Document {
+  userId: IUser;
+  eventId: mongoose.Types.ObjectId;
+  status: string;
+  registeredAt: Date;
+}
 
 export const getEvents = async (req: Request, res: Response) => {
   try {
@@ -72,11 +80,11 @@ export const calculatePenalties = async (req: Request, res: Response) => {
     });
 
     // Get all users
-    const users = await User.find({ role: 'member' });
+    const users = await mongoose.model<IUser>('User').find({ role: 'member' });
 
     // Calculate attendance for each user
     const penalties = await Promise.all(
-      users.map(async (user) => {
+      users.map(async (user: IUser) => {
         const attendances = await Attendee.find({
           userId: user._id,
           eventId: { $in: meetings.map(m => m._id) },
@@ -84,10 +92,11 @@ export const calculatePenalties = async (req: Request, res: Response) => {
         });
 
         const attendanceRate = attendances.length / meetings.length;
-        const penalty = attendanceRate < 0.5 ? user.annualDues / 2 : 0;
+        // Default to 0 if annualDues is not set
+        const penalty = attendanceRate < 0.5 ? ((user as any).annualDues || 0) / 2 : 0;
 
         if (penalty > 0) {
-          await User.findByIdAndUpdate(user._id, {
+          await mongoose.model<IUser>('User').findByIdAndUpdate(user._id, {
             $inc: { pendingDues: penalty }
           });
         }
@@ -121,11 +130,11 @@ export const sendWarnings = async (req: Request, res: Response) => {
     });
 
     // Get all users
-    const users = await User.find({ role: 'member' });
+    const users = await mongoose.model<IUser>('User').find({ role: 'member' });
 
     // Calculate attendance and send warnings
     const warnings = await Promise.all(
-      users.map(async (user) => {
+      users.map(async (user: IUser) => {
         const attendances = await Attendee.find({
           userId: user._id,
           eventId: { $in: meetings.map(m => m._id) },
@@ -160,7 +169,7 @@ export const exportAttendanceCSV = async (req: Request, res: Response) => {
     const { eventId } = req.params;
     const event = await Event.findById(eventId);
     const attendees = await Attendee.find({ eventId })
-      .populate('userId', 'firstName lastName email');
+      .populate<{ userId: IUser }>('userId', 'firstName lastName email');
 
     // Create CSV content
     const headers = ['Name', 'Email', 'Status', 'Registration Date'];

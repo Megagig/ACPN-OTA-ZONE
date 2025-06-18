@@ -206,4 +206,6 @@ router.post('/:id/approve', auth_middleware_1.protect, requireAdminRole, (0, cac
 router.post('/:id/reject', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.rejectPayment);
 router.post('/:id/review', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.reviewPayment);
 router.delete('/:id', auth_middleware_1.protect, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.deletePayment);
+// Add a new endpoint for recording any payment type
+router.post('/record', auth_middleware_1.protect, requireAdminRole, handleUploadErrors, requireAdminRole, (0, cache_middleware_1.clearCacheMiddleware)('payments'), payment_controller_1.recordPayment);
 exports.default = router;

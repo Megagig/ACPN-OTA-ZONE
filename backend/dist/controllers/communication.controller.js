@@ -45,9 +45,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCommunicationRecipients = exports.scheduleCommunication = exports.sendCommunication = exports.getCommunicationStats = exports.deleteCommunication = exports.markAsRead = exports.createCommunication = exports.getCommunication = exports.getUserSentCommunications = exports.getUserInbox = exports.getAllAdminCommunications = void 0;
+exports.getCommunicationRecipients = exports.scheduleCommunication = exports.updateCommunication = exports.sendCommunication = exports.getCommunicationStats = exports.deleteCommunication = exports.markAsRead = exports.createCommunication = exports.getCommunication = exports.getUserSentCommunications = exports.getUserInbox = exports.getAllAdminCommunications = void 0;
 const communication_model_1 = __importStar(require("../models/communication.model"));
 const communicationRecipient_model_1 = __importDefault(require("../models/communicationRecipient.model"));
+const userNotification_model_1 = __importDefault(require("../models/userNotification.model"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 const async_middleware_1 = __importDefault(require("../middleware/async.middleware"));
 const errorResponse_1 = __importDefault(require("../utils/errorResponse"));
@@ -294,7 +295,7 @@ exports.createCommunication = (0, async_middleware_1.default)((req, res, next) =
     // Add sender to req.body
     req.body.senderUserId = req.user._id;
     // Create the communication
-    const communication = yield communication_model_1.default.create(req.body);
+    const communication = yield communication_model_1.default.create(Object.assign(Object.assign({}, req.body), { senderUserId: req.user._id, status: communication_model_1.CommunicationStatus.DRAFT }));
     // Add recipients based on recipientType
     let recipientUsers = [];
     if (req.body.recipientType === communication_model_1.RecipientType.ALL) {
@@ -323,6 +324,9 @@ exports.createCommunication = (0, async_middleware_1.default)((req, res, next) =
         if (existingUsers.length !== req.body.recipientIds.length) {
             return next(new errorResponse_1.default(`Some recipient IDs are invalid`, 400));
         }
+        // Save specific recipients to the communication document
+        communication.specificRecipients = existingUsers.map((user) => user._id);
+        yield communication.save();
         recipientUsers = existingUsers;
     }
     // Batch create recipient records
@@ -511,65 +515,133 @@ exports.getCommunicationStats = (0, async_middleware_1.default)((req, res) => __
 // @route   POST /api/communications/:id/send
 // @access  Private/Admin/Secretary
 exports.sendCommunication = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const communication = yield communication_model_1.default.findById(req.params.id).populate({
-        path: 'senderUserId',
-        select: 'firstName lastName email',
-    });
+    var _a;
+    const communication = yield communication_model_1.default.findById(req.params.id);
     if (!communication) {
         return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
     }
-    // Check if user is authorized to send
+    // Authorization checks
     const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender = communication.senderUserId.toString() === req.user._id.toString();
     if (!isAdmin && !isSender) {
         return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to send this communication`, 403));
     }
-    // Check if communication is in draft status
     if (communication.status !== 'draft') {
         return next(new errorResponse_1.default(`Communication is already ${communication.status}`, 400));
     }
-    // Update communication status and send date
-    communication.status = 'sent';
-    communication.sentDate = new Date();
-    yield communication.save();
-    // Create recipient records if they don't exist
-    const existingRecipients = yield communicationRecipient_model_1.default.find({
-        communicationId: communication._id,
-    });
-    if (existingRecipients.length === 0) {
+    try {
+        // 1. Determine recipient users
         let recipientUsers = [];
-        if (communication.recipientType === 'all') {
-            recipientUsers = yield user_model_1.default.find({ isActive: true }).select('_id');
+        const userQuery = { isActive: true };
+        switch (communication.recipientType) {
+            case communication_model_1.RecipientType.ALL:
+                recipientUsers = yield user_model_1.default.find(userQuery).select('_id');
+                break;
+            case communication_model_1.RecipientType.ADMIN:
+                userQuery.role = { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] };
+                recipientUsers = yield user_model_1.default.find(userQuery).select('_id');
+                break;
+            case communication_model_1.RecipientType.SPECIFIC:
+                if ((_a = communication.specificRecipients) === null || _a === void 0 ? void 0 : _a.length) {
+                    userQuery._id = { $in: communication.specificRecipients };
+                    recipientUsers = yield user_model_1.default.find(userQuery).select('_id');
+                }
+                break;
         }
-        else if (communication.recipientType === 'admin') {
-            recipientUsers = yield user_model_1.default.find({
-                isActive: true,
-                role: { $in: ['admin', 'superadmin', 'secretary', 'treasurer'] },
-            }).select('_id');
-        }
+        // 2. Update communication status and save
+        communication.status = 'sent';
+        communication.sentDate = new Date();
+        yield communication.save();
+        let createdNotifications = [];
+        // 3. Process recipients and notifications
         if (recipientUsers.length > 0) {
-            const recipientRecords = recipientUsers.map((user) => ({
+            const recipientIds = recipientUsers.map((user) => user._id);
+            // Create recipient records in bulk, ensuring a clean slate
+            yield communicationRecipient_model_1.default.deleteMany({ communicationId: communication._id });
+            const recipientRecords = recipientIds.map((userId) => ({
                 communicationId: communication._id,
-                userId: user._id,
-                readStatus: false,
+                userId: userId,
             }));
             yield communicationRecipient_model_1.default.insertMany(recipientRecords);
+            // Create notifications in bulk
+            const sender = yield user_model_1.default.findById(communication.senderUserId).select('firstName lastName');
+            const senderInfo = sender ? `${sender.firstName} ${sender.lastName}`.trim() : 'System';
+            const notificationsToCreate = recipientIds.map((userId) => ({
+                userId: userId,
+                type: 'communication',
+                title: `New Communication: ${communication.subject}`,
+                message: `You have received a new communication from ${senderInfo}.`,
+                priority: communication.priority || 'normal',
+                referenceId: communication._id,
+                referenceModel: 'Communication',
+            }));
+            yield userNotification_model_1.default.deleteMany({ referenceId: communication._id, referenceModel: 'Communication' });
+            createdNotifications = yield userNotification_model_1.default.insertMany(notificationsToCreate);
         }
+        // Return success response
+        res.status(200).json({
+            success: true,
+            message: 'Communication sent successfully',
+            data: {
+                communication,
+                recipientCount: recipientUsers.length,
+                notificationCount: createdNotifications.length,
+            },
+        });
     }
+    catch (error) {
+        console.error('Error sending communication:', error);
+        return next(new errorResponse_1.default(`Error sending communication: ${error.message}`, 500));
+    }
+}));
+// @desc    Update a communication
+// @route   PUT /api/communications/:id
+// @access  Private
+exports.updateCommunication = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    let communication = yield communication_model_1.default.findById(req.params.id);
+    if (!communication) {
+        return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
+    }
+    // Check if user is authorized to update
+    const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
+    const isSender = communication.senderUserId.toString() === req.user._id.toString();
+    if (!isAdmin && !isSender) {
+        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to update this communication`, 403));
+    }
+    // Check if communication can be updated (only in draft status)
+    if (communication.status !== 'draft') {
+        return next(new errorResponse_1.default(`Cannot update a communication that has been ${communication.status}`, 400));
+    }
+    // Handle specific recipients update
+    if (req.body.recipientType === 'specific' &&
+        req.body.recipientIds &&
+        Array.isArray(req.body.recipientIds)) {
+        // Validate all recipients exist
+        const existingUsers = yield user_model_1.default.find({
+            _id: { $in: req.body.recipientIds },
+            isActive: true,
+        }).select('_id');
+        if (existingUsers.length !== req.body.recipientIds.length) {
+            return next(new errorResponse_1.default(`Some recipient IDs are invalid`, 400));
+        }
+        // Update specific recipients
+        req.body.specificRecipients = existingUsers.map((user) => user._id);
+    }
+    // Update communication
+    communication = yield communication_model_1.default.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+    });
     res.status(200).json({
         success: true,
         data: communication,
     });
 }));
-// @desc    Schedule a communication
+// @desc    Schedule a communication for later sending
 // @route   POST /api/communications/:id/schedule
-// @access  Private/Admin/Secretary
+// @access  Private
 exports.scheduleCommunication = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { scheduledDate } = req.body;
-    if (!scheduledDate) {
-        return next(new errorResponse_1.default('Scheduled date is required', 400));
-    }
-    const communication = yield communication_model_1.default.findById(req.params.id);
+    let communication = yield communication_model_1.default.findById(req.params.id);
     if (!communication) {
         return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
     }
@@ -583,39 +655,95 @@ exports.scheduleCommunication = (0, async_middleware_1.default)((req, res, next)
     if (communication.status !== 'draft') {
         return next(new errorResponse_1.default(`Communication is already ${communication.status}`, 400));
     }
+    // Validate scheduled date
+    const { scheduledDate } = req.body;
+    if (!scheduledDate) {
+        return next(new errorResponse_1.default('Scheduled date is required', 400));
+    }
+    const scheduledFor = new Date(scheduledDate);
+    if (scheduledFor <= new Date()) {
+        return next(new errorResponse_1.default('Scheduled date must be in the future', 400));
+    }
     // Update communication status and scheduled date
     communication.status = 'scheduled';
-    communication.scheduledFor = new Date(scheduledDate);
+    communication.scheduledFor = scheduledFor;
     yield communication.save();
+    // Create recipients for scheduled communication (same logic as sending)
+    let recipients = [];
+    if (communication.recipientType === communication_model_1.RecipientType.ALL) {
+        // Get all active users
+        const allUsers = yield user_model_1.default.find({ isActive: true }).select('_id');
+        recipients = allUsers.map((user) => ({
+            communicationId: communication._id,
+            userId: user._id,
+        }));
+    }
+    else if (communication.recipientType === communication_model_1.RecipientType.ADMIN) {
+        // Get all admin users
+        const adminUsers = yield user_model_1.default.find({
+            role: { $in: ['admin', 'superadmin', 'secretary'] },
+            isActive: true,
+        }).select('_id');
+        recipients = adminUsers.map((user) => ({
+            communicationId: communication._id,
+            userId: user._id,
+        }));
+    }
+    else if (communication.recipientType === communication_model_1.RecipientType.SPECIFIC) {
+        // Use specific recipients
+        if (communication.specificRecipients &&
+            communication.specificRecipients.length > 0) {
+            recipients = communication.specificRecipients.map((userId) => ({
+                communicationId: communication._id,
+                userId: userId,
+            }));
+        }
+    }
+    // Clear existing recipients and create new ones for scheduled communication
+    yield communicationRecipient_model_1.default.deleteMany({
+        communicationId: communication._id,
+    });
+    if (recipients.length > 0) {
+        yield communicationRecipient_model_1.default.insertMany(recipients);
+    }
     res.status(200).json({
         success: true,
+        message: `Communication scheduled for ${scheduledFor.toISOString()}`,
         data: communication,
     });
 }));
-// @desc    Get communication recipients
+// @desc    Get recipients of a communication
 // @route   GET /api/communications/:id/recipients
-// @access  Private/Admin/Secretary
+// @access  Private
 exports.getCommunicationRecipients = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const communication = yield communication_model_1.default.findById(req.params.id);
     if (!communication) {
         return next(new errorResponse_1.default(`Communication not found with id of ${req.params.id}`, 404));
     }
-    // Check if user is authorized to view recipients
+    // Authorization check
     const isAdmin = ['admin', 'superadmin', 'secretary'].includes(req.user.role);
     const isSender = communication.senderUserId.toString() === req.user._id.toString();
     if (!isAdmin && !isSender) {
-        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to view recipients`, 403));
+        return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to view recipients for this communication`, 403));
     }
-    // Get recipients with user details
+    // Get recipients with populated user details
     const recipients = yield communicationRecipient_model_1.default.find({
-        communicationId: communication._id,
-    }).populate({
+        communicationId: req.params.id,
+    })
+        .populate({
         path: 'userId',
-        select: 'firstName lastName email phone',
+        select: 'firstName lastName email role',
+    })
+        .sort({ createdAt: 1 });
+    // Transform data for the frontend, ensuring a 'user' property exists
+    const transformedRecipients = recipients
+        .filter(r => r.userId) // Ensure user exists
+        .map(r => {
+        const recipientObj = r.toObject();
+        return Object.assign(Object.assign({}, recipientObj), { user: recipientObj.userId });
     });
     res.status(200).json({
         success: true,
-        count: recipients.length,
-        data: recipients,
+        data: transformedRecipients,
     });
 }));

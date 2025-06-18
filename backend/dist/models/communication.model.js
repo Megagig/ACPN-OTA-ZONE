@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommunicationStatus = exports.RecipientType = exports.MessageType = void 0;
+exports.CommunicationPriority = exports.CommunicationStatus = exports.RecipientType = exports.MessageType = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var MessageType;
 (function (MessageType) {
@@ -53,6 +53,13 @@ var CommunicationStatus;
     CommunicationStatus["SENT"] = "sent";
     CommunicationStatus["SCHEDULED"] = "scheduled";
 })(CommunicationStatus || (exports.CommunicationStatus = CommunicationStatus = {}));
+var CommunicationPriority;
+(function (CommunicationPriority) {
+    CommunicationPriority["LOW"] = "low";
+    CommunicationPriority["NORMAL"] = "normal";
+    CommunicationPriority["HIGH"] = "high";
+    CommunicationPriority["URGENT"] = "urgent";
+})(CommunicationPriority || (exports.CommunicationPriority = CommunicationPriority = {}));
 const communicationSchema = new mongoose_1.Schema({
     subject: {
         type: String,
@@ -73,10 +80,21 @@ const communicationSchema = new mongoose_1.Schema({
         enum: Object.values(RecipientType),
         required: true,
     },
+    specificRecipients: [
+        {
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+    ],
     status: {
         type: String,
         enum: Object.values(CommunicationStatus),
         default: CommunicationStatus.DRAFT,
+    },
+    priority: {
+        type: String,
+        enum: Object.values(CommunicationPriority),
+        default: CommunicationPriority.NORMAL,
     },
     sentDate: {
         type: Date,

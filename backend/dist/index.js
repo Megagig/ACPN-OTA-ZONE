@@ -66,8 +66,8 @@ const role_routes_1 = __importDefault(require("./routes/role.routes"));
 const userManagement_routes_1 = __importDefault(require("./routes/userManagement.routes"));
 const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"));
 const memberDashboard_routes_1 = __importDefault(require("./routes/memberDashboard.routes"));
-const cache_routes_1 = __importDefault(require("./routes/cache.routes"));
 const message_routes_1 = __importDefault(require("./routes/message.routes"));
+const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 // Register paymentRoutes (which uses multer) BEFORE global fileupload or general body parsers
 app.use('/api/payments', payment_routes_1.default);
 // File upload middleware for organization documents (express-fileupload)
@@ -111,8 +111,8 @@ app.use('/api/roles', role_routes_1.default);
 app.use('/api/user-management', userManagement_routes_1.default);
 app.use('/api/dashboard', dashboard_routes_1.default);
 app.use('/api/member-dashboard', memberDashboard_routes_1.default);
-app.use('/api/cache', cache_routes_1.default);
 app.use('/api/messages', message_routes_1.default);
+app.use('/api/notifications', notification_routes_1.default);
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.
 app.use(express_1.default.urlencoded({ extended: true }));

@@ -160,6 +160,10 @@ const dueSchema = new mongoose_1.Schema({
     nextDueDate: {
         type: Date,
     },
+    isDeleted: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });

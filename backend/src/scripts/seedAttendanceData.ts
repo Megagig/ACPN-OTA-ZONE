@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
+import { config } from 'dotenv';
+import { addMonths, startOfYear } from 'date-fns';
+import { IUser } from '../models/user.model';
 import Event from '../models/Event';
 import Attendee from '../models/Attendee';
-import User from '../models/User';
-import { addMonths, startOfYear } from 'date-fns';
-import dotenv from 'dotenv';
 
-dotenv.config();
+config();
 
 const seedData = async () => {
   try {
@@ -19,7 +19,8 @@ const seedData = async () => {
     console.log('Cleared existing data');
 
     // Get admin user for createdBy field
-    const admin = await User.findOne({ role: 'admin' });
+    const UserModel = mongoose.model<IUser>('User');
+    const admin = await UserModel.findOne({ role: 'admin' });
     if (!admin) {
       throw new Error('Admin user not found');
     }
@@ -65,7 +66,7 @@ const seedData = async () => {
     console.log('Created test events');
 
     // Get all members
-    const members = await User.find({ role: 'member' });
+    const members = await UserModel.find({ role: 'member' });
     if (members.length === 0) {
       throw new Error('No member users found');
     }

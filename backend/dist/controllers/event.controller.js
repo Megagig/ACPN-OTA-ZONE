@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelEvent = exports.publishEvent = exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getUserEventHistory = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.getEventAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
+exports.bulkRegisterAllMembers = exports.cancelEvent = exports.publishEvent = exports.sendAttendanceWarningsForYear = exports.calculatePenalties = exports.getAllPenaltyConfigs = exports.createPenaltyConfig = exports.getPenaltyConfig = exports.getUserEventHistory = exports.getEventRegistrations = exports.getUserRegistrations = exports.getUserPenalties = exports.getEventStats = exports.acknowledgeEvent = exports.getMyEvents = exports.markAttendance = exports.getEventAttendance = exports.cancelRegistration = exports.registerForEvent = exports.deleteEvent = exports.updateEvent = exports.createEvent = exports.getEvent = exports.getAllEvents = void 0;
 const event_model_1 = __importStar(require("../models/event.model"));
 const eventRegistration_model_1 = __importStar(require("../models/eventRegistration.model"));
 const eventAttendance_model_1 = __importDefault(require("../models/eventAttendance.model"));
@@ -1234,5 +1234,53 @@ exports.cancelEvent = (0, async_middleware_1.default)((req, res, next) => __awai
     res.status(200).json({
         success: true,
         data: event,
+    });
+}));
+// @desc    Bulk register all members for an event
+// @route   POST /api/events/:id/bulk-register
+// @access  Private (Admin only)
+exports.bulkRegisterAllMembers = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const eventId = req.params.id;
+    const event = yield event_model_1.default.findById(eventId);
+    if (!event) {
+        return next(new errorResponse_1.default(`Event not found with id of ${eventId}`, 404));
+    }
+    // Find all users with role 'member'
+    const members = yield user_model_1.default.find({ role: 'member', isActive: true });
+    let createdCount = 0;
+    let alreadyRegisteredCount = 0;
+    let errors = [];
+    for (const member of members) {
+        const existing = yield eventRegistration_model_1.default.findOne({ eventId, userId: member._id });
+        if (existing) {
+            alreadyRegisteredCount++;
+            continue;
+        }
+        try {
+            yield eventRegistration_model_1.default.create({
+                eventId,
+                userId: member._id,
+                status: eventRegistration_model_1.RegistrationStatus.REGISTERED,
+                paymentStatus: event.registrationFee ? 'pending' : 'waived',
+            });
+            createdCount++;
+        }
+        catch (err) {
+            let errorMsg = 'Unknown error';
+            if (err instanceof Error) {
+                errorMsg = err.message;
+            }
+            else if (typeof err === 'string') {
+                errorMsg = err;
+            }
+            errors.push({ userId: member._id, error: errorMsg });
+        }
+    }
+    res.status(200).json({
+        success: true,
+        message: `Bulk registration complete. ${createdCount} new registrations, ${alreadyRegisteredCount} already registered.`,
+        createdCount,
+        alreadyRegisteredCount,
+        errors,
     });
 }));

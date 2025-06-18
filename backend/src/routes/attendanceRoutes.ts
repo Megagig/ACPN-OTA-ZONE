@@ -7,12 +7,12 @@ import {
   sendWarnings,
   exportAttendanceCSV
 } from '../controllers/attendanceController';
-import { authenticateToken } from '../middleware/auth';
+import { protect } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
 // All routes require authentication
-router.use(authenticateToken);
+router.use(protect);
 
 // Get events for a specific year
 router.get('/events', getEvents);

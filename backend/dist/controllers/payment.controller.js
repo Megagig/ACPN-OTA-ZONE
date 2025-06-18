@@ -41,11 +41,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPaymentById = exports.deletePayment = exports.reviewPayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getAllPayments = exports.getDuePayments = exports.submitPayment = void 0;
+exports.recordPayment = exports.getPaymentById = exports.deletePayment = exports.reviewPayment = exports.rejectPayment = exports.approvePayment = exports.getPendingPayments = exports.getAllPayments = exports.getDuePayments = exports.submitPayment = void 0;
 const payment_model_1 = __importStar(require("../models/payment.model"));
 const due_model_1 = __importStar(require("../models/due.model"));
 const pharmacy_model_1 = __importDefault(require("../models/pharmacy.model"));
@@ -516,6 +527,71 @@ exports.getPaymentById = (0, async_middleware_1.default)((req, res, next) => __a
         return next(new errorResponse_1.default(`User ${req.user._id} is not authorized to view this payment`, 403));
     }
     res.status(200).json({
+        success: true,
+        data: payment,
+    });
+}));
+// Add a new controller for recording any payment type
+exports.recordPayment = (0, async_middleware_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const _a = req.body, { paymentType, pharmacyId, amount, paymentMethod, paymentReference, dueId, eventId, description, purpose, participant, receipt } = _a, rest = __rest(_a, ["paymentType", "pharmacyId", "amount", "paymentMethod", "paymentReference", "dueId", "eventId", "description", "purpose", "participant", "receipt"]);
+    if (!paymentType || !pharmacyId || !amount || !paymentMethod) {
+        return next(new errorResponse_1.default('Missing required fields for payment recording', 400));
+    }
+    // Check if pharmacy exists
+    const pharmacy = yield pharmacy_model_1.default.findById(pharmacyId);
+    if (!pharmacy) {
+        return next(new errorResponse_1.default(`Pharmacy not found with id of ${pharmacyId}`, 404));
+    }
+    // Handle receipt upload (assume multer middleware)
+    let receiptUrl = '', receiptPublicId = '';
+    if (req.file) {
+        // Upload to Cloudinary or use local path
+        try {
+            const result = yield (0, cloudinary_1.uploadToCloudinary)(req.file.path, 'payment-receipts');
+            receiptUrl = result.secure_url;
+            receiptPublicId = result.public_id;
+        }
+        catch (err) {
+            receiptUrl = `/static/receipts/${req.file.filename}`;
+            receiptPublicId = req.file.filename;
+        }
+    }
+    else {
+        return next(new errorResponse_1.default('Receipt upload is required', 400));
+    }
+    // Build meta object for extra fields
+    const meta = Object.assign({ description, purpose, participant, eventId }, rest);
+    // Dues logic
+    if (paymentType === 'due') {
+        if (!dueId) {
+            return next(new errorResponse_1.default('Due ID is required for due payments', 400));
+        }
+        const due = yield due_model_1.default.findById(dueId);
+        if (!due) {
+            return next(new errorResponse_1.default(`Due not found with id of ${dueId}`, 404));
+        }
+        if (due.pharmacyId.toString() !== pharmacyId) {
+            return next(new errorResponse_1.default('Due does not belong to this pharmacy', 400));
+        }
+        if (parseFloat(amount) > due.balance) {
+            return next(new errorResponse_1.default('Payment amount exceeds outstanding balance', 400));
+        }
+    }
+    // Create payment record
+    const payment = yield payment_model_1.default.create({
+        paymentType,
+        dueId: paymentType === 'due' ? dueId : undefined,
+        pharmacyId,
+        amount,
+        paymentMethod,
+        paymentReference,
+        receiptUrl,
+        receiptPublicId,
+        submittedBy: req.user._id,
+        approvalStatus: payment_model_1.PaymentApprovalStatus.PENDING,
+        meta,
+    });
+    res.status(201).json({
         success: true,
         data: payment,
     });

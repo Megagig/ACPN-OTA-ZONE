@@ -77,4 +77,8 @@ router
 router
     .route('/:id/cancel')
     .patch((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), event_controller_1.cancelEvent);
+// Bulk register all members for an event (Admin only)
+router
+    .route('/:id/bulk-register')
+    .post((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN), event_controller_1.bulkRegisterAllMembers);
 exports.default = router;

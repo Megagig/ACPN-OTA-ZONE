@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaymentApprovalStatus = exports.PaymentMethod = void 0;
+exports.PaymentType = exports.PaymentApprovalStatus = exports.PaymentMethod = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var PaymentMethod;
 (function (PaymentMethod) {
@@ -48,11 +48,32 @@ var PaymentApprovalStatus;
     PaymentApprovalStatus["REJECTED"] = "rejected";
     PaymentApprovalStatus["DENIED"] = "denied";
 })(PaymentApprovalStatus || (exports.PaymentApprovalStatus = PaymentApprovalStatus = {}));
+var PaymentType;
+(function (PaymentType) {
+    PaymentType["DUE"] = "due";
+    PaymentType["DONATION"] = "donation";
+    PaymentType["EVENT_FEE"] = "event_fee";
+    PaymentType["REGISTRATION_FEE"] = "registration_fee";
+    PaymentType["CONFERENCE_FEE"] = "conference_fee";
+    PaymentType["ACCOMMODATION"] = "accommodation";
+    PaymentType["SEMINAR"] = "seminar";
+    PaymentType["TRANSPORTATION"] = "transportation";
+    PaymentType["BUILDING"] = "building";
+    PaymentType["OTHER"] = "other";
+})(PaymentType || (exports.PaymentType = PaymentType = {}));
 const paymentSchema = new mongoose_1.Schema({
+    paymentType: {
+        type: String,
+        enum: Object.values(PaymentType),
+        required: true,
+        default: PaymentType.DUE,
+    },
     dueId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: 'Due',
-        required: true,
+        required: function () {
+            return this.paymentType === PaymentType.DUE;
+        },
     },
     pharmacyId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
@@ -105,6 +126,10 @@ const paymentSchema = new mongoose_1.Schema({
     submittedAt: {
         type: Date,
         default: Date.now,
+    },
+    meta: {
+        type: mongoose_1.Schema.Types.Mixed,
+        default: {},
     },
 }, {
     timestamps: true,

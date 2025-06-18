@@ -51,8 +51,8 @@ router.get('/pharmacy/:pharmacyId/history', due_controller_1.getPharmacyPaymentH
 router
     .route('/:id')
     .get(due_controller_1.getDue)
-    .put(adminAuthorize, due_controller_1.updateDue)
-    .delete(adminAuthorize, due_controller_1.deleteDue);
+    .put(adminAuthorize, (0, cache_middleware_1.clearCacheMiddleware)('dues'), due_controller_1.updateDue)
+    .delete(adminAuthorize, (0, cache_middleware_1.clearCacheMiddleware)('dues'), due_controller_1.deleteDue);
 // Special due operations
 router.post('/:id/penalty', adminAuthorize, due_controller_1.addPenaltyToDue);
 router.put('/:id/mark-paid', adminAuthorize, due_controller_1.markDueAsPaid);

@@ -23,7 +23,11 @@ router
     .get((0, auth_middleware_1.authorize)(user_model_1.UserRole.ADMIN, user_model_1.UserRole.SUPERADMIN, user_model_1.UserRole.SECRETARY), communication_controller_1.getCommunicationStats);
 // Mixed routes
 router.route('/').post(communication_controller_1.createCommunication);
-router.route('/:id').get(communication_controller_1.getCommunication).delete(communication_controller_1.deleteCommunication);
+router
+    .route('/:id')
+    .get(communication_controller_1.getCommunication)
+    .put(communication_controller_1.updateCommunication)
+    .delete(communication_controller_1.deleteCommunication);
 // Communication action routes
 router.route('/:id/send').post(communication_controller_1.sendCommunication);
 router.route('/:id/schedule').post(communication_controller_1.scheduleCommunication);
