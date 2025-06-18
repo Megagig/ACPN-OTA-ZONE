@@ -1,66 +1,73 @@
 import Redis from 'ioredis';
 import { logger } from '../utils/logger';
 
+// Check if Redis is enabled
+const isRedisEnabled = process.env.ENABLE_REDIS === 'true';
+
 // Redis client configuration
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: Number(process.env.REDIS_PORT) || 6379,
-  password: process.env.REDIS_PASSWORD || '',
-  connectTimeout: 10000, // 10 seconds
-  maxRetriesPerRequest: 3,
-  enableOfflineQueue: true,
-  retryStrategy: (times) => {
-    // Retry connection with exponential backoff (max 10 seconds)
-    const delay = Math.min(times * 100, 10000);
-    logger.info(
-      `Redis reconnecting... attempt ${times}. Next retry in ${delay}ms`
-    );
-    return delay;
-  },
-});
+const redisClient = isRedisEnabled
+  ? new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD || '',
+      connectTimeout: 10000, // 10 seconds
+      maxRetriesPerRequest: 3,
+      enableOfflineQueue: true,
+      retryStrategy: (times) => {
+        // Retry connection with exponential backoff (max 10 seconds)
+        const delay = Math.min(times * 100, 10000);
+        logger.info(
+          `Redis reconnecting... attempt ${times}. Next retry in ${delay}ms`
+        );
+        return delay;
+      },
+    })
+  : null;
 
 // Event handlers
-redisClient.on('connect', () => {
-  logger.info('Redis client connected');
-});
+if (redisClient) {
+  redisClient.on('connect', () => {
+    logger.info('Redis client connected');
+  });
 
-redisClient.on('ready', async () => {
-  logger.info('Redis client ready and accepting commands');
+  redisClient.on('ready', async () => {
+    logger.info('Redis client ready and accepting commands');
 
-  // Warm the cache once Redis is ready
-  try {
-    if (
-      process.env.NODE_ENV === 'production' ||
-      process.env.ENABLE_CACHE_WARMING === 'true'
-    ) {
-      // Import here to avoid circular dependency issues
-      const { cacheWarming } = require('../utils/cacheWarming');
+    // Warm the cache once Redis is ready
+    try {
+      if (
+        process.env.NODE_ENV === 'production' ||
+        process.env.ENABLE_CACHE_WARMING === 'true'
+      ) {
+        // Import here to avoid circular dependency issues
+        const { cacheWarming } = require('../utils/cacheWarming');
 
-      // Delay cache warming slightly to ensure application is fully initialized
-      setTimeout(async () => {
-        await cacheWarming.warmCache();
-      }, 5000); // 5 second delay
+        // Delay cache warming slightly to ensure application is fully initialized
+        setTimeout(async () => {
+          await cacheWarming.warmCache();
+        }, 5000); // 5 second delay
+      }
+    } catch (error) {
+      logger.error(`Error during cache warming: ${error}`);
     }
-  } catch (error) {
-    logger.error(`Error during cache warming: ${error}`);
-  }
-});
+  });
 
-redisClient.on('error', (err) => {
-  logger.error(`Redis client error: ${err}`);
-});
+  redisClient.on('error', (err) => {
+    logger.error(`Redis client error: ${err}`);
+  });
 
-redisClient.on('reconnecting', (delay: number) => {
-  logger.warn(`Redis client reconnecting in ${delay}ms`);
-});
+  redisClient.on('reconnecting', (delay: number) => {
+    logger.warn(`Redis client reconnecting in ${delay}ms`);
+  });
 
-redisClient.on('close', () => {
-  logger.warn('Redis client connection closed');
-});
+  redisClient.on('close', () => {
+    logger.warn('Redis client connection closed');
+  });
 
-redisClient.on('end', () => {
-  logger.warn('Redis client connection ended');
-});
+  redisClient.on('end', () => {
+    logger.warn('Redis client connection ended');
+  });
+}
 
 // Cache utility functions
 export const redisCache = {
@@ -70,6 +77,8 @@ export const redisCache = {
    * @returns Parsed data or null if not found
    */
   async get<T>(key: string): Promise<T | null> {
+    if (!redisClient) return null;
+    
     try {
       const startTime = Date.now();
       const data = await redisClient.get(key);
@@ -95,6 +104,8 @@ export const redisCache = {
    * @param expirySeconds Time in seconds until expiry (optional)
    */
   async set(key: string, data: any, expirySeconds?: number): Promise<void> {
+    if (!redisClient) return;
+    
     try {
       const startTime = Date.now();
       const stringifiedData = JSON.stringify(data);
@@ -118,6 +129,8 @@ export const redisCache = {
    * @param key Cache key to delete
    */
   async del(key: string): Promise<void> {
+    if (!redisClient) return;
+    
     try {
       const startTime = Date.now();
       const result = await redisClient.del(key);
@@ -134,6 +147,8 @@ export const redisCache = {
    * @param pattern Pattern to match keys (e.g., "users:*")
    */
   async delByPattern(pattern: string): Promise<void> {
+    if (!redisClient) return;
+    
     try {
       const startTime = Date.now();
       const keys = await redisClient.keys(pattern);

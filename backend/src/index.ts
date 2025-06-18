@@ -92,7 +92,7 @@ app.use(
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
-  res.send('ACPN OTA Zone API is running...');
+  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
 });
 
 // Health check endpoint
@@ -105,7 +105,7 @@ app.get('/api/health-check', (req: Request, res: Response) => {
   });
 });
 
-// Define Routes
+// Define API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/pharmacies', pharmacyRoutes);
@@ -127,6 +127,12 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/member-dashboard', memberDashboardRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+});
 
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.
