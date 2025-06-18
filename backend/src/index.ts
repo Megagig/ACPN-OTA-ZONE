@@ -23,14 +23,14 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 const corsOptions = {
-  origin:
-    process.env.NODE_ENV === 'production'
-      ? ['https://acpnotazone.org', 'https://www.acpnotazone.org']
-      : [
-          'http://localhost:3000',
-          'http://localhost:5173',
-          'http://localhost:5174',
-        ],
+  origin: [
+    'https://acpnotazone.org',
+    'https://www.acpnotazone.org',
+    'https://acpn-ota-zone.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ],
   credentials: true,
   optionsSuccessStatus: 200,
 };
