@@ -614,12 +614,9 @@ function App() {
                         path="/polls/:id/respond"
                         element={<PollResponse />}
                       />
-<<<<<<< HEAD
 
                       {/* API Connection Test */}
                       {/* <Route path="/test-api" element={<TestApiConnection />} /> */}
-=======
->>>>>>> 6fe588413d0a68fe77bcee7922e2fa3fb6a1146d
                     </Route>
                   </Route>
 
