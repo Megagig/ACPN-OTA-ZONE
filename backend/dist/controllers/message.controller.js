@@ -256,7 +256,8 @@ exports.sendMessage = (0, async_middleware_1.default)((req, res, next) => __awai
     });
     // Populate message details
     const populatedMessage = yield threadMessage_model_1.default.findById(message._id)
-        .populate('senderId', 'firstName lastName profileImage').populate('replyTo');
+        .populate('senderId', 'firstName lastName profileImage')
+        .populate('replyTo');
     // Emit real-time message to thread participants
     if (global.socketService) {
         global.socketService.emitToThread(threadId, 'new_message', {

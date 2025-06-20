@@ -1,366 +1,683 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import ThemeToggle from '../components/ui/ThemeToggle';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  VStack,
+  HStack,
+  SimpleGrid,
+  Icon,
+  Image,
+  useColorModeValue,
+  Stack,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,
+  IconButton,
+  Link,
+  Divider,
+  Center,
+  Avatar,
+  useBreakpointValue,
+} from '@chakra-ui/react';
+import { 
+  FaShieldAlt, 
+  FaUsers, 
+  FaClock, 
+  FaStar, 
+  FaPhone, 
+  FaEnvelope, 
+  FaMapMarkerAlt,
+  FaChevronRight,
+  FaArrowRight,
+  FaCheckCircle,
+  FaBars
+} from 'react-icons/fa';
 
 const LandingPage: React.FC = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const bg = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.600', 'gray.200');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const buttonSize = useBreakpointValue({ base: 'md', md: 'lg' });
+
   return (
-    <div className="bg-background text-foreground min-h-screen">
+    <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.900')}>
+      {/* Navigation */}
+      <Box 
+        bg={bg} 
+        borderBottom="1px" 
+        borderColor={borderColor}
+        position="fixed" 
+        w="full" 
+        top={0} 
+        zIndex={50}
+        backdropFilter="blur(10px)"
+        backgroundColor={useColorModeValue('rgba(255,255,255,0.8)', 'rgba(26,32,44,0.8)')}
+      >
+        <Container maxW="7xl">
+          <Flex h={16} alignItems="center" justifyContent="space-between">
+            {/* Logo */}
+            <HStack spacing={2}>
+              <Image 
+                src="/acpn-ota-zone-logo.svg" 
+                alt="ACPN OTA Zone" 
+                h={10}
+                fallback={<Box w={10} h={10} bg="blue.500" borderRadius="md" />}
+              />
+              <Heading size="lg" fontWeight="bold">ACPN OTA Zone</Heading>
+            </HStack>
+
+            {/* Desktop Navigation */}
+            <HStack as="nav" spacing={8} display={{ base: 'none', md: 'flex' }}>
+              <Link href="#features" _hover={{ color: 'blue.500' }}>Features</Link>
+              <Link href="#about" _hover={{ color: 'blue.500' }}>About</Link>
+              <Link href="#testimonials" _hover={{ color: 'blue.500' }}>Testimonials</Link>
+              <Link href="#contact" _hover={{ color: 'blue.500' }}>Contact</Link>
+            </HStack>
+
+            {/* Auth Buttons */}
+            <HStack spacing={4} display={{ base: 'none', md: 'flex' }}>
+              <Button 
+                as={RouterLink} 
+                to="/login" 
+                variant="ghost"
+                _hover={{ color: 'blue.500' }}
+              >
+                Sign In
+              </Button>
+              <Button 
+                as={RouterLink} 
+                to="/register" 
+                colorScheme="blue"
+                size={buttonSize}
+                rightIcon={<Icon as={FaChevronRight} />}
+              >
+                Get Started
+              </Button>
+            </HStack>
+
+            {/* Mobile menu button */}
+            <IconButton
+              aria-label="Open menu"
+              icon={<FaBars />}
+              onClick={onOpen}
+              display={{ base: 'flex', md: 'none' }}
+              variant="ghost"
+            />
+          </Flex>
+        </Container>
+
+        {/* Mobile Drawer */}
+        <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader>Menu</DrawerHeader>
+            <DrawerBody>
+              <VStack spacing={4} align="stretch">
+                <Link href="#features" onClick={onClose}>Features</Link>
+                <Link href="#about" onClick={onClose}>About</Link>
+                <Link href="#testimonials" onClick={onClose}>Testimonials</Link>
+                <Link href="#contact" onClick={onClose}>Contact</Link>
+                <Divider />
+                <Button as={RouterLink} to="/login" variant="ghost" onClick={onClose}>
+                  Sign In
+                </Button>
+                <Button as={RouterLink} to="/register" colorScheme="blue" onClick={onClose}>
+                  Get Started
+                </Button>
+              </VStack>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      </Box>
+
       {/* Hero Section */}
-      <header className="bg-primary">
-        <nav
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-          aria-label="Top"
-        >
-          <div className="w-full py-6 flex items-center justify-between border-b border-primary-foreground/20 lg:border-none">
-            <div className="flex items-center">
-              <div className="flex items-center">
-                <img
-                  src="/acpn-ota-zone-logo.svg"
-                  alt="ACPN Ota Zone Logo"
-                  className="w-10 h-10 mr-2"
-                />
-                <span className="text-primary-foreground text-xl font-bold">
-                  ACPN Ota Zone
-                </span>
-              </div>
-              <div className="hidden ml-10 space-x-8 lg:block">
-                <Link
-                  to="#about"
-                  className="text-base font-medium text-primary-foreground hover:text-primary-foreground/80"
-                >
-                  About
-                </Link>
-                <Link
-                  to="#features"
-                  className="text-base font-medium text-primary-foreground hover:text-primary-foreground/80"
-                >
-                  Features
-                </Link>
-                <Link
-                  to="#contact"
-                  className="text-base font-medium text-primary-foreground hover:text-primary-foreground/80"
-                >
-                  Contact
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center ml-10 space-x-4">
-              <ThemeToggle className="text-primary-foreground" />
-              <Link
-                to="/login"
-                className="inline-block bg-primary-foreground/10 py-2 px-4 border border-transparent rounded-md text-base font-medium text-primary-foreground hover:bg-primary-foreground/20"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/register"
-                className="inline-block bg-card py-2 px-4 border border-transparent rounded-md text-base font-medium text-primary hover:bg-card/90"
-              >
-                Register
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
-
-      <main>
-        {/* Hero section */}
-        <div className="relative">
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-muted"></div>
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div className="relative shadow-xl sm:rounded-2xl sm:overflow-hidden">
-              <div className="absolute inset-0">
-                <img
-                  className="h-full w-full object-cover"
-                  src="https://images.unsplash.com/photo-1576602976047-174e57a47881?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
-                  alt="Pharmacy"
-                />
-                <div className="absolute inset-0 bg-primary/80 mix-blend-multiply"></div>
-              </div>
-              <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
-                <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  <span className="block text-primary-foreground">
-                    Association of Community
-                  </span>
-                  <span className="block text-primary-foreground/80">
-                    Pharmacists of Nigeria
-                  </span>
-                  <span className="block text-primary-foreground">
-                    Ota Zone
-                  </span>
-                </h1>
-                <p className="mt-6 max-w-lg mx-auto text-center text-xl text-primary-foreground/80 sm:max-w-3xl">
-                  A comprehensive portal for managing pharmacy registrations,
-                  dues, events, elections, and communications for ACPN Ota Zone
-                  members.
-                </p>
-                <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
-                  <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
-                    <Link
-                      to="/login"
-                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary bg-primary-foreground hover:bg-primary-foreground/90 sm:px-8"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary-foreground bg-primary/80 hover:bg-primary sm:px-8"
-                    >
-                      Register
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Features section */}
-        <div
-          id="features"
-          className="py-16 bg-muted/30 overflow-hidden lg:py-24"
-        >
-          <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-8 lg:max-w-7xl">
-            <div className="relative">
-              <h2 className="text-center text-3xl leading-8 font-extrabold tracking-tight text-foreground sm:text-4xl">
-                A Modern Portal for Pharmacy Management
-              </h2>
-              <p className="mt-4 max-w-3xl mx-auto text-center text-xl text-muted-foreground">
-                Our platform provides comprehensive tools to streamline pharmacy
-                operations, increase collaboration, and improve administrative
-                efficiency.
-              </p>
-            </div>
-
-            <div className="relative mt-12 lg:mt-24 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
-              <div className="relative">
-                <h3 className="text-2xl font-extrabold text-foreground tracking-tight sm:text-3xl">
-                  For Pharmacy Owners
-                </h3>
-                <p className="mt-3 text-lg text-muted-foreground">
-                  Manage your pharmacy profile, track dues payments, and stay
-                  informed about zone activities.
-                </p>
-
-                <dl className="mt-10 space-y-10">
-                  <div className="relative">
-                    <dt>
-                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
-                        <i className="fas fa-building"></i>
-                      </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-foreground">
-                        Pharmacy Registration
-                      </p>
-                    </dt>
-                    <dd className="mt-2 ml-16 text-base text-muted-foreground">
-                      Register your pharmacy details including location, license
-                      information, and contact details.
-                    </dd>
-                  </div>
-
-                  <div className="relative">
-                    <dt>
-                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
-                        <i className="fas fa-money-bill"></i>
-                      </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-foreground">
-                        Dues Management
-                      </p>
-                    </dt>
-                    <dd className="mt-2 ml-16 text-base text-muted-foreground">
-                      Track your dues payments, payment history, and upcoming
-                      financial obligations.
-                    </dd>
-                  </div>
-
-                  <div className="relative">
-                    <dt>
-                      <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
-                        <i className="fas fa-calendar"></i>
-                      </div>
-                      <p className="ml-16 text-lg leading-6 font-medium text-foreground">
-                        Event Participation
-                      </p>
-                    </dt>
-                    <dd className="mt-2 ml-16 text-base text-muted-foreground">
-                      Register for zone events, track attendance, and access
-                      event materials.
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div className="mt-10 -mx-4 relative lg:mt-0" aria-hidden="true">
-                <img
-                  className="relative mx-auto rounded-lg shadow-lg"
-                  src="https://images.unsplash.com/photo-1587370560942-ad2a04eabb6d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                  alt="Pharmacist working"
-                />
-              </div>
-            </div>
-
-            <div className="relative mt-12 sm:mt-16 lg:mt-24">
-              <div className="lg:grid lg:grid-flow-row-dense lg:grid-cols-2 lg:gap-8 lg:items-center">
-                <div className="lg:col-start-2">
-                  <h3 className="text-2xl font-extrabold text-foreground tracking-tight sm:text-3xl">
-                    For Zone Administrators
-                  </h3>
-                  <p className="mt-3 text-lg text-muted-foreground">
-                    Comprehensive tools for managing the zone's operations,
-                    communications, and governance.
-                  </p>
-
-                  <dl className="mt-10 space-y-10">
-                    <div className="relative">
-                      <dt>
-                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
-                          <i className="fas fa-users"></i>
-                        </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-foreground">
-                          Member Management
-                        </p>
-                      </dt>
-                      <dd className="mt-2 ml-16 text-base text-muted-foreground">
-                        Complete user and pharmacy management with approval
-                        workflows and detailed reporting.
-                      </dd>
-                    </div>
-
-                    <div className="relative">
-                      <dt>
-                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
-                          <i className="fas fa-vote-yea"></i>
-                        </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-foreground">
-                          Elections & Polls
-                        </p>
-                      </dt>
-                      <dd className="mt-2 ml-16 text-base text-muted-foreground">
-                        Create and manage elections, process candidate
-                        registrations, and collect member feedback through
-                        polls.
-                      </dd>
-                    </div>
-
-                    <div className="relative">
-                      <dt>
-                        <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-primary-foreground">
-                          <i className="fas fa-chart-line"></i>
-                        </div>
-                        <p className="ml-16 text-lg leading-6 font-medium text-foreground">
-                          Financial Oversight
-                        </p>
-                      </dt>
-                      <dd className="mt-2 ml-16 text-base text-muted-foreground">
-                        Track zone finances, manage dues collection, and
-                        maintain transparency with financial reports.
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-
-                <div className="mt-10 -mx-4 relative lg:mt-0 lg:col-start-1">
-                  <img
-                    className="relative mx-auto rounded-lg shadow-lg"
-                    src="https://images.unsplash.com/photo-1590051207943-12e22e34e5a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                    alt="Team collaboration"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA section */}
-        <div id="contact" className="bg-primary">
-          <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-extrabold text-primary-foreground sm:text-4xl">
-              <span className="block">Ready to get started?</span>
-              <span className="block">Join ACPN Ota Zone today.</span>
-            </h2>
-            <p className="mt-4 text-lg leading-6 text-primary-foreground/80">
-              Register your pharmacy and become a part of our growing community
-              of professional pharmacists.
-            </p>
-            <Link
-              to="/register"
-              className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-primary-foreground hover:bg-primary-foreground/90 sm:w-auto"
+      <Box pt={20} pb={16}>
+        <Container maxW="7xl">
+          <VStack spacing={8} textAlign="center">
+            <Heading 
+              size="3xl" 
+              fontWeight="bold"
+              bgGradient="linear(to-r, blue.400, blue.600)"
+              bgClip="text"
+              lineHeight="shorter"
             >
-              Register Now
-            </Link>
-          </div>
-        </div>
-      </main>
+              Welcome to ACPN OTA Zone
+            </Heading>
+            <Text fontSize="xl" color={textColor} maxW="3xl" lineHeight="tall">
+              Your comprehensive platform for managing continuing professional development, 
+              tracking requirements, and staying connected with the pharmacy community.
+            </Text>
+            <Stack direction={{ base: 'column', sm: 'row' }} spacing={4}>
+              <Button 
+                as={RouterLink} 
+                to="/register" 
+                colorScheme="blue"
+                size="lg"
+                rightIcon={<Icon as={FaChevronRight} />}
+                _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
+                transition="all 0.2s"
+              >
+                Get Started Today
+              </Button>
+              <Button 
+                as={RouterLink} 
+                to="/login" 
+                size="lg"
+                variant="outline"
+                rightIcon={<Icon as={FaArrowRight} />}
+                _hover={{ transform: 'translateY(-2px)' }}
+                transition="all 0.2s"
+              >
+                Sign In
+              </Button>
+            </Stack>
+          </VStack>
+        </Container>
+      </Box>
+
+      {/* Features Section */}
+      <Box id="features" py={16} bg={bg}>
+        <Container maxW="7xl">
+          <VStack spacing={12}>
+            <VStack spacing={4} textAlign="center">
+              <Heading size="xl">Powerful Features for Pharmacy Professionals</Heading>
+              <Text fontSize="lg" color={textColor} maxW="2xl">
+                Everything you need to manage your professional development and stay compliant.
+              </Text>
+            </VStack>
+
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} w="full">
+              {/* Feature 1 */}
+              <Box 
+                p={8} 
+                borderRadius="2xl" 
+                bg={useColorModeValue('blue.50', 'blue.900')}
+                border="1px"
+                borderColor={useColorModeValue('blue.100', 'blue.700')}
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack align="start" spacing={4}>
+                  <Center 
+                    w={12} 
+                    h={12} 
+                    bg="blue.500" 
+                    borderRadius="xl" 
+                    color="white"                  >
+                    <Icon as={FaShieldAlt} boxSize={6} />
+                  </Center>
+                  <Heading size="md">Secure Platform</Heading>
+                  <Text color={textColor}>
+                    Your data is protected with enterprise-grade security measures and encryption.
+                  </Text>
+                </VStack>
+              </Box>
+
+              {/* Feature 2 */}
+              <Box 
+                p={8} 
+                borderRadius="2xl" 
+                bg={useColorModeValue('green.50', 'green.900')}
+                border="1px"
+                borderColor={useColorModeValue('green.100', 'green.700')}
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack align="start" spacing={4}>
+                  <Center 
+                    w={12} 
+                    h={12} 
+                    bg="green.500" 
+                    borderRadius="xl" 
+                    color="white"
+                  >
+                    <Icon as={FaUsers} boxSize={6} />
+                  </Center>
+                  <Heading size="md">Community Driven</Heading>
+                  <Text color={textColor}>
+                    Connect with fellow pharmacy professionals and share knowledge and experiences.
+                  </Text>
+                </VStack>
+              </Box>
+
+              {/* Feature 3 */}
+              <Box 
+                p={8} 
+                borderRadius="2xl" 
+                bg={useColorModeValue('purple.50', 'purple.900')}
+                border="1px"
+                borderColor={useColorModeValue('purple.100', 'purple.700')}
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack align="start" spacing={4}>
+                  <Center 
+                    w={12} 
+                    h={12} 
+                    bg="purple.500" 
+                    borderRadius="xl" 
+                    color="white"
+                  >
+                    <Icon as={FaClock} boxSize={6} />
+                  </Center>
+                  <Heading size="md">24/7 Access</Heading>
+                  <Text color={textColor}>
+                    Access your account and manage your professional development anytime, anywhere.
+                  </Text>
+                </VStack>
+              </Box>
+            </SimpleGrid>
+          </VStack>
+        </Container>
+      </Box>
+
+      {/* About Section */}
+      <Box id="about" py={16} bg={useColorModeValue('gray.50', 'gray.800')}>
+        <Container maxW="7xl">
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} alignItems="center">
+            <VStack align="start" spacing={6}>
+              <Heading size="xl">About ACPN OTA Zone</Heading>
+              <Text fontSize="lg" color={textColor} lineHeight="tall">
+                ACPN OTA Zone is the premier platform for pharmacy professionals in Nigeria, 
+                providing comprehensive tools for continuing professional development, 
+                compliance tracking, and professional networking.
+              </Text>
+              <VStack align="start" spacing={4}>
+                <HStack align="start">
+                  <Icon as={FaCheckCircle} color="green.500" mt={1} />
+                  <VStack align="start" spacing={1}>
+                    <Heading size="sm">Professional Development</Heading>
+                    <Text color={textColor}>Track your CPD hours and manage your professional growth.</Text>
+                  </VStack>
+                </HStack>
+                <HStack align="start">
+                  <Icon as={FaCheckCircle} color="green.500" mt={1} />
+                  <VStack align="start" spacing={1}>
+                    <Heading size="sm">Compliance Management</Heading>
+                    <Text color={textColor}>Stay up-to-date with regulatory requirements and deadlines.</Text>
+                  </VStack>
+                </HStack>
+                <HStack align="start">
+                  <Icon as={FaCheckCircle} color="green.500" mt={1} />
+                  <VStack align="start" spacing={1}>
+                    <Heading size="sm">Community Network</Heading>
+                    <Text color={textColor}>Connect with peers and industry experts nationwide.</Text>
+                  </VStack>
+                </HStack>
+              </VStack>
+            </VStack>
+
+            <Box p={8} bg={bg} borderRadius="2xl" boxShadow="xl">
+              <SimpleGrid columns={2} spacing={6} textAlign="center">
+                <VStack>
+                  <Heading size="2xl" color="blue.500">5000+</Heading>
+                  <Text color={textColor}>Active Members</Text>
+                </VStack>
+                <VStack>
+                  <Heading size="2xl" color="green.500">98%</Heading>
+                  <Text color={textColor}>Satisfaction Rate</Text>
+                </VStack>
+                <VStack>
+                  <Heading size="2xl" color="purple.500">24/7</Heading>
+                  <Text color={textColor}>Support Available</Text>
+                </VStack>
+                <VStack>
+                  <Heading size="2xl" color="orange.500">3+</Heading>
+                  <Text color={textColor}>Years of Service</Text>
+                </VStack>
+              </SimpleGrid>
+            </Box>
+          </SimpleGrid>
+        </Container>
+      </Box>
+
+      {/* Testimonials Section */}
+      <Box id="testimonials" py={16} bg={bg}>
+        <Container maxW="7xl">
+          <VStack spacing={12}>
+            <VStack spacing={4} textAlign="center">
+              <Heading size="xl">What Our Members Say</Heading>
+              <Text fontSize="lg" color={textColor} maxW="2xl">
+                Hear from pharmacy professionals who have transformed their practice with ACPN OTA Zone.
+              </Text>
+            </VStack>
+
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} w="full">
+              {/* Testimonial 1 */}
+              <Box 
+                p={8} 
+                borderRadius="2xl" 
+                bg={useColorModeValue('blue.50', 'blue.900')}
+                border="1px"
+                borderColor={useColorModeValue('blue.100', 'blue.700')}
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack align="start" spacing={4}>
+                  <HStack>
+                    {[...Array(5)].map((_, i) => (
+                      <Icon key={i} as={FaStar} color="yellow.400" />
+                    ))}
+                  </HStack>
+                  <Text color={textColor} lineHeight="tall">
+                    "ACPN OTA Zone has revolutionized how I manage my professional development. 
+                    The platform is intuitive and comprehensive."
+                  </Text>
+                  <HStack>
+                    <Avatar 
+                      name="Adaora Saliu" 
+                      bg="blue.500" 
+                      color="white"
+                      size="md"
+                    />
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="semibold">Dr. Adaora Saliu</Text>
+                      <Text fontSize="sm" color={textColor}>Community Pharmacist</Text>
+                    </VStack>
+                  </HStack>
+                </VStack>
+              </Box>
+
+              {/* Testimonial 2 */}
+              <Box 
+                p={8} 
+                borderRadius="2xl" 
+                bg={useColorModeValue('green.50', 'green.900')}
+                border="1px"
+                borderColor={useColorModeValue('green.100', 'green.700')}
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack align="start" spacing={4}>
+                  <HStack>
+                    {[...Array(5)].map((_, i) => (
+                      <Icon key={i} as={FaStar} color="yellow.400" />
+                    ))}
+                  </HStack>
+                  <Text color={textColor} lineHeight="tall">
+                    "The networking opportunities and professional resources available 
+                    through this platform are unmatched."
+                  </Text>
+                  <HStack>
+                    <Avatar 
+                      name="Biodun Okonkwo" 
+                      bg="green.500" 
+                      color="white"
+                      size="md"
+                    />
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="semibold">Pharm. Biodun Okonkwo</Text>
+                      <Text fontSize="sm" color={textColor}>Hospital Pharmacist</Text>
+                    </VStack>
+                  </HStack>
+                </VStack>
+              </Box>
+
+              {/* Testimonial 3 */}
+              <Box 
+                p={8} 
+                borderRadius="2xl" 
+                bg={useColorModeValue('purple.50', 'purple.900')}
+                border="1px"
+                borderColor={useColorModeValue('purple.100', 'purple.700')}
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack align="start" spacing={4}>
+                  <HStack>
+                    {[...Array(5)].map((_, i) => (
+                      <Icon key={i} as={FaStar} color="yellow.400" />
+                    ))}
+                  </HStack>
+                  <Text color={textColor} lineHeight="tall">
+                    "Finally, a platform that understands the unique needs of pharmacy 
+                    professionals in Nigeria. Highly recommended!"
+                  </Text>
+                  <HStack>
+                    <Avatar 
+                      name="Funmi Ibrahim" 
+                      bg="purple.500" 
+                      color="white"
+                      size="md"
+                    />
+                    <VStack align="start" spacing={0}>
+                      <Text fontWeight="semibold">Dr. Funmi Ibrahim</Text>
+                      <Text fontSize="sm" color={textColor}>Clinical Pharmacist</Text>
+                    </VStack>
+                  </HStack>
+                </VStack>
+              </Box>
+            </SimpleGrid>
+          </VStack>
+        </Container>
+      </Box>
+
+      {/* CTA Section */}
+      <Box py={16} bgGradient="linear(to-r, blue.500, blue.600)">
+        <Container maxW="7xl">
+          <VStack spacing={8} textAlign="center" color="white">
+            <Heading size="xl">Ready to Transform Your Professional Journey?</Heading>
+            <Text fontSize="xl" maxW="2xl" opacity={0.9}>
+              Join thousands of pharmacy professionals who are already using ACPN OTA Zone 
+              to advance their careers and stay compliant.
+            </Text>
+            <Stack direction={{ base: 'column', sm: 'row' }} spacing={4}>
+              <Button 
+                as={RouterLink} 
+                to="/register" 
+                size="lg"
+                bg="white"
+                color="blue.600"
+                rightIcon={<Icon as={FaChevronRight} />}
+                _hover={{ 
+                  bg: 'gray.100', 
+                  transform: 'translateY(-2px)', 
+                  boxShadow: 'xl' 
+                }}
+                transition="all 0.2s"
+              >
+                Start Your Free Account
+              </Button>
+              <Button 
+                href="#contact" 
+                as="a"
+                size="lg"
+                variant="outline"
+                borderColor="white"
+                color="white"
+                _hover={{ 
+                  bg: 'whiteAlpha.200', 
+                  borderColor: 'whiteAlpha.800' 
+                }}
+              >
+                Learn More
+              </Button>
+            </Stack>
+          </VStack>
+        </Container>
+      </Box>
+
+      {/* Contact Section */}
+      <Box id="contact" py={16} bg={useColorModeValue('gray.50', 'gray.800')}>
+        <Container maxW="7xl">
+          <VStack spacing={12}>
+            <VStack spacing={4} textAlign="center">
+              <Heading size="xl">Get in Touch</Heading>
+              <Text fontSize="lg" color={textColor} maxW="2xl">
+                Have questions? We're here to help you get started on your professional journey.
+              </Text>
+            </VStack>
+
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} w="full">
+              {/* Phone Support */}
+              <Box 
+                p={8} 
+                bg={bg} 
+                borderRadius="2xl" 
+                boxShadow="lg" 
+                textAlign="center"
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack spacing={4}>
+                  <Center 
+                    w={16} 
+                    h={16} 
+                    bg="blue.100" 
+                    borderRadius="full" 
+                    color="blue.500"
+                  >
+                    <Icon as={FaPhone} boxSize={8} />
+                  </Center>
+                  <Heading size="md">Phone Support</Heading>
+                  <Text color={textColor}>Speak with our support team</Text>
+                  <Link 
+                    href="tel:+234-XXX-XXXX" 
+                    color="blue.500" 
+                    fontWeight="semibold"
+                    _hover={{ color: 'blue.600' }}
+                  >
+                    +234-XXX-XXXX
+                  </Link>
+                </VStack>
+              </Box>
+
+              {/* Email Support */}
+              <Box 
+                p={8} 
+                bg={bg} 
+                borderRadius="2xl" 
+                boxShadow="lg" 
+                textAlign="center"
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack spacing={4}>
+                  <Center 
+                    w={16} 
+                    h={16} 
+                    bg="green.100" 
+                    borderRadius="full" 
+                    color="green.500"
+                  >
+                    <Icon as={FaEnvelope} boxSize={8} />
+                  </Center>
+                  <Heading size="md">Email Support</Heading>
+                  <Text color={textColor}>Send us your questions</Text>
+                  <Link 
+                    href="mailto:support@acpn-ota-zone.com" 
+                    color="green.500" 
+                    fontWeight="semibold"
+                    _hover={{ color: 'green.600' }}
+                  >
+                    support@acpn-ota-zone.com
+                  </Link>
+                </VStack>
+              </Box>
+
+              {/* Office Location */}
+              <Box 
+                p={8} 
+                bg={bg} 
+                borderRadius="2xl" 
+                boxShadow="lg" 
+                textAlign="center"
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <VStack spacing={4}>
+                  <Center 
+                    w={16} 
+                    h={16} 
+                    bg="purple.100" 
+                    borderRadius="full" 
+                    color="purple.500"
+                  >
+                    <Icon as={FaMapMarkerAlt} boxSize={8} />
+                  </Center>
+                  <Heading size="md">Office Location</Heading>
+                  <Text color={textColor}>Visit our headquarters</Text>
+                  <Text color="purple.500" fontWeight="semibold">Lagos, Nigeria</Text>
+                </VStack>
+              </Box>
+            </SimpleGrid>
+          </VStack>
+        </Container>
+      </Box>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border">
-        <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
-          <nav
-            className="-mx-5 -my-2 flex flex-wrap justify-center"
-            aria-label="Footer"
+      <Box bg={useColorModeValue('gray.900', 'gray.900')} color="white" py={12}>
+        <Container maxW="7xl">
+          <SimpleGrid columns={{ base: 1, md: 4 }} spacing={8}>
+            {/* Company Info */}
+            <Box gridColumn={{ base: '1', md: '1 / 3' }}>
+              <VStack align="start" spacing={6}>
+                <HStack spacing={2}>
+                  <Image 
+                    src="/acpn-ota-zone-logo.svg" 
+                    alt="ACPN OTA Zone" 
+                    h={10}
+                    fallback={<Box w={10} h={10} bg="blue.500" borderRadius="md" />}
+                  />
+                  <Heading size="lg">ACPN OTA Zone</Heading>
+                </HStack>
+                <Text color="gray.400" maxW="md">
+                  Empowering pharmacy professionals across Nigeria with comprehensive 
+                  tools for professional development and compliance management.
+                </Text>
+              </VStack>
+            </Box>
+
+            {/* Quick Links */}
+            <Box>
+              <Heading size="sm" mb={6}>Quick Links</Heading>
+              <VStack align="start" spacing={4}>
+                <Link href="#features" _hover={{ color: 'white' }}>Features</Link>
+                <Link href="#about" _hover={{ color: 'white' }}>About</Link>
+                <Link href="#testimonials" _hover={{ color: 'white' }}>Testimonials</Link>
+                <Link href="#contact" _hover={{ color: 'white' }}>Contact</Link>
+              </VStack>
+            </Box>
+
+            {/* Support */}
+            <Box>
+              <Heading size="sm" mb={6}>Support</Heading>
+              <VStack align="start" spacing={4}>
+                <Link href="#" _hover={{ color: 'white' }}>Help Center</Link>
+                <Link href="#" _hover={{ color: 'white' }}>Privacy Policy</Link>
+                <Link href="#" _hover={{ color: 'white' }}>Terms of Service</Link>
+                <Link href="#" _hover={{ color: 'white' }}>Documentation</Link>
+              </VStack>
+            </Box>
+          </SimpleGrid>
+
+          <Divider my={8} borderColor="gray.700" />          <Flex 
+            direction={{ base: 'column', md: 'row' }} 
+            justify="space-between" 
+            align="center"
+            gap={4}
           >
-            <div className="px-5 py-2">
-              <Link
-                to="#"
-                className="text-base text-muted-foreground hover:text-foreground"
-              >
-                About
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link
-                to="#"
-                className="text-base text-muted-foreground hover:text-foreground"
-              >
-                Features
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link
-                to="#"
-                className="text-base text-muted-foreground hover:text-foreground"
-              >
-                Privacy
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link
-                to="#"
-                className="text-base text-muted-foreground hover:text-foreground"
-              >
-                Terms
-              </Link>
-            </div>
-            <div className="px-5 py-2">
-              <Link
-                to="#"
-                className="text-base text-muted-foreground hover:text-foreground"
-              >
-                Contact
-              </Link>
-            </div>
-          </nav>
-          <div className="mt-8 flex justify-center space-x-6">
-            <a href="#" className="text-muted-foreground hover:text-foreground">
-              <span className="sr-only">Facebook</span>
-              <i className="fab fa-facebook fa-2x"></i>
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground">
-              <span className="sr-only">Twitter</span>
-              <i className="fab fa-twitter fa-2x"></i>
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground">
-              <span className="sr-only">Instagram</span>
-              <i className="fab fa-instagram fa-2x"></i>
-            </a>
-          </div>
-          <p className="mt-8 text-center text-base text-muted-foreground">
-            &copy; {new Date().getFullYear()} Association of Community
-            Pharmacists of Nigeria, Ota Zone. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    </div>
+            <Text color="gray.400" fontSize="sm">
+              © 2024 ACPN OTA Zone. All rights reserved.
+            </Text>
+            <Text color="gray.400" fontSize="sm">
+              Made with ❤️ for pharmacy professionals in Nigeria
+            </Text>
+          </Flex>
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

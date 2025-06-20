@@ -68,10 +68,10 @@ const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const pharmacy_routes_1 = __importDefault(require("./routes/pharmacy.routes"));
 const document_routes_1 = __importDefault(require("./routes/document.routes"));
 const organizationDocument_routes_1 = __importDefault(require("./routes/organizationDocument.routes"));
-// NOTE: dueRoutes and donationRoutes are excluded here to avoid circular dependencies
-// They are accessible through pharmacyRoutes with nested routing
+const due_routes_1 = __importDefault(require("./routes/due.routes"));
 const dueType_routes_1 = __importDefault(require("./routes/dueType.routes"));
 const payment_routes_1 = __importDefault(require("./routes/payment.routes")); // Import paymentRoutes here
+const donation_routes_1 = __importDefault(require("./routes/donation.routes"));
 const event_routes_1 = __importDefault(require("./routes/event.routes"));
 const election_routes_1 = __importDefault(require("./routes/election.routes"));
 const poll_routes_1 = __importDefault(require("./routes/poll.routes"));
@@ -116,9 +116,10 @@ app.use('/api/users', user_routes_1.default);
 app.use('/api/pharmacies', pharmacy_routes_1.default);
 app.use('/api/documents', document_routes_1.default);
 app.use('/api/organization-documents', organizationDocument_routes_1.default);
-// NOTE: /api/dues and /api/donations are now accessible through /api/pharmacies/:pharmacyId/dues and /api/pharmacies/:pharmacyId/donations
+app.use('/api/dues', due_routes_1.default);
 app.use('/api/due-types', dueType_routes_1.default);
 app.use('/api/payments', payment_routes_1.default);
+app.use('/api/donations', donation_routes_1.default);
 app.use('/api/events', event_routes_1.default);
 app.use('/api/elections', election_routes_1.default);
 app.use('/api/polls', poll_routes_1.default);
@@ -131,19 +132,10 @@ app.use('/api/dashboard', dashboard_routes_1.default);
 app.use('/api/member-dashboard', memberDashboard_routes_1.default);
 app.use('/api/messages', message_routes_1.default);
 app.use('/api/notifications', notification_routes_1.default);
-// console.log('✓ User management routes registered');
-// app.use('/api/dashboard', dashboardRoutes);
-// console.log('✓ Dashboard routes registered');
-// app.use('/api/member-dashboard', memberDashboardRoutes);
-// console.log('✓ Member dashboard routes registered');
-// app.use('/api/messages', messageRoutes);
-// console.log('✓ Message routes registered');
-// app.use('/api/notifications', notificationRoutes);
-// console.log('✓ Notification routes registered');
 console.log('Registering catchall * route');
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
-app.get(/.*/, (req, res) => {
+app.get('*', (req, res) => {
     try {
         res.sendFile(path_1.default.join(__dirname, "../../frontend/dist/index.html"));
     }

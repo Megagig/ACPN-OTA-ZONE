@@ -236,7 +236,8 @@ exports.createNotificationForCommunication = (0, async_middleware_1.default)((re
         // Set expiration for 30 days from now
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     }));
-    const createdNotifications = yield userNotification_model_1.default.insertMany(notifications); // Emit real-time notifications if socket service is available
+    const createdNotifications = yield userNotification_model_1.default.insertMany(notifications);
+    // Emit real-time notifications if socket service is available
     if (global.socketService) {
         recipients.forEach((recipient) => {
             const notification = createdNotifications.find((n) => n.userId.toString() === recipient.userId.toString());

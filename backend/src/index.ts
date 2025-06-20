@@ -75,10 +75,10 @@ import authRoutes from './routes/auth.routes';
 import pharmacyRoutes from './routes/pharmacy.routes';
 import documentRoutes from './routes/document.routes';
 import organizationDocumentRoutes from './routes/organizationDocument.routes';
-// NOTE: dueRoutes and donationRoutes are excluded here to avoid circular dependencies
-// They are accessible through pharmacyRoutes with nested routing
+import dueRoutes from './routes/due.routes';
 import dueTypeRoutes from './routes/dueType.routes';
 import paymentRoutes from './routes/payment.routes'; // Import paymentRoutes here
+import donationRoutes from './routes/donation.routes';
 import eventRoutes from './routes/event.routes';
 import electionRoutes from './routes/election.routes';
 import pollRoutes from './routes/poll.routes';
@@ -130,9 +130,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/pharmacies', pharmacyRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/organization-documents', organizationDocumentRoutes);
-// NOTE: /api/dues and /api/donations are now accessible through /api/pharmacies/:pharmacyId/dues and /api/pharmacies/:pharmacyId/donations
+app.use('/api/dues', dueRoutes);
 app.use('/api/due-types', dueTypeRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/donations', donationRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/elections', electionRoutes);
 app.use('/api/polls', pollRoutes);
@@ -150,7 +151,12 @@ console.log('Registering catchall * route');
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+  try {
+    res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+  } catch (err) {
+    console.error('Error in catchall route:', err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 console.log('Registering express.urlencoded middleware');

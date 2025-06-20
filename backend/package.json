@@ -6,7 +6,6 @@
     "build": "npm install && npx tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-   
     "seed": "node --require ts-node/register src/utils/seed.ts",
     "fix-urls": "npx ts-node scripts/fix-placeholder-urls.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -31,7 +30,7 @@
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
     "express-fileupload": "^1.5.1",
     "express-rate-limit": "^7.5.0",
