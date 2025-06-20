@@ -61,7 +61,7 @@ const VotingInterface: React.FC = () => {
           setElection(data);
 
           // Check if user has already voted in this election
-          const hasUserVoted = await electionService.checkUserVoted(id);
+          const hasUserVoted = await electionService.checkUserVoted();
           setHasVoted(hasUserVoted);
         }
       } catch (error) {

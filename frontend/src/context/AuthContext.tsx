@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/auth.service';
-import socketService from '../services/socket.service';
+import SocketService from '../services/socket.service';
 import type { LoginCredentials } from '../types/auth.types';
 
 interface AuthContextType {
@@ -20,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [socketService] = useState(() => new SocketService());
 
   useEffect(() => {
     const initAuth = async () => {
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const token = localStorage.getItem('token');
           if (token) {
             try {
-              await socketService.connect(token);
+              socketService.connect(token);
               console.log('Socket connection established from AuthContext');
             } catch (socketError) {
               console.error('Failed to connect to socket:', socketError);
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     initAuth();
-  }, []);
+  }, [socketService]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const connectWithRetry = async (retries = 3) => {
           for (let i = 0; i < retries; i++) {
             try {
-              await socketService.connect(response.token);
+              socketService.connect(response.token);
               console.log('Socket connection established after login');
               return;
             } catch (socketError) {

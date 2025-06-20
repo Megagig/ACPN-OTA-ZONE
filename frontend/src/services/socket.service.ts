@@ -1,236 +1,195 @@
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 class SocketService {
-  private socket: Socket | null = null;
-  private isConnected = false;
-  private connectionTimeout: NodeJS.Timeout | null = null;
-  private maxRetries = 3;
-  private retryCount = 0;
+  private socket: any = null;
+  private messageHandlers: ((message: any) => void)[] = [];
+  private typingHandlers: ((userId: string, threadId: string, isTyping: boolean) => void)[] = [];
+  private threadUpdateHandlers: ((thread: any) => void)[] = [];
 
-  connect(token: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // If already connecting or connected, resolve immediately
-      if (this.isConnected && this.socket?.connected) {
-        console.log('Socket already connected');
-        resolve();
-        return;
-      }
-
-      // Disconnect existing socket if any
-      if (this.socket) {
-        this.socket.disconnect();
-      }
-
-      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      console.log(
-        `Connecting to socket server at ${serverUrl} (attempt ${
-          this.retryCount + 1
-        }/${this.maxRetries})`
-      );
-
-      // Disconnect existing socket if any
-      if (this.socket) {
-        this.socket.disconnect();
-        this.socket = null;
-      }
-
-      this.socket = io(serverUrl, {
-        auth: {
-          token: token,
-        },
-        transports: ['websocket', 'polling'],
-        timeout: 10000, // 10 second timeout
-        reconnection: true,
-        reconnectionAttempts: 3,
-        reconnectionDelay: 1000,
-      });
-
-      // Set connection timeout
-      this.connectionTimeout = setTimeout(() => {
-        console.error('Socket connection timeout');
-        this.isConnected = false;
-        if (this.socket) {
-          this.socket.disconnect();
-        }
-        reject(new Error('Connection timeout'));
-      }, 15000); // 15 second timeout
-
-      this.socket.on('connect', () => {
-        console.log(
-          'Connected to messaging server with socket ID:',
-          this.socket?.id
-        );
-        this.isConnected = true;
-        this.retryCount = 0; // Reset retry count on successful connection
-
-        if (this.connectionTimeout) {
-          clearTimeout(this.connectionTimeout);
-          this.connectionTimeout = null;
-        }
-
-        this.socket?.emit('user_online');
-        resolve();
-      });
-
-      this.socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error.message || error);
-        this.isConnected = false;
-
-        if (this.connectionTimeout) {
-          clearTimeout(this.connectionTimeout);
-          this.connectionTimeout = null;
-        }
-
-        reject(error);
-      });
-
-      this.socket.on('disconnect', (reason) => {
-        console.log('Disconnected from messaging server:', reason);
-        this.isConnected = false;
-
-        if (this.connectionTimeout) {
-          clearTimeout(this.connectionTimeout);
-          this.connectionTimeout = null;
-        }
-      });
-
-      // Handle authentication errors
-      this.socket.on('error', (error) => {
-        console.error('Socket error:', error);
-        this.isConnected = false;
-
-        if (this.connectionTimeout) {
-          clearTimeout(this.connectionTimeout);
-          this.connectionTimeout = null;
-        }
-
-        reject(new Error(error.message || 'Socket connection failed'));
-      });
-    });
-  }
-
-  disconnect() {
-    if (this.connectionTimeout) {
-      clearTimeout(this.connectionTimeout);
-      this.connectionTimeout = null;
+  connect(token: string): void {
+    if (this.socket) {
+      this.socket.disconnect();
     }
 
+    this.socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+      auth: {
+        token,
+      },
+      transports: ['websocket', 'polling'],
+    });
+
+    this.setupEventListeners();
+  }
+
+  disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      this.isConnected = false;
-      this.retryCount = 0;
+    }
+  }
+
+  private setupEventListeners(): void {
+    if (!this.socket) return;
+
+    this.socket.on('connect', () => {
+      console.log('Connected to socket server');
+    });
+
+    this.socket.on('message', (message: any) => {
+      this.messageHandlers.forEach(handler => handler(message));
+    });
+
+    this.socket.on('typing', (data: { userId: string; threadId: string; isTyping: boolean }) => {
+      this.typingHandlers.forEach(handler => handler(data.userId, data.threadId, data.isTyping));
+    });
+
+    this.socket.on('thread_update', (thread: any) => {
+      this.threadUpdateHandlers.forEach(handler => handler(thread));
+    });
+
+    this.socket.on('connect_error', (error: any) => {
+      console.error('Socket connection error:', error);
+    });
+
+    this.socket.on('disconnect', (reason: any) => {
+      console.log('Disconnected from socket server:', reason);
+    });
+
+    this.socket.on('error', (error: any) => {
+      console.error('Socket error:', error);
+    });
+  }
+
+  // Message methods
+  sendMessage(threadId: string, content: string): void {
+    if (this.socket) {
+      this.socket.emit('send_message', { threadId, content });
+    }
+  }
+
+  sendTyping(threadId: string, isTyping: boolean): void {
+    if (this.socket) {
+      this.socket.emit('typing', { threadId, isTyping });
+    }
+  }
+
+  onMessage(handler: (message: any) => void): void {
+    this.messageHandlers.push(handler);
+  }
+
+  offMessage(handler: (message: any) => void): void {
+    this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+  }
+
+  onTyping(handler: (userId: string, threadId: string, isTyping: boolean) => void): void {
+    this.typingHandlers.push(handler);
+  }
+
+  offTyping(handler: (userId: string, threadId: string, isTyping: boolean) => void): void {
+    this.typingHandlers = this.typingHandlers.filter(h => h !== handler);
+  }
+
+  onThreadUpdate(handler: (thread: any) => void): void {
+    this.threadUpdateHandlers.push(handler);
+  }
+
+  offThreadUpdate(handler: (thread: any) => void): void {
+    this.threadUpdateHandlers = this.threadUpdateHandlers.filter(h => h !== handler);
+  }
+
+  // Room management
+  joinRoom(roomId: string): void {
+    if (this.socket) {
+      this.socket.emit('join_room', { roomId });
+    }
+  }
+
+  leaveRoom(roomId: string): void {
+    if (this.socket) {
+      this.socket.emit('leave_room', { roomId });
     }
   }
 
   // Thread management
-  joinThread(threadId: string) {
-    if (this.socket && this.isConnected) {
-      this.socket.emit('join_thread', threadId);
-    }
-  }
-
-  leaveThread(threadId: string) {
-    if (this.socket && this.isConnected) {
-      this.socket.emit('leave_thread', threadId);
-    }
-  }
-
-  // Message handling
-  sendMessage(threadId: string, message: any) {
-    if (this.socket && this.isConnected) {
-      this.socket.emit('send_message', {
-        threadId,
-        message,
-      });
-    }
-  }
-
-  // Typing indicators
-  startTyping(threadId: string) {
-    if (this.socket && this.isConnected) {
-      this.socket.emit('typing_start', { threadId });
-    }
-  }
-
-  stopTyping(threadId: string) {
-    if (this.socket && this.isConnected) {
-      this.socket.emit('typing_stop', { threadId });
-    }
-  }
-
-  // Event listeners
-  onNewMessage(callback: (data: any) => void) {
+  joinThread(threadId: string): void {
     if (this.socket) {
-      this.socket.on('new_message', callback);
+      this.socket.emit('join_thread', { threadId });
     }
   }
 
-  onUserTyping(callback: (data: any) => void) {
+  leaveThread(threadId: string): void {
     if (this.socket) {
-      this.socket.on('user_typing', callback);
+      this.socket.emit('leave_thread', { threadId });
     }
   }
 
-  onUserStoppedTyping(callback: (data: any) => void) {
+  // User status
+  setUserStatus(status: 'online' | 'offline' | 'away'): void {
     if (this.socket) {
-      this.socket.on('user_stopped_typing', callback);
+      this.socket.emit('set_status', { status });
     }
   }
 
-  onUserStatusChange(callback: (data: any) => void) {
+  // Notification methods
+  markMessageAsRead(messageId: string): void {
     if (this.socket) {
-      this.socket.on('user_status_change', callback);
+      this.socket.emit('mark_read', { messageId });
     }
   }
 
-  onJoinedThread(callback: (data: any) => void) {
+  markThreadAsRead(threadId: string): void {
     if (this.socket) {
-      this.socket.on('joined_thread', callback);
+      this.socket.emit('mark_thread_read', { threadId });
     }
   }
 
-  // Remove event listeners
-  offNewMessage(callback?: (data: any) => void) {
+  // File upload progress
+  onFileUploadProgress(handler: (progress: number) => void): void {
     if (this.socket) {
-      this.socket.off('new_message', callback);
+      this.socket.on('file_upload_progress', handler);
     }
   }
 
-  offUserTyping(callback?: (data: any) => void) {
-    if (this.socket) {
-      this.socket.off('user_typing', callback);
-    }
+  // Connection status
+  isConnected(): boolean {
+    return this.socket?.connected || false;
   }
 
-  offUserStoppedTyping(callback?: (data: any) => void) {
-    if (this.socket) {
-      this.socket.off('user_stopped_typing', callback);
-    }
-  }
-
-  offUserStatusChange(callback?: (data: any) => void) {
-    if (this.socket) {
-      this.socket.off('user_status_change', callback);
-    }
-  }
-
-  offJoinedThread(callback?: (data: any) => void) {
-    if (this.socket) {
-      this.socket.off('joined_thread', callback);
-    }
-  }
-
-  // Utility methods
-  getConnectionStatus(): boolean {
-    return this.isConnected;
-  }
-
-  getSocket(): Socket | null {
+  getSocket(): any {
     return this.socket;
+  }
+
+  // Reconnection
+  reconnect(): void {
+    if (this.socket) {
+      this.socket.connect();
+    }
+  }
+
+  // Manual event emission for testing
+  emit(event: string, data: any): void {
+    if (this.socket) {
+      this.socket.emit(event, data);
+    }
+  }
+
+  // Listen to custom events
+  on(event: string, handler: (data: any) => void): void {
+    if (this.socket) {
+      this.socket.on(event, handler);
+    }
+  }
+
+  // Remove custom event listeners
+  off(event: string, handler?: (data: any) => void): void {
+    if (this.socket) {
+      if (handler) {
+        this.socket.off(event, handler);
+      } else {
+        this.socket.off(event);
+      }
+    }
   }
 }
 
-// Create singleton instance
-const socketService = new SocketService();
-export default socketService;
+export default SocketService;

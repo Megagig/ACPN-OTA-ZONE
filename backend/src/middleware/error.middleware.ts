@@ -16,56 +16,38 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  let error = { ...err };
-  error.message = err.message;
-
-  // Log error details for debugging
-  console.error('Error encountered:');
-  console.error(`Request URL: ${req.originalUrl}`);
-  console.error(`Method: ${req.method}`);
-  console.error(`Error name: ${err.name}`);
-  console.error(`Error message: ${err.message}`);
-  console.error(`Error stack: ${err.stack}`);
-
-  if (err.response) {
-    console.error(`Response data: ${JSON.stringify(err.response.data)}`);
+  // Log the request method and path for debugging
+  console.error('Error occurred for request:', req.method, req.originalUrl);
+  // Log the error stack for debugging
+  if (err && err.stack) {
+    console.error('Error stack:', err.stack);
   }
+  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  let message = err.message;
 
   // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    const message = `Resource not found with id of ${err.value}`;
-    error = new ErrorResponse(message, 404);
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    statusCode = 404;
+    message = 'Resource not found';
   }
 
   // Mongoose duplicate key
-  if (err.code === 11000) {
-    const message = 'Duplicate field value entered';
-    error = new ErrorResponse(message, 400);
+  if (err.code && err.code === 11000) {
+    statusCode = 400;
+    message = 'Duplicate field value entered';
   }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map((val: any) => val.message);
-    error = new ErrorResponse(
-      message.join(', '),
-      400,
-      Object.values(err.errors)
-    );
+    statusCode = 400;
+    message = Object.values(err.errors)
+      .map((val: any) => val.message)
+      .join(', ');
   }
 
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    error = new ErrorResponse('Invalid token', 401);
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    error = new ErrorResponse('Token expired', 401);
-  }
-
-  res.status(error.statusCode || 500).json({
+  res.status(statusCode).json({
     success: false,
-    error: error.message || 'Server Error',
-    errors: error.errors || [],
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    error: message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
   });
 };

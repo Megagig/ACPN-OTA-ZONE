@@ -70,7 +70,7 @@ class DashboardService {
    */
   async getOverviewStats(): Promise<DashboardOverviewStats> {
     try {
-      const response = await api.get('/dashboard/overview');
+      const response = await api.get('/api/dashboard/overview');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching overview stats:', error);
@@ -96,7 +96,7 @@ class DashboardService {
    */
   async getUserManagementStats(): Promise<UserManagementStats> {
     try {
-      const response = await api.get('/dashboard/user-management');
+      const response = await api.get('/api/dashboard/user-management');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching user management stats:', error);
@@ -118,7 +118,7 @@ class DashboardService {
    */
   async getRecentActivity(): Promise<ActivityItem[]> {
     try {
-      const response = await api.get('/dashboard/overview');
+      const response = await api.get('/api/dashboard/overview');
       return response.data.data.recentActivity || [];
     } catch (error) {
       console.error('Error fetching recent activity:', error);
@@ -131,7 +131,7 @@ class DashboardService {
    */
   async getSystemSettings(): Promise<SystemSettings> {
     try {
-      const response = await api.get('/dashboard/settings');
+      const response = await api.get('/api/dashboard/settings');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching system settings:', error);
@@ -172,7 +172,7 @@ class DashboardService {
     settings: Partial<SystemSettings>
   ): Promise<SystemSettings> {
     try {
-      const response = await api.put('/dashboard/settings', settings);
+      const response = await api.put('/api/dashboard/settings', settings);
       return response.data.data;
     } catch (error) {
       console.error('Error updating system settings:', error);
@@ -191,7 +191,7 @@ class DashboardService {
     totalDuesPaid: number;
   }> {
     try {
-      const response = await api.get('/dashboard/overview');
+      const response = await api.get('/api/dashboard/overview');
       const data = response.data.data;
 
       return {
@@ -220,7 +220,7 @@ class DashboardService {
     type: 'overview' | 'users' | 'pharmacies' | 'events'
   ): Promise<void> {
     try {
-      const response = await api.get(`/dashboard/export/${type}`, {
+      const response = await api.get(`/api/dashboard/export/${type}`, {
         responseType: 'blob',
       });
 

@@ -1,20 +1,14 @@
-import api from './api';
 import type {
   Poll,
   PollResponse,
-  PollStatus,
-  PollSubmission,
-  PollResults,
   PollSummary,
-  AnswerStatistics,
+  PollStatus,
+  PollResults,
+  PollSubmission,
+  QuestionType,
 } from '../types/poll.types';
 
-const BASE_URL = '/api';
-
-// For demonstration, using mock data instead of actual API calls
-// In production, replace these with actual API calls
-
-// Mock polls data
+// Mock data for development
 const mockPolls: Poll[] = [
   {
     _id: 'poll001',
@@ -244,11 +238,6 @@ const mockPolls: Poll[] = [
   },
 ];
 
-// Mock poll responses
-const mockResponses: PollResponse[] = [
-  // Responses would be populated here for a real implementation
-];
-
 // Mock poll summary
 const mockPollSummary: PollSummary = {
   total: mockPolls.length,
@@ -265,7 +254,7 @@ const mockPollSummary: PollSummary = {
 };
 
 // Mock poll results
-const mockPollResults: PollResults = {
+const mockPollResults = {
   pollId: 'poll001',
   pollTitle: 'Pharmacy Practice Improvement Survey',
   totalResponses: 15,
@@ -274,7 +263,7 @@ const mockPollResults: PollResults = {
       questionId: 'q001',
       questionText:
         'What are the biggest challenges you face in your pharmacy practice?',
-      questionType: 'multiple_choice',
+      questionType: 'multiple_choice' as QuestionType,
       totalResponses: 15,
       options: [
         {
@@ -319,7 +308,7 @@ const mockPollResults: PollResults = {
       questionId: 'q002',
       questionText:
         'How satisfied are you with the current regulatory environment?',
-      questionType: 'rating',
+      questionType: 'rating' as QuestionType,
       totalResponses: 15,
       averageRating: 3.2,
     },
@@ -327,7 +316,7 @@ const mockPollResults: PollResults = {
       questionId: 'q003',
       questionText:
         'What additional support would you like from ACPN Ota Zone?',
-      questionType: 'text',
+      questionType: 'text' as QuestionType,
       totalResponses: 10,
       textResponses: [
         'More business development workshops',
@@ -352,28 +341,18 @@ const mockPollResults: PollResults = {
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Polls API
-export const getPolls = async (
-  params?: Record<string, unknown>
-): Promise<Poll[]> => {
-  // For demo purposes, return mock data
-  await delay(800);
+export const getPolls = async (): Promise<Poll[]> => {
+  await delay(500);
   return mockPolls;
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/polls`, { params });
-  // return response.data.data;
 };
 
 export const getPollById = async (id: string): Promise<Poll> => {
-  // For demo purposes, return mock data
-  await delay(800);
+  await delay(300);
   const poll = mockPolls.find((p) => p._id === id);
-  if (!poll) throw new Error('Poll not found');
+  if (!poll) {
+    throw new Error('Poll not found');
+  }
   return poll;
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/polls/${id}`);
-  // return response.data.data;
 };
 
 export const createPoll = async (data: Partial<Poll>): Promise<Poll> => {
@@ -411,12 +390,9 @@ export const updatePoll = async (
   // return response.data.data;
 };
 
-export const deletePoll = async (id: string): Promise<void> => {
-  // For demo purposes, just add a delay
-  await delay(800);
-
-  // Real API call
-  // await api.delete(`${BASE_URL}/polls/${id}`);
+export const deletePoll = async (): Promise<void> => {
+  await delay(300);
+  // Mock implementation
 };
 
 export const updatePollStatus = async (
@@ -478,16 +454,9 @@ export const submitPollResponse = async (
   // return response.data.data;
 };
 
-export const checkUserResponded = async (pollId: string): Promise<boolean> => {
-  // For demo purposes, return mock result
-  await delay(500);
-
-  // Simulate that user hasn't responded yet
-  return false;
-
-  // Real API call
-  // const response = await api.get(`${BASE_URL}/polls/${pollId}/user-responded`);
-  // return response.data.hasResponded;
+export const checkUserResponded = async (): Promise<boolean> => {
+  await delay(200);
+  return Math.random() > 0.5; // Mock response
 };
 
 // All exported functions

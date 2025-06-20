@@ -86,14 +86,14 @@ const MemberAttendanceStatus: React.FC = () => {
           // Handle both old and new API response structures
           const attendanceData = userHistory.data.attendance || [];
           const attendedIds = attendanceData
-            .filter((attendance) => attendance.attended === true)
+            .filter((attendance) => attendance.status === 'attended')
             .map((attendance) => {
               // Handle both populated and unpopulated eventId
               if (
                 typeof attendance.eventId === 'object' &&
-                attendance.eventId._id
+                attendance.eventId && '_id' in attendance.eventId
               ) {
-                return attendance.eventId._id;
+                return (attendance.eventId as any)._id;
               }
               return attendance.eventId as string;
             })

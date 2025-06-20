@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy } from '../../types/pharmacy.types';
 import type { AxiosError } from 'axios';
-import { useTheme } from '../../context/ThemeContext';
 
 interface ErrorResponse {
   message?: string;
@@ -15,7 +14,6 @@ const PharmacyDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const { theme } = useTheme();
 
   const fetchPharmacyDetails = useCallback(async () => {
     try {

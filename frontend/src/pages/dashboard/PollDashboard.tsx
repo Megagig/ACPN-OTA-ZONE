@@ -187,7 +187,7 @@ const PollDashboard: React.FC = () => {
                             {poll.description}
                           </p>
                           <div className="flex items-center space-x-3 mt-2">
-                            <Badge variant="success">
+                            <Badge>
                               {poll.status.toUpperCase()}
                             </Badge>
                             <span className="text-xs">
@@ -196,7 +196,6 @@ const PollDashboard: React.FC = () => {
                           </div>
                         </div>
                         <Button
-                          size="sm"
                           onClick={() => navigate(`/polls/${poll._id}/respond`)}
                         >
                           Respond
@@ -215,7 +214,6 @@ const PollDashboard: React.FC = () => {
                 </Card>
               )}
               <Button
-                variant="outline"
                 className="mt-4"
                 onClick={() => navigate('/polls/list')}
               >
@@ -237,13 +235,7 @@ const PollDashboard: React.FC = () => {
                           <div className="space-y-2">
                             <h3 className="font-medium">{poll.title}</h3>
                             <div className="flex items-center space-x-3">
-                              <Badge
-                                variant={
-                                  poll.status === 'active'
-                                    ? 'success'
-                                    : 'default'
-                                }
-                              >
+                              <Badge>
                                 {poll.status.toUpperCase()}
                               </Badge>
                               <div className="flex items-center text-xs text-gray-500">
@@ -253,8 +245,6 @@ const PollDashboard: React.FC = () => {
                             </div>
                           </div>
                           <Button
-                            variant="outline"
-                            size="sm"
                             onClick={() => navigate(`/polls/${poll._id}`)}
                           >
                             View Details

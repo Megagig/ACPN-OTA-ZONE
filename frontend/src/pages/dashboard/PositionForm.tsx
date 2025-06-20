@@ -30,7 +30,7 @@ const PositionForm: React.FC = () => {
       if (!positionId) return;
       
       try {
-        const positions = await electionService.getPositions(electionId!);
+        const positions = await electionService.getPositions();
         const position = positions.find(p => p._id === positionId);
         if (position) {
           setPosition(position);
@@ -57,7 +57,7 @@ const PositionForm: React.FC = () => {
     setIsLoading(true);
     try {
       if (positionId) {
-        await electionService.updatePosition(electionId, positionId, position);
+        await electionService.updatePosition(positionId, position);
         toast({
           title: 'Position updated',
           description: 'Position has been updated successfully',
@@ -66,7 +66,7 @@ const PositionForm: React.FC = () => {
           isClosable: true,
         });
       } else {
-        await electionService.createPosition(electionId, position);
+        await electionService.createPosition(position);
         toast({
           title: 'Position created',
           description: 'Position has been created successfully',

@@ -10,7 +10,7 @@ import notificationService, {
   type UserNotification,
   type NotificationStats,
 } from '../services/notification.service';
-import socketService from '../services/socket.service';
+import SocketService from '../services/socket.service';
 
 interface NotificationContextType {
   notifications: UserNotification[];
@@ -51,6 +51,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [socketService] = useState(() => new SocketService());
 
   // Fetch notifications
   const fetchNotifications = useCallback(
@@ -214,14 +215,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   // Initialize socket listeners when user is authenticated
   useEffect(() => {
-    if (user && socketService.getConnectionStatus()) {
+    if (user && socketService.isConnected()) {
       console.log('Setting up real-time notification listeners');
       // Listen for new notifications
       socketService.getSocket()?.on('new_notification', handleNewNotification);
 
+      // Cleanup on unmount
       return () => {
-        // Clean up socket listeners
-        console.log('Cleaning up notification listeners');
         socketService
           .getSocket()
           ?.off('new_notification', handleNewNotification);

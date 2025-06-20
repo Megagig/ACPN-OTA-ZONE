@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import authService from '../../services/auth.service';
-import { useTheme } from '../../context/ThemeContext';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const VerifyEmail: React.FC = () => {
@@ -13,7 +12,6 @@ const VerifyEmail: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [isSubmittingCode, setIsSubmittingCode] = useState<boolean>(false);
-  const { theme } = useTheme();
   const navigate = useNavigate();
 
   // Verify using token (from URL)
@@ -21,7 +19,7 @@ const VerifyEmail: React.FC = () => {
     const verifyEmailWithToken = async () => {
       if (token) {
         try {
-          const _response = await authService.verifyEmail(token);
+          await authService.verifyEmail(token);
           setVerificationStatus('success');
 
           // Redirect to login page after successful verification
@@ -52,26 +50,17 @@ const VerifyEmail: React.FC = () => {
   const handleVerifyWithCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingCode(true);
+    setErrorMessage('');
 
     try {
       await authService.verifyEmailWithCode(email, verificationCode);
       setVerificationStatus('success');
-
-      // Redirect to login page after successful verification
       setTimeout(() => {
-        navigate('/login', {
-          state: {
-            message:
-              'Email verified successfully. Please wait for admin approval before logging in.',
-          },
-        });
-      }, 5000);
-    } catch (error: any) {
+        navigate('/login');
+      }, 3000);
+    } catch (err: any) {
       setVerificationStatus('error');
-      setErrorMessage(
-        error.response?.data?.message ||
-          'Code verification failed. Please check your email and code.'
-      );
+      setErrorMessage(err.response?.data?.message || 'Failed to verify email');
     } finally {
       setIsSubmittingCode(false);
     }
@@ -81,18 +70,14 @@ const VerifyEmail: React.FC = () => {
   const renderContent = () => {
     switch (verificationStatus) {
       case 'loading':
-        if (token) {
-          return (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-lg text-foreground">
-                Verifying your email...
-              </p>
-            </div>
-          );
-        } else {
-          return renderCodeVerificationForm();
-        }
+        return (
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-lg text-foreground">
+              Verifying your email...
+            </p>
+          </div>
+        );
 
       case 'success':
         return (
@@ -116,20 +101,8 @@ const VerifyEmail: React.FC = () => {
               Email Verified!
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Your email has been successfully verified. You will be redirected
-              to the login page.
-              <br />
-              Please note that an administrator needs to approve your account
-              before you can log in.
+              {errorMessage}
             </p>
-            <div className="mt-4">
-              <Link
-                to="/login"
-                className="text-sm font-medium text-primary hover:text-primary/80"
-              >
-                Go to login page →
-              </Link>
-            </div>
           </div>
         );
 
@@ -155,10 +128,11 @@ const VerifyEmail: React.FC = () => {
               Verification Failed
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
-
-            {renderCodeVerificationForm()}
           </div>
         );
+
+      default:
+        return renderCodeVerificationForm();
     }
   };
 

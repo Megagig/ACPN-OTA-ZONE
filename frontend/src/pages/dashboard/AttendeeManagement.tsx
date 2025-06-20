@@ -50,18 +50,18 @@ const AttendeeManagement: React.FC = () => {
         // If editing an existing attendee, fetch their details
         if (isEditMode && attendeeId) {
           const attendees = await eventService.getEventAttendees(eventId);
-          const attendee = attendees.find((a) => a._id === attendeeId);
+          const attendee = attendees.data?.find((a: any) => a._id === attendeeId);
 
           if (attendee) {
             setFormData({
-              userName: attendee.userName,
-              pharmacyName: attendee.pharmacyName || '',
-              status: attendee.status,
-              paid: attendee.paid,
-              paymentMethod: attendee.paymentMethod || '',
-              paymentReference: attendee.paymentReference || '',
-              checkedIn: attendee.checkedIn,
-              comments: attendee.comments || '',
+              userName: attendee.attendeeId || '',
+              pharmacyName: '',
+              status: attendee.status as AttendeeStatus,
+              paid: false,
+              paymentMethod: '',
+              paymentReference: '',
+              checkedIn: attendee.status === 'attended',
+              comments: '',
             });
           } else {
             setErrors({ form: 'Attendee not found' });
@@ -127,12 +127,11 @@ const AttendeeManagement: React.FC = () => {
 
     try {
       if (isEditMode && attendeeId) {
-        // In a real app, you would update the attendee here
-        // For our mock service, we're using updateAttendeeStatus which only updates the status
-        await eventService.updateAttendeeStatus(
+        // Update attendance status
+        await eventService.updateAttendance(
           eventId!,
           attendeeId,
-          formData.status as AttendeeStatus
+          formData.checkedIn || false
         );
 
         // If the user is checked in, call the check-in function
@@ -140,21 +139,9 @@ const AttendeeManagement: React.FC = () => {
           await eventService.checkInAttendee(eventId!, attendeeId);
         }
       } else {
-        // Register a new attendee
-        await eventService.registerForEvent(eventId!, {
-          user: 'user-' + Date.now(), // This would normally come from a user selection
-          userName: formData.userName,
-          pharmacy: formData.pharmacyName
-            ? 'pharmacy-' + Date.now()
-            : undefined, // This would normally come from a pharmacy selection
-          pharmacyName: formData.pharmacyName || undefined,
-          status: formData.status as AttendeeStatus,
-          paid: formData.paid,
-          paymentMethod: formData.paymentMethod || undefined,
-          paymentReference: formData.paymentReference || undefined,
-          checkedIn: formData.checkedIn,
-          comments: formData.comments || undefined,
-        });
+        // Register a new attendee - this would need to be implemented properly
+        // For now, we'll just show an error
+        throw new Error('New attendee registration not implemented');
       }
 
       navigate(`/events/${eventId}`);

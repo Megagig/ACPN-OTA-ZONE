@@ -1,47 +1,37 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth.service';
-import { useTheme } from '../../context/ThemeContext';
-import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const ResetPassword: React.FC = () => {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const { theme } = useTheme();
-
-  const { token } = useParams<{ token: string }>();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    if (!token) return;
 
-    // Validate passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
+    setError('');
+    setSuccess(false);
+
     try {
-      if (!token) {
-        throw new Error('Reset token is missing');
-      }
-      const _response = await authService.resetPassword(token, password);
+      await authService.resetPassword(token, password);
       setSuccess(true);
-      // Redirect to login after a delay
       setTimeout(() => {
         navigate('/login');
-      }, 3000);
+      }, 2000);
     } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          'Failed to reset password. Please try again.'
-      );
+      setError(err.response?.data?.message || 'Failed to reset password');
     } finally {
       setIsLoading(false);
     }
@@ -51,9 +41,6 @@ const ResetPassword: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
-          <div className="flex justify-end">
-            <ThemeToggle />
-          </div>
           <div className="text-center">
             <svg
               className="mx-auto h-12 w-12 text-green-500"
@@ -89,9 +76,6 @@ const ResetPassword: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-md">
-        <div className="flex justify-end">
-          <ThemeToggle />
-        </div>
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
             Reset Your Password

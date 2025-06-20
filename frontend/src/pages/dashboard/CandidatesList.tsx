@@ -10,15 +10,18 @@ import {
   Badge,
   Flex,
   Avatar,
-  useToast,
 } from '@chakra-ui/react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import { useToast } from '../../hooks/useToast';
+import electionService from '../../services/election.service';
+import type { Candidate, ElectionStatus } from '../../types/election.types';
 
 interface CandidatesListProps {
   candidates: Candidate[];
   electionStatus: ElectionStatus;
   positionId: string;
   electionId: string;
+  onCandidateRemoved: () => void;
 }
 
 const CandidatesList: React.FC<CandidatesListProps> = ({
@@ -26,31 +29,19 @@ const CandidatesList: React.FC<CandidatesListProps> = ({
   electionStatus,
   positionId,
   electionId,
+  onCandidateRemoved,
 }) => {
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { toast } = useToast();
 
   const handleRemoveCandidate = async (candidateId: string) => {
     try {
-      await electionService.removeCandidate(
-        electionId,
-        positionId,
-        candidateId
-      );
-      showToast(
-        'Candidate removed',
-        'Candidate has been removed successfully',
-        'success'
-      );
-      // Refresh the page to show updated data
-      navigate(0);
+      await electionService.deleteCandidate(candidateId);
+      toast({ title: 'Candidate removed successfully', status: 'success' });
+      onCandidateRemoved();
     } catch (error) {
       console.error('Error removing candidate:', error);
-      showToast(
-        'Error removing candidate',
-        'Failed to remove candidate',
-        'error'
-      );
+      toast({ title: 'Failed to remove candidate', status: 'error' });
     }
   };
 

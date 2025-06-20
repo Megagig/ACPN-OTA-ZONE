@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -21,6 +21,18 @@ ensureAssets();
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
 
+console.log('Starting backend index.ts');
+
+// Defensive middleware to block requests with a path that looks like a full URL
+app.use(((req, res, next) => {
+  if (/^\/https?:\/\//.test(req.path)) {
+    console.error('Blocked suspicious request path:', req.method, req.path);
+    return res.status(400).json({ error: 'Invalid request path' });
+  }
+  next();
+}) as express.RequestHandler);
+
+console.log('Registering CORS middleware');
 // Middleware
 const corsOptions = {
   origin: [
@@ -36,8 +48,10 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+console.log('Registering static frontend dist');
 app.use(express.static(path.join(__dirname, "../../frontend/dist"))); 
 
+console.log('Registering express.json middleware');
 // Body parsing middleware
 app.use(express.json()); // Add this line to parse JSON bodies
 
@@ -49,10 +63,12 @@ if (!fs.existsSync(uploadDir)) {
   console.log('Created uploads directory:', uploadDir);
 }
 
+console.log('Registering /api/static');
 // Static file serving - must come before fileUpload middleware
 import staticFilesRouter from './routes/static.routes';
 app.use('/api/static', staticFilesRouter); // Map to /api/static to match frontend URL
 
+console.log('Registering /api/payments (multer)');
 // Routes
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
@@ -79,6 +95,7 @@ import notificationRoutes from './routes/notification.routes';
 // Register paymentRoutes (which uses multer) BEFORE global fileupload or general body parsers
 app.use('/api/payments', paymentRoutes);
 
+console.log('Registering express-fileupload');
 // File upload middleware for organization documents (express-fileupload)
 // This should ideally not be global or be placed after routes using other parsers like multer
 app.use(
@@ -90,11 +107,12 @@ app.use(
   })
 );
 
-// Routes
+console.log('Registering / route');
 app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
 });
 
+console.log('Registering /api/health-check');
 // Health check endpoint
 app.get('/api/health-check', (req: Request, res: Response) => {
   res.status(200).json({
@@ -105,6 +123,7 @@ app.get('/api/health-check', (req: Request, res: Response) => {
   });
 });
 
+console.log('Registering API routes');
 // Define API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -128,16 +147,19 @@ app.use('/api/member-dashboard', memberDashboardRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+console.log('Registering catchall * route');
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('*', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
 });
 
+console.log('Registering express.urlencoded middleware');
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.
 app.use(express.urlencoded({ extended: true }));
 
+console.log('Registering error handlers');
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middleware/error.middleware';
 
@@ -172,6 +194,7 @@ declare global {
 }
 global.socketService = socketService;
 
+console.log('About to start server...');
 // Start server
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

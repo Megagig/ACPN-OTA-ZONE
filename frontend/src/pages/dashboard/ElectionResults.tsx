@@ -47,12 +47,12 @@ interface VotingStatistics {
 }
 
 const ElectionResults: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [election, setElection] = useState<Election | null>(null);
-  const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<number>(0);
+  const [results, setResults] = useState<VotingStatistics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const fetchElectionResults = async () => {
@@ -89,7 +89,7 @@ const ElectionResults: React.FC = () => {
               other: 50,
             },
           };
-          setStatistics(stats);
+          setResults(stats);
         }
       } catch (error) {
         console.error('Error fetching election results:', error);
@@ -186,15 +186,15 @@ const ElectionResults: React.FC = () => {
   };
 
   const renderStatistics = () => {
-    if (!statistics) return null;
+    if (!results) return null;
 
-    const ageGroups = Object.keys(statistics.votersByAge);
-    const ageData = ageGroups.map((group) => statistics.votersByAge[group]);
+    const ageGroups = Object.keys(results.votersByAge);
+    const ageData = ageGroups.map((group) => results.votersByAge[group]);
 
     const genderData = [
-      statistics.votersByGender.male,
-      statistics.votersByGender.female,
-      statistics.votersByGender.other,
+      results.votersByGender.male,
+      results.votersByGender.female,
+      results.votersByGender.other,
     ];
 
     return (
@@ -203,15 +203,15 @@ const ElectionResults: React.FC = () => {
           <Card className="p-4">
             <Stat>
               <StatLabel>Total Eligible Voters</StatLabel>
-              <StatNumber>{statistics.totalEligibleVoters}</StatNumber>
+              <StatNumber>{results.totalEligibleVoters}</StatNumber>
             </Stat>
           </Card>
           <Card className="p-4">
             <Stat>
               <StatLabel>Total Votes Cast</StatLabel>
-              <StatNumber>{statistics.totalVotesCast}</StatNumber>
+              <StatNumber>{results.totalVotesCast}</StatNumber>
               <StatHelpText>
-                {statistics.votingPercentage.toFixed(1)}% voter turnout
+                {results.votingPercentage.toFixed(1)}% voter turnout
               </StatHelpText>
             </Stat>
           </Card>
@@ -354,21 +354,15 @@ const ElectionResults: React.FC = () => {
 
       <Divider className="my-4" />
 
-      <Tabs onChange={(index) => setActiveTab(index)}>
+      <Tabs index={activeTab} onChange={setActiveTab}>
         <TabList>
-          <Tab
-            _selected={{ bg: 'blue.500', color: 'white' }}
-            onClick={() => setActiveTab(0)}
-          >
+          <Tab _selected={{ bg: 'blue.500', color: 'white' }}>
             <HStack>
               <FaMedal />
               <Text>Results by Position</Text>
             </HStack>
           </Tab>
-          <Tab
-            _selected={{ bg: 'blue.500', color: 'white' }}
-            onClick={() => setActiveTab(1)}
-          >
+          <Tab _selected={{ bg: 'blue.500', color: 'white' }}>
             <HStack>
               <FaChartBar />
               <Text>Voting Statistics</Text>

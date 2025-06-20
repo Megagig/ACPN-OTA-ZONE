@@ -34,7 +34,7 @@ const PositionsList: React.FC<PositionsListProps> = ({ electionId }) => {
     const fetchData = async () => {
       try {
         const [positionsData, electionData] = await Promise.all([
-          electionService.getPositions(electionId),
+          electionService.getPositions(),
           electionService.getElectionById(electionId)
         ]);
         setPositions(positionsData);
@@ -60,7 +60,7 @@ const PositionsList: React.FC<PositionsListProps> = ({ electionId }) => {
 
   const handleDelete = async (positionId: string) => {
     try {
-      await electionService.deletePosition(electionId, positionId);
+      await electionService.deletePosition(positionId);
       setPositions(positions.filter(p => p._id !== positionId));
       toast({
         title: 'Position deleted',

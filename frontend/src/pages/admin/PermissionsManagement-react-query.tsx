@@ -1,6 +1,5 @@
 // Full implementation of PermissionsManagement.tsx with React Query
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import {
   usePermissions,
   useCreatePermission,
@@ -8,39 +7,40 @@ import {
   useDeletePermission,
   type Permission,
 } from '../../hooks/usePermissions';
-
-// UI Components
 import {
-  Button,
+  Box,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
+  CardBody,
+  Text,
+  VStack,
+  HStack,
+  Button,
+  Badge,
+  Spinner,
+  Flex,
+  Center,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Label,
+  Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  FormControl,
+  FormLabel,
   Textarea,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  useToast,
-} from '../../components/ui';
+  IconButton,
+} from '@chakra-ui/react';
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { useToast } from '../../hooks/useToast';
 
 const PermissionsManagement: React.FC = () => {
   const { toast } = useToast();
@@ -64,7 +64,7 @@ const PermissionsManagement: React.FC = () => {
   });
   const [selectedPermissionForDelete, setSelectedPermissionForDelete] =
     useState<string>('');
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
 
   // Resources and actions (derived from your permission model)
   const resources = [
@@ -107,7 +107,7 @@ const PermissionsManagement: React.FC = () => {
     search: searchTerm || undefined,
   });
 
-  const permissions = data?.data || [];
+  const filteredPermissions = data?.data || [];
 
   // Mutations
   const createPermissionMutation = useCreatePermission();
@@ -119,7 +119,7 @@ const PermissionsManagement: React.FC = () => {
   };
 
   // Filter permissions client-side as well
-  const filteredPermissions = permissions.filter((permission) => {
+  const filteredPermissionsClient = filteredPermissions.filter((permission) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       permission.name.toLowerCase().includes(searchLower) ||
@@ -208,386 +208,306 @@ const PermissionsManagement: React.FC = () => {
   const handleSubmitPermission = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.name || !formData.resource || !formData.action) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
+        status: 'error',
+      });
+      return;
+    }
+
     try {
-      if (dialogMode === 'create') {
-        // Use the create mutation
-        await createPermissionMutation.mutateAsync(formData);
-        toast({
-          title: 'Success',
-          description: 'Permission created successfully.',
-        });
-      } else if (dialogMode === 'edit' && currentPermission) {
-        // Use the update mutation
+      if (dialogMode === 'edit' && currentPermission) {
         await updatePermissionMutation.mutateAsync({
           id: currentPermission._id,
           data: formData,
         });
         toast({
           title: 'Success',
-          description: 'Permission updated successfully.',
+          description: 'Permission updated successfully',
+          status: 'success',
+        });
+      } else {
+        await createPermissionMutation.mutateAsync(formData);
+        toast({
+          title: 'Success',
+          description: 'Permission created successfully',
+          status: 'success',
         });
       }
 
       setShowPermissionDialog(false);
-      // No need to manually refetch as mutations automatically invalidate queries
-    } catch (error) {
-      console.error('Error saving permission:', error);
+      setFormData({
+        name: '',
+        description: '',
+        resource: '',
+        action: '',
+      });
+      refetch();
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to save permission. Please try again.',
-        variant: 'destructive',
+        description: error.message || 'Failed to save permission',
+        status: 'error',
       });
     }
   };
 
   const handleDeleteConfirm = async () => {
     try {
-      // Use the delete mutation
       await deletePermissionMutation.mutateAsync(selectedPermissionForDelete);
       toast({
         title: 'Success',
-        description: 'Permission deleted successfully.',
+        description: 'Permission deleted successfully',
+        status: 'success',
       });
       setShowDeleteDialog(false);
-      // No need to manually refetch as mutations automatically invalidate queries
-    } catch (error) {
-      console.error('Error deleting permission:', error);
+      setSelectedPermissionForDelete('');
+      refetch();
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to delete permission. Please try again.',
-        variant: 'destructive',
+        description: error.message || 'Failed to delete permission',
+        status: 'error',
       });
     }
   };
 
-  const initializePermissions = async () => {
-    try {
-      // This is a custom endpoint, so we'll use a simple fetch for now
-      // In a more complete solution, you could create a useInitializePermissions hook
-      const response = await fetch('/api/permissions/initialize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Default permissions initialized successfully.',
-        });
-        // Refetch permissions after initialization
-        refetch();
-      } else {
-        throw new Error('Failed to initialize permissions');
-      }
-    } catch (error) {
-      console.error('Error initializing permissions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to initialize permissions. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Group permissions by resource for display
-  const groupedPermissions = filteredPermissions.reduce((acc, permission) => {
-    const resource = permission.resource;
-    if (!acc[resource]) {
-      acc[resource] = [];
-    }
-    acc[resource].push(permission);
-    return acc;
-  }, {} as Record<string, Permission[]>);
-
-  // Show loading states from mutations
-  const isMutating =
-    createPermissionMutation.isPending ||
-    updatePermissionMutation.isPending ||
-    deletePermissionMutation.isPending;
+  if (loading) {
+    return (
+      <Center minH="400px">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Permissions Management
-          </h2>
-          <p className="text-muted-foreground">
-            Create and manage system permissions
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleCreatePermission} disabled={isMutating}>
+    <Box p={6}>
+      <VStack spacing={6} align="stretch">
+        {/* Header */}
+        <Flex justify="space-between" align="center">
+          <Box>
+            <Text fontSize="2xl" fontWeight="bold">
+              Permissions Management
+            </Text>
+            <Text color="gray.600">
+              Manage system permissions and access controls
+            </Text>
+          </Box>
+          <Button
+            leftIcon={<FaPlus />}
+            colorScheme="blue"
+            onClick={handleCreatePermission}
+          >
             Create Permission
           </Button>
-          <Button
-            variant="outline"
-            onClick={initializePermissions}
-            disabled={isMutating}
-          >
-            Initialize Default Permissions
-          </Button>
-          <Link to="/admin/roles">
-            <Button variant="outline">Manage Roles</Button>
-          </Link>
-        </div>
-      </div>
+        </Flex>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Permissions</CardTitle>
-          <CardDescription>
-            View and manage all permissions in the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Search permissions..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="w-full"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4 sm:w-2/5">
-                <Select
-                  value={resourceFilter}
-                  onValueChange={setResourceFilter}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by resource" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Resources</SelectItem>
-                    {resources.map((resource) => (
-                      <SelectItem key={resource} value={resource}>
-                        {resource.replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={actionFilter} onValueChange={setActionFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by action" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Actions</SelectItem>
-                    {actions.map((action) => (
-                      <SelectItem key={action} value={action}>
-                        {action}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        {/* Filters */}
+        <Card>
+          <CardBody>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="lg" fontWeight="semibold">
+                Filters
+              </Text>
+              <Flex gap={4} wrap="wrap">
+                <Box flex="1" minW="200px">
+                  <FormControl>
+                    <FormLabel>Search</FormLabel>
+                    <Input
+                      placeholder="Search permissions..."
+                      value={searchTerm}
+                      onChange={handleSearch}
+                    />
+                  </FormControl>
+                </Box>
+                <Box flex="1" minW="200px">
+                  <FormControl>
+                    <FormLabel>Resource</FormLabel>
+                    <Select
+                      value={resourceFilter}
+                      onChange={(e) => setResourceFilter(e.target.value)}
+                      placeholder="All Resources"
+                    >
+                      {resources.map((resource) => (
+                        <option key={resource} value={resource}>
+                          {resource.replace('_', ' ')}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+                <Box flex="1" minW="200px">
+                  <FormControl>
+                    <FormLabel>Action</FormLabel>
+                    <Select
+                      value={actionFilter}
+                      onChange={(e) => setActionFilter(e.target.value)}
+                      placeholder="All Actions"
+                    >
+                      {actions.map((action) => (
+                        <option key={action} value={action}>
+                          {action}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Flex>
+            </VStack>
+          </CardBody>
+        </Card>
 
-            {/* Permissions by Resource */}
-            {loading ? (
-              <div className="text-center py-4">Loading permissions...</div>
-            ) : Object.keys(groupedPermissions).length === 0 ? (
-              <div className="text-center py-4">No permissions found</div>
-            ) : (
-              <div className="space-y-6">
-                {Object.entries(groupedPermissions).map(([resource, perms]) => (
-                  <div
-                    key={resource}
-                    className="border rounded-md overflow-hidden"
-                  >
-                    <div className="bg-muted p-3 font-medium capitalize">
-                      {resource.replace('_', ' ')}
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left p-2">Name</th>
-                            <th className="text-left p-2">Description</th>
-                            <th className="text-left p-2">Action</th>
-                            <th className="text-left p-2">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {perms.map((permission) => (
-                            <tr
-                              key={permission._id}
-                              className="border-b hover:bg-muted/50"
-                            >
-                              <td className="p-2">{permission.name}</td>
-                              <td className="p-2">{permission.description}</td>
-                              <td className="p-2 capitalize">
-                                {permission.action}
-                              </td>
-                              <td className="p-2">
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      handleEditPermission(permission)
-                                    }
-                                    disabled={isMutating}
-                                  >
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() =>
-                                      handleDeletePermission(permission._id)
-                                    }
-                                    disabled={isMutating}
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        {/* Permissions Table */}
+        <Card>
+          <CardBody>
+            <TableContainer>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Name</Th>
+                    <Th>Description</Th>
+                    <Th>Resource</Th>
+                    <Th>Action</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredPermissionsClient.map((permission) => (
+                    <Tr key={permission._id}>
+                      <Td fontWeight="medium">{permission.name}</Td>
+                      <Td>{permission.description}</Td>
+                      <Td>
+                        <Badge colorScheme="blue">
+                          {permission.resource.replace('_', ' ')}
+                        </Badge>
+                      </Td>
+                      <Td>
+                        <Badge colorScheme="green">{permission.action}</Badge>
+                      </Td>
+                      <Td>
+                        <HStack spacing={2}>
+                          <IconButton
+                            aria-label="Edit permission"
+                            icon={<FaEdit />}
+                            size="sm"
+                            onClick={() => handleEditPermission(permission)}
+                          />
+                          <IconButton
+                            aria-label="Delete permission"
+                            icon={<FaTrash />}
+                            size="sm"
+                            colorScheme="red"
+                            onClick={() => handleDeletePermission(permission._id)}
+                          />
+                        </HStack>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </CardBody>
+        </Card>
 
-      {/* Create/Edit Permission Dialog */}
-      <Dialog
-        isOpen={showPermissionDialog}
-        onClose={() => setShowPermissionDialog(false)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {dialogMode === 'create'
-                ? 'Create New Permission'
-                : 'Edit Permission'}
-            </DialogTitle>
-            <DialogDescription>
-              {dialogMode === 'create'
-                ? 'Create a new permission by defining its resource and action.'
-                : 'Edit the permission details.'}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmitPermission}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="resource">Resource</Label>
+        {/* Create/Edit Permission Modal */}
+        <Modal isOpen={showPermissionDialog} onClose={() => setShowPermissionDialog(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              {dialogMode === 'create' ? 'Create Permission' : 'Edit Permission'}
+            </ModalHeader>
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Name</FormLabel>
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Permission name"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Description</FormLabel>
+                  <Textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Permission description"
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Resource</FormLabel>
                   <Select
                     value={formData.resource}
-                    onValueChange={(value) =>
-                      handleSelectChange('resource', value)
-                    }
+                    onChange={(e) => handleSelectChange('resource', e.target.value)}
+                    placeholder="Select resource"
                   >
-                    <SelectTrigger disabled={dialogMode === 'edit'}>
-                      <SelectValue placeholder="Select resource" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {resources.map((resource) => (
-                        <SelectItem key={resource} value={resource}>
-                          {resource.replace('_', ' ')}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    {resources.map((resource) => (
+                      <option key={resource} value={resource}>
+                        {resource.replace('_', ' ')}
+                      </option>
+                    ))}
                   </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="action">Action</Label>
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Action</FormLabel>
                   <Select
                     value={formData.action}
-                    onValueChange={(value) =>
-                      handleSelectChange('action', value)
-                    }
+                    onChange={(e) => handleSelectChange('action', e.target.value)}
+                    placeholder="Select action"
                   >
-                    <SelectTrigger disabled={dialogMode === 'edit'}>
-                      <SelectValue placeholder="Select action" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {actions.map((action) => (
-                        <SelectItem key={action} value={action}>
-                          {action}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    {actions.map((action) => (
+                      <option key={action} value={action}>
+                        {action}
+                      </option>
+                    ))}
                   </Select>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., create_user"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Describe what this permission allows"
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowPermissionDialog(false)}
-                disabled={isMutating}
-              >
+                </FormControl>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={() => setShowPermissionDialog(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isMutating}>
-                {isMutating ? 'Saving...' : 'Save'}
+              <Button
+                colorScheme="blue"
+                onClick={handleSubmitPermission}
+                isLoading={createPermissionMutation.isPending || updatePermissionMutation.isPending}
+              >
+                {dialogMode === 'create' ? 'Create' : 'Update'}
               </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              permission and may affect roles that use it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletePermissionMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground"
-              disabled={deletePermissionMutation.isPending}
-            >
-              {deletePermissionMutation.isPending ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {/* Delete Confirmation Modal */}
+        <Modal isOpen={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Delete Permission</ModalHeader>
+            <ModalBody>
+              <Text>Are you sure you want to delete this permission? This action cannot be undone.</Text>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleDeleteConfirm}
+                isLoading={deletePermissionMutation.isPending}
+              >
+                Delete
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </VStack>
+    </Box>
   );
 };
 
-export default PermissionsManagement;
+export default PermissionsManagement; 

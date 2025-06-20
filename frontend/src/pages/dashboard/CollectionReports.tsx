@@ -307,9 +307,9 @@ const CollectionReports: React.FC = () => {
                 tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
               />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `₦${value.toLocaleString()}`,
-                  name === 'collected' ? 'Collected' : 'Target',
+                formatter={(value: any, name: string) => [
+                  `${name}: ${value}`,
+                  `Total: ${value}`,
                 ]}
               />
               <Legend />
@@ -330,7 +330,7 @@ const CollectionReports: React.FC = () => {
               <XAxis dataKey="period" />
               <YAxis tickFormatter={(value) => `${value}%`} />
               <Tooltip
-                formatter={(value: number) => [
+                formatter={(value: any) => [
                   `${value.toFixed(1)}%`,
                   'Achievement',
                 ]}
@@ -358,9 +358,9 @@ const CollectionReports: React.FC = () => {
                 tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
               />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `₦${value.toLocaleString()}`,
-                  name === 'collected' ? 'Collected' : 'Outstanding',
+                formatter={(value: any, name: string) => [
+                  `${name}: ${value}`,
+                  `Total: ${value}`,
                 ]}
               />
               <Legend />

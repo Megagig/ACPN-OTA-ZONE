@@ -109,11 +109,10 @@ const MemberEventRegistration: React.FC = () => {
 
       const registrations = await EventService.getUserRegistrations(
         user?._id,
-        1,
-        100
+        1
       );
       const existingRegistration = registrations.data.find(
-        (reg) => reg.eventId === eventId
+        (reg: any) => reg.eventId === eventId
       );
 
       if (existingRegistration) {
@@ -187,6 +186,9 @@ const MemberEventRegistration: React.FC = () => {
       await EventService.registerForEvent(event._id, formData);
       setShowConfirmDialog(true);
       // Assuming success toast is handled by navigation or confirmation dialog
+      setTimeout(() => {
+        navigate(`/events/${eventId}`);
+      }, 1000);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       const errorMessage =

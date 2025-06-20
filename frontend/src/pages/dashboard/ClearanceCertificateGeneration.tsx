@@ -73,7 +73,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
                   payment.pharmacyId === pharmacy._id &&
                   (payment.status === 'approved' ||
                     payment.approvalStatus === 'approved') &&
-                  new Date(payment.paymentDate).getFullYear() === currentYear
+                  new Date(payment.paymentDate || '').getFullYear() === currentYear
               ) || [];
             return pharmacyPayments.length > 0; // Has approved payments for current year
           })
@@ -115,7 +115,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
           payment.pharmacyId === pharmacy._id &&
           (payment.status === 'approved' ||
             payment.approvalStatus === 'approved') &&
-          new Date(payment.paymentDate).getFullYear() === currentYear
+          new Date(payment.paymentDate || '').getFullYear() === currentYear
       );
 
       const totalPaid = pharmacyPayments.reduce(
@@ -223,7 +223,7 @@ const ClearanceCertificateGeneration: React.FC = () => {
           .slice(0, 5)
           .forEach((payment: Payment, index: number) => {
             const paymentDate = new Date(
-              payment.paymentDate
+              payment.paymentDate || ''
             ).toLocaleDateString();
             pdf.text(
               `${

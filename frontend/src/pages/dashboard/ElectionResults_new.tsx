@@ -54,7 +54,6 @@ const ElectionResults: React.FC = () => {
   const [election, setElection] = useState<Election | null>(null);
   const [statistics, setStatistics] = useState<VotingStatistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<number>(0);
 
   useEffect(() => {
     const fetchElectionResults = async () => {
@@ -155,12 +154,12 @@ const ElectionResults: React.FC = () => {
                   {candidate.photoUrl ? (
                     <img
                       src={candidate.photoUrl}
-                      alt={candidate.name}
+                      alt={candidate.name || 'C'}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold">
-                      {candidate.name.charAt(0)}
+                      {(candidate.name || 'C').charAt(0)}
                     </div>
                   )}
                   <Text
@@ -372,11 +371,10 @@ const ElectionResults: React.FC = () => {
 
         <Divider className="my-4" />
 
-        <Tabs onChange={(index) => setActiveTab(index)}>
+        <Tabs>
           <TabList>
             <Tab
               _selected={{ bg: 'blue.500', color: 'white' }}
-              onClick={() => setActiveTab(0)}
             >
               <HStack>
                 <FaMedal />
@@ -385,7 +383,6 @@ const ElectionResults: React.FC = () => {
             </Tab>
             <Tab
               _selected={{ bg: 'blue.500', color: 'white' }}
-              onClick={() => setActiveTab(1)}
             >
               <HStack>
                 <FaChartBar />

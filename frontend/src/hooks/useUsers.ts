@@ -5,8 +5,11 @@ import {
   useUpdateResource,
   useDeleteResource,
   useBulkAction,
+  type ApiError,
 } from './useApiQuery';
 import { UserRole, UserStatus } from '../types/user';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 // Types
 export interface User {
@@ -76,57 +79,63 @@ export function useDeleteUser() {
 }
 
 export function useApproveUser() {
-  return useUpdateResource<User, { isApproved: boolean }>(
-    `${USERS_ENDPOINT}`,
-    [USERS_KEY, 'approve'],
-    {
-      mutationFn: ({ id, data }) => {
-        return fetch(`${USERS_ENDPOINT}/${id}/approve`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<User, AxiosError<ApiError>, { id: string; data: { isApproved: boolean } }>({
+    mutationFn: ({ id, data }: { id: string; data: { isApproved: boolean } }) => {
+      return fetch(`${USERS_ENDPOINT}/${id}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: User, variables: { id: string; data: { isApproved: boolean } }) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
 }
 
 export function useUpdateUserStatus() {
-  return useUpdateResource<User, { status: UserStatus }>(
-    `${USERS_ENDPOINT}`,
-    [USERS_KEY, 'status'],
-    {
-      mutationFn: ({ id, data }) => {
-        return fetch(`${USERS_ENDPOINT}/${id}/status`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<User, AxiosError<ApiError>, { id: string; data: { status: UserStatus } }>({
+    mutationFn: ({ id, data }: { id: string; data: { status: UserStatus } }) => {
+      return fetch(`${USERS_ENDPOINT}/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: User, variables: { id: string; data: { status: UserStatus } }) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
 }
 
 export function useUpdateUserRole() {
-  return useUpdateResource<User, { role: UserRole }>(
-    `${USERS_ENDPOINT}`,
-    [USERS_KEY, 'role'],
-    {
-      mutationFn: ({ id, data }) => {
-        return fetch(`${USERS_ENDPOINT}/${id}/role`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<User, AxiosError<ApiError>, { id: string; data: { role: UserRole } }>({
+    mutationFn: ({ id, data }: { id: string; data: { role: UserRole } }) => {
+      return fetch(`${USERS_ENDPOINT}/${id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: User, variables: { id: string; data: { role: UserRole } }) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
 }
 
 export function useBulkUpdateUserStatus() {

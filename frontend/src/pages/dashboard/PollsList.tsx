@@ -105,7 +105,7 @@ const PollsList: React.FC = () => {
     if (!pollToDelete) return;
 
     try {
-      await pollService.deletePoll(pollToDelete);
+      await pollService.deletePoll();
       setPolls(polls.filter((poll) => poll._id !== pollToDelete));
       toast.success('The poll has been successfully deleted.', {
         autoClose: 3000,

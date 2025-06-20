@@ -6,7 +6,6 @@ import type {
   DuePayment,
   Donation,
   FinancialAnalytics,
-  FinancialReport,
   Payment,
   DueAssignmentData,
   BulkAssignmentData,
@@ -33,7 +32,7 @@ export const getFinancialRecords = async (params?: {
   endDate?: string;
 }): Promise<FinancialRecord[]> => {
   try {
-    const response = await api.get('/financial-records', { params });
+    const response = await api.get('/api/financial-records', { params });
     return response.data.data;
   } catch (error) {
     console.error('Error fetching financial records:', error);
@@ -57,7 +56,7 @@ export const createFinancialRecord = async (
   data: Partial<FinancialRecord>
 ): Promise<FinancialRecord> => {
   try {
-    const response = await api.post('/financial-records', data);
+    const response = await api.post('/api/financial-records', data);
     return response.data.data;
   } catch (error) {
     console.error('Error creating financial record:', error);
@@ -91,7 +90,7 @@ export const getFinancialSummary = async (
   period: string = 'month'
 ): Promise<FinancialSummary> => {
   try {
-    const response = await api.get('/financial-records/summary', {
+    const response = await api.get('/api/financial-records/summary', {
       params: { period },
     });
     return response.data.data;
@@ -110,7 +109,7 @@ export const getDues = async (params?: {
   year?: number;
 }): Promise<Due[]> => {
   try {
-    const response = await api.get('/dues', { params });
+    const response = await api.get('/api/dues', { params });
     return response.data.data;
   } catch (error) {
     console.error('Error fetching dues:', error);
@@ -130,7 +129,7 @@ export const getDueById = async (id: string): Promise<Due> => {
 
 export const createDue = async (data: Partial<Due>): Promise<Due> => {
   try {
-    const response = await api.post('/dues', data);
+    const response = await api.post('/api/dues', data);
     return response.data.data;
   } catch (error) {
     console.error('Error creating due:', error);
@@ -238,7 +237,7 @@ export const getDonations = async (params?: {
   pharmacyId?: string;
 }): Promise<Donation[]> => {
   try {
-    const response = await api.get('/donations', { params });
+    const response = await api.get('/api/donations', { params });
 
     // Transform backend data to match frontend Donation type
     if (Array.isArray(response.data.data)) {
@@ -326,7 +325,7 @@ export const createDonation = async (
   data: Partial<Donation>
 ): Promise<Donation> => {
   try {
-    const response = await api.post('/donations', data);
+    const response = await api.post('/api/donations', data);
     return response.data.data;
   } catch (error) {
     console.error('Error creating donation:', error);
@@ -499,12 +498,16 @@ export const getPendingPayments = async (): Promise<any> => {
   return response.data.data;
 };
 
-export const getAllPayments = async (params?: { status?: string }): Promise<any> => {
+export const getAllPayments = async (params?: { 
+  status?: string; 
+  page?: number; 
+  limit?: number; 
+}): Promise<any> => {
   if (params?.status === 'pending') {
     const response = await api.get(`/payments/admin/pending`);
     return response.data.data;
   }
-  const response = await api.get(`/payments/admin/all`, { params });
+  const response = await api.get('/api/payments/admin/all', { params });
   return response.data.data;
 };
 
@@ -954,7 +957,7 @@ export const generateCertificatePDF = async (
 };
 
 export const recordPayment = async (formData: FormData): Promise<any> => {
-  const response = await api.post('/payments/record', formData, {
+  const response = await api.post('/api/payments/record', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

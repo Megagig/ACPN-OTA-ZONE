@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import PharmacyCard from '../../components/pharmacy/PharmacyCard';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy, PharmacyStats } from '../../types/pharmacy.types';
-import { useTheme } from '../../context/ThemeContext';
 
 interface ApiError {
   message: string;
 }
 
 const PharmacyList: React.FC = () => {
+  const navigate = useNavigate();
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [stats, setStats] = useState<PharmacyStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,8 +21,6 @@ const PharmacyList: React.FC = () => {
   >('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const navigate = useNavigate();
-  const { theme } = useTheme();
   const limit = 10; // Items per page
 
   useEffect(() => {

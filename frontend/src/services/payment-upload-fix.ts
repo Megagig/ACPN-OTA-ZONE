@@ -1,7 +1,8 @@
+// Payment upload fix service
+// This file contains utilities for fixing payment upload issues
+
 // Simple patch script to fix the payment upload functionality
 // To be merged into the PharmacyDues.tsx component in the handlePaymentSubmit function
-
-import submitPaymentWithAxios from './submitPaymentWithAxios';
 
 // Usage example in PharmacyDues.tsx:
 /*

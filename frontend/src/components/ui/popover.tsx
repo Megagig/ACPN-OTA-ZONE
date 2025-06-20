@@ -18,7 +18,7 @@ const Popover: React.FC<PopoverProps> = ({ open, onOpenChange, children }) => {
   return React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
     if (child.type === PopoverTrigger) {
-      return React.cloneElement(child, {
+      return React.cloneElement(child as React.ReactElement<PopoverTriggerProps>, {
         onClick: () => handleOpenChange(!isOpen),
       });
     }

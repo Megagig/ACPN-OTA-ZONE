@@ -49,8 +49,8 @@ export async function submitPaymentWithAxios(data: FormData): Promise<Payment> {
     }
 
     // Use axios directly - Axios will set the content-type header correctly for FormData
-    console.log('Submitting with Axios to:', '/payments/submit');
-    const response = await api.post('/payments/submit', cleanFormData, {
+    console.log('Submitting with Axios to:', '/api/payments/submit');
+    const response = await api.post('/api/payments/submit', cleanFormData, {
       headers: {
         // Don't set Content-Type manually, let Axios handle it
         // It needs to be multipart/form-data with the boundary parameter

@@ -15,8 +15,6 @@ import {
   Avatar,
   IconButton,
   Tooltip,
-  List,
-  ListItem,
   Flex,
   Center,
 } from '@chakra-ui/react';
@@ -27,7 +25,7 @@ import {
   FaArrowRight,
   FaSync,
 } from 'react-icons/fa';
-import { EventService } from '../../services/event.service';
+import eventService from '../../services/event.service';
 import type {
   Event,
   EventRegistration,
@@ -60,9 +58,9 @@ const MemberEventWidget: React.FC = () => {
 
       const [eventsResponse, registrationsResponse, penaltiesData] =
         await Promise.all([
-          EventService.getAllEvents({ status: 'published' }, 1, 5),
-          EventService.getUserRegistrations(undefined, 1, 10),
-          EventService.getUserPenalties().catch(() => null), // Ignore errors for penalties
+          eventService.getAllEvents({ status: 'published' }, 1, 5),
+          eventService.getUserRegistrations(1, 10),
+          eventService.getUserPenalties().catch(() => null), // Ignore errors for penalties
         ]);
 
       // Filter upcoming events

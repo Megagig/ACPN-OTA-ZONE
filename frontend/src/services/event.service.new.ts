@@ -1,15 +1,12 @@
 import api from './api';
 import type {
   Event,
-  EventRegistration,
   EventAttendance,
-  EventNotification,
   MeetingPenaltyConfig,
   EventSummary,
   EventAttendee,
+  EventType,
 } from '../types/event.types';
-
-const BASE_URL = '/api/events';
 
 class EventService {
   // Event CRUD operations
@@ -39,7 +36,7 @@ class EventService {
       });
     }
     const queryString = searchParams.toString();
-    const url = queryString ? `${BASE_URL}?${queryString}` : BASE_URL;
+    const url = queryString ? `/api/events?${queryString}` : '/api/events';
 
     const response = await api.get(url);
     return response.data;
@@ -49,7 +46,7 @@ class EventService {
     success: boolean;
     data: Event;
   }> {
-    const response = await api.get(`${BASE_URL}/${id}`);
+    const response = await api.get(`/api/events/${id}`);
     return response.data;
   }
 
@@ -79,7 +76,7 @@ class EventService {
     success: boolean;
     data: Event;
   }> {
-    const response = await api.post(BASE_URL, eventData);
+    const response = await api.post('/api/events', eventData);
     return response.data;
   }
 
@@ -90,7 +87,7 @@ class EventService {
     success: boolean;
     data: Event;
   }> {
-    const response = await api.put(`${BASE_URL}/${id}`, eventData);
+    const response = await api.put(`/api/events/${id}`, eventData);
     return response.data;
   }
 
@@ -98,7 +95,7 @@ class EventService {
     success: boolean;
     message: string;
   }> {
-    const response = await api.delete(`${BASE_URL}/${id}`);
+    const response = await api.delete(`/api/events/${id}`);
     return response.data;
   }
 
@@ -108,7 +105,7 @@ class EventService {
     message: string;
     data: { status: string };
   }> {
-    const response = await api.post(`${BASE_URL}/${eventId}/register`);
+    const response = await api.post(`/api/events/${eventId}/register`);
     return response.data;
   }
 
@@ -116,7 +113,7 @@ class EventService {
     success: boolean;
     message: string;
   }> {
-    const response = await api.delete(`${BASE_URL}/${eventId}/register`);
+    const response = await api.delete(`/api/events/${eventId}/register`);
     return response.data;
   }
 
@@ -133,7 +130,7 @@ class EventService {
     data: EventAttendance;
   }> {
     const response = await api.post(
-      `${BASE_URL}/${eventId}/attendance`,
+      `/api/events/${eventId}/attendance`,
       attendanceData
     );
     return response.data;
@@ -156,7 +153,7 @@ class EventService {
       };
     };
   }> {
-    const response = await api.get(`${BASE_URL}/my-events`);
+    const response = await api.get('/api/events/my-events');
     return response.data;
   }
 
@@ -165,7 +162,7 @@ class EventService {
     success: boolean;
     message: string;
   }> {
-    const response = await api.post(`${BASE_URL}/${eventId}/acknowledge`);
+    const response = await api.post(`/api/events/${eventId}/acknowledge`);
     return response.data;
   }
 
@@ -196,38 +193,38 @@ class EventService {
   // Legacy methods for backward compatibility
   async getEventSummary(): Promise<EventSummary> {
     try {
-      const { data: eventsResponse } = await this.getEvents();
-      const events = eventsResponse.data;
-
+      const response = await api.get('/api/events/summary');
+      const events = response.data;
       const now = new Date();
-      const total = events.length;
+      
       const upcoming = events.filter(
-        (event) => new Date(event.startDate) > now
-      ).length;
+        (event: Event) => new Date(event.startDate) > now
+      );
       const past = events.filter(
-        (event) => new Date(event.endDate) < now
-      ).length;
+        (event: Event) => new Date(event.endDate) < now
+      );
 
-      const byType = events.reduce((acc, event) => {
-        acc[event.eventType] = (acc[event.eventType] || 0) + 1;
+      const byType = events.reduce((acc: Record<EventType, number>, event: Event) => {
+        const eventType = event.type || event.eventType;
+        if (eventType) {
+          acc[eventType] = (acc[eventType] || 0) + 1;
+        }
         return acc;
-      }, {} as Record<string, number>);
+      }, {} as Record<EventType, number>);
 
-      const recentEvents = events
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt || '').getTime() -
-            new Date(a.createdAt || '').getTime()
-        )
-        .slice(0, 5);
+      // Sort events by start date
+      const sortedEvents = events.sort(
+        (a: Event, b: Event) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
 
       return {
-        total,
-        upcoming,
-        past,
-        byType,
-        recentEvents,
-        topAttendedEvents: [], // This would need attendance data
+        total: events.length,
+        upcoming: upcoming.length,
+        past: past.length,
+        recentEvents: sortedEvents.slice(0, 5),
+        byType: byType,
+        topAttendedEvents: [],
       };
     } catch (error) {
       console.error('Error fetching event summary:', error);
@@ -235,8 +232,8 @@ class EventService {
         total: 0,
         upcoming: 0,
         past: 0,
-        byType: {},
         recentEvents: [],
+        byType: {} as Record<EventType, number>,
         topAttendedEvents: [],
       };
     }
@@ -245,12 +242,12 @@ class EventService {
   // Legacy method for attendees
   async getEventAttendees(eventId: string): Promise<EventAttendee[]> {
     try {
-      const { data: eventResponse } = await this.getEvent(eventId);
-      const event = eventResponse.data;
+      const response = await api.get(`/api/events/${eventId}`);
+      const event = response.data;
 
       // Convert registrations to legacy attendee format
       const attendees: EventAttendee[] = (event.registrations || []).map(
-        (reg) => ({
+        (reg: any) => ({
           _id: reg._id,
           event: eventId,
           user: reg.userId,
@@ -273,10 +270,10 @@ class EventService {
   }
 
   async updateAttendeeStatus(
-    eventId: string,
-    attendeeId: string,
-    status: string
-  ): Promise<EventAttendee> {
+    _eventId: string,
+    _attendeeId: string,
+    _status: string
+  ): Promise<any> {
     // This would need to be implemented based on registration/attendance operations
     throw new Error(
       'Not implemented - use registration/attendance methods instead'
@@ -284,22 +281,22 @@ class EventService {
   }
 
   // Legacy compatibility methods
-  async getEventById(id: string): Promise<Event | null> {
-    try {
-      const { data: response } = await this.getEvent(id);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching event by ID:', error);
-      return null;
-    }
-  }
-
   async checkInAttendee(
-    eventId: string,
-    attendeeId: string
+    _eventId: string,
+    _attendeeId: string
   ): Promise<EventAttendee | null> {
     // This would need to be implemented using attendance marking
     throw new Error('Not implemented - use markAttendance method instead');
+  }
+
+  async deleteAttendee(
+    _eventId: string,
+    _attendeeId: string
+  ): Promise<any> {
+    // This would need to be implemented based on registration/attendance operations
+    throw new Error(
+      'Not implemented - use registration/attendance methods instead'
+    );
   }
 }
 

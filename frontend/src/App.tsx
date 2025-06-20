@@ -8,7 +8,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ToastProvider } from './components/shadcn/toast';
-import { QueryProvider } from './lib/react-query';
+import { ReactQueryProvider } from './lib/react-query';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
@@ -134,7 +134,7 @@ function App() {
       <ToastProvider>
         <AuthProvider>
           <NotificationProvider>
-            <QueryProvider>
+            <ReactQueryProvider>
               <Router>
                 <Routes>
                   {/* Public Routes */}
@@ -624,7 +624,7 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Router>
-            </QueryProvider>
+            </ReactQueryProvider>
           </NotificationProvider>
         </AuthProvider>
       </ToastProvider>

@@ -1,27 +1,25 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
 import electionService from '../../services/election.service';
-import type { ElectionSummary, Election } from '../../types/election.types';
+import type { ElectionSummary } from '../../types/election.types';
 import ChartComponent from '../../components/common/ChartComponent';
 import StatCard from '../../components/common/StatCard';
 
-const ElectionDashboard = () => {
+const ElectionDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<ElectionSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchElectionData = async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
         const summaryData = await electionService.getElectionSummary();
         setSummary(summaryData);
-      } catch (error) {
-        console.error('Error fetching election data:', error);
+      } catch (err) {
+        console.error(err);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -151,31 +149,31 @@ const ElectionDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Total Elections"
-          value={isLoading ? '-' : summary?.total.toString() || '0'}
+          value={loading ? '-' : summary?.total.toString() || '0'}
           icon={<i className="fas fa-poll"></i>}
           className="border-l-4 border-blue-500"
-          isLoading={isLoading}
+          isLoading={loading}
         />
         <StatCard
           title="Upcoming Elections"
-          value={isLoading ? '-' : summary?.upcoming.toString() || '0'}
+          value={loading ? '-' : summary?.upcoming.toString() || '0'}
           icon={<i className="fas fa-hourglass-start"></i>}
           className="border-l-4 border-green-500"
-          isLoading={isLoading}
+          isLoading={loading}
         />
         <StatCard
           title="Ongoing Elections"
-          value={isLoading ? '-' : summary?.ongoing.toString() || '0'}
+          value={loading ? '-' : summary?.ongoing.toString() || '0'}
           icon={<i className="fas fa-vote-yea"></i>}
           className="border-l-4 border-purple-500"
-          isLoading={isLoading}
+          isLoading={loading}
         />
         <StatCard
           title="Total Votes Cast"
-          value={isLoading ? '-' : summary?.totalVotes.toString() || '0'}
+          value={loading ? '-' : summary?.totalVotes.toString() || '0'}
           icon={<i className="fas fa-ballot-check"></i>}
           className="border-l-4 border-indigo-500"
-          isLoading={isLoading}
+          isLoading={loading}
         />
       </div>
 
@@ -299,7 +297,7 @@ const ElectionDashboard = () => {
                 Positions & Candidates
               </h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
-                {summary.activeElection.positions.map((position) => (
+                {summary.activeElection.positions.map((position: any) => (
                   <div
                     key={position._id}
                     className="bg-card p-2 rounded shadow-sm border border-border"
@@ -309,7 +307,7 @@ const ElectionDashboard = () => {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {summary.activeElection?.candidates.filter(
-                        (c) => c.position === position._id
+                        (c: any) => c.position === position._id
                       ).length || 0}{' '}
                       candidates
                     </p>
@@ -327,7 +325,7 @@ const ElectionDashboard = () => {
           <h2 className="text-lg font-semibold mb-4 text-foreground">
             Election Status Distribution
           </h2>
-          {isLoading ? (
+          {loading ? (
             <div className="animate-pulse h-64 bg-muted rounded"></div>
           ) : (
             getElectionStatusChartData() && (
@@ -354,7 +352,7 @@ const ElectionDashboard = () => {
             </button>
           </div>
 
-          {isLoading ? (
+          {loading ? (
             <div className="animate-pulse space-y-3">
               {[...Array(3)].map((_, index) => (
                 <div key={index} className="h-16 bg-muted rounded"></div>
@@ -366,7 +364,7 @@ const ElectionDashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {summary?.recentElections.map((election) => (
+              {summary?.recentElections.map((election: any) => (
                 <div
                   key={election._id}
                   className="border border-border rounded-lg p-4 hover:bg-muted/50 cursor-pointer"

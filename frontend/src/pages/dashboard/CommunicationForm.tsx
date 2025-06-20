@@ -1,11 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import communicationService from '../../services/communication.service';
-import type {
-  Communication,
-  CommunicationType,
-  RecipientType,
-} from '../../types/communication.types';
+import type { Communication, CommunicationType } from '../../types/communication.types';
 
 const CommunicationForm = () => {
   const navigate = useNavigate();
@@ -134,16 +130,14 @@ const CommunicationForm = () => {
         attachments,
       };
 
-      let result;
-
-      if (isEditing) {
-        result = await communicationService.updateCommunication(id, dataToSave);
+      if (isEditing && id) {
+        await communicationService.updateCommunication(id, dataToSave);
       } else {
-        result = await communicationService.createCommunication(dataToSave);
+        await communicationService.createCommunication(dataToSave);
       }
 
       // Navigate back to the communications list or detail page
-      navigate(isEditing ? `/communications/${id}` : '/communications/list');
+      navigate(isEditing && id ? `/communications/${id}` : '/communications/list');
     } catch (error) {
       console.error('Error saving communication:', error);
     } finally {
@@ -170,7 +164,7 @@ const CommunicationForm = () => {
           attachments,
         });
         commId = newComm._id;
-      } else {
+      } else if (id) {
         await communicationService.updateCommunication(id, {
           ...formData,
           attachments,
@@ -178,13 +172,15 @@ const CommunicationForm = () => {
       }
 
       // Then schedule it
-      await communicationService.scheduleCommunication(
-        commId,
-        scheduledDateTime.toISOString()
-      );
+      if (commId) {
+        await communicationService.scheduleCommunication(
+          commId,
+          scheduledDateTime.toISOString()
+        );
+      }
 
       // Navigate back to the communications list or detail page
-      navigate(isEditing ? `/communications/${id}` : '/communications/list');
+      navigate(isEditing && id ? `/communications/${id}` : '/communications/list');
     } catch (error) {
       console.error('Error scheduling communication:', error);
     } finally {
@@ -207,7 +203,7 @@ const CommunicationForm = () => {
     setAttachments((prev) => [...prev, ...newAttachments]);
   };
 
-  const removeAttachment = (index: number) => {
+  const handleRemoveAttachment = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -372,21 +368,15 @@ const CommunicationForm = () => {
 
             {attachments.length > 0 && (
               <div className="mt-2 space-y-2">
-                {attachments.map((url, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center bg-gray-50 p-2 rounded-md"
-                  >
-                    <i className="fas fa-file-alt text-gray-500 mr-2"></i>
-                    <span className="text-sm text-gray-700 truncate flex-1">
-                      Attachment {index + 1}
-                    </span>
+                {attachments.map((_, index) => (
+                  <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+                    <span className="text-sm text-gray-600">Attachment {index + 1}</span>
                     <button
                       type="button"
+                      onClick={() => handleRemoveAttachment(index)}
                       className="text-red-500 hover:text-red-700"
-                      onClick={() => removeAttachment(index)}
                     >
-                      <i className="fas fa-times"></i>
+                      Remove
                     </button>
                   </div>
                 ))}
@@ -537,7 +527,9 @@ const CommunicationForm = () => {
                       }
 
                       // Then send it
-                      await communicationService.sendCommunication(commId);
+                      if (commId) {
+                        await communicationService.sendCommunication(commId);
+                      }
 
                       // Navigate back
                       navigate('/communications/list');

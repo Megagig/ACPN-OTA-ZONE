@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy } from '../../types/pharmacy.types';
-import { useTheme } from '../../context/ThemeContext';
 
 const PharmacyProfile: React.FC = () => {
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchPharmacy = async () => {

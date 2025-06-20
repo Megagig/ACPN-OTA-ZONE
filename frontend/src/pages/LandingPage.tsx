@@ -1,11 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ui/ThemeToggle';
 
 const LandingPage: React.FC = () => {
-  const { theme } = useTheme();
-
   return (
     <div className="bg-background text-foreground min-h-screen">
       {/* Hero Section */}

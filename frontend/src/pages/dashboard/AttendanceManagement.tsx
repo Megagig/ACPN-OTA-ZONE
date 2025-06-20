@@ -1,15 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import attendanceService from '../../services/attendanceService';
 import type { Event, AttendeeWithUser } from '../../services/attendanceService';
 import { toast } from 'react-toastify';
-
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
 
 const AttendanceManagement: React.FC = () => {
   const navigate = useNavigate();

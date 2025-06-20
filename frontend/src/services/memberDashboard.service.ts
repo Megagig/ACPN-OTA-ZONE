@@ -48,7 +48,7 @@ export interface MemberPaymentsResponse {
 export const getMemberDashboardStats =
   async (): Promise<MemberDashboardStats> => {
     try {
-      const response = await api.get('/member-dashboard/overview');
+      const response = await api.get('/api/member-dashboard/overview');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching member dashboard stats:', error);
@@ -75,7 +75,7 @@ export const getMemberPayments = async (
   limit = 10
 ): Promise<MemberPaymentsResponse> => {
   try {
-    const response = await api.get('/member-dashboard/payments', {
+    const response = await api.get('/api/member-dashboard/payments', {
       params: { page, limit },
     });
     return response.data.data;

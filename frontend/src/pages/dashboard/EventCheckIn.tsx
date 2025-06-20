@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import eventService from '../../services/event.service';
-import type { Event, EventAttendee } from '../../types/event.types';
+import type { Event } from '../../types/event.types';
 
 const EventCheckIn: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const [event, setEvent] = useState<Event | null>(null);
-  const [attendees, setAttendees] = useState<EventAttendee[]>([]);
+  const [attendees, setAttendees] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredAttendees, setFilteredAttendees] = useState<EventAttendee[]>(
-    []
-  );
+  const [filteredAttendees, setFilteredAttendees] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedAttendee, setSelectedAttendee] =
-    useState<EventAttendee | null>(null);
+  const [selectedAttendee, setSelectedAttendee] = useState<any | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
@@ -30,8 +27,8 @@ const EventCheckIn: React.FC = () => {
         ]);
 
         setEvent(eventData);
-        setAttendees(attendeeData);
-        setFilteredAttendees(attendeeData);
+        setAttendees(attendeeData.data || []);
+        setFilteredAttendees(attendeeData.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -52,7 +49,7 @@ const EventCheckIn: React.FC = () => {
     const lowercaseSearch = searchTerm.toLowerCase();
     const filtered = attendees.filter(
       (attendee) =>
-        attendee.userName.toLowerCase().includes(lowercaseSearch) ||
+        (attendee.userName || attendee.user?.firstName || '').toLowerCase().includes(lowercaseSearch) ||
         (attendee.pharmacyName &&
           attendee.pharmacyName.toLowerCase().includes(lowercaseSearch))
     );
@@ -61,7 +58,7 @@ const EventCheckIn: React.FC = () => {
   }, [searchTerm, attendees]);
 
   // Handle check-in of an attendee
-  const handleCheckIn = async (attendee: EventAttendee) => {
+  const handleCheckIn = async (attendee: any) => {
     if (!id) return;
 
     setSelectedAttendee(attendee);
@@ -74,7 +71,7 @@ const EventCheckIn: React.FC = () => {
       setAttendees(
         attendees.map((a) =>
           a._id === attendee._id
-            ? { ...a, checkedIn: true, checkedInAt: new Date().toISOString() }
+            ? { ...a, attended: true, attendedAt: new Date().toISOString() }
             : a
         )
       );
@@ -83,7 +80,7 @@ const EventCheckIn: React.FC = () => {
       setFilteredAttendees(
         filteredAttendees.map((a) =>
           a._id === attendee._id
-            ? { ...a, checkedIn: true, checkedInAt: new Date().toISOString() }
+            ? { ...a, attended: true, attendedAt: new Date().toISOString() }
             : a
         )
       );
@@ -204,7 +201,7 @@ const EventCheckIn: React.FC = () => {
                 {attendees.length} Registered
               </span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                {attendees.filter((a) => a.checkedIn).length} Checked In
+                {attendees.filter((a) => a.attended || a.checkedIn).length} Checked In
               </span>
             </div>
           </div>
@@ -217,7 +214,7 @@ const EventCheckIn: React.FC = () => {
               <div>
                 Capacity:{' '}
                 <span className="text-foreground">
-                  {attendees.filter((a) => a.checkedIn).length} /{' '}
+                  {attendees.filter((a) => a.attended || a.checkedIn).length} /{' '}
                   {event.maxAttendees}
                 </span>
               </div>
@@ -254,10 +251,8 @@ const EventCheckIn: React.FC = () => {
             <div
               key={attendee._id}
               className={`bg-card rounded-lg shadow-md border border-border p-4 border-l-4 ${
-                attendee.checkedIn
+                attendee.attended || attendee.checkedIn
                   ? 'border-l-green-500'
-                  : attendee.paid
-                  ? 'border-l-blue-500'
                   : 'border-l-yellow-500'
               }`}
             >
@@ -268,7 +263,7 @@ const EventCheckIn: React.FC = () => {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-foreground">
-                      {attendee.userName}
+                      {attendee.userName || `${attendee.user?.firstName || ''} ${attendee.user?.lastName || ''}`}
                     </h3>
                     {attendee.pharmacyName && (
                       <p className="text-sm text-muted-foreground">
@@ -280,11 +275,10 @@ const EventCheckIn: React.FC = () => {
                 <div className="flex flex-col items-end">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getAttendeeStatusBadgeClass(
-                      attendee.status
+                      attendee.status || 'registered'
                     )}`}
                   >
-                    {attendee.status.charAt(0).toUpperCase() +
-                      attendee.status.slice(1)}
+                    {attendee.status || 'registered'}
                   </span>
                   {attendee.paid ? (
                     <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
@@ -303,11 +297,13 @@ const EventCheckIn: React.FC = () => {
                   <div className="text-sm text-muted-foreground">
                     Registered on {formatDate(attendee.registeredAt)}
                   </div>
-                  {attendee.checkedIn ? (
+                  {attendee.attended || attendee.checkedIn ? (
                     <div className="inline-flex items-center text-sm text-green-600 dark:text-green-400">
                       <i className="fas fa-check-circle mr-1"></i>
                       Checked in at{' '}
-                      {attendee.checkedInAt
+                      {attendee.attendedAt
+                        ? formatTime(attendee.attendedAt)
+                        : attendee.checkedInAt
                         ? formatTime(attendee.checkedInAt)
                         : 'N/A'}
                     </div>

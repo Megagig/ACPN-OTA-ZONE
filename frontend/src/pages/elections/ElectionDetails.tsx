@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import electionService from '../../services/election.service';
 import type { Election, Candidate } from '../../types/election.types';
 import StatCard from '../../components/common/StatCard';
+
+// Assume you have access to currentUserId (replace with actual user id logic)
+const currentUserId = '';
 
 const ElectionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [election, setElection] = useState<Election | null>(null);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,15 +28,6 @@ const ElectionDetails = () => {
         // Fetch election data which includes candidates
         const electionData = await electionService.getElectionById(id);
         setElection(electionData);
-
-        // Extract candidates from the election data
-        if (electionData.candidatesByPosition) {
-          const allCandidates: Candidate[] = [];
-          Object.values(electionData.candidatesByPosition).forEach(positionCandidates => {
-            allCandidates.push(...positionCandidates);
-          });
-          setCandidates(allCandidates);
-        }
       } catch (error) {
         console.error('Error fetching election data:', error);
         setError('Failed to load election data. Please try again later.');
@@ -85,6 +78,29 @@ const ElectionDetails = () => {
     );
   };
 
+  // Compute isUserCandidate
+  const isUserCandidate = useMemo(() => {
+    if (!election || !currentUserId) return false;
+    return election.candidates.some((c) => c.user === currentUserId);
+  }, [election]);
+
+  // Group candidates by position
+  const candidatesByPosition = useMemo(() => {
+    if (!election) return {};
+    const grouped: { [positionId: string]: Candidate[] } = {};
+    election.candidates.forEach((candidate) => {
+      if (!grouped[candidate.position]) grouped[candidate.position] = [];
+      grouped[candidate.position].push(candidate);
+    });
+    return grouped;
+  }, [election]);
+
+  // Compute total vote count
+  const voteCount = useMemo(() => {
+    if (!election) return 0;
+    return election.candidates.reduce((sum, c) => sum + (c.votes || 0), 0);
+  }, [election]);
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -128,7 +144,7 @@ const ElectionDetails = () => {
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
           <StatusBadge status={election.status} />
-          {election.status === 'ongoing' && !election.isUserCandidate && (
+          {election.status === 'ongoing' && !isUserCandidate && (
             <button
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
               onClick={() => navigate(`/elections/${election._id}/vote`)}
@@ -156,13 +172,13 @@ const ElectionDetails = () => {
         />
         <StatCard
           title="Positions"
-          value={Object.keys(election.candidatesByPosition || {}).length.toString()}
+          value={Object.keys(candidatesByPosition || {}).length.toString()}
           icon={<i className="fas fa-users"></i>}
           className="border-l-4 border-purple-500"
         />
         <StatCard
           title="Votes Cast"
-          value={`${election.voteCount || 0} / ${election.totalVoters || 0}`}
+          value={`${voteCount || 0} / ${election.totalVoters || 0}`}
           icon={<i className="fas fa-vote-yea"></i>}
           className="border-l-4 border-indigo-500"
         />
@@ -174,7 +190,7 @@ const ElectionDetails = () => {
           Positions & Candidates
         </h2>
         <div className="space-y-6">
-          {Object.entries(election.candidatesByPosition || {}).map(([positionId, positionCandidates]) => (
+          {Object.entries(candidatesByPosition || {}).map(([positionId, positionCandidates]) => (
             <div key={positionId} className="border-b border-border pb-6 last:border-0">
               <h3 className="text-lg font-medium text-foreground mb-4">
                 {positionCandidates[0]?.positionName || 'Position'}
@@ -202,7 +218,7 @@ const ElectionDetails = () => {
                           {candidate.fullName}
                         </h4>
                         <p className="text-sm text-muted-foreground">
-                          {candidate.bio || 'No bio available'}
+                          {candidate.manifesto || 'No manifesto available'}
                         </p>
                       </div>
                     </div>

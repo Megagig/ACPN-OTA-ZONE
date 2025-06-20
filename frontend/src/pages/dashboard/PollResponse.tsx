@@ -31,7 +31,7 @@ const PollResponse: React.FC = () => {
           setPoll(data);
 
           // Check if user has already responded
-          const hasUserResponded = await pollService.checkUserResponded(id);
+          const hasUserResponded = await pollService.checkUserResponded();
           setHasResponded(hasUserResponded);
         }
       } catch {

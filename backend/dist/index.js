@@ -23,13 +23,14 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 // Middleware
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://acpnotazone.org', 'https://www.acpnotazone.org']
-        : [
-            'http://localhost:3000',
-            'http://localhost:5173',
-            'http://localhost:5174',
-        ],
+    origin: [
+        'https://acpnotazone.org',
+        'https://www.acpnotazone.org',
+        'https://acpn-ota-zone.onrender.com',
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:5174',
+    ],
     credentials: true,
     optionsSuccessStatus: 200,
 };
@@ -81,7 +82,7 @@ app.use((0, express_fileupload_1.default)({
 }));
 // Routes
 app.get('/', (req, res) => {
-    res.send('ACPN OTA Zone API is running...');
+    res.sendFile(path_1.default.join(__dirname, "../../frontend/dist/index.html"));
 });
 // Health check endpoint
 app.get('/api/health-check', (req, res) => {
@@ -92,7 +93,7 @@ app.get('/api/health-check', (req, res) => {
         environment: process.env.NODE_ENV || 'development',
     });
 });
-// Define Routes
+// Define API Routes
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/users', user_routes_1.default);
 app.use('/api/pharmacies', pharmacy_routes_1.default);
@@ -114,6 +115,11 @@ app.use('/api/dashboard', dashboard_routes_1.default);
 app.use('/api/member-dashboard', memberDashboard_routes_1.default);
 app.use('/api/messages', message_routes_1.default);
 app.use('/api/notifications', notification_routes_1.default);
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+    res.sendFile(path_1.default.join(__dirname, "../../frontend/dist/index.html"));
+});
 // General body parsers - place them after specific multipart handlers if possible,
 // or ensure they don't process multipart/form-data if other handlers are meant to.
 app.use(express_1.default.urlencoded({ extended: true }));

@@ -45,7 +45,7 @@ const FinancialManagement: React.FC = () => {
 
       const monthlyPayments =
         allPayments.payments?.filter((payment: Payment) => {
-          const paymentDate = new Date(payment.paymentDate);
+          const paymentDate = new Date(payment.paymentDate || new Date());
           return (
             paymentDate.getMonth() === currentMonth &&
             paymentDate.getFullYear() === currentYear &&

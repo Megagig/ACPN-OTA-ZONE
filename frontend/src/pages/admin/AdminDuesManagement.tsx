@@ -138,8 +138,7 @@ const DueForm: React.FC<DueFormProps> = ({ due, onSave, onClose, dueTypes }) => 
 
 const AdminDuesManagement: React.FC = () => {
   const [dues, setDues] = useState<Due[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editDue, setEditDue] = useState<Due | undefined>(undefined);
   const [dueTypes, setDueTypes] = useState<DueType[]>([]);
@@ -150,18 +149,17 @@ const AdminDuesManagement: React.FC = () => {
 
   const fetchDues = async () => {
     try {
-      setLoading(true);
-      const res = await api.get('/dues', {
+      setIsLoading(true);
+      const res = await api.get('/api/dues', {
         params: { page, limit: itemsPerPage, search },
       });
       setDues(res.data.data.filter((due: any) => !due.isDeleted));
       setTotalPages(res.data.pagination.totalPages);
     } catch (err: any) {
       console.error('Error fetching dues:', err);
-      setError(err.response?.data?.message || 'Failed to fetch dues');
       toast.error('Failed to fetch dues. Please try again later.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -176,7 +174,7 @@ const AdminDuesManagement: React.FC = () => {
   const handleDelete = async (id: string) => {
     toast.info('Deleting due...');
     try {
-      await api.delete(`/dues/${id}`);
+      await api.delete(`/api/dues/${id}`);
       setDues((prev) => prev.filter((d) => d._id !== id));
       toast.success('Due deleted successfully.');
       fetchDues();
@@ -194,11 +192,11 @@ const AdminDuesManagement: React.FC = () => {
     try {
       if (editDue) {
         // Edit
-        await api.put(`/dues/${editDue._id}`, data);
+        await api.put(`/api/dues/${editDue._id}`, data);
         toast.success('Due updated successfully');
       } else {
         // Assign new
-        const response = await api.post(`/pharmacies/${data.pharmacyId}/dues`, data);
+        await api.post(`/api/pharmacies/${data.pharmacyId}/dues`, data);
         toast.success('Due assigned successfully');
       }
       setShowForm(false);
@@ -206,7 +204,6 @@ const AdminDuesManagement: React.FC = () => {
       fetchDues();
     } catch (err: any) {
       console.error('Error submitting due:', err);
-      setError(err.response?.data?.message || 'Failed to submit due');
       toast.error(err.response?.data?.message || 'Failed to submit due');
     }
   };
@@ -223,7 +220,7 @@ const AdminDuesManagement: React.FC = () => {
         />
         <button onClick={() => { setShowForm(true); setEditDue(undefined); }} className="px-4 py-2 bg-blue-600 text-white rounded">Assign New Due</button>
       </div>
-      {loading ? <div>Loading...</div> : (
+      {isLoading ? <div>Loading...</div> : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead>

@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { PharmacyFormData } from '../../types/pharmacy.types';
-import { useTheme } from '../../context/ThemeContext';
 
 const PharmacyForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isEdit = location.pathname.includes('/edit');
-  const { theme } = useTheme();
 
   const initialFormData: PharmacyFormData = {
     name: '',

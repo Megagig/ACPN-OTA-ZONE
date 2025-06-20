@@ -27,7 +27,7 @@ const CertificateView: React.FC<CertificateViewProps> = ({
   isVisible,
   onClose,
 }) => {
-  const { theme } = useTheme();
+  const { theme: _theme } = useTheme();
   const [certificateData, setCertificateData] =
     useState<CertificateData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

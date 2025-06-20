@@ -12,7 +12,7 @@ class PharmacyService {
     limit = 10,
     filters = {}
   ): Promise<{ pharmacies: Pharmacy[]; total: number }> {
-    const response = await api.get('/pharmacies', {
+    const response = await api.get('/api/pharmacies', {
       params: { page, limit, ...filters },
     });
     return {
@@ -29,7 +29,7 @@ class PharmacyService {
 
   // Create a new pharmacy
   async createPharmacy(pharmacyData: FormData): Promise<Pharmacy> {
-    const response = await api.post('/pharmacies', pharmacyData, {
+    const response = await api.post('/api/pharmacies', pharmacyData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -90,14 +90,14 @@ class PharmacyService {
 
   // Get pharmacy statistics
   async getPharmacyStats(): Promise<PharmacyStats> {
-    const response = await api.get('/pharmacies/stats');
+    const response = await api.get('/api/pharmacies/stats');
     return response.data.data;
   }
 
   // Get pharmacy by user ID
   async getPharmacyByUser(): Promise<Pharmacy | null> {
     try {
-      const response = await api.get('/pharmacies/me');
+      const response = await api.get('/api/pharmacies/me');
       return response.data.data;
     } catch (error) {
       if (
@@ -117,8 +117,8 @@ class PharmacyService {
 
   // Search pharmacies
   async searchPharmacies(query: string): Promise<Pharmacy[]> {
-    const response = await api.get('/pharmacies/search', {
-      params: { query },
+    const response = await api.get('/api/pharmacies/search', {
+      params: { q: query },
     });
     return response.data.data;
   }

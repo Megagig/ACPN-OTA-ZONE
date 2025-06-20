@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import authService from '../../services/auth.service';
-import { useTheme } from '../../context/ThemeContext';
 import ThemeToggle from '../../components/ui/ThemeToggle';
+import { toast } from 'react-hot-toast';
+import authService from '../../services/auth.service';
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,13 +15,9 @@ const Register: React.FC = () => {
     confirmPassword: '',
     pcnLicense: '',
   });
-
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const { theme } = useTheme();
-
-  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,39 +29,29 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
     try {
       await authService.register(formData);
       setSuccess(true);
-      // Redirect to verification page after a delay
+      toast.success('Registration successful! Please check your email for verification.');
       setTimeout(() => {
-        navigate('/verify-email');
+        navigate('/login');
       }, 3000);
-    } catch (err: unknown) {
-      const errorMessage =
-        err &&
-        typeof err === 'object' &&
-        'response' in err &&
-        err.response &&
-        typeof err.response === 'object' &&
-        'data' in err.response &&
-        err.response.data &&
-        typeof err.response.data === 'object' &&
-        'message' in err.response.data
-          ? (err.response.data.message as string)
-          : 'Registration failed. Please try again.';
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Registration failed';
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -223,7 +210,7 @@ const Register: React.FC = () => {
             </div>
             <div>
               <label htmlFor="pcnLicense" className="sr-only">
-                PCN License Number
+                PCN License
               </label>
               <input
                 id="pcnLicense"
@@ -231,7 +218,7 @@ const Register: React.FC = () => {
                 type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-border bg-background placeholder-muted-foreground text-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="PCN License Number"
+                placeholder="PCN License"
                 value={formData.pcnLicense}
                 onChange={handleChange}
               />
@@ -271,10 +258,10 @@ const Register: React.FC = () => {
           <div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                   <svg
                     className="animate-spin h-5 w-5 text-primary-foreground/70"
@@ -309,7 +296,7 @@ const Register: React.FC = () => {
                   </svg>
                 </span>
               )}
-              {isLoading ? 'Processing...' : 'Register'}
+              {loading ? 'Processing...' : 'Register'}
             </button>
           </div>
         </form>

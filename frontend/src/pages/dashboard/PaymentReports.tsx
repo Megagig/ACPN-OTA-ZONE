@@ -80,7 +80,7 @@ const PaymentReports: React.FC = () => {
     const monthlyData: { [key: string]: { count: number; amount: number } } =
       {};
     paymentsData.forEach((payment) => {
-      const month = new Date(payment.paymentDate).toLocaleString('default', {
+      const month = new Date(payment.paymentDate || new Date()).toLocaleString('default', {
         month: 'short',
       });
       if (!monthlyData[month]) {
@@ -298,7 +298,7 @@ const PaymentReports: React.FC = () => {
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={reportData.monthlyPayments}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="month"
                     tick={{ fontSize: 12, fill: 'currentColor' }}
@@ -368,7 +368,7 @@ const PaymentReports: React.FC = () => {
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={reportData.stateWisePayments}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="state"
                     tick={{ fontSize: 12, fill: 'currentColor' }}
@@ -435,7 +435,7 @@ const PaymentReports: React.FC = () => {
                         ₦{payment.amount.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {new Date(payment.paymentDate).toLocaleDateString()}
+                        {new Date(payment.paymentDate || new Date()).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

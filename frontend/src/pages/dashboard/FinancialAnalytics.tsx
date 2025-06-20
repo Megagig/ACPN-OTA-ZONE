@@ -76,8 +76,6 @@ const FinancialAnalytics: React.FC = () => {
       ]);
 
       const paymentsData = payments.payments || [];
-      // We'll use today's date for calculations
-      const currentDate = new Date();
       const periodMonths =
         selectedPeriod === '12months'
           ? 12
@@ -598,7 +596,7 @@ const FinancialAnalytics: React.FC = () => {
                   cy="50%"
                   labelLine={false}
                   label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
+                    `${name} ${((percent || 0) * 100).toFixed(0)}%`
                   }
                   outerRadius={120}
                   fill="#8884d8"

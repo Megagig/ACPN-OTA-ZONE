@@ -5,7 +5,10 @@ import {
   useUpdateResource,
   useDeleteResource,
   useBulkAction,
+  type ApiError,
 } from './useApiQuery';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 // Event status and type enums
 export enum EventStatus {
@@ -104,57 +107,83 @@ export function useDeleteEvent() {
 }
 
 export function usePublishEvent() {
-  return useUpdateResource<Event, { status: EventStatus }>(
-    `${EVENTS_ENDPOINT}`,
-    [EVENTS_KEY, 'publish'],
-    {
-      mutationFn: ({ id, data }) => {
-        return fetch(`${EVENTS_ENDPOINT}/${id}/publish`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<Event, AxiosError<ApiError>, { id: string; data: { status: EventStatus } }>({
+    mutationFn: ({ id, data }) => {
+      return fetch(`${EVENTS_ENDPOINT}/${id}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY] });
+    },
+  });
+}
+
+export function useUpdateEventStatus() {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Event, AxiosError<ApiError>, { id: string; data: { status: EventStatus } }>({
+    mutationFn: ({ id, data }: { id: string; data: { status: EventStatus } }) => {
+      return fetch(`${EVENTS_ENDPOINT}/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: Event, variables: { id: string; data: { status: EventStatus } }) => {
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY] });
+    },
+  });
 }
 
 export function useCancelEvent() {
-  return useUpdateResource<Event, { reason?: string }>(
-    `${EVENTS_ENDPOINT}`,
-    [EVENTS_KEY, 'cancel'],
-    {
-      mutationFn: ({ id, data }) => {
-        return fetch(`${EVENTS_ENDPOINT}/${id}/cancel`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<Event, AxiosError<ApiError>, { id: string; data: { reason?: string } }>({
+    mutationFn: ({ id, data }: { id: string; data: { reason?: string } }) => {
+      return fetch(`${EVENTS_ENDPOINT}/${id}/cancel`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: Event, variables: { id: string; data: { reason?: string } }) => {
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY] });
+    },
+  });
 }
 
 export function useCompleteEvent() {
-  return useUpdateResource<Event, { summary?: string }>(
-    `${EVENTS_ENDPOINT}`,
-    [EVENTS_KEY, 'complete'],
-    {
-      mutationFn: ({ id, data }) => {
-        return fetch(`${EVENTS_ENDPOINT}/${id}/complete`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<Event, AxiosError<ApiError>, { id: string; data: { summary?: string } }>({
+    mutationFn: ({ id, data }: { id: string; data: { summary?: string } }) => {
+      return fetch(`${EVENTS_ENDPOINT}/${id}/complete`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: Event, variables: { id: string; data: { summary?: string } }) => {
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY] });
+    },
+  });
 }
 
 // Attendance Management
@@ -182,7 +211,7 @@ export function useEventAttendees(
 ) {
   return useQueryWithPagination<Attendee>(
     `${EVENTS_ENDPOINT}/${eventId}/attendees`,
-    [EVENTS_KEY, eventId, 'attendees'],
+    [EVENTS_KEY, eventId || '', 'attendees'],
     page,
     limit,
     {},
@@ -194,22 +223,25 @@ export function useEventAttendees(
 }
 
 export function useMarkAttendance() {
-  return useUpdateResource<Attendee, { attended: boolean; notes?: string }>(
-    `${EVENTS_ENDPOINT}`,
-    [EVENTS_KEY, 'attendance'],
-    {
-      mutationFn: ({ id, data }) => {
-        const [eventId, attendeeId] = id.split(':');
-        return fetch(`${EVENTS_ENDPOINT}/${eventId}/attendees/${attendeeId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        }).then((res) => res.json());
-      },
-    }
-  );
+  const queryClient = useQueryClient();
+  
+  return useMutation<Attendee, AxiosError<ApiError>, { id: string; data: { attended: boolean; notes?: string } }>({
+    mutationFn: ({ id, data }) => {
+      const [eventId, attendeeId] = id.split(':');
+      return fetch(`${EVENTS_ENDPOINT}/${eventId}/attendees/${attendeeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_, variables) => {
+      const [eventId] = variables.id.split(':');
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY, eventId, 'attendees'] });
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY, 'attendance'] });
+    },
+  });
 }
 
 export function useBulkMarkAttendance() {
@@ -231,10 +263,32 @@ export function useUserAttendanceRecord(
   }>(
     `${EVENTS_ENDPOINT}/attendance/${userId}`,
     year ? year.toString() : 'current',
-    [EVENTS_KEY, 'attendance', userId],
+    [EVENTS_KEY, 'attendance', userId || ''],
     {
       enabled: !!userId,
       staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );
+}
+
+export function useUpdateAttendeeStatus() {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Attendee, AxiosError<ApiError>, { id: string; data: { attended: boolean; notes?: string } }>({
+    mutationFn: ({ id, data }: { id: string; data: { attended: boolean; notes?: string } }) => {
+      return fetch(`${EVENTS_ENDPOINT}/attendees/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).then((res) => res.json());
+    },
+    onSuccess: (_: Attendee) => {
+      queryClient.invalidateQueries({ 
+        queryKey: [EVENTS_KEY, 'attendees'],
+      });
+      queryClient.invalidateQueries({ queryKey: [EVENTS_KEY] });
+    },
+  });
 }

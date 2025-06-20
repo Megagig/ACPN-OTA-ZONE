@@ -37,7 +37,7 @@ const PenaltyManagement: React.FC = () => {
     try {
       setLoading(true);
       const response = await financialService.getRealDues();
-      setDues(response.data || []);
+      setDues((response.dues || []) as any[]);
     } catch (err) {
       console.error('Failed to fetch dues:', err);
       setError('Failed to load dues');

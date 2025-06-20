@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const NotFound: React.FC = () => {
-  const { theme } = useTheme();
+  const { theme: _theme } = useTheme();
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 lg:px-8">

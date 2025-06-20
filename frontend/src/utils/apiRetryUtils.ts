@@ -80,7 +80,7 @@ export async function getWithRetry<T>(
     console.error(`Failed getWithRetry for ${url}:`, error);
 
     // For timeout errors, return a more user-friendly response
-    if (axios.isCancel(error) || error.code === 'ECONNABORTED') {
+    if (axios.isCancel(error) || (error as any).code === 'ECONNABORTED') {
       // Return a minimal structure to avoid breaking the UI
       return {
         success: false,

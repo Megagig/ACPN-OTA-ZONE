@@ -26,7 +26,7 @@ class UserService {
       isApproved?: boolean;
     } = {}
   ): Promise<UserListResponse> {
-    const response = await api.get('/users', { params });
+    const response = await api.get('/api/users', { params });
     return response.data;
   }
 
@@ -44,7 +44,7 @@ class UserService {
   async createUser(
     userData: Partial<User>
   ): Promise<{ success: boolean; data: User }> {
-    const response = await api.post('/users', userData);
+    const response = await api.post('/api/users', userData);
     return response.data;
   }
 
@@ -109,8 +109,7 @@ class UserService {
       limit?: number;
     } = {}
   ): Promise<UserListResponse> {
-    // Updated to use the new dedicated endpoint
-    const response = await api.get('/users/pending-approvals', { params });
+    const response = await api.get('/api/users/pending-approvals', { params });
     return response.data;
   }
 }

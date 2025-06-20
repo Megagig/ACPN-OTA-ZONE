@@ -88,7 +88,7 @@ export interface AuditTrailResponse extends BaseResponse {
 class UserManagementService {
   // Permission methods
   async getPermissions(): Promise<PermissionsResponse> {
-    const response = await api.get('/permissions');
+    const response = await api.get('/api/permissions');
     return response.data;
   }
 
@@ -100,7 +100,7 @@ class UserManagementService {
   async createPermission(
     permissionData: Partial<Permission>
   ): Promise<PermissionResponse> {
-    const response = await api.post('/permissions', permissionData);
+    const response = await api.post('/api/permissions', permissionData);
     return response.data;
   }
 
@@ -124,7 +124,7 @@ class UserManagementService {
 
   // Role methods
   async getRoles(): Promise<RolesResponse> {
-    const response = await api.get('/roles');
+    const response = await api.get('/api/roles');
     return response.data;
   }
 
@@ -134,7 +134,7 @@ class UserManagementService {
   }
 
   async createRole(roleData: Partial<Role>): Promise<RoleResponse> {
-    const response = await api.post('/roles', roleData);
+    const response = await api.post('/api/roles', roleData);
     return response.data;
   }
 
@@ -149,7 +149,7 @@ class UserManagementService {
   }
 
   async initializeDefaultRoles(): Promise<RolesResponse> {
-    const response = await api.post('/roles/initialize/default');
+    const response = await api.post('/api/roles/initialize/default');
     return response.data;
   }
 
@@ -195,12 +195,12 @@ class UserManagementService {
   }
 
   async getUserProfile(): Promise<UserResponse> {
-    const response = await api.get('/user-management/profile');
+    const response = await api.get('/api/user-management/profile');
     return response.data;
   }
 
   async updateUserProfile(userData: Partial<User>): Promise<UserResponse> {
-    const response = await api.put('/user-management/profile', userData);
+    const response = await api.put('/api/user-management/profile', userData);
     return response.data;
   }
 
@@ -218,7 +218,7 @@ class UserManagementService {
   }
 
   async getUserPermissions(): Promise<PermissionsResponse> {
-    const response = await api.get('/user-management/permissions');
+    const response = await api.get('/api/user-management/permissions');
     return response.data;
   }
 
@@ -247,7 +247,7 @@ class UserManagementService {
     userIds: string[],
     status: string
   ): Promise<BaseResponse> {
-    const response = await api.put('/user-management/bulk/status', {
+    const response = await api.put('/api/user-management/bulk/status', {
       userIds,
       status,
     });
@@ -298,7 +298,7 @@ class UserManagementService {
     page = 1,
     limit = 10
   ): Promise<UsersResponse> {
-    const response = await api.post('/user-management/filter', {
+    const response = await api.post('/api/user-management/filter', {
       ...filters,
       page,
       limit,

@@ -68,7 +68,7 @@ const ElectionResults: React.FC = () => {
 
           // If election is completed, fetch voting statistics
           if (data.status === 'ended') {
-            const stats = await electionService.getElectionStatistics(id);
+            const stats = await electionService.getElectionStatistics();
             setStatistics(stats);
           } else {
             toast({

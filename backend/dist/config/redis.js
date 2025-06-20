@@ -15,55 +15,61 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.redisCache = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
 const logger_1 = require("../utils/logger");
+// Check if Redis is enabled
+const isRedisEnabled = process.env.ENABLE_REDIS === 'true';
 // Redis client configuration
-const redisClient = new ioredis_1.default({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || '',
-    connectTimeout: 10000, // 10 seconds
-    maxRetriesPerRequest: 3,
-    enableOfflineQueue: true,
-    retryStrategy: (times) => {
-        // Retry connection with exponential backoff (max 10 seconds)
-        const delay = Math.min(times * 100, 10000);
-        logger_1.logger.info(`Redis reconnecting... attempt ${times}. Next retry in ${delay}ms`);
-        return delay;
-    },
-});
+const redisClient = isRedisEnabled
+    ? new ioredis_1.default({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+        password: process.env.REDIS_PASSWORD || '',
+        connectTimeout: 10000, // 10 seconds
+        maxRetriesPerRequest: 3,
+        enableOfflineQueue: true,
+        retryStrategy: (times) => {
+            // Retry connection with exponential backoff (max 10 seconds)
+            const delay = Math.min(times * 100, 10000);
+            logger_1.logger.info(`Redis reconnecting... attempt ${times}. Next retry in ${delay}ms`);
+            return delay;
+        },
+    })
+    : null;
 // Event handlers
-redisClient.on('connect', () => {
-    logger_1.logger.info('Redis client connected');
-});
-redisClient.on('ready', () => __awaiter(void 0, void 0, void 0, function* () {
-    logger_1.logger.info('Redis client ready and accepting commands');
-    // Warm the cache once Redis is ready
-    try {
-        if (process.env.NODE_ENV === 'production' ||
-            process.env.ENABLE_CACHE_WARMING === 'true') {
-            // Import here to avoid circular dependency issues
-            const { cacheWarming } = require('../utils/cacheWarming');
-            // Delay cache warming slightly to ensure application is fully initialized
-            setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-                yield cacheWarming.warmCache();
-            }), 5000); // 5 second delay
+if (redisClient) {
+    redisClient.on('connect', () => {
+        logger_1.logger.info('Redis client connected');
+    });
+    redisClient.on('ready', () => __awaiter(void 0, void 0, void 0, function* () {
+        logger_1.logger.info('Redis client ready and accepting commands');
+        // Warm the cache once Redis is ready
+        try {
+            if (process.env.NODE_ENV === 'production' ||
+                process.env.ENABLE_CACHE_WARMING === 'true') {
+                // Import here to avoid circular dependency issues
+                const { cacheWarming } = require('../utils/cacheWarming');
+                // Delay cache warming slightly to ensure application is fully initialized
+                setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
+                    yield cacheWarming.warmCache();
+                }), 5000); // 5 second delay
+            }
         }
-    }
-    catch (error) {
-        logger_1.logger.error(`Error during cache warming: ${error}`);
-    }
-}));
-redisClient.on('error', (err) => {
-    logger_1.logger.error(`Redis client error: ${err}`);
-});
-redisClient.on('reconnecting', (delay) => {
-    logger_1.logger.warn(`Redis client reconnecting in ${delay}ms`);
-});
-redisClient.on('close', () => {
-    logger_1.logger.warn('Redis client connection closed');
-});
-redisClient.on('end', () => {
-    logger_1.logger.warn('Redis client connection ended');
-});
+        catch (error) {
+            logger_1.logger.error(`Error during cache warming: ${error}`);
+        }
+    }));
+    redisClient.on('error', (err) => {
+        logger_1.logger.error(`Redis client error: ${err}`);
+    });
+    redisClient.on('reconnecting', (delay) => {
+        logger_1.logger.warn(`Redis client reconnecting in ${delay}ms`);
+    });
+    redisClient.on('close', () => {
+        logger_1.logger.warn('Redis client connection closed');
+    });
+    redisClient.on('end', () => {
+        logger_1.logger.warn('Redis client connection ended');
+    });
+}
 // Cache utility functions
 exports.redisCache = {
     /**
@@ -73,6 +79,8 @@ exports.redisCache = {
      */
     get(key) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!redisClient)
+                return null;
             try {
                 const startTime = Date.now();
                 const data = yield redisClient.get(key);
@@ -100,6 +108,8 @@ exports.redisCache = {
      */
     set(key, data, expirySeconds) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!redisClient)
+                return;
             try {
                 const startTime = Date.now();
                 const stringifiedData = JSON.stringify(data);
@@ -123,6 +133,8 @@ exports.redisCache = {
      */
     del(key) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!redisClient)
+                return;
             try {
                 const startTime = Date.now();
                 const result = yield redisClient.del(key);
@@ -139,6 +151,8 @@ exports.redisCache = {
      */
     delByPattern(pattern) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!redisClient)
+                return;
             try {
                 const startTime = Date.now();
                 const keys = yield redisClient.keys(pattern);

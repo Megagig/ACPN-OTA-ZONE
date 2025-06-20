@@ -144,10 +144,7 @@ const PaymentHistory: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getAllPayments({
-        page: currentPage,
-        limit: ITEMS_PER_PAGE,
-      });
+      const response = await getAllPayments({});
 
       if (response && response.data && Array.isArray(response.data)) {
         setPayments(response.data);

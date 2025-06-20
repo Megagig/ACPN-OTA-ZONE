@@ -1,52 +1,28 @@
+import { Chart as ChartJS, registerables } from 'chart.js';
+import { Chart } from 'react-chartjs-2';
 import { type ReactNode } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
-
-import type { ChartData, ChartOptions } from 'chart.js';
-
-import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import { useTheme } from '../../context/ThemeContext';
 
 // Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(...registerables);
 
 type ChartType = 'line' | 'bar' | 'pie' | 'doughnut';
 
 interface ChartComponentProps {
   type: ChartType;
-  data: ChartData<any>;
-  options?: ChartOptions<any>;
-  height?: number;
+  data: any;
+  options?: any;
   width?: number;
+  height?: number;
   className?: string;
 }
 
-export const ChartComponent = ({
+const ChartComponent = ({
   type,
   data,
-  options,
-  height,
+  options = {},
   width,
+  height,
   className,
 }: ChartComponentProps): ReactNode => {
   const { theme } = useTheme();
@@ -64,7 +40,7 @@ export const ChartComponent = ({
   const themeColors = getThemeColors();
 
   // Default chart options with theme support
-  const defaultOptions: ChartOptions<any> = {
+  const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -104,28 +80,12 @@ export const ChartComponent = ({
 
   const mergedOptions = { ...defaultOptions, ...options };
 
-  // Render different chart types based on the 'type' prop
-  const renderChart = () => {
-    switch (type) {
-      case 'line':
-        return <Line data={data} options={mergedOptions} />;
-      case 'bar':
-        return <Bar data={data} options={mergedOptions} />;
-      case 'pie':
-        return <Pie data={data} options={mergedOptions} />;
-      case 'doughnut':
-        return <Doughnut data={data} options={mergedOptions} />;
-      default:
-        return <Bar data={data} options={mergedOptions} />;
-    }
-  };
-
   return (
     <div
       className={`chart-container bg-card rounded-lg p-4 ${className || ''}`}
       style={{ height: height || 300, width: width || '100%' }}
     >
-      {renderChart()}
+      <Chart type={type} data={data} options={mergedOptions} />
     </div>
   );
 };

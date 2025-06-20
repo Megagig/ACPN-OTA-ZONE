@@ -113,25 +113,16 @@ const CandidateForm: React.FC = () => {
         if (candidateId) {
           setIsEdit(true);
           // Fetch actual candidate data if in edit mode
-          // This is a placeholder, replace with actual API call
-          const existingCandidate = posData.candidates?.find(
-            (cand: Candidate) => cand._id === candidateId
-          );
-          if (existingCandidate) {
-            setCandidate({
-              name: existingCandidate.name || '',
-              email: existingCandidate.email || '',
-              phoneNumber: existingCandidate.phoneNumber || '',
-              bio: existingCandidate.bio || '',
-              photoUrl: existingCandidate.photoUrl || '',
-              manifesto: existingCandidate.manifesto || '',
-            });
-          } else {
-            toast.error('Candidate not found for editing.', {
-              autoClose: 3000,
-            });
-            // navigate(`/elections/${electionId}`); // Or handle as appropriate
-          }
+          const allCandidates = await electionService.getCandidates();
+          const existingCandidate = allCandidates.find(c => c._id === candidateId);
+          setCandidate({
+            name: existingCandidate?.fullName || '',
+            email: '', // Email not available in Candidate type
+            phoneNumber: '', // Phone number not available in Candidate type
+            bio: '', // Bio not available in Candidate type
+            photoUrl: existingCandidate?.photoUrl || '',
+            manifesto: existingCandidate?.manifesto || '',
+          });
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -159,21 +150,12 @@ const CandidateForm: React.FC = () => {
       }
 
       if (isEdit && candidateId) {
-        await electionService.updateCandidateInPosition(
-          electionId,
-          positionId,
-          candidateId,
-          values as Candidate // Cast to Candidate type
-        );
+        await electionService.updateCandidate(candidateId, values as unknown as Candidate);
         toast.success('Candidate information has been updated successfully', {
           autoClose: 3000,
         });
       } else {
-        await electionService.addCandidate(
-          electionId,
-          positionId,
-          values as Candidate
-        );
+        await electionService.createCandidate(positionId, values as unknown as Candidate);
         toast.success('New candidate has been added successfully', {
           autoClose: 3000,
         });

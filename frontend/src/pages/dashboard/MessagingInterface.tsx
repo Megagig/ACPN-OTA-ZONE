@@ -4,7 +4,7 @@ import messageService, {
   type MessageThread,
   type ThreadMessage,
 } from '../../services/message.service';
-import socketService from '../../services/socket.service';
+import SocketService from '../../services/socket.service';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 
@@ -31,6 +31,7 @@ const MessagingInterface = () => {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketService = useRef(new SocketService());
 
   useEffect(() => {
     fetchThreads();
@@ -238,41 +239,28 @@ const MessagingInterface = () => {
 
   // Socket.io integration
   useEffect(() => {
-    const initializeSocket = async () => {
-      if (user && socketService.getConnectionStatus()) {
-        // Setup real-time message listener
-        socketService.onNewMessage(handleNewMessage);
+    if (user && socketService.current.isConnected()) {
+      socketService.current.onMessage(handleNewMessage);
+      socketService.current.onTyping(handleUserTyping);
+    }
 
-        // Setup typing indicators
-        socketService.onUserTyping(handleUserTyping);
-        socketService.onUserStoppedTyping(handleUserStoppedTyping);
-      } else {
-        console.log(
-          'Socket not connected or user not authenticated in Messaging Interface'
-        );
-      }
-    };
-
-    initializeSocket();
-
-    // Cleanup on unmount
     return () => {
-      socketService.offNewMessage(handleNewMessage);
-      socketService.offUserTyping(handleUserTyping);
-      socketService.offUserStoppedTyping(handleUserStoppedTyping);
-      socketService.disconnect();
+      socketService.current.offMessage(handleNewMessage);
+      socketService.current.offTyping(handleUserTyping);
     };
   }, [user]);
 
   // Join thread room when thread is selected
   useEffect(() => {
-    if (selectedThread && socketService.getConnectionStatus()) {
-      socketService.joinThread(selectedThread._id);
-
-      return () => {
-        socketService.leaveThread(selectedThread._id);
-      };
+    if (selectedThread && socketService.current.isConnected()) {
+      socketService.current.joinThread(selectedThread._id);
     }
+
+    return () => {
+      if (selectedThread) {
+        socketService.current.leaveThread(selectedThread._id);
+      }
+    };
   }, [selectedThread]);
 
   // Real-time message handler
@@ -317,11 +305,6 @@ const MessagingInterface = () => {
   const handleUserTyping = useCallback((data: any) => {
     // Implement typing indicator UI
     console.log('User typing:', data);
-  }, []);
-
-  const handleUserStoppedTyping = useCallback((data: any) => {
-    // Implement typing indicator UI
-    console.log('User stopped typing:', data);
   }, []);
 
   return (

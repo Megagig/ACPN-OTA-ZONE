@@ -78,7 +78,7 @@ const mapFrontendTypeToBackend = (frontendType?: string): string => {
   const typeMap: Record<string, string> = {
     announcement: 'announcement',
     email: 'newsletter',
-    sms: 'announcement', // Map SMS to announcement for now
+    sms: 'announcement',
     private_message: 'direct',
   };
   return typeMap[frontendType || 'announcement'] || 'announcement';
@@ -132,7 +132,7 @@ const mapBackendStatusToFrontend = (backendComm: any): string => {
 export const getCommunications = async (
   params?: Record<string, unknown>
 ): Promise<Communication[]> => {
-  const response = await api.get('/communications/admin', { params });
+  const response = await api.get('/api/communications/admin', { params });
   return response.data.data.map(transformBackendToFrontend);
 };
 
@@ -143,7 +143,7 @@ export const getCommunicationById = async (
   const cleanId = id.includes('?') ? id.split('?')[0] : id;
   const queryParams = id.includes('?') ? id.substring(id.indexOf('?')) : '';
 
-  const response = await api.get(`/communications/${cleanId}${queryParams}`);
+  const response = await api.get(`/api/communications/${cleanId}${queryParams}`);
   return transformBackendToFrontend(response.data.data);
 };
 
@@ -151,7 +151,7 @@ export const createCommunication = async (
   data: Partial<Communication>
 ): Promise<Communication> => {
   const response = await api.post(
-    '/communications',
+    '/api/communications',
     transformFrontendToBackend(data)
   );
   return transformBackendToFrontend(response.data.data);
@@ -162,20 +162,20 @@ export const updateCommunication = async (
   data: Partial<Communication>
 ): Promise<Communication> => {
   const response = await api.put(
-    `/communications/${id}`,
+    `/api/communications/${id}`,
     transformFrontendToBackend(data)
   );
   return transformBackendToFrontend(response.data.data);
 };
 
 export const deleteCommunication = async (id: string): Promise<void> => {
-  await api.delete(`/communications/${id}`);
+  await api.delete(`/api/communications/${id}`);
 };
 
 // Send a draft communication
 export const sendCommunication = async (id: string): Promise<Communication> => {
   console.log('Sending communication request for ID:', id);
-  const response = await api.post(`/communications/${id}/send`);
+  const response = await api.post(`/api/communications/${id}/send`);
   console.log('Send communication raw response:', response.data);
   // The backend returns { success: true, data: { communication: {...} } }
   const transformed = transformBackendToFrontend(response.data.data.communication);
@@ -188,7 +188,7 @@ export const scheduleCommunication = async (
   id: string,
   scheduledDate: string
 ): Promise<Communication> => {
-  const response = await api.post(`/communications/${id}/schedule`, {
+  const response = await api.post(`/api/communications/${id}/schedule`, {
     scheduledDate,
   });
   return transformBackendToFrontend(response.data.data);
@@ -198,14 +198,14 @@ export const getCommunicationRecipients = async (
   communicationId: string
 ): Promise<CommunicationRecipient[]> => {
   const response = await api.get(
-    `/communications/${communicationId}/recipients`
+    `/api/communications/${communicationId}/recipients`
   );
   return response.data.data || []; // Ensure we return an array
 };
 
 export const getCommunicationSummary =
   async (): Promise<CommunicationSummary> => {
-    const response = await api.get('/communications/stats');
+    const response = await api.get('/api/communications/stats');
     const backendData = response.data.data;
 
     // Transform backend stats to frontend format
@@ -267,7 +267,7 @@ export const getCommunicationSummary =
 export const getUserInbox = async (
   params?: Record<string, unknown>
 ): Promise<Communication[]> => {
-  const response = await api.get('/communications/inbox', { params });
+  const response = await api.get('/api/communications/inbox', { params });
 
   // Transform each item to ensure proper mapping
   return response.data.data.map((item: any) => {
@@ -281,18 +281,18 @@ export const getUserInbox = async (
 export const getUserSentCommunications = async (
   params?: Record<string, unknown>
 ): Promise<Communication[]> => {
-  const response = await api.get('/communications/sent', { params });
+  const response = await api.get('/api/communications/sent', { params });
   return response.data.data.map(transformBackendToFrontend);
 };
 
 // Mark communication as read
 export const markCommunicationAsRead = async (id: string): Promise<void> => {
-  await api.put(`/communications/${id}/read`);
+  await api.put(`/api/communications/${id}/read`);
 };
 
 // Private Messages / Threads API
 export const getThreads = async (): Promise<CommunicationThread[]> => {
-  const response = await api.get('/messages/threads');
+  const response = await api.get('/api/messages/threads');
 
   // Transform backend format to frontend format
   return response.data.data.map((thread: any) => ({
@@ -311,7 +311,7 @@ export const getThreads = async (): Promise<CommunicationThread[]> => {
 export const getThreadById = async (
   id: string
 ): Promise<CommunicationThread> => {
-  const response = await api.get(`/messages/threads/${id}`);
+  const response = await api.get(`/api/messages/threads/${id}`);
   const thread = response.data.data;
 
   // Transform backend format to frontend format
@@ -327,13 +327,9 @@ export const getThreadById = async (
         _id: msg._id,
         sender: msg.senderId,
         senderName: msg.sender?.firstName + ' ' + msg.sender?.lastName,
-        recipient: msg.recipientId,
-        recipientName: msg.recipient?.firstName + ' ' + msg.recipient?.lastName,
-        message: msg.content,
-        readStatus: true, // Assume read when fetching thread
-        readAt: msg.readAt,
-        attachments: msg.attachments,
-        createdAt: msg.createdAt,
+        content: msg.content,
+        timestamp: msg.createdAt,
+        attachments: msg.attachments || [],
       })) || [],
     createdAt: thread.createdAt,
     updatedAt: thread.updatedAt,
@@ -346,36 +342,22 @@ export const createThread = async (data: {
   message: string;
   attachments?: string[];
 }): Promise<CommunicationThread> => {
-  const response = await api.post('/messages/threads', {
+  const response = await api.post('/api/messages/threads', {
     participants: [data.recipient],
     subject: data.subject,
-    content: data.message,
-    attachments: data.attachments,
+    message: data.message,
+    attachments: data.attachments || [],
   });
 
   const thread = response.data.data;
-
-  // Transform backend format to frontend format
   return {
     _id: thread._id,
-    participants: thread.participants,
+    participants: thread.participants.map((p: any) => p._id || p),
     subject: thread.subject,
-    lastMessage: data.message,
-    lastMessageDate: thread.createdAt,
-    unreadCount: 1,
-    messages: [
-      {
-        _id: thread.lastMessageId || 'temp-' + Date.now(),
-        sender: thread.createdBy,
-        senderName: 'You',
-        recipient: data.recipient,
-        recipientName: 'Recipient',
-        message: data.message,
-        readStatus: false,
-        attachments: data.attachments,
-        createdAt: thread.createdAt,
-      },
-    ],
+    lastMessage: thread.lastMessage,
+    lastMessageDate: thread.lastMessageAt,
+    unreadCount: 0,
+    messages: [],
     createdAt: thread.createdAt,
     updatedAt: thread.updatedAt,
   };
@@ -386,24 +368,21 @@ export const sendMessage = async (
   message: string,
   attachments?: string[]
 ): Promise<CommunicationThreadItem> => {
-  const response = await api.post(`/messages/threads/${threadId}/messages`, {
+  const response = await api.post(`/api/messages/threads/${threadId}/messages`, {
     content: message,
-    attachments,
+    attachments: attachments || [],
   });
 
   const msg = response.data.data;
-
-  // Transform backend format to frontend format
   return {
     _id: msg._id,
     sender: msg.senderId,
-    senderName: msg.sender?.firstName + ' ' + msg.sender?.lastName || 'You',
-    recipient: msg.recipientId,
-    recipientName:
-      msg.recipient?.firstName + ' ' + msg.recipient?.lastName || 'Recipient',
+    senderName: msg.sender?.firstName + ' ' + msg.sender?.lastName,
+    recipient: msg.recipientId || '',
+    recipientName: msg.recipient?.firstName + ' ' + msg.recipient?.lastName || '',
     message: msg.content,
     readStatus: false,
-    attachments: msg.attachments,
+    attachments: msg.attachments || [],
     createdAt: msg.createdAt,
   };
 };

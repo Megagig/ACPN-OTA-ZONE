@@ -33,7 +33,7 @@ const EventReports: React.FC = () => {
           const eventAttendees = await eventService.getEventAttendees(
             event._id
           );
-          allAttendees.push(...eventAttendees);
+          allAttendees.push(...(eventAttendees.data || []) as any[]);
         }
 
         setAttendees(allAttendees);
@@ -99,10 +99,10 @@ const EventReports: React.FC = () => {
     const typeCount: Record<string, number> = {};
 
     filteredEvents.forEach((event) => {
-      if (typeCount[event.type]) {
-        typeCount[event.type]++;
+      if (typeCount[event.type || 'other']) {
+        typeCount[event.type || 'other']++;
       } else {
-        typeCount[event.type] = 1;
+        typeCount[event.type || 'other'] = 1;
       }
     });
 

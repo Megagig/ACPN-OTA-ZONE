@@ -1,30 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import {
-  usePayments,
-  usePendingPayments,
-  useReviewPayment,
-  useDeletePayment,
-  PaymentApprovalStatus,
-  type Payment,
-} from '../../hooks/usePayments';
-import { 
-  Eye, 
-  Check, 
-  X, 
-  Trash2, 
-  CreditCard, 
-  Calendar, 
-  User, 
-  Building, 
-  Receipt,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  FileText,
-  Search
-} from 'lucide-react';
+import { usePayments, useReviewPayment, useDeletePayment, type PaymentApprovalStatus, type Payment } from '../../hooks/usePayments';
 import { toast } from 'react-toastify';
+import { 
+  Building, 
+  CreditCard, 
+  FileText, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  AlertCircle,
+  Search,
+  Calendar,
+  User,
+  Receipt,
+  Eye,
+  Trash2,
+  Check,
+  X
+} from 'lucide-react';
 
 const AdminPaymentReview: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');

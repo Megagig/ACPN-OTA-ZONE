@@ -245,7 +245,7 @@ const ElectionDetail: React.FC = () => {
       <Tabs
         isFitted
         variant="enclosed"
-        onChange={(index) => setActiveTab(index)}
+        onChange={(index: number) => setActiveTab(index)}
         index={activeTab}
       >
         <TabList mb="1em">
@@ -297,6 +297,10 @@ const ElectionDetail: React.FC = () => {
                         electionStatus={election.status}
                         positionId={position._id}
                         electionId={election._id}
+                        onCandidateRemoved={() => {
+                          // Refetch election data when a candidate is removed
+                          window.location.reload();
+                        }}
                       />
                     ) : (
                       <Text color="gray.500">
