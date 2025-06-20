@@ -41,6 +41,7 @@ import {
   FaCheckCircle,
   FaBars
 } from 'react-icons/fa';
+import ThemeToggle from '../components/ui/ThemeToggle';
 
 const LandingPage: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -84,8 +85,9 @@ const LandingPage: React.FC = () => {
               <Link href="#contact" _hover={{ color: 'blue.500' }}>Contact</Link>
             </HStack>
 
-            {/* Auth Buttons */}
+            {/* Auth Buttons + Theme Toggle */}
             <HStack spacing={4} display={{ base: 'none', md: 'flex' }}>
+              <ThemeToggle />
               <Button 
                 as={RouterLink} 
                 to="/login" 
@@ -121,13 +123,17 @@ const LandingPage: React.FC = () => {
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader>Menu</DrawerHeader>
-            <DrawerBody>
+            <DrawerHeader>Menu</DrawerHeader>            <DrawerBody>
               <VStack spacing={4} align="stretch">
                 <Link href="#features" onClick={onClose}>Features</Link>
                 <Link href="#about" onClick={onClose}>About</Link>
                 <Link href="#testimonials" onClick={onClose}>Testimonials</Link>
                 <Link href="#contact" onClick={onClose}>Contact</Link>
+                <Divider />
+                <HStack justifyContent="space-between" alignItems="center">
+                  <Text>Theme</Text>
+                  <ThemeToggle size="sm" />
+                </HStack>
                 <Divider />
                 <Button as={RouterLink} to="/login" variant="ghost" onClick={onClose}>
                   Sign In
