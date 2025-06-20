@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': new URL('./src', import.meta.url).pathname,
     },
   },
   build: {
@@ -21,13 +20,13 @@ export default defineConfig({
         },
       },
     },
-  },
-  server: {
+  },  server: {
+    port: 5173,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:5000',
+        target: 'https://acpn-ota-zone.onrender.com',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         timeout: 120000, // 2 minutes timeout for file uploads
         proxyTimeout: 120000, // 2 minutes timeout for proxy
         configure: (proxy, _options) => {

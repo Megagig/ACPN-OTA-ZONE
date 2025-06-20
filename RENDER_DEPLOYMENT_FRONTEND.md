@@ -15,7 +15,7 @@ Set these environment variables in your Render dashboard:
 
 ### Required Variables:
 ```
-VITE_API_URL=https://your-backend-app.onrender.com/api
+VITE_API_URL=https://your-backend-app.onrender.com
 VITE_SOCKET_URL=https://your-backend-app.onrender.com
 VITE_WS_URL=wss://your-backend-app.onrender.com
 VITE_APP_NAME=ACPN OTA Zone
@@ -23,6 +23,8 @@ VITE_APP_VERSION=1.0.0
 VITE_ENVIRONMENT=production
 VITE_BACKEND_URL=https://your-backend-app.onrender.com
 ```
+
+**Important**: Do NOT include `/api` in the VITE_API_URL - the frontend code handles the API path internally.
 
 ## Build Settings for Render
 

@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { API_URL } from './env';
+import { API_URL, isDev } from './env';
 
 // Create an axios instance with default configuration
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: isDev() ? '/api' : `${API_URL}/api`,
   timeout: 15000, // Reduced timeout to 15 seconds for better user experience
   headers: {
     'Content-Type': 'application/json',

@@ -8,37 +8,34 @@ import type {
   User,
 } from '../types/auth.types';
 
-class AuthService {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post('/api/auth/login', credentials);
+class AuthService {  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const response = await api.post('/auth/login', credentials);
     if (response.data.success) {
       this.setAuthData(response.data);
     }
     return response.data;
-  }
-
-  async register(userData: RegistrationData): Promise<AuthResponse> {
-    const response = await api.post('/api/auth/register', userData);
+  }  async register(userData: RegistrationData): Promise<AuthResponse> {
+    const response = await api.post('/auth/register', userData);
     return response.data;
   }
 
   async verifyEmail(token: string): Promise<ApiResponse> {
-    const response = await api.get(`/api/auth/verify-email/${token}`);
+    const response = await api.get(`/auth/verify-email/${token}`);
     return response.data;
   }
 
   async verifyEmailWithCode(email: string, code: string): Promise<ApiResponse> {
-    const response = await api.post('/api/auth/verify-email-code', { email, code });
+    const response = await api.post('/auth/verify-email-code', { email, code });
     return response.data;
   }
 
   async forgotPassword(data: ResetPasswordData): Promise<ApiResponse> {
-    const response = await api.post('/api/auth/forgot-password', data);
+    const response = await api.post('/auth/forgot-password', data);
     return response.data;
   }
 
   async resetPassword(token: string, password: string): Promise<ApiResponse> {
-    const response = await api.post(`/api/auth/reset-password/${token}`, {
+    const response = await api.post(`/auth/reset-password/${token}`, {
       password,
     });
     return response.data;
@@ -51,7 +48,7 @@ class AuthService {
     }
 
     try {
-      const response = await api.post('/api/auth/refresh-token', { refreshToken });
+      const response = await api.post('/auth/refresh-token', { refreshToken });
 
       if (response.data.success) {
         // Update only the access token, keep the refresh token

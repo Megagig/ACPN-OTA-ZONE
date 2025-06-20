@@ -42,6 +42,8 @@ const corsOptions = {
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:5000', // Local frontend dev
+    'https://acpn-ota-zone.onrender.com', // TODO: Replace with your actual production frontend domain
   ],
   credentials: true,
   optionsSuccessStatus: 200,

@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { API_URL } from '../utils/env';
+import { API_URL, isDev } from '../utils/env';
 
 // Using relative URL for the API to work with Vite's proxy
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: isDev() ? '/api' : `${API_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

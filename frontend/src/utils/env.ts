@@ -4,7 +4,8 @@
 
 export const getEnvVar = (key: keyof ImportMetaEnv, fallback: string = ''): string => {
   try {
-    return import.meta.env?.[key] || fallback;
+    const value = import.meta.env?.[key];
+    return typeof value === 'string' ? value : fallback;
   } catch (error) {
     console.warn(`Environment variable ${key} not found, using fallback: ${fallback}`);
     return fallback;
@@ -13,7 +14,7 @@ export const getEnvVar = (key: keyof ImportMetaEnv, fallback: string = ''): stri
 
 export const isDev = (): boolean => {
   try {
-    return import.meta.env?.DEV || false;
+    return Boolean(import.meta.env?.DEV);
   } catch (error) {
     return false;
   }
@@ -21,12 +22,12 @@ export const isDev = (): boolean => {
 
 export const isProd = (): boolean => {
   try {
-    return import.meta.env?.PROD || false;
+    return Boolean(import.meta.env?.PROD);
   } catch (error) {
     return true; // Default to production if uncertain
   }
 };
 
 // Common environment variables
-export const API_URL = getEnvVar('VITE_API_URL', 'https://acpn-ota-zone.onrender.com/api');
+export const API_URL = getEnvVar('VITE_API_URL', 'https://acpn-ota-zone.onrender.com');
 export const SOCKET_URL = getEnvVar('VITE_SOCKET_URL', 'https://acpn-ota-zone.onrender.com');

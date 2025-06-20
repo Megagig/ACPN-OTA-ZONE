@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        button { padding: 10px 20px; margin: 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <button onclick="testConnection()">Test API Connection</button>
+    <div id="results"></div>
+
+    <script>
+        async function testConnection() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="result">Testing connection...</div>';
+
+            try {
+                // Test different API endpoints
+                const tests = [
+                    { name: 'Direct API Call', url: 'https://acpn-ota-zone.onrender.com/api/auth/login' },
+                    { name: 'Proxy API Call', url: '/api/auth/login' }
+                ];
+
+                for (const test of tests) {
+                    try {
+                        const response = await fetch(test.url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: 'test@example.com',
+                                password: 'test123'
+                            })
+                        });
+
+                        const data = await response.text();
+                        const resultClass = response.ok ? 'success' : 'error';
+                        resultsDiv.innerHTML += `
+                            <div class="result ${resultClass}">
+                                <strong>${test.name}:</strong> Status ${response.status}<br>
+                                <small>URL: ${test.url}</small><br>
+                                <small>Response: ${data.substring(0, 200)}...</small>
+                            </div>
+                        `;
+                    } catch (error) {
+                        resultsDiv.innerHTML += `
+                            <div class="result error">
+                                <strong>${test.name}:</strong> Error<br>
+                                <small>URL: ${test.url}</small><br>
+                                <small>Error: ${error.message}</small>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `
+                    <div class="result error">
+                        <strong>Test Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
