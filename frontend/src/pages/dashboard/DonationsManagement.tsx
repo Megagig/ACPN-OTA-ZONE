@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
 import type { Donation } from '../../types/financial.types';
+import { isDev } from '../../utils/env';
 
 const DonationsManagement = () => {
   const navigate = useNavigate();
@@ -191,10 +192,8 @@ const DonationsManagement = () => {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Development debug info - will only show in development */}
-      {import.meta.env.DEV && error && (
+      </div>      {/* Development debug info - will only show in development */}
+      {isDev() && error && (
         <div className="mt-8 p-4 border border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
           <h3 className="text-sm font-semibold mb-2">Debug Information:</h3>
           <p className="text-xs font-mono">{error}</p>

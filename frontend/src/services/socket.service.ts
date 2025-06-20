@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { getEnvVar } from '../utils/env';
 
 class SocketService {
   private socket: any = null;
@@ -11,7 +12,7 @@ class SocketService {
       this.socket.disconnect();
     }
 
-    this.socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+    this.socket = io(getEnvVar('VITE_API_URL', 'http://localhost:5000'), {
       auth: {
         token,
       },
