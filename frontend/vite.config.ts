@@ -24,7 +24,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://acpn-ota-zone.onrender.com',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: true,
         timeout: 120000, // 2 minutes timeout for file uploads

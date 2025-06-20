@@ -33,23 +33,22 @@ app.use(((req, res, next) => {
 }) as express.RequestHandler);
 
 console.log('Registering CORS middleware');
-// Middleware
-const corsOptions = {
-  origin: [
-    'https://acpnotazone.org',
-    'https://www.acpnotazone.org',
-    'https://acpn-ota-zone.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5000', // Local frontend dev
-    'https://acpn-ota-zone.onrender.com', // TODO: Replace with your actual production frontend domain
-  ],
+const allowedOrigins = [
+  'http://localhost:5000', // Local dev only
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
-
+}));
 console.log('Registering static frontend dist');
 app.use(express.static(path.join(__dirname, "../../frontend/dist"))); 
 

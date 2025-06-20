@@ -31,20 +31,22 @@ app.use(((req, res, next) => {
     next();
 }));
 console.log('Registering CORS middleware');
-// Middleware
-const corsOptions = {
-    origin: [
-        'https://acpnotazone.org',
-        'https://www.acpnotazone.org',
-        'https://acpn-ota-zone.onrender.com',
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:5174',
-    ],
+const allowedOrigins = [
+    'http://localhost:5000', // Local dev only
+];
+app.use((0, cors_1.default)({
+    origin: function (origin, callback) {
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
     optionsSuccessStatus: 200,
-};
-app.use((0, cors_1.default)(corsOptions));
+}));
 console.log('Registering static frontend dist');
 app.use(express_1.default.static(path_1.default.join(__dirname, "../../frontend/dist")));
 console.log('Registering express.json middleware');
