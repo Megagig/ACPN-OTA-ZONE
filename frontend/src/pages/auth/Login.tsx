@@ -17,15 +17,14 @@ import {
   Link,
   Alert,
   AlertIcon,
-  useColorModeValue,
-  IconButton,
+  useColorModeValue,  IconButton,
   Divider,
   Image,
   useToast,
   Card,
   CardBody,
 } from '@chakra-ui/react';
-import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
+import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from 'react-icons/fa';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const Login: React.FC = () => {

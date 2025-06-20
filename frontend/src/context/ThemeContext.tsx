@@ -1,27 +1,10 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import {
   ChakraProvider,
-  extendTheme,
   useColorMode,
   ColorModeScript,
 } from '@chakra-ui/react';
-
-// 1. Define your Chakra UI theme (can be customized further)
-const chakraCustomTheme = extendTheme({
-  config: {
-    initialColorMode: 'system', // Use system preference initially
-    useSystemColorMode: true, // Follow system color mode changes automatically
-  },
-  // Add any custom theme overrides here if needed
-  // styles: {
-  //   global: (props: { colorMode: string }) => ({
-  //     body: {
-  //       bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
-  //       color: props.colorMode === 'dark' ? 'white' : 'gray.800',
-  //     },
-  //   }),
-  // },
-});
+import chakraCustomTheme from '../theme/chakra-theme';
 
 type Theme = 'light' | 'dark';
 

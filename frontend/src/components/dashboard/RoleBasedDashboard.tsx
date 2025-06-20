@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DashboardHome from '../../pages/dashboard/DashboardHome';
-import MemberDashboard from '../../pages/dashboard/MemberDashboard';
+import ModernMemberDashboard from './ModernMemberDashboard';
 
 /**
  * A component that conditionally renders the appropriate dashboard based on the user's role
@@ -22,9 +22,8 @@ const RoleBasedDashboard: React.FC = () => {
 
   // Check if user has an admin role
   const isAdminRole = user?.role && adminRoles.includes(user.role);
-
   // Render the appropriate dashboard based on role
-  return isAdminRole ? <DashboardHome /> : <MemberDashboard />;
+  return isAdminRole ? <DashboardHome /> : <ModernMemberDashboard />;
 };
 
 export default RoleBasedDashboard;

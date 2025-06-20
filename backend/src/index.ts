@@ -34,7 +34,10 @@ app.use(((req, res, next) => {
 
 console.log('Registering CORS middleware');
 const allowedOrigins = [
-  'http://localhost:5000', // Local dev only
+  'http://localhost:5000', // Backend server
+  'http://localhost:5173', // Frontend dev server (Vite)
+  'http://localhost:3000', // Alternative frontend port
+  'http://127.0.0.1:5173', // Alternative localhost format
 ];
 
 app.use(cors({

@@ -9,7 +9,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ToastProvider } from './components/shadcn/toast';
 import { ReactQueryProvider } from './lib/react-query';
-import DashboardLayout from './components/layout/DashboardLayout';
+import ModernDashboardLayout from './components/layout/ModernDashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
 
@@ -163,7 +163,7 @@ function App() {
 
                   {/* Protected Dashboard Routes */}
                   <Route element={<ProtectedRoute />}>
-                    <Route element={<DashboardLayout />}>
+                    <Route element={<ModernDashboardLayout />}>
                       <Route
                         path="/dashboard"
                         element={<RoleBasedDashboard />}

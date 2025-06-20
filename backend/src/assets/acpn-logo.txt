@@ -1,3 +1,0 @@
-// This is a placeholder file
-// In a real application, you would place an actual image file here
-// Rename this file to acpn-logo.png after adding the real logo
