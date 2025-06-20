@@ -317,16 +317,14 @@ export const createNotificationForCommunication = asyncHandler(
     }));
 
     const createdNotifications =
-      await UserNotification.insertMany(notifications);
-
-    // Emit real-time notifications if socket service is available
-    if (global.socketService) {
+      await UserNotification.insertMany(notifications);    // Emit real-time notifications if socket service is available
+    if ((global as any).socketService) {
       recipients.forEach((recipient) => {
         const notification = createdNotifications.find(
           (n) => n.userId.toString() === recipient.userId.toString()
         );
         if (notification) {
-          global.socketService.emitToUser(
+          (global as any).socketService.emitToUser(
             recipient.userId.toString(),
             'new_notification',
             notification

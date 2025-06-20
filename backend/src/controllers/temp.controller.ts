@@ -43,15 +43,14 @@ const createNotificationsForRecipients = async (
 
   // Create notifications in the database
   const createdNotifications = await UserNotification.insertMany(notifications);
-
   // Send real-time notifications via socket
-  if (global.socketService) {
+  if ((global as any).socketService) {
     recipients.forEach((recipient) => {
       const notification = createdNotifications.find(
         (n: any) => n.userId.toString() === recipient.userId._id.toString()
       );
       if (notification) {
-        global.socketService.emitToUser(
+        (global as any).socketService.emitToUser(
           recipient.userId._id.toString(),
           'new_notification',
           notification

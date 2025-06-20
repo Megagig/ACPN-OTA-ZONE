@@ -306,12 +306,11 @@ export const sendMessage = asyncHandler(
 
     // Populate message details
     const populatedMessage = await ThreadMessage.findById(message._id)
-      .populate('senderId', 'firstName lastName profileImage')
-      .populate('replyTo');
+      .populate('senderId', 'firstName lastName profileImage')      .populate('replyTo');
 
     // Emit real-time message to thread participants
-    if (global.socketService) {
-      global.socketService.emitToThread(threadId, 'new_message', {
+    if ((global as any).socketService) {
+      (global as any).socketService.emitToThread(threadId, 'new_message', {
         message: populatedMessage,
         threadId,
         senderId: userId,
