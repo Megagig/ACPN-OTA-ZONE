@@ -1,5 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Card,
+  CardBody,
+  CardHeader,
+  Heading,
+  VStack,
+  HStack,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  useToast,
+  Text,
+  Spinner,
+  Center,
+  useColorModeValue,
+  Grid,
+  GridItem,
+  Switch,
+  Flex,
+  IconButton,
+  Divider,
+} from '@chakra-ui/react';
+import { ArrowBackIcon, AttachmentIcon, CloseIcon, TimeIcon, CheckIcon } from '@chakra-ui/icons';
 import communicationService from '../../services/communication.service';
 import type { Communication, CommunicationType } from '../../types/communication.types';
 
@@ -7,6 +36,7 @@ const CommunicationForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const toast = useToast();
   const queryParams = new URLSearchParams(location.search);
   const typeFromQuery = queryParams.get('type') as CommunicationType | null;
 
@@ -30,6 +60,10 @@ const CommunicationForm = () => {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Color mode values
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+
   useEffect(() => {
     if (isEditing) {
       fetchCommunication(id);
@@ -47,13 +81,18 @@ const CommunicationForm = () => {
         setScheduleDate(date.toISOString().split('T')[0]);
         setScheduleTime(date.toTimeString().slice(0, 5));
         setShowScheduleOptions(true);
-      }
-
-      if (data.attachments) {
+      }      if (data.attachments) {
         setAttachments(data.attachments);
       }
     } catch (error) {
       console.error('Error fetching communication:', error);
+      toast({
+        title: 'Error fetching communication',
+        description: 'Failed to load communication data. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -131,15 +170,29 @@ const CommunicationForm = () => {
       };
 
       if (isEditing && id) {
-        await communicationService.updateCommunication(id, dataToSave);
-      } else {
+        await communicationService.updateCommunication(id, dataToSave);      } else {
         await communicationService.createCommunication(dataToSave);
       }
+
+      toast({
+        title: 'Communication saved successfully',
+        description: `Communication has been ${isEditing ? 'updated' : 'created'} successfully.`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
       // Navigate back to the communications list or detail page
       navigate(isEditing && id ? `/communications/${id}` : '/communications/list');
     } catch (error) {
       console.error('Error saving communication:', error);
+      toast({
+        title: 'Error saving communication',
+        description: 'Failed to save communication. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -175,14 +228,28 @@ const CommunicationForm = () => {
       if (commId) {
         await communicationService.scheduleCommunication(
           commId,
-          scheduledDateTime.toISOString()
-        );
+          scheduledDateTime.toISOString()        );
       }
+
+      toast({
+        title: 'Communication scheduled successfully',
+        description: 'Communication has been scheduled successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
       // Navigate back to the communications list or detail page
       navigate(isEditing && id ? `/communications/${id}` : '/communications/list');
     } catch (error) {
       console.error('Error scheduling communication:', error);
+      toast({
+        title: 'Error scheduling communication',
+        description: 'Failed to schedule communication. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsScheduling(false);
     }
@@ -206,359 +273,298 @@ const CommunicationForm = () => {
   const handleRemoveAttachment = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
-
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-12 bg-gray-200 rounded w-1/3"></div>
-        </div>
-      </div>
+      <Container maxW="container.lg" py={6}>
+        <Center>
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" thickness="4px" />
+            <Text fontSize="lg" color="gray.600">
+              Loading communication data...
+            </Text>
+          </VStack>
+        </Center>
+      </Container>
     );
   }
-
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {isEditing ? 'Edit Communication' : 'New Communication'}
-        </h1>
-        <button
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm shadow"
-          onClick={() => navigate(-1)}
-        >
-          <i className="fas fa-arrow-left mr-2"></i>
-          Back
-        </button>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-md p-6"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Title */}
-          <div className="col-span-2">
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-1"
+    <Container maxW="container.lg" py={6}>
+      <Card bg={bgColor} shadow="md">
+        <CardHeader>
+          <Flex justify="space-between" align="center">
+            <Heading size="lg" color="gray.800">
+              {isEditing ? 'Edit Communication' : 'New Communication'}
+            </Heading>
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              variant="outline"
+              colorScheme="gray"
+              onClick={() => navigate(-1)}
             >
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="title"
-              name="title"
-              type="text"
-              className={`border ${
-                errors.title ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
-              placeholder="Enter communication title"
-              value={formData.title || ''}
-              onChange={handleChange}
-            />
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-500">{errors.title}</p>
-            )}
-          </div>
+              Back
+            </Button>
+          </Flex>
+        </CardHeader>
 
-          {/* Type */}
-          <div>
-            <label
-              htmlFor="type"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="type"
-              name="type"
-              className={`border ${
-                errors.type ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
-              value={formData.type || ''}
-              onChange={handleChange}
-            >
-              <option value="announcement">Announcement</option>
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
-              <option value="private_message">Private Message</option>
-            </select>
-            {errors.type && (
-              <p className="mt-1 text-sm text-red-500">{errors.type}</p>
-            )}
-          </div>
+        <CardBody>
+          <Box as="form" onSubmit={handleSubmit}>
+            <VStack spacing={6} align="stretch">
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
+                {/* Title */}
+                <GridItem colSpan={2}>
+                  <FormControl isRequired isInvalid={!!errors.title}>
+                    <FormLabel>Title</FormLabel>
+                    <Input
+                      name="title"
+                      placeholder="Enter communication title"
+                      value={formData.title || ''}
+                      onChange={handleChange}
+                    />
+                    <FormErrorMessage>{errors.title}</FormErrorMessage>
+                  </FormControl>
+                </GridItem>
 
-          {/* Recipients */}
-          <div>
-            <label
-              htmlFor="recipientType"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Recipients <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="recipientType"
-              name="recipientType"
-              className={`border ${
-                errors.recipientType ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
-              value={formData.recipientType || ''}
-              onChange={handleChange}
-            >
-              <option value="all_members">All Members</option>
-              <option value="executives">Executives Only</option>
-              <option value="committee">Committee Members</option>
-              <option value="specific_members">Specific Members</option>
-            </select>
-            {errors.recipientType && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.recipientType}
-              </p>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="col-span-2">
-            <label
-              htmlFor="content"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Content <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              rows={8}
-              className={`border ${
-                errors.content ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm p-2 w-full`}
-              placeholder="Enter communication content"
-              value={formData.content || ''}
-              onChange={handleChange}
-            ></textarea>
-            {errors.content && (
-              <p className="mt-1 text-sm text-red-500">{errors.content}</p>
-            )}
-          </div>
-
-          {/* Attachments */}
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Attachments
-            </label>
-            <div className="flex items-center space-x-2">
-              <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-md text-sm">
-                <i className="fas fa-paperclip mr-2"></i>
-                Add Attachment
-                <input
-                  type="file"
-                  className="hidden"
-                  multiple
-                  onChange={handleAttachmentUpload}
-                />
-              </label>
-              <span className="text-sm text-gray-500">
-                {attachments.length}{' '}
-                {attachments.length === 1 ? 'file' : 'files'} attached
-              </span>
-            </div>
-
-            {attachments.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {attachments.map((_, index) => (
-                  <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-600">Attachment {index + 1}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAttachment(index)}
-                      className="text-red-500 hover:text-red-700"
+                {/* Type */}
+                <GridItem>
+                  <FormControl isRequired isInvalid={!!errors.type}>
+                    <FormLabel>Type</FormLabel>
+                    <Select
+                      name="type"
+                      value={formData.type || ''}
+                      onChange={handleChange}
                     >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                      <option value="announcement">Announcement</option>
+                      <option value="email">Email</option>
+                      <option value="sms">SMS</option>
+                      <option value="private_message">Private Message</option>
+                    </Select>
+                    <FormErrorMessage>{errors.type}</FormErrorMessage>
+                  </FormControl>
+                </GridItem>
 
-          {/* Schedule Options */}
-          <div className="col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <input
-                id="schedule-toggle"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                checked={showScheduleOptions}
-                onChange={() => setShowScheduleOptions(!showScheduleOptions)}
-              />
-              <label
-                htmlFor="schedule-toggle"
-                className="text-sm font-medium text-gray-700"
-              >
-                Schedule for later
-              </label>
-            </div>
+                {/* Recipients */}
+                <GridItem>
+                  <FormControl isRequired isInvalid={!!errors.recipientType}>
+                    <FormLabel>Recipients</FormLabel>
+                    <Select
+                      name="recipientType"
+                      value={formData.recipientType || ''}
+                      onChange={handleChange}
+                    >
+                      <option value="all_members">All Members</option>
+                      <option value="executives">Executives Only</option>
+                      <option value="committee">Committee Members</option>
+                      <option value="specific_members">Specific Members</option>
+                    </Select>
+                    <FormErrorMessage>{errors.recipientType}</FormErrorMessage>
+                  </FormControl>
+                </GridItem>
 
-            {showScheduleOptions && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md">
-                <div>
-                  <label
-                    htmlFor="scheduleDate"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                {/* Content */}
+                <GridItem colSpan={2}>
+                  <FormControl isRequired isInvalid={!!errors.content}>
+                    <FormLabel>Content</FormLabel>
+                    <Textarea
+                      name="content"
+                      rows={8}
+                      placeholder="Enter communication content"
+                      value={formData.content || ''}
+                      onChange={handleChange}
+                    />
+                    <FormErrorMessage>{errors.content}</FormErrorMessage>
+                  </FormControl>
+                </GridItem>                {/* Attachments */}
+                <GridItem colSpan={2}>
+                  <FormControl>
+                    <FormLabel>Attachments</FormLabel>
+                    <HStack spacing={4} mb={3}>
+                      <Button
+                        as="label"
+                        leftIcon={<AttachmentIcon />}
+                        variant="outline"
+                        colorScheme="gray"
+                        cursor="pointer"
+                        size="sm"
+                      >
+                        Add Attachment
+                        <Box as="input" type="file" hidden multiple onChange={handleAttachmentUpload} />
+                      </Button>
+                      <Text fontSize="sm" color="gray.500">
+                        {attachments.length} {attachments.length === 1 ? 'file' : 'files'} attached
+                      </Text>
+                    </HStack>
+
+                    {attachments.length > 0 && (
+                      <VStack spacing={2} align="stretch">
+                        {attachments.map((_, index) => (
+                          <HStack
+                            key={index}
+                            p={3}
+                            bg="gray.50"
+                            borderRadius="md"
+                            justify="space-between"
+                          >
+                            <Text fontSize="sm" color="gray.600">
+                              Attachment {index + 1}
+                            </Text>
+                            <IconButton
+                              aria-label="Remove attachment"
+                              icon={<CloseIcon />}
+                              size="xs"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => handleRemoveAttachment(index)}
+                            />
+                          </HStack>
+                        ))}
+                      </VStack>
+                    )}
+                  </FormControl>
+                </GridItem>
+
+                {/* Schedule Options */}
+                <GridItem colSpan={2}>
+                  <FormControl>
+                    <HStack spacing={3} mb={4}>
+                      <Switch
+                        id="schedule-toggle"
+                        isChecked={showScheduleOptions}
+                        onChange={() => setShowScheduleOptions(!showScheduleOptions)}
+                      />
+                      <FormLabel htmlFor="schedule-toggle" mb={0}>
+                        Schedule for later
+                      </FormLabel>
+                    </HStack>
+
+                    {showScheduleOptions && (
+                      <Box p={4} bg="gray.50" borderRadius="md" border="1px" borderColor={borderColor}>
+                        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                          <GridItem>
+                            <FormControl isRequired isInvalid={!!errors.scheduleDate}>
+                              <FormLabel>Date</FormLabel>
+                              <Input
+                                type="date"
+                                value={scheduleDate}
+                                onChange={(e) => setScheduleDate(e.target.value)}
+                                min={new Date().toISOString().split('T')[0]}
+                              />
+                              <FormErrorMessage>{errors.scheduleDate}</FormErrorMessage>
+                            </FormControl>
+                          </GridItem>
+
+                          <GridItem>
+                            <FormControl isRequired isInvalid={!!errors.scheduleTime}>
+                              <FormLabel>Time</FormLabel>
+                              <Input
+                                type="time"
+                                value={scheduleTime}
+                                onChange={(e) => setScheduleTime(e.target.value)}
+                              />
+                              <FormErrorMessage>{errors.scheduleTime}</FormErrorMessage>
+                            </FormControl>
+                          </GridItem>
+                        </Grid>
+                      </Box>
+                    )}
+                  </FormControl>
+                </GridItem>
+              </Grid>              <Divider />
+
+              {/* Action Buttons */}
+              <HStack spacing={3} justify="flex-end">
+                <Button
+                  variant="outline"
+                  colorScheme="gray"
+                  onClick={() => navigate(-1)}
+                >
+                  Cancel
+                </Button>
+
+                {showScheduleOptions ? (
+                  <Button
+                    leftIcon={<TimeIcon />}
+                    colorScheme="blue"
+                    isLoading={isScheduling}
+                    loadingText="Scheduling..."
+                    onClick={handleScheduleSubmit}
                   >
-                    Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="scheduleDate"
-                    type="date"
-                    className={`border ${
-                      errors.scheduleDate ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm p-2 w-full`}
-                    value={scheduleDate}
-                    onChange={(e) => setScheduleDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  {errors.scheduleDate && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.scheduleDate}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="scheduleTime"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Time <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="scheduleTime"
-                    type="time"
-                    className={`border ${
-                      errors.scheduleTime ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md shadow-sm p-2 w-full`}
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                  />
-                  {errors.scheduleTime && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.scheduleTime}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-2">
-          <button
-            type="button"
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm"
-            onClick={() => navigate(-1)}
-          >
-            Cancel
-          </button>
-
-          {showScheduleOptions ? (
-            <button
-              type="button"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
-              onClick={handleScheduleSubmit}
-              disabled={isScheduling}
-            >
-              {isScheduling ? (
-                <>
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Scheduling...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-clock mr-2"></i>
-                  Schedule
-                </>
-              )}
-            </button>
-          ) : (
-            <>
-              <button
-                type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Saving...
-                  </>
+                    Schedule
+                  </Button>
                 ) : (
                   <>
-                    <i className="fas fa-save mr-2"></i>
-                    Save as Draft
+                    <Button
+                      type="submit"
+                      colorScheme="purple"
+                      isLoading={isSaving}
+                      loadingText="Saving..."
+                    >
+                      Save as Draft
+                    </Button>
+
+                    <Button
+                      leftIcon={<CheckIcon />}
+                      colorScheme="green"
+                      isLoading={isSaving}
+                      loadingText="Processing..."
+                      onClick={async () => {
+                        if (validateForm()) {
+                          try {
+                            setIsSaving(true);
+                            // First save/update the communication
+                            let commId = id;
+                            if (!isEditing) {
+                              const newComm = await communicationService.createCommunication({
+                                ...formData,
+                                attachments,
+                              });
+                              commId = newComm._id;
+                            } else {
+                              await communicationService.updateCommunication(id, {
+                                ...formData,
+                                attachments,
+                              });
+                            }
+
+                            // Then send it
+                            if (commId) {
+                              await communicationService.sendCommunication(commId);
+                            }
+
+                            toast({
+                              title: 'Communication sent successfully',
+                              description: 'Communication has been sent successfully.',
+                              status: 'success',
+                              duration: 3000,
+                              isClosable: true,
+                            });
+
+                            // Navigate back
+                            navigate('/communications/list');
+                          } catch (error) {
+                            console.error('Error sending communication:', error);
+                            toast({
+                              title: 'Error sending communication',
+                              description: 'Failed to send communication. Please try again.',
+                              status: 'error',
+                              duration: 5000,
+                              isClosable: true,
+                            });
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }
+                      }}
+                    >
+                      Send Now
+                    </Button>
                   </>
                 )}
-              </button>
-
-              <button
-                type="button"
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
-                onClick={async () => {
-                  if (validateForm()) {
-                    try {
-                      setIsSaving(true);
-                      // First save/update the communication
-                      let commId = id;
-                      if (!isEditing) {
-                        const newComm =
-                          await communicationService.createCommunication({
-                            ...formData,
-                            attachments,
-                          });
-                        commId = newComm._id;
-                      } else {
-                        await communicationService.updateCommunication(id, {
-                          ...formData,
-                          attachments,
-                        });
-                      }
-
-                      // Then send it
-                      if (commId) {
-                        await communicationService.sendCommunication(commId);
-                      }
-
-                      // Navigate back
-                      navigate('/communications/list');
-                    } catch (error) {
-                      console.error('Error sending communication:', error);
-                    } finally {
-                      setIsSaving(false);
-                    }
-                  }
-                }}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-paper-plane mr-2"></i>
-                    Send Now
-                  </>
-                )}
-              </button>
-            </>
-          )}
-        </div>
-      </form>
-    </div>
+              </HStack>
+            </VStack>
+          </Box>
+        </CardBody>
+      </Card>
+    </Container>
   );
 };
 

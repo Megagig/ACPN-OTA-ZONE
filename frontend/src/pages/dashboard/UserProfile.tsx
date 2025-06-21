@@ -1,9 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  Card,
+  CardBody,
+  CardHeader,
+  VStack,
+  HStack,
+  Button,
+  Input,
+  FormControl,
+  FormLabel,
+  FormHelperText,
+  SimpleGrid,
+  Divider,
+  Badge,
+  Icon,
+  useToast,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import { EditIcon, LockIcon } from '@chakra-ui/icons';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const toast = useToast();
+  const cardBg = useColorModeValue('white', 'gray.800');
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -15,6 +40,9 @@ const UserProfile: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -31,13 +59,6 @@ const UserProfile: React.FC = () => {
     }
   }, [user]);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -49,7 +70,7 @@ const UserProfile: React.FC = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage(null);
+    
     try {
       const profileData = {
         firstName: formData.firstName,
@@ -59,16 +80,24 @@ const UserProfile: React.FC = () => {
       };
       const response = await api.put('/auth/update-details', profileData);
       updateUser(response.data.user);
-      setMessage({
-        type: 'success',
-        text: response.data.message || 'Profile updated successfully',
+      
+      toast({
+        title: 'Success',
+        description: response.data.message || 'Profile updated successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
       });
+      
       setIsEditing(false);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to update profile',
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to update profile',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -78,25 +107,34 @@ const UserProfile: React.FC = () => {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage(null);
+    
     if (formData.newPassword !== formData.confirmPassword) {
-      setMessage({
-        type: 'error',
-        text: 'New passwords do not match',
+      toast({
+        title: 'Error',
+        description: 'New passwords do not match',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
       setIsLoading(false);
       return;
     }
+    
     try {
       const passwordData = {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       };
       const response = await api.put('/auth/change-password', passwordData);
-      setMessage({
-        type: 'success',
-        text: response.data.message || 'Password changed successfully',
+      
+      toast({
+        title: 'Success',
+        description: response.data.message || 'Password changed successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
       });
+      
       setFormData((prev) => ({
         ...prev,
         currentPassword: '',
@@ -105,9 +143,12 @@ const UserProfile: React.FC = () => {
       }));
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to change password',
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to change password',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -115,332 +156,236 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">My Profile</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your personal information and account settings
-        </p>
-      </div>
+    <Container maxW="4xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        <Box>
+          <Heading size="lg" mb={2}>My Profile</Heading>
+          <Text color="gray.500">
+            Manage your personal information and account settings
+          </Text>
+        </Box>
 
-      {message && (
-        <div
-          className={`p-4 rounded-md ${
-            message.type === 'success' ? 'bg-green-50' : 'bg-red-50'
-          }`}
-        >
-          <div className="flex">
-            <div className="flex-shrink-0">
-              {message.type === 'success' ? (
-                <svg
-                  className="h-5 w-5 text-green-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+        {/* Personal Information Section */}
+        <Card bg={cardBg} shadow="lg">
+          <CardHeader>
+            <HStack justify="space-between" align="flex-start">
+              <VStack align="start" spacing={1}>
+                <Heading size="md">Personal Information</Heading>
+                <Text color="gray.500" fontSize="sm">
+                  Your personal details and contact information
+                </Text>
+              </VStack>
+              {!isEditing && (
+                <Button
+                  leftIcon={<EditIcon />}
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  size="sm"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                  Edit
+                </Button>
               )}
-            </div>
-            <div className="ml-3">
-              <p
-                className={`text-sm font-medium ${
-                  message.type === 'success' ? 'text-green-800' : 'text-red-800'
-                }`}
-              >
-                {message.text}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+            </HStack>
+          </CardHeader>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              Personal Information
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Your personal details and contact information
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsEditing(!isEditing)}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            {isEditing ? 'Cancel' : 'Edit'}
-          </button>
-        </div>
+          {!isEditing ? (
+            <CardBody>
+              <SimpleGrid columns={1} spacing={4}>
+                <HStack justify="space-between" align="center" py={3}>
+                  <Text fontWeight="medium" color="gray.600">Full name</Text>
+                  <Text>{user?.firstName} {user?.lastName}</Text>
+                </HStack>
+                <Divider />
+                
+                <HStack justify="space-between" align="center" py={3}>
+                  <Text fontWeight="medium" color="gray.600">Email address</Text>
+                  <Text>{user?.email}</Text>
+                </HStack>
+                <Divider />
+                
+                <HStack justify="space-between" align="center" py={3}>
+                  <Text fontWeight="medium" color="gray.600">Phone number</Text>
+                  <Text>{user?.phone || 'Not set'}</Text>
+                </HStack>
+                <Divider />
+                
+                <HStack justify="space-between" align="center" py={3}>
+                  <Text fontWeight="medium" color="gray.600">PCN License Number</Text>
+                  <Text>{user?.pcnLicense || 'Not set'}</Text>
+                </HStack>
+                <Divider />
+                
+                <HStack justify="space-between" align="center" py={3}>
+                  <Text fontWeight="medium" color="gray.600">Role</Text>
+                  <Badge colorScheme="blue" variant="subtle" textTransform="capitalize">
+                    {user?.role || 'Member'}
+                  </Badge>
+                </HStack>
+                <Divider />
+                
+                <HStack justify="space-between" align="center" py={3}>
+                  <Text fontWeight="medium" color="gray.600">Member since</Text>
+                  <Text>
+                    {user?.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'Unknown'}
+                  </Text>
+                </HStack>
+              </SimpleGrid>
+            </CardBody>
+          ) : (
+            <CardBody>
+              <Box as="form" onSubmit={handleProfileUpdate}>
+                <VStack spacing={6} align="stretch">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>First name</FormLabel>
+                      <Input
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        placeholder="Enter your first name"
+                      />
+                    </FormControl>
 
-        {isEditing ? (
-          <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-            <form onSubmit={handleProfileUpdate}>
-              <div className="grid grid-cols-6 gap-6">
-                <div className="col-span-6 sm:col-span-3">
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    First name
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    id="firstName"
-                    value={formData.firstName}
+                    <FormControl isRequired>
+                      <FormLabel>Last name</FormLabel>
+                      <Input
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        placeholder="Enter your last name"
+                      />
+                    </FormControl>
+                  </SimpleGrid>
+
+                  <FormControl>
+                    <FormLabel>Email address</FormLabel>
+                    <Input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      isDisabled
+                      bg="gray.50"
+                    />
+                    <FormHelperText>Email cannot be changed</FormHelperText>
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Phone number</FormLabel>
+                    <Input
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Enter your phone number"
+                    />
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>PCN License Number</FormLabel>
+                    <Input
+                      name="pcnLicense"
+                      value={formData.pcnLicense}
+                      onChange={handleChange}
+                      placeholder="Enter your PCN license number"
+                    />
+                  </FormControl>
+
+                  <HStack justify="flex-end" spacing={3}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      colorScheme="blue"
+                      isLoading={isLoading}
+                      loadingText="Saving..."
+                    >
+                      Save Changes
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </CardBody>
+          )}
+        </Card>
+
+        {/* Change Password Section */}
+        <Card bg={cardBg} shadow="lg">
+          <CardHeader>
+            <VStack align="start" spacing={1}>
+              <HStack>
+                <Icon as={LockIcon} color="gray.500" />
+                <Heading size="md">Change Password</Heading>
+              </HStack>
+              <Text color="gray.500" fontSize="sm">
+                Update your account password
+              </Text>
+            </VStack>
+          </CardHeader>
+          
+          <CardBody>
+            <Box as="form" onSubmit={handlePasswordChange}>
+              <VStack spacing={6} align="stretch">
+                <FormControl isRequired>
+                  <FormLabel>Current Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="currentPassword"
+                    value={formData.currentPassword}
                     onChange={handleChange}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your current password"
                   />
-                </div>
+                </FormControl>
 
-                <div className="col-span-6 sm:col-span-3">
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Last name
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    id="lastName"
-                    value={formData.lastName}
+                <FormControl isRequired>
+                  <FormLabel>New Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="newPassword"
+                    value={formData.newPassword}
                     onChange={handleChange}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your new password"
+                    minLength={6}
                   />
-                </div>
+                  <FormHelperText>Password must be at least 6 characters long</FormHelperText>
+                </FormControl>
 
-                <div className="col-span-6 sm:col-span-4">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Email address
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    value={formData.email}
-                    disabled
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-gray-50"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Email cannot be changed
-                  </p>
-                </div>
-
-                <div className="col-span-6 sm:col-span-4">
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    id="phone"
-                    value={formData.phone}
+                <FormControl isRequired>
+                  <FormLabel>Confirm New Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
                     onChange={handleChange}
-                    required
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Confirm your new password"
+                    minLength={6}
                   />
-                </div>
+                </FormControl>
 
-                <div className="col-span-6 sm:col-span-4">
-                  <label
-                    htmlFor="pcnLicense"
-                    className="block text-sm font-medium text-gray-700"
+                <HStack justify="flex-end">
+                  <Button
+                    type="submit"
+                    colorScheme="blue"
+                    isLoading={isLoading}
+                    loadingText="Updating..."
                   >
-                    PCN License Number
-                  </label>
-                  <input
-                    type="text"
-                    name="pcnLicense"
-                    id="pcnLicense"
-                    value={formData.pcnLicense}
-                    onChange={handleChange}
-                    required
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="mr-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-          <div className="border-t border-gray-200">
-            <dl>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Full name</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.firstName} {user?.lastName}
-                </dd>
-              </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  Email address
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.email}
-                </dd>
-              </div>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  Phone number
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.phone || 'Not set'}
-                </dd>
-              </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  PCN License Number
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.pcnLicense || 'Not set'}
-                </dd>
-              </div>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Role</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 capitalize">
-                  {user?.role || 'Member'}
-                </dd>
-              </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  Member since
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.createdAt
-                    ? new Date(user.createdAt).toLocaleDateString()
-                    : 'Unknown'}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
-      </div>
-
-      {/* Password Change Section */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Change Password
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Update your account password
-          </p>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-          <form onSubmit={handlePasswordChange}>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="currentPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  name="currentPassword"
-                  id="currentPassword"
-                  value={formData.currentPassword}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="newPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  name="newPassword"
-                  id="newPassword"
-                  value={formData.newPassword}
-                  onChange={handleChange}
-                  required
-                  minLength={6}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  id="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  minLength={6}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Updating...' : 'Update Password'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+                    Update Password
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </CardBody>
+        </Card>
+      </VStack>
+    </Container>
   );
 };
 

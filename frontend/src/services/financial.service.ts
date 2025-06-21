@@ -109,11 +109,11 @@ export const getDues = async (params?: {
   year?: number;
 }): Promise<Due[]> => {
   try {
-    const response = await api.get('/api/dues', { params });
-    return response.data.data;
+    const response = await api.get('/dues', { params });
+    return response.data.data || response.data || [];
   } catch (error) {
     console.error('Error fetching dues:', error);
-    throw error;
+    return [];
   }
 };
 
@@ -423,10 +423,15 @@ export const markDueAsPaid = async (dueId: string): Promise<Due> => {
 export const getDueAnalytics = async (
   year?: number
 ): Promise<any> => {
-  const response = await api.get(`/dues/analytics/all`, {
-    params: { year },
-  });
-  return response.data.data;
+  try {
+    const response = await api.get(`/dues/analytics/all`, {
+      params: { year },
+    });
+    return response.data.data || response.data || { outstandingAmount: 0 };
+  } catch (error) {
+    console.error('Error fetching due analytics:', error);
+    return { outstandingAmount: 0 };
+  }
 };
 
 export const getPharmacyDueAnalytics = async (
@@ -503,12 +508,18 @@ export const getAllPayments = async (params?: {
   page?: number; 
   limit?: number; 
 }): Promise<any> => {
-  if (params?.status === 'pending') {
-    const response = await api.get(`/payments/admin/pending`);
-    return response.data.data;
+  try {
+    if (params?.status === 'pending') {
+      const response = await api.get(`/payments/admin/pending`);
+      return response.data;
+    }
+    const response = await api.get('/payments/admin/all', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    // Return empty structure instead of throwing
+    return { payments: [] };
   }
-  const response = await api.get('/api/payments/admin/all', { params });
-  return response.data.data;
 };
 
 // Payment Management API
@@ -1050,6 +1061,68 @@ const financialService = {
   // Clearance Certificate PDF
   getClearanceCertificate,
   generateCertificatePDF,
+
+  // Certificate History
+  getCertificateHistory: async (
+    pharmacyId?: string
+  ): Promise<CertificateData[]> => {
+    try {
+      let url = `${BASE_URL}/dues/certificates`;
+      if (pharmacyId) {
+        url = `${BASE_URL}/dues/pharmacy/${pharmacyId}/certificates`;
+      }
+      const response = await api.get(url);
+      return response.data.certificates;
+    } catch (error) {
+      console.error('Error fetching certificate history:', error);
+      throw error;
+    }
+  },
+
+  downloadCertificateByNumber: async (
+    certificateNumber: string
+  ): Promise<Blob> => {
+    try {
+      const response = await api.get(
+        `${BASE_URL}/dues/certificates/${certificateNumber}/download`,
+        { responseType: 'blob' }
+      );
+      
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `certificate-${certificateNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      return blob;
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      throw error;
+    }
+  },
+
+  viewCertificateByNumber: async (
+    certificateNumber: string
+  ): Promise<string> => {
+    try {
+      const response = await api.get(
+        `${BASE_URL}/dues/certificates/${certificateNumber}/view`
+      );
+      
+      // Open certificate URL in new tab
+      const certificateUrl = response.data.certificateUrl;
+      window.open(certificateUrl, '_blank');
+      
+      return certificateUrl;
+    } catch (error) {
+      console.error('Error viewing certificate:', error);
+      throw error;
+    }
+  },
 
   // Record Payment
   recordPayment,

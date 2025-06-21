@@ -1,35 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { usePayments, useReviewPayment, useDeletePayment, type PaymentApprovalStatus, type Payment } from '../../hooks/usePayments';
-import { toast } from 'react-toastify';
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Card,
+  CardBody,
+  VStack,
+  HStack,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Badge,
+  Spinner,
+  Center,
+  Icon,
+  useToast,
+  useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  ButtonGroup,
+  Textarea,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  Radio,
+  Link,
+  SimpleGrid
+} from '@chakra-ui/react';
 import { 
-  Building, 
-  CreditCard, 
-  FileText, 
-  CheckCircle, 
-  Clock, 
-  XCircle, 
-  AlertCircle,
-  Search,
-  Calendar,
-  User,
-  Receipt,
-  Eye,
-  Trash2,
-  Check,
-  X
-} from 'lucide-react';
+  FaBuilding, 
+  FaCreditCard, 
+  FaFile, 
+  FaCheckCircle, 
+  FaClock, 
+  FaTimesCircle, 
+  FaExclamationTriangle,
+  FaSearch,
+  FaCalendarAlt,
+  FaUser,
+  FaReceipt,
+  FaEye,
+  FaTrash,
+  FaCheck,
+  FaTimes
+} from 'react-icons/fa';
+import { usePayments, useReviewPayment, useDeletePayment, type PaymentApprovalStatus, type Payment } from '../../hooks/usePayments';
 
 const AdminPaymentReview: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [activeTab, setActiveTab] = useState(0); // 0: pending, 1: approved, 2: rejected, 3: all
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [reviewData, setReviewData] = useState({
     action: 'approve' as 'approve' | 'reject',
     rejectionReason: '',
   });
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Chakra UI hooks
+  const toast = useToast();
+  const { isOpen: isReviewOpen, onOpen: onReviewOpen, onClose: onReviewClose } = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  
+  // Color mode values
+  const bgGradient = useColorModeValue(
+    'linear(to-br, blue.50, purple.50, pink.50)',
+    'linear(to-br, gray.900, blue.900, purple.900)'
+  );
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+
+  const tabMapping = ['pending', 'approved', 'rejected', 'all'];
+  const activeTabValue = tabMapping[activeTab] as 'all' | 'pending' | 'approved' | 'rejected';
 
   // Fetch payments from API
   const {
@@ -40,7 +95,7 @@ const AdminPaymentReview: React.FC = () => {
   } = usePayments(
     currentPage,
     10,
-    activeTab !== 'all' ? { approvalStatus: activeTab as PaymentApprovalStatus } : {}
+    activeTabValue !== 'all' ? { approvalStatus: activeTabValue as PaymentApprovalStatus } : {}
   );
 
   // Helper: get payments array from API response
@@ -78,30 +133,33 @@ const AdminPaymentReview: React.FC = () => {
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const getPaymentMethodIcon = (method: string) => {
+    const getPaymentMethodIcon = (method: string) => {
     switch (method) {
-      case 'bank_transfer': return <Building className="w-4 h-4" />;
-      case 'cash': return <CreditCard className="w-4 h-4" />;
-      case 'check': return <FileText className="w-4 h-4" />;
-      default: return <CreditCard className="w-4 h-4" />;
+      case 'bank_transfer': return <Icon as={FaBuilding} />;
+      case 'cash': return <Icon as={FaCreditCard} />;
+      case 'check': return <Icon as={FaFile} />;
+      default: return <Icon as={FaCreditCard} />;
     }
   };
+  
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'pending': return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'rejected': return <XCircle className="w-5 h-5 text-red-500" />;
-      default: return <AlertCircle className="w-5 h-5 text-gray-500" />;
+      case 'approved': return <Icon as={FaCheckCircle} color="green.500" />;
+      case 'pending': return <Icon as={FaClock} color="yellow.500" />;
+      case 'rejected': return <Icon as={FaTimesCircle} color="red.500" />;
+      default: return <Icon as={FaExclamationTriangle} color="gray.500" />;
     }
   };
-  const getStatusColor = (status: string) => {
+  
+  const getStatusColorScheme = (status: string) => {
     switch (status) {
-      case 'approved': return 'bg-green-50 text-green-700 border-green-200';
-      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'rejected': return 'bg-red-50 text-red-700 border-red-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+      case 'approved': return 'green';
+      case 'pending': return 'yellow';
+      case 'rejected': return 'red';
+      default: return 'gray';
     }
   };
+  
   const getPaymentTitle = (payment: Payment) => {
     if ((payment as any).paymentType === 'event_fee') {
       return (payment as any).meta?.eventId || 'Event Fee';
@@ -128,32 +186,53 @@ const AdminPaymentReview: React.FC = () => {
   // Show error toasts for API errors
   useEffect(() => {
     if (paymentsError) {
-      toast.error(`Error loading payments: ${paymentsError.message || paymentsError}`);
+      toast({
+        title: 'Error Loading Payments',
+        description: paymentsError.message || String(paymentsError),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
     if (reviewError) {
-      toast.error(`Error reviewing payment: ${reviewError.message || reviewError}`);
+      toast({
+        title: 'Error Reviewing Payment',
+        description: reviewError.message || String(reviewError),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
     if (deleteError) {
-      toast.error(`Error deleting payment: ${deleteError.message || deleteError}`);
+      toast({
+        title: 'Error Deleting Payment',
+        description: deleteError.message || String(deleteError),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
-  }, [paymentsError, reviewError, deleteError]);
+  }, [paymentsError, reviewError, deleteError, toast]);
 
   // Modal handlers
   const openReviewModal = (payment: Payment) => {
     setSelectedPayment(payment);
     setReviewData({ action: 'approve', rejectionReason: '' });
-    setShowReviewModal(true);
+    onReviewOpen();
   };
+  
   const openDeleteModal = (payment: Payment) => {
     setSelectedPayment(payment);
-    setShowDeleteModal(true);
+    onDeleteOpen();
   };
+  
   const closeModals = () => {
-    setShowReviewModal(false);
-    setShowDeleteModal(false);
+    onReviewClose();
+    onDeleteClose();
     setSelectedPayment(null);
     setReviewData({ action: 'approve', rejectionReason: '' });
   };
+  
   const handleReviewSubmit = () => {
     if (!selectedPayment) return;
     reviewPayment(
@@ -163,345 +242,884 @@ const AdminPaymentReview: React.FC = () => {
       },
       {
         onSuccess: () => {
-          toast.success(
-            reviewData.action === 'approve'
+          toast({
+            title: 'Payment Reviewed',
+            description: reviewData.action === 'approve'
               ? 'Payment approved successfully'
-              : 'Payment rejected successfully'
-          );
+              : 'Payment rejected successfully',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
           closeModals();
           refetchPayments();
         },
         onError: (error: any) => {
-          toast.error(`Error: ${error.message || 'Failed to review payment.'}`);
+          toast({
+            title: 'Review Failed',
+            description: error.message || 'Failed to review payment.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
         },
       }
     );
   };
+  
   const handleDeletePayment = () => {
     if (!selectedPayment) return;
     deletePayment(selectedPayment._id, {
       onSuccess: () => {
-        toast.success('Payment deleted successfully');
+        toast({
+          title: 'Payment Deleted',
+          description: 'Payment deleted successfully',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
         closeModals();
         refetchPayments();
       },
       onError: (error: any) => {
-        toast.error(`Error: ${error.message || 'Failed to delete payment.'}`);
+        toast({
+          title: 'Delete Failed',
+          description: error.message || 'Failed to delete payment.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       },
     });
   };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-950 dark:to-indigo-950">
-      <div className="container mx-auto p-2 sm:p-4 md:p-6">
+    <Box minH="100vh" bgGradient={bgGradient}>
+      <Container maxW="7xl" py={{ base: 4, md: 8 }}>
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-300 dark:to-indigo-300">
+        <VStack spacing={6} align="stretch" mb={8}>
+          <Flex 
+            direction={{ base: 'column', md: 'row' }} 
+            justify="space-between" 
+            align={{ base: 'start', md: 'center' }}
+            gap={4}
+          >
+            <VStack align="start" spacing={2}>
+              <Heading 
+                size={{ base: 'lg', md: 'xl' }}
+                bgGradient="linear(to-r, blue.400, purple.500)"
+                bgClip="text"
+              >
                 Payment Review Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm sm:text-base">Manage and review all pharmacy payment submissions</p>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search payments..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-slate-800/70 backdrop-blur-sm text-sm text-gray-900 dark:text-gray-100"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Payments List */}
-        <div className="bg-white/70 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl border border-white/20 dark:border-slate-800 shadow-lg overflow-hidden">
-          <div className="border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
-            <nav className="flex flex-wrap space-x-0 sm:space-x-8 px-2 sm:px-6">
-              {['all', 'pending', 'approved', 'rejected'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => { setActiveTab(tab as 'all' | 'pending' | 'approved' | 'rejected'); setCurrentPage(1); }}
-                  className={`py-3 px-2 sm:py-4 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200 ${
-                    activeTab === tab
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-300'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-200 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <span className="flex items-center space-x-2">
-                    <span>{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
-                  </span>
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div className="p-2 sm:p-6">
-            {paymentsLoading ? (
-              <div className="text-center py-12">
-                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Loading payments...</h3>
-                <p className="text-gray-500 dark:text-gray-400">Please wait while payments are loaded.</p>
-              </div>
-            ) : filteredPayments.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No payments found</h3>
-                <p className="text-gray-500 dark:text-gray-400">There are no payments matching your criteria.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredPayments.map((payment) => (
-                  <div
-                    key={payment._id}
-                    className="bg-white/50 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/30 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-300 overflow-hidden group"
-                  >
-                    <div className="p-4 sm:p-6">
-                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2 md:gap-0">
-                        <div className="flex-1 w-full">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 mb-2">
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                              {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
-                                ? payment.pharmacyId.name
-                                : typeof payment.pharmacyId === 'string'
-                                ? payment.pharmacyId
-                                : 'Unknown Pharmacy'}
-                            </h3>
-                            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(payment.approvalStatus)}`}> 
-                              <div className="flex items-center space-x-1">
-                                {getStatusIcon(payment.approvalStatus)}
-                                <span className="capitalize">{payment.approvalStatus}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">{getPaymentTitle(payment)}</p>
-                        </div>
-                        <div className="text-right min-w-[120px]">
-                          <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {formatCurrency(payment.amount)}
-                          </div>
-                          <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-1">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {formatDate(payment.submittedAt)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-4">
-                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                          {getPaymentMethodIcon(payment.paymentMethod || '')}
-                          <span className="capitalize">
-                            {(payment.paymentMethod || '').replace('_', ' ')}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                          <User className="w-4 h-4" />
-                          <span>
-                            {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
-                              ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
-                              : 'Unknown'}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                          <Receipt className="w-4 h-4" />
-                          <a
-                            href={payment.receiptUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
+              </Heading>
+              <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
+                Manage and review all pharmacy payment submissions
+              </Text>
+            </VStack>
+            <InputGroup maxW={{ base: 'full', md: '300px' }}>
+              <InputLeftElement pointerEvents="none">
+                <Icon as={FaSearch} color="gray.400" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search payments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                bg={useColorModeValue('white', 'gray.700')}
+                border="1px solid"
+                borderColor={borderColor}
+                _focus={{
+                  borderColor: 'blue.500',
+                  boxShadow: '0 0 0 1px blue.500',
+                }}
+              />
+            </InputGroup>
+          </Flex>
+        </VStack>
+
+        {/* Tabs and Content */}
+        <Card bg={cardBg} shadow="lg" borderWidth="1px" borderColor={borderColor}>
+          <Tabs index={activeTab} onChange={(index) => { setActiveTab(index); setCurrentPage(1); }}>
+            <TabList>
+              <Tab>Pending</Tab>
+              <Tab>Approved</Tab>
+              <Tab>Rejected</Tab>
+              <Tab>All</Tab>
+            </TabList>
+            
+            <TabPanels>
+              <TabPanel px={0}>
+                {paymentsLoading ? (
+                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Spinner size="xl" color="blue.500" />
+                      <Text fontSize="lg" fontWeight="medium">Loading payments...</Text>
+                      <Text color="gray.500" fontSize="sm">Please wait while payments are loaded.</Text>
+                    </VStack>
+                  </Center>
+                ) : filteredPayments.length === 0 ? (                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Icon as={FaFile} boxSize={16} color="gray.300" />
+                      <Text fontSize="lg" fontWeight="medium">No payments found</Text>
+                      <Text color="gray.500" fontSize="sm">There are no payments matching your criteria.</Text>
+                    </VStack>
+                  </Center>
+                ) : (
+                  <VStack spacing={4} px={4}>
+                    {filteredPayments.map((payment) => (
+                      <Card
+                        key={payment._id}
+                        w="full"
+                        bg={useColorModeValue('white', 'gray.700')}
+                        borderWidth="1px"
+                        borderColor={borderColor}
+                        _hover={{
+                          borderColor: 'blue.300',
+                          shadow: 'md',
+                          transform: 'translateY(-2px)',
+                        }}
+                        transition="all 0.2s"
+                      >
+                        <CardBody>
+                          <Flex 
+                            direction={{ base: 'column', lg: 'row' }} 
+                            justify="space-between" 
+                            align={{ base: 'start', lg: 'center' }}
+                            gap={4}
+                            mb={4}
                           >
-                            View Receipt
-                          </a>
-                        </div>
-                      </div>
-                      <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button
-                          onClick={() => openReviewModal(payment)}
-                          className="inline-flex items-center px-4 py-2 border border-blue-300 dark:border-blue-700 rounded-lg text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors duration-200"
-                          disabled={isReviewing || isDeleting}
-                        >
-                          {isReviewing ? <span className="animate-spin mr-2"><Clock className="w-4 h-4" /></span> : <Eye className="w-4 h-4 mr-2" />}
-                          Review
-                        </button>
-                        <button
-                          onClick={() => openDeleteModal(payment)}
-                          className="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg text-xs sm:text-sm font-medium text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 transition-colors duration-200"
-                          disabled={isReviewing || isDeleting}
-                        >
-                          {isDeleting ? <span className="animate-spin mr-2"><Clock className="w-4 h-4" /></span> : <Trash2 className="w-4 h-4 mr-2" />}
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row justify-center items-center mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <span className="px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+                            <VStack align="start" spacing={2} flex={1}>
+                              <HStack spacing={3} wrap="wrap">
+                                <Heading size="md">
+                                  {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+                                    ? payment.pharmacyId.name
+                                    : typeof payment.pharmacyId === 'string'
+                                    ? payment.pharmacyId
+                                    : 'Unknown Pharmacy'}
+                                </Heading>
+                                <Badge 
+                                  colorScheme={getStatusColorScheme(payment.approvalStatus)}
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                >
+                                  <HStack spacing={1}>
+                                    {getStatusIcon(payment.approvalStatus)}
+                                    <Text textTransform="capitalize">{payment.approvalStatus}</Text>
+                                  </HStack>
+                                </Badge>
+                              </HStack>
+                              <Text color="gray.600" fontSize="sm">
+                                {getPaymentTitle(payment)}
+                              </Text>
+                            </VStack>
+                            
+                            <VStack align={{ base: 'start', lg: 'end' }} spacing={2}>
+                              <Text fontSize={{ base: 'lg', md: '2xl' }} fontWeight="bold">
+                                {formatCurrency(payment.amount)}
+                              </Text>
+                              <HStack spacing={1} color="gray.500" fontSize="sm">
+                                <Icon as={FaCalendarAlt} />
+                                <Text>{formatDate(payment.submittedAt)}</Text>
+                              </HStack>
+                            </VStack>
+                          </Flex>
+                          
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={4}>
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              {getPaymentMethodIcon(payment.paymentMethod || '')}
+                              <Text textTransform="capitalize">
+                                {(payment.paymentMethod || '').replace('_', ' ')}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              <Icon as={FaUser} />
+                              <Text>
+                                {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+                                  ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
+                                  : 'Unknown'}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm">
+                              <Icon as={FaReceipt} color="gray.600" />
+                              <Link
+                                href={payment.receiptUrl}
+                                isExternal
+                                color="blue.500"
+                                _hover={{ color: 'blue.600', textDecoration: 'underline' }}
+                              >
+                                View Receipt
+                              </Link>
+                            </HStack>
+                          </SimpleGrid>
+                          
+                          <Flex justify="end" gap={3}>
+                            <Button
+                              leftIcon={<Icon as={FaEye} />}
+                              colorScheme="blue"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openReviewModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Review
+                            </Button>
+                            <Button
+                              leftIcon={<Icon as={FaTrash} />}
+                              colorScheme="red"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDeleteModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Delete
+                            </Button>
+                          </Flex>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                )}
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <Flex justify="center" align="center" mt={6} gap={4}>
+                    <Button
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      isDisabled={currentPage === 1}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Previous
+                    </Button>
+                    <Text fontSize="sm" fontWeight="medium">
+                      Page {currentPage} of {totalPages}
+                    </Text>
+                    <Button
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      isDisabled={currentPage === totalPages}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Next
+                    </Button>
+                  </Flex>
+                )}
+              </TabPanel>
+              
+              {/* Other tab panels can show same content with different filters */}
+              <TabPanel px={0}>
+                {/* Same content as above - the tab change already filters the data */}
+                {paymentsLoading ? (
+                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Spinner size="xl" color="blue.500" />
+                      <Text fontSize="lg" fontWeight="medium">Loading payments...</Text>
+                    </VStack>
+                  </Center>
+                ) : filteredPayments.length === 0 ? (                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Icon as={FaFile} boxSize={16} color="gray.300" />
+                      <Text fontSize="lg" fontWeight="medium">No approved payments found</Text>
+                    </VStack>
+                  </Center>
+                ) : (
+                  <VStack spacing={4} px={4}>
+                    {filteredPayments.map((payment) => (
+                      <Card
+                        key={payment._id}
+                        w="full"
+                        bg={useColorModeValue('white', 'gray.700')}
+                        borderWidth="1px"
+                        borderColor={borderColor}
+                        _hover={{
+                          borderColor: 'blue.300',
+                          shadow: 'md',
+                          transform: 'translateY(-2px)',
+                        }}
+                        transition="all 0.2s"
+                      >
+                        <CardBody>
+                          <Flex 
+                            direction={{ base: 'column', lg: 'row' }} 
+                            justify="space-between" 
+                            align={{ base: 'start', lg: 'center' }}
+                            gap={4}
+                            mb={4}
+                          >
+                            <VStack align="start" spacing={2} flex={1}>
+                              <HStack spacing={3} wrap="wrap">
+                                <Heading size="md">
+                                  {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+                                    ? payment.pharmacyId.name
+                                    : typeof payment.pharmacyId === 'string'
+                                    ? payment.pharmacyId
+                                    : 'Unknown Pharmacy'}
+                                </Heading>
+                                <Badge 
+                                  colorScheme={getStatusColorScheme(payment.approvalStatus)}
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                >
+                                  <HStack spacing={1}>
+                                    {getStatusIcon(payment.approvalStatus)}
+                                    <Text textTransform="capitalize">{payment.approvalStatus}</Text>
+                                  </HStack>
+                                </Badge>
+                              </HStack>
+                              <Text color="gray.600" fontSize="sm">
+                                {getPaymentTitle(payment)}
+                              </Text>
+                            </VStack>
+                            
+                            <VStack align={{ base: 'start', lg: 'end' }} spacing={2}>
+                              <Text fontSize={{ base: 'lg', md: '2xl' }} fontWeight="bold">
+                                {formatCurrency(payment.amount)}
+                              </Text>
+                              <HStack spacing={1} color="gray.500" fontSize="sm">
+                                <Icon as={FaCalendarAlt} />
+                                <Text>{formatDate(payment.submittedAt)}</Text>
+                              </HStack>
+                            </VStack>
+                          </Flex>
+                          
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={4}>
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              {getPaymentMethodIcon(payment.paymentMethod || '')}
+                              <Text textTransform="capitalize">
+                                {(payment.paymentMethod || '').replace('_', ' ')}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              <Icon as={FaUser} />
+                              <Text>
+                                {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+                                  ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
+                                  : 'Unknown'}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm">
+                              <Icon as={FaReceipt} color="gray.600" />
+                              <Link
+                                href={payment.receiptUrl}
+                                isExternal
+                                color="blue.500"
+                                _hover={{ color: 'blue.600', textDecoration: 'underline' }}
+                              >
+                                View Receipt
+                              </Link>
+                            </HStack>
+                          </SimpleGrid>
+                          
+                          <Flex justify="end" gap={3}>
+                            <Button
+                              leftIcon={<Icon as={FaEye} />}
+                              colorScheme="blue"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openReviewModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Review
+                            </Button>
+                            <Button
+                              leftIcon={<Icon as={FaTrash} />}
+                              colorScheme="red"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDeleteModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Delete
+                            </Button>
+                          </Flex>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                )}
+              </TabPanel>
+              
+              <TabPanel px={0}>
+                {/* Rejected payments tab - same structure */}
+                {paymentsLoading ? (
+                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Spinner size="xl" color="blue.500" />
+                      <Text fontSize="lg" fontWeight="medium">Loading payments...</Text>
+                    </VStack>
+                  </Center>
+                ) : filteredPayments.length === 0 ? (                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Icon as={FaFile} boxSize={16} color="gray.300" />
+                      <Text fontSize="lg" fontWeight="medium">No rejected payments found</Text>
+                    </VStack>
+                  </Center>
+                ) : (
+                  <VStack spacing={4} px={4}>
+                    {filteredPayments.map((payment) => (
+                      <Card
+                        key={payment._id}
+                        w="full"
+                        bg={useColorModeValue('white', 'gray.700')}
+                        borderWidth="1px"
+                        borderColor={borderColor}
+                        _hover={{
+                          borderColor: 'blue.300',
+                          shadow: 'md',
+                          transform: 'translateY(-2px)',
+                        }}
+                        transition="all 0.2s"
+                      >
+                        <CardBody>
+                          <Flex 
+                            direction={{ base: 'column', lg: 'row' }} 
+                            justify="space-between" 
+                            align={{ base: 'start', lg: 'center' }}
+                            gap={4}
+                            mb={4}
+                          >
+                            <VStack align="start" spacing={2} flex={1}>
+                              <HStack spacing={3} wrap="wrap">
+                                <Heading size="md">
+                                  {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+                                    ? payment.pharmacyId.name
+                                    : typeof payment.pharmacyId === 'string'
+                                    ? payment.pharmacyId
+                                    : 'Unknown Pharmacy'}
+                                </Heading>
+                                <Badge 
+                                  colorScheme={getStatusColorScheme(payment.approvalStatus)}
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                >
+                                  <HStack spacing={1}>
+                                    {getStatusIcon(payment.approvalStatus)}
+                                    <Text textTransform="capitalize">{payment.approvalStatus}</Text>
+                                  </HStack>
+                                </Badge>
+                              </HStack>
+                              <Text color="gray.600" fontSize="sm">
+                                {getPaymentTitle(payment)}
+                              </Text>
+                            </VStack>
+                            
+                            <VStack align={{ base: 'start', lg: 'end' }} spacing={2}>
+                              <Text fontSize={{ base: 'lg', md: '2xl' }} fontWeight="bold">
+                                {formatCurrency(payment.amount)}
+                              </Text>
+                              <HStack spacing={1} color="gray.500" fontSize="sm">
+                                <Icon as={FaCalendarAlt} />
+                                <Text>{formatDate(payment.submittedAt)}</Text>
+                              </HStack>
+                            </VStack>
+                          </Flex>
+                          
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={4}>
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              {getPaymentMethodIcon(payment.paymentMethod || '')}
+                              <Text textTransform="capitalize">
+                                {(payment.paymentMethod || '').replace('_', ' ')}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              <Icon as={FaUser} />
+                              <Text>
+                                {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+                                  ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
+                                  : 'Unknown'}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm">
+                              <Icon as={FaReceipt} color="gray.600" />
+                              <Link
+                                href={payment.receiptUrl}
+                                isExternal
+                                color="blue.500"
+                                _hover={{ color: 'blue.600', textDecoration: 'underline' }}
+                              >
+                                View Receipt
+                              </Link>
+                            </HStack>
+                          </SimpleGrid>
+                          
+                          <Flex justify="end" gap={3}>
+                            <Button
+                              leftIcon={<Icon as={FaEye} />}
+                              colorScheme="blue"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openReviewModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Review
+                            </Button>
+                            <Button
+                              leftIcon={<Icon as={FaTrash} />}
+                              colorScheme="red"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDeleteModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Delete
+                            </Button>
+                          </Flex>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                )}
+              </TabPanel>
+              
+              <TabPanel px={0}>
+                {/* All payments tab - same structure */}
+                {paymentsLoading ? (
+                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Spinner size="xl" color="blue.500" />
+                      <Text fontSize="lg" fontWeight="medium">Loading payments...</Text>
+                    </VStack>
+                  </Center>
+                ) : filteredPayments.length === 0 ? (                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Icon as={FaFile} boxSize={16} color="gray.300" />
+                      <Text fontSize="lg" fontWeight="medium">No payments found</Text>
+                    </VStack>
+                  </Center>
+                ) : (
+                  <VStack spacing={4} px={4}>
+                    {filteredPayments.map((payment) => (
+                      <Card
+                        key={payment._id}
+                        w="full"
+                        bg={useColorModeValue('white', 'gray.700')}
+                        borderWidth="1px"
+                        borderColor={borderColor}
+                        _hover={{
+                          borderColor: 'blue.300',
+                          shadow: 'md',
+                          transform: 'translateY(-2px)',
+                        }}
+                        transition="all 0.2s"
+                      >
+                        <CardBody>
+                          <Flex 
+                            direction={{ base: 'column', lg: 'row' }} 
+                            justify="space-between" 
+                            align={{ base: 'start', lg: 'center' }}
+                            gap={4}
+                            mb={4}
+                          >
+                            <VStack align="start" spacing={2} flex={1}>
+                              <HStack spacing={3} wrap="wrap">
+                                <Heading size="md">
+                                  {typeof payment.pharmacyId === 'object' && payment.pharmacyId !== null && 'name' in payment.pharmacyId
+                                    ? payment.pharmacyId.name
+                                    : typeof payment.pharmacyId === 'string'
+                                    ? payment.pharmacyId
+                                    : 'Unknown Pharmacy'}
+                                </Heading>
+                                <Badge 
+                                  colorScheme={getStatusColorScheme(payment.approvalStatus)}
+                                  variant="subtle"
+                                  fontSize="xs"
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                >
+                                  <HStack spacing={1}>
+                                    {getStatusIcon(payment.approvalStatus)}
+                                    <Text textTransform="capitalize">{payment.approvalStatus}</Text>
+                                  </HStack>
+                                </Badge>
+                              </HStack>
+                              <Text color="gray.600" fontSize="sm">
+                                {getPaymentTitle(payment)}
+                              </Text>
+                            </VStack>
+                            
+                            <VStack align={{ base: 'start', lg: 'end' }} spacing={2}>
+                              <Text fontSize={{ base: 'lg', md: '2xl' }} fontWeight="bold">
+                                {formatCurrency(payment.amount)}
+                              </Text>
+                              <HStack spacing={1} color="gray.500" fontSize="sm">
+                                <Icon as={FaCalendarAlt} />
+                                <Text>{formatDate(payment.submittedAt)}</Text>
+                              </HStack>
+                            </VStack>
+                          </Flex>
+                          
+                          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={4}>
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              {getPaymentMethodIcon(payment.paymentMethod || '')}
+                              <Text textTransform="capitalize">
+                                {(payment.paymentMethod || '').replace('_', ' ')}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm" color="gray.600">
+                              <Icon as={FaUser} />
+                              <Text>
+                                {typeof payment.submittedBy === 'object' && payment.submittedBy !== null
+                                  ? `${payment.submittedBy.firstName} ${payment.submittedBy.lastName}`
+                                  : 'Unknown'}
+                              </Text>
+                            </HStack>
+                            
+                            <HStack spacing={2} fontSize="sm">
+                              <Icon as={FaReceipt} color="gray.600" />
+                              <Link
+                                href={payment.receiptUrl}
+                                isExternal
+                                color="blue.500"
+                                _hover={{ color: 'blue.600', textDecoration: 'underline' }}
+                              >
+                                View Receipt
+                              </Link>
+                            </HStack>
+                          </SimpleGrid>
+                          
+                          <Flex justify="end" gap={3}>
+                            <Button
+                              leftIcon={<Icon as={FaEye} />}
+                              colorScheme="blue"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openReviewModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Review
+                            </Button>
+                            <Button
+                              leftIcon={<Icon as={FaTrash} />}
+                              colorScheme="red"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDeleteModal(payment)}
+                              isLoading={isReviewing || isDeleting}
+                            >
+                              Delete
+                            </Button>
+                          </Flex>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                )}
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Card>
+      </Container>      
       {/* Review Modal */}
-      {showReviewModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Review Payment</h2>
-              <p className="text-gray-600 text-sm mt-1">
+      <Modal isOpen={isReviewOpen} onClose={closeModals} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <VStack align="start" spacing={1}>
+              <Text fontSize="xl" fontWeight="semibold">Review Payment</Text>
+              <Text fontSize="sm" color="gray.600">
                 Review the payment details and choose your action
-              </p>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* Payment Details */}
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                <h3 className="font-medium text-gray-900">Payment Details</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-medium">{selectedPayment.amount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Method:</span>
-                    <span className="capitalize">{(selectedPayment.paymentMethod || '').replace('_', ' ')}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Type:</span>
-                    <span className="capitalize">{('paymentType' in selectedPayment ? (selectedPayment as any).paymentType : '').replace('_', ' ')}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Pharmacy:</span>
-                    <span>{typeof selectedPayment.pharmacyId === 'object' && selectedPayment.pharmacyId !== null && 'name' in selectedPayment.pharmacyId ? selectedPayment.pharmacyId.name : 'Unknown Pharmacy'}</span>
-                  </div>
-                </div>
-              </div>
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <h3 className="font-medium text-gray-900">Action</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setReviewData({ ...reviewData, action: 'approve' })}
-                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                      reviewData.action === 'approve'
-                        ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-green-300'
-                    }`}
+              </Text>
+            </VStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedPayment && (
+              <VStack spacing={6} align="stretch">
+                {/* Payment Details */}
+                <Box bg={useColorModeValue('gray.50', 'gray.700')} p={4} borderRadius="md">
+                  <Text fontWeight="medium" mb={3}>Payment Details</Text>
+                  <VStack spacing={2} align="stretch" fontSize="sm">
+                    <Flex justify="space-between">
+                      <Text color="gray.600">Amount:</Text>
+                      <Text fontWeight="medium">{formatCurrency(selectedPayment.amount)}</Text>
+                    </Flex>
+                    <Flex justify="space-between">
+                      <Text color="gray.600">Method:</Text>
+                      <Text textTransform="capitalize">
+                        {(selectedPayment.paymentMethod || '').replace('_', ' ')}
+                      </Text>
+                    </Flex>
+                    <Flex justify="space-between">
+                      <Text color="gray.600">Type:</Text>
+                      <Text textTransform="capitalize">
+                        {('paymentType' in selectedPayment ? (selectedPayment as any).paymentType : '').replace('_', ' ')}
+                      </Text>
+                    </Flex>
+                    <Flex justify="space-between">
+                      <Text color="gray.600">Pharmacy:</Text>
+                      <Text>
+                        {typeof selectedPayment.pharmacyId === 'object' && selectedPayment.pharmacyId !== null && 'name' in selectedPayment.pharmacyId 
+                          ? selectedPayment.pharmacyId.name 
+                          : 'Unknown Pharmacy'}
+                      </Text>
+                    </Flex>
+                  </VStack>
+                </Box>
+                
+                {/* Action Selection */}
+                <FormControl>
+                  <FormLabel>Action</FormLabel>
+                  <RadioGroup 
+                    value={reviewData.action} 
+                    onChange={(value) => setReviewData({ ...reviewData, action: value as 'approve' | 'reject' })}
                   >
-                    <Check className="w-5 h-5 mx-auto mb-1" />
-                    <span className="text-sm font-medium">Approve</span>
-                  </button>
-                  <button
-                    onClick={() => setReviewData({ ...reviewData, action: 'reject' })}
-                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                      reviewData.action === 'reject'
-                        ? 'border-red-500 bg-red-50 text-red-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-red-300'
-                    }`}
-                  >
-                    <X className="w-5 h-5 mx-auto mb-1" />
-                    <span className="text-sm font-medium">Reject</span>
-                  </button>
-                </div>
-              </div>
-              {/* Rejection Reason */}
-              {reviewData.action === 'reject' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rejection Reason
-                  </label>
-                  <textarea
-                    value={reviewData.rejectionReason}
-                    onChange={(e) => setReviewData({ ...reviewData, rejectionReason: e.target.value })}
-                    placeholder="Please provide a reason for rejection..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="p-6 border-t border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <button
+                    <SimpleGrid columns={2} spacing={3}>
+                      <Card 
+                        borderWidth="2px"
+                        borderColor={reviewData.action === 'approve' ? 'green.500' : 'gray.200'}
+                        bg={reviewData.action === 'approve' ? 'green.50' : 'white'}
+                        _hover={{ borderColor: 'green.300' }}
+                        cursor="pointer"
+                        onClick={() => setReviewData({ ...reviewData, action: 'approve' })}
+                      >
+                        <CardBody textAlign="center" py={4}>
+                          <Radio value="approve" mb={2}>
+                            <VStack spacing={1}>
+                              <Icon as={FaCheck} color="green.500" boxSize={5} />
+                              <Text fontSize="sm" fontWeight="medium">Approve</Text>
+                            </VStack>
+                          </Radio>
+                        </CardBody>
+                      </Card>
+                      
+                      <Card 
+                        borderWidth="2px"
+                        borderColor={reviewData.action === 'reject' ? 'red.500' : 'gray.200'}
+                        bg={reviewData.action === 'reject' ? 'red.50' : 'white'}
+                        _hover={{ borderColor: 'red.300' }}
+                        cursor="pointer"
+                        onClick={() => setReviewData({ ...reviewData, action: 'reject' })}
+                      >
+                        <CardBody textAlign="center" py={4}>
+                          <Radio value="reject" mb={2}>
+                            <VStack spacing={1}>
+                              <Icon as={FaTimes} color="red.500" boxSize={5} />
+                              <Text fontSize="sm" fontWeight="medium">Reject</Text>
+                            </VStack>
+                          </Radio>
+                        </CardBody>
+                      </Card>
+                    </SimpleGrid>
+                  </RadioGroup>
+                </FormControl>
+                
+                {/* Rejection Reason */}
+                {reviewData.action === 'reject' && (
+                  <FormControl>
+                    <FormLabel>Rejection Reason</FormLabel>
+                    <Textarea
+                      value={reviewData.rejectionReason}
+                      onChange={(e) => setReviewData({ ...reviewData, rejectionReason: e.target.value })}
+                      placeholder="Please provide a reason for rejection..."
+                      rows={3}
+                      resize="none"
+                    />
+                  </FormControl>
+                )}
+              </VStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <ButtonGroup spacing={3} w="full">
+              <Button 
+                variant="outline"
                 onClick={closeModals}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200"
-                disabled={isReviewing}
+                isDisabled={isReviewing}
+                flex={1}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button 
+                colorScheme="blue"
                 onClick={handleReviewSubmit}
-                disabled={isReviewing || (reviewData.action === 'reject' && !reviewData.rejectionReason)}
-                className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-800 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                isLoading={isReviewing}
+                isDisabled={reviewData.action === 'reject' && !reviewData.rejectionReason}
+                flex={1}
               >
-                {isReviewing ? 'Processing...' : 'Submit Review'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                Submit Review
+              </Button>
+            </ButtonGroup>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Delete Payment</h2>
-                  <p className="text-gray-600 text-sm">This action cannot be undone</p>
-                </div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-700">
+      <Modal isOpen={isDeleteOpen} onClose={closeModals} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <HStack spacing={3}>
+              <Box 
+                w={12} 
+                h={12} 
+                bg="red.100" 
+                borderRadius="full" 
+                display="flex" 
+                alignItems="center" 
+                justifyContent="center"
+              >
+                <Icon as={FaTrash} color="red.600" boxSize={6} />
+              </Box>
+              <VStack align="start" spacing={1}>
+                <Text fontSize="xl" fontWeight="semibold">Delete Payment</Text>
+                <Text fontSize="sm" color="gray.600">This action cannot be undone</Text>
+              </VStack>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedPayment && (
+              <Box bg={useColorModeValue('gray.50', 'gray.700')} p={4} borderRadius="md">
+                <Text fontSize="sm" color="gray.700">
                   You are about to permanently delete the payment from{' '}
-                  <span className="font-medium">{typeof selectedPayment.pharmacyId === 'object' && selectedPayment.pharmacyId !== null && 'name' in selectedPayment.pharmacyId ? selectedPayment.pharmacyId.name : 'Unknown Pharmacy'}</span>{' '}
-                  for <span className="font-medium">{formatCurrency(selectedPayment.amount)}</span>.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                <button
-                  onClick={closeModals}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeletePayment}
-                  className="flex-1 px-4 py-2 bg-red-600 dark:bg-red-800 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white hover:bg-red-700 dark:hover:bg-red-900 transition-colors duration-200"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete Payment'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+                  <Text as="span" fontWeight="medium">
+                    {typeof selectedPayment.pharmacyId === 'object' && selectedPayment.pharmacyId !== null && 'name' in selectedPayment.pharmacyId 
+                      ? selectedPayment.pharmacyId.name 
+                      : 'Unknown Pharmacy'}
+                  </Text>{' '}
+                  for <Text as="span" fontWeight="medium">{formatCurrency(selectedPayment.amount)}</Text>.
+                </Text>
+              </Box>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <ButtonGroup spacing={3} w="full">
+              <Button 
+                variant="outline"
+                onClick={closeModals}
+                isDisabled={isDeleting}
+                flex={1}
+              >
+                Cancel
+              </Button>
+              <Button 
+                colorScheme="red"
+                onClick={handleDeletePayment}
+                isLoading={isDeleting}
+                flex={1}
+              >
+                Delete Payment
+              </Button>
+            </ButtonGroup>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Box>  );
 };
 
 export default AdminPaymentReview;

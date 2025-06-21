@@ -1,244 +1,77 @@
 import React, { useState } from 'react';
-import type { ReactNode } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import ThemeToggle from '../ui/ThemeToggle';
-import NotificationBell from '../ui/NotificationBell';
+import { Box, useBreakpointValue } from '@chakra-ui/react';
+import { Outlet } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import ModernHeader from './ModernHeader';
 
 interface DashboardLayoutProps {
-  children?: ReactNode;
+  children?: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Responsive sidebar behavior
+  const isMobile = useBreakpointValue({ base: true, lg: false });
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  // Define navigation items based on user role
-  const getNavItems = () => {
-    const commonItems = [
-      { name: 'My Profile', path: '/profile', icon: 'user' },
-    ];
-
-    const adminCommonItems = [
-      { name: 'Dashboard', path: '/dashboard', icon: 'home' },
-      { name: 'My Profile', path: '/profile', icon: 'user' },
-    ];
-
-    const adminItems = [
-      {
-        name: 'Admin Dashboard',
-        path: '/admin/dashboard',
-        icon: 'tachometer-alt',
-      },
-      {
-        name: 'Dues Management',
-        path: '/admin/dues-management',
-        icon: 'money-bill',
-      },
-      { name: 'Pharmacies', path: '/admin/pharmacies', icon: 'building' },
-      { name: 'Users', path: '/admin/users', icon: 'users' },
-      { name: 'Roles', path: '/admin/roles', icon: 'user-tag' },
-      { name: 'Permissions', path: '/admin/permissions', icon: 'shield-alt' },
-      { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
-      { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },
-      {
-        name: 'Attendance Management',
-        path: '/dashboard/attendance-management',
-        icon: 'clipboard-check',
-      },
-      { name: 'Elections', path: '/elections', icon: 'vote-yea' },
-      { name: 'Polls', path: '/polls', icon: 'poll' },
-      { name: 'Communications', path: '/communications', icon: 'envelope' },
-      { name: 'Notifications', path: '/notifications', icon: 'bell' },
-      { name: 'Finances', path: '/finances', icon: 'money-bill' },
-      {
-        name: 'Financial Management',
-        path: '/dashboard/financial-management',
-        icon: 'chart-line',
-      },
-      { name: 'Documents', path: '/documents', icon: 'file-alt' },
-      { name: 'Settings', path: '/settings', icon: 'cog' },
-    ];
-
-    const memberItems = [
-      { name: 'Dashboard', path: '/dashboard', icon: 'home' },
-      { name: 'My Pharmacy', path: '/my-pharmacy', icon: 'building' },
-      { name: 'My Documents', path: '/my-documents', icon: 'file-alt' },
-      { name: 'Dues & Payments', path: '/payments', icon: 'money-bill' },
-      { name: 'Events', path: '/member/events', icon: 'calendar' },
-      {
-        name: 'My Attendance',
-        path: '/dashboard/attendance-status',
-        icon: 'clipboard-check',
-      },
-      { name: 'Elections', path: '/elections', icon: 'vote-yea' },
-      { name: 'Messages', path: '/messages', icon: 'envelope' },
-      { name: 'Notifications', path: '/notifications', icon: 'bell' },
-    ];
-
-    if (['admin', 'superadmin'].includes(user?.role)) {
-      return [...adminCommonItems, ...adminItems];
-    } else if (['treasurer', 'financial_secretary'].includes(user?.role)) {
-      return [
-        ...adminCommonItems,
-        { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
-        { name: 'Finances', path: '/finances', icon: 'money-bill' },
-        {
-          name: 'Financial Management',
-          path: '/dashboard/financial-management',
-          icon: 'chart-line',
-        },
-        { name: 'Dues', path: '/dues', icon: 'receipt' },
-        { name: 'Donations', path: '/donations', icon: 'gift' },
-      ];
-    } else if (user?.role === 'secretary') {
-      return [
-        ...adminCommonItems,
-        { name: 'Pharmacies', path: '/pharmacies', icon: 'building' },
-        { name: 'Event Management', path: '/admin/events', icon: 'calendar' },
-        { name: 'Legacy Events', path: '/events', icon: 'calendar-alt' },
-        { name: 'Communications', path: '/communications', icon: 'envelope' },
-        { name: 'Notifications', path: '/notifications', icon: 'bell' },
-        { name: 'Documents', path: '/documents', icon: 'file-alt' },
-      ];
-    } else {
-      return [...commonItems, ...memberItems];
+  const closeSidebar = () => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
     }
   };
 
-  const navItems = getNavItems();
-
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <Box minH="100vh" bg="gray.50" _dark={{ bg: 'gray.900' }}>
+      {/* Sidebar */}
+      <Box
+        display={isMobile && !isSidebarOpen ? 'none' : 'block'}
+        position="fixed"
+        zIndex={1000}
+      >        <Sidebar 
+          isOpen={isSidebarOpen} 
+          onClose={closeSidebar}
+        />
+      </Box>
+
       {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 md:hidden"
-          onClick={toggleSidebar}
-          aria-hidden="true"
+      {isMobile && isSidebarOpen && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="blackAlpha.600"
+          zIndex={999}
+          onClick={closeSidebar}
         />
       )}
 
-      {/* Sidebar */}
-      <div
-        className={`${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-30 w-64 bg-card border-r border-border transition duration-300 ease-in-out transform md:translate-x-0 md:static md:h-screen`}
+      {/* Main Content Area */}
+      <Box
+        ml={isMobile ? 0 : isSidebarOpen ? "280px" : "80px"}
+        transition="margin-left 0.3s ease"
+        minH="100vh"
       >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
-          <div className="flex items-center justify-center h-16 border-b border-border">
-            <div className="flex items-center">
-              <img
-                src="/acpn-ota-zone-logo.svg"
-                alt="ACPN Ota Zone Logo"
-                className="w-10 h-10 mr-2"
-              />
-              <h2 className="text-xl font-bold text-primary">ACPN Ota Zone</h2>
-            </div>
-          </div>
+        {/* Header */}
+        <ModernHeader 
+          onMenuClick={toggleSidebar}
+          isSidebarOpen={!isMobile && isSidebarOpen}
+        />
 
-          {/* Navigation Items */}
-          <div className="flex-1 px-4 space-y-1 overflow-y-auto">
-            <div className="py-4">
-              <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                MAIN
-              </p>
-              <nav className="mt-2 space-y-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      location.pathname === item.path
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-foreground/70 hover:bg-accent hover:text-foreground'
-                    }`}
-                  >
-                    <i
-                      className={`fas fa-${item.icon} mr-3 text-muted-foreground`}
-                    ></i>
-                    {item.name}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </div>
-
-          {/* User Profile Section */}
-          <div className="p-4 border-t border-border">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                  {user?.firstName ? user.firstName.charAt(0) : 'U'}
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-foreground">
-                  {user ? `${user.firstName} ${user.lastName}` : 'User'}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {user?.role || 'Member'}
-                </p>
-              </div>
-              <div className="ml-auto flex items-center space-x-2">
-                <Link
-                  to="/profile"
-                  className="text-muted-foreground hover:text-primary"
-                  title="Profile"
-                >
-                  <i className="fas fa-user-circle"></i>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Logout"
-                >
-                  <i className="fas fa-sign-out-alt"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Top Navigation */}
-        <header className="flex items-center justify-between h-16 px-6 bg-card border-b border-border">
-          <button
-            onClick={toggleSidebar}
-            className="text-foreground/70 focus:outline-none md:hidden"
-          >
-            <i className={`fas fa-${sidebarOpen ? 'times' : 'bars'}`}></i>
-          </button>
-          <div className="flex items-center ml-auto space-x-4">
-            <NotificationBell />
-            <button className="text-foreground/70 hover:text-primary">
-              <i className="fas fa-envelope"></i>
-            </button>
-            {/* Theme Toggle Button */}
-            <ThemeToggle />
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-background">
-          {children ? children : <Outlet />}
-        </main>
-      </div>
-    </div>
+        {/* Page Content */}        <Box
+          pt="80px" // Header height
+          p={6}
+          minH="calc(100vh - 80px)"
+        >
+          {children || <Outlet />}
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

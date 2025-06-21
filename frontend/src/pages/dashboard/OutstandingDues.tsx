@@ -1,11 +1,52 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Calendar,
-  AlertTriangle,
-  Search,
-  Filter,
-  Download,
-} from 'lucide-react';
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Card,
+  CardBody,
+  VStack,
+  HStack,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Select,
+  FormControl,
+  Stat,
+  StatLabel,
+  StatNumber,
+  SimpleGrid,
+  Spinner,
+  Center,
+  Icon,
+  useToast,
+  useColorModeValue,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Badge,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+  ButtonGroup
+} from '@chakra-ui/react';
+import { 
+  FaCalendarAlt,
+  FaExclamationTriangle,
+  FaSearch,
+  FaFilter,
+  FaDownload,
+  FaBell,
+  FaPlus,
+  FaMoneyBillWave
+} from 'react-icons/fa';
 import financialService from '../../services/financial.service';
 import type { Due } from '../../types/financial.types';
 
@@ -26,6 +67,17 @@ const OutstandingDues: React.FC = () => {
   const [sortBy, setSortBy] = useState<'amount' | 'date' | 'penalty'>('date');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  // Chakra UI hooks
+  const toast = useToast();
+  
+  // Color mode values
+  const bgGradient = useColorModeValue(
+    'linear(to-br, blue.50, purple.50, pink.50)',
+    'linear(to-br, gray.900, blue.900, purple.900)'
+  );
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   const filterAndSortDues = useCallback(() => {
     let filtered = [...outstandingDues];
@@ -113,24 +165,41 @@ const OutstandingDues: React.FC = () => {
           penaltyAmount,
           totalOwed,
         };
-      });
-
-      setOutstandingDues(enrichedDues);
+      });      setOutstandingDues(enrichedDues);
     } catch (err) {
-      setError('Failed to fetch outstanding dues');
+      const errorMessage = 'Failed to fetch outstanding dues';
+      setError(errorMessage);
+      toast({
+        title: 'Error Loading Data',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error fetching outstanding dues:', err);
     } finally {
       setLoading(false);
     }
   };
-
   const handleSendReminder = async () => {
     try {
       // Mock API call for sending reminder
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert('Reminder sent successfully!');
+      toast({
+        title: 'Reminder Sent',
+        description: 'Reminder sent successfully!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch {
-      alert('Failed to send reminder');
+      toast({
+        title: 'Error',
+        description: 'Failed to send reminder',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -147,9 +216,21 @@ const OutstandingDues: React.FC = () => {
         reason,
       });
       fetchOutstandingDues(); // Refresh data
-      alert('Penalty added successfully!');
+      toast({
+        title: 'Penalty Added',
+        description: 'Penalty added successfully!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch {
-      alert('Failed to add penalty');
+      toast({
+        title: 'Error',
+        description: 'Failed to add penalty',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -189,14 +270,10 @@ const OutstandingDues: React.FC = () => {
     a.download = 'outstanding-dues.csv';
     a.click();
     window.URL.revokeObjectURL(url);
-  };
-
-  const getPriorityColor = (daysPastDue: number) => {
-    if (daysPastDue > 60)
-      return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
-    if (daysPastDue > 30)
-      return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
-    return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+  };  const getPriorityColorScheme = (daysPastDue: number) => {
+    if (daysPastDue > 60) return 'red';
+    if (daysPastDue > 30) return 'yellow';
+    return 'green';
   };
 
   const getPriorityLabel = (daysPastDue: number) => {
@@ -230,306 +307,397 @@ const OutstandingDues: React.FC = () => {
       ? filteredDues.reduce((sum, due) => sum + due.daysPastDue, 0) /
         filteredDues.length
       : 0;
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient}>
+        <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+          <Center h="400px">
+            <VStack spacing={4}>
+              <Spinner size="xl" color="blue.500" thickness="4px" />
+              <Text fontSize="lg" fontWeight="medium">Loading outstanding dues...</Text>
+              <Text color="gray.500" fontSize="sm">Please wait while data is being loaded.</Text>
+            </VStack>
+          </Center>
+        </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
-        <p className="text-destructive">{error}</p>
-        <button
-          onClick={fetchOutstandingDues}
-          className="mt-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient}>
+        <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+          <Alert status="error" borderRadius="md">
+            <AlertIcon />
+            <VStack align="start" spacing={2} flex={1}>
+              <AlertDescription>{error}</AlertDescription>
+              <Button
+                onClick={fetchOutstandingDues}
+                colorScheme="red"
+                size="sm"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </VStack>
+          </Alert>
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground">Outstanding Dues</h1>
-        <button
-          onClick={exportData}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 flex items-center gap-2 transition-colors"
-        >
-          <Download size={16} />
-          Export Report
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card p-6 rounded-lg shadow border border-border">
-          <div className="flex items-center">
-            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">
-                Total Outstanding
-              </p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                ₦{totalOutstanding.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card p-6 rounded-lg shadow border border-border">
-          <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">
-                Total Penalties
-              </p>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                ₦{totalPenalties.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card p-6 rounded-lg shadow border border-border">
-          <div className="flex items-center">
-            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">
-                Critical Cases
-              </p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {criticalCount}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card p-6 rounded-lg shadow border border-border">
-          <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">
-                Avg Days Overdue
-              </p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {averageDaysOverdue.toFixed(0)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="relative">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-            size={16}
-          />
-          <input
-            type="text"
-            placeholder="Search dues or pharmacy..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-          />
-        </div>
-        <div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+    <Box minH="100vh" bgGradient={bgGradient}>
+      <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+        <VStack spacing={6} align="stretch">
+          {/* Header */}
+          <Flex 
+            direction={{ base: 'column', md: 'row' }} 
+            justify="space-between" 
+            align={{ base: 'start', md: 'center' }}
+            gap={4}
           >
-            <option value="all">All Status</option>
-            <option value="critical">Critical (60+ days)</option>
-            <option value="warning">Warning (30-60 days)</option>
-            <option value="recent">Recent (0-30 days)</option>
-          </select>
-        </div>
-        <div>
-          <select
-            value={sortBy}
-            onChange={(e) =>
-              setSortBy(e.target.value as 'amount' | 'date' | 'penalty')
-            }
-            className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-          >
-            <option value="date">Sort by Days Overdue</option>
-            <option value="amount">Sort by Amount</option>
-            <option value="penalty">Sort by Penalty</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter size={16} className="text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
-            {filteredDues.length} of {outstandingDues.length} items
-          </span>
-        </div>
-      </div>
+            <VStack align="start" spacing={2}>
+              <Heading 
+                size={{ base: 'lg', md: 'xl' }}
+                bgGradient="linear(to-r, blue.400, purple.500)"
+                bgClip="text"
+              >
+                Outstanding Dues
+              </Heading>
+              <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
+                Monitor and manage overdue payments and penalties
+              </Text>
+            </VStack>
+            <Button
+              leftIcon={<Icon as={FaDownload} />}
+              onClick={exportData}
+              colorScheme="blue"
+              variant="solid"
+              size={{ base: 'sm', md: 'md' }}
+            >
+              Export Report
+            </Button>
+          </Flex>
 
-      {/* Outstanding Dues Table */}
-      <div className="bg-card rounded-lg shadow border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Due Details
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Pharmacy
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Days Overdue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Penalty
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Total Owed
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-card divide-y divide-border">
-              {paginatedDues.map((due) => (
-                <tr
-                  key={due._id}
-                  className="hover:bg-muted/30 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-foreground">
-                        {due.title}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Due: {new Date(due.dueDate).toLocaleDateString()}
-                      </div>
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(
-                          due.daysPastDue
-                        )}`}
-                      >
-                        {getPriorityLabel(due.daysPastDue)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {due.pharmacyName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    ₦{due.amount.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(
-                        due.daysPastDue
-                      )}`}
+          {/* Summary Cards */}
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <HStack spacing={3}>
+                    <Icon as={FaExclamationTriangle} boxSize={8} color="red.500" />
+                    <VStack align="start" spacing={1}>
+                      <StatLabel color="gray.500" fontSize="sm">Total Outstanding</StatLabel>
+                      <StatNumber color="red.500" fontSize={{ base: 'lg', md: 'xl' }}>
+                        ₦{totalOutstanding.toLocaleString()}
+                      </StatNumber>
+                    </VStack>
+                  </HStack>
+                </Stat>
+              </CardBody>
+            </Card>
+            
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <HStack spacing={3}>
+                    <Icon as={FaMoneyBillWave} boxSize={8} color="yellow.500" />
+                    <VStack align="start" spacing={1}>
+                      <StatLabel color="gray.500" fontSize="sm">Total Penalties</StatLabel>
+                      <StatNumber color="yellow.500" fontSize={{ base: 'lg', md: 'xl' }}>
+                        ₦{totalPenalties.toLocaleString()}
+                      </StatNumber>
+                    </VStack>
+                  </HStack>
+                </Stat>
+              </CardBody>
+            </Card>
+            
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <HStack spacing={3}>
+                    <Icon as={FaExclamationTriangle} boxSize={8} color="red.500" />
+                    <VStack align="start" spacing={1}>
+                      <StatLabel color="gray.500" fontSize="sm">Critical Cases</StatLabel>
+                      <StatNumber color="red.500" fontSize={{ base: 'lg', md: 'xl' }}>
+                        {criticalCount}
+                      </StatNumber>
+                    </VStack>
+                  </HStack>
+                </Stat>
+              </CardBody>
+            </Card>
+            
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <HStack spacing={3}>
+                    <Icon as={FaCalendarAlt} boxSize={8} color="blue.500" />
+                    <VStack align="start" spacing={1}>
+                      <StatLabel color="gray.500" fontSize="sm">Avg Days Overdue</StatLabel>
+                      <StatNumber color="blue.500" fontSize={{ base: 'lg', md: 'xl' }}>
+                        {averageDaysOverdue.toFixed(0)}
+                      </StatNumber>
+                    </VStack>
+                  </HStack>
+                </Stat>
+              </CardBody>
+            </Card>
+          </SimpleGrid>
+
+          {/* Filters and Search */}
+          <Card bg={cardBg} shadow="sm" borderWidth="1px" borderColor={borderColor}>
+            <CardBody>
+              <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4}>
+                <FormControl>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <Icon as={FaSearch} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      placeholder="Search dues or pharmacy..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      bg={useColorModeValue('white', 'gray.700')}
+                      borderColor={borderColor}
+                    />
+                  </InputGroup>
+                </FormControl>
+                
+                <FormControl>
+                  <Select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={borderColor}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="critical">Critical (60+ days)</option>
+                    <option value="warning">Warning (30-60 days)</option>
+                    <option value="recent">Recent (0-30 days)</option>
+                  </Select>
+                </FormControl>
+                
+                <FormControl>
+                  <Select
+                    value={sortBy}
+                    onChange={(e) =>
+                      setSortBy(e.target.value as 'amount' | 'date' | 'penalty')
+                    }
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={borderColor}
+                  >
+                    <option value="date">Sort by Days Overdue</option>
+                    <option value="amount">Sort by Amount</option>
+                    <option value="penalty">Sort by Penalty</option>
+                  </Select>
+                </FormControl>
+                
+                <FormControl>
+                  <HStack spacing={2} justify="center">
+                    <Icon as={FaFilter} color="gray.500" />
+                    <Text fontSize="sm" color="gray.500">
+                      {filteredDues.length} of {outstandingDues.length} items
+                    </Text>
+                  </HStack>
+                </FormControl>
+              </SimpleGrid>
+            </CardBody>
+          </Card>          {/* Outstanding Dues Table */}
+          <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+            <TableContainer>
+              <Table variant="simple" size="md">
+                <Thead bg={useColorModeValue('gray.50', 'gray.700')}>
+                  <Tr>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Due Details
+                    </Th>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Pharmacy
+                    </Th>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Amount
+                    </Th>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Days Overdue
+                    </Th>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Penalty
+                    </Th>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Total Owed
+                    </Th>
+                    <Th fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
+                      Actions
+                    </Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {paginatedDues.map((due) => (
+                    <Tr 
+                      key={due._id}
+                      _hover={{ 
+                        bg: useColorModeValue('gray.50', 'gray.700'),
+                        transform: 'translateY(-1px)',
+                        shadow: 'sm'
+                      }}
+                      transition="all 0.2s"
                     >
-                      {due.daysPastDue} days
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
-                    ₦{due.penaltyAmount.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                    ₦{due.totalOwed.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleSendReminder()}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs px-2 py-1 border border-blue-600 dark:border-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                      >
-                        Send Reminder
-                      </button>
-                      <button
-                        onClick={() => handleAddPenalty(due._id)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs px-2 py-1 border border-red-600 dark:border-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                      >
-                        Add Penalty
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-card px-4 py-3 border-t border-border sm:px-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Showing{' '}
-                    <span className="font-medium text-foreground">
-                      {startIndex + 1}
-                    </span>{' '}
-                    to{' '}
-                    <span className="font-medium text-foreground">
-                      {Math.min(startIndex + itemsPerPage, filteredDues.length)}
-                    </span>{' '}
-                    of{' '}
-                    <span className="font-medium text-foreground">
-                      {filteredDues.length}
-                    </span>{' '}
-                    results
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
-                            currentPage === page
-                              ? 'z-10 bg-primary/10 border-primary text-primary'
-                              : 'bg-card border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                          }`}
+                      <Td>
+                        <VStack align="start" spacing={1}>
+                          <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                            {due.title}
+                          </Text>
+                          <Text fontSize="xs" color="gray.500">
+                            Due: {new Date(due.dueDate).toLocaleDateString()}
+                          </Text>
+                          <Badge
+                            colorScheme={getPriorityColorScheme(due.daysPastDue)}
+                            size="sm"
+                            borderRadius="full"
+                          >
+                            {getPriorityLabel(due.daysPastDue)}
+                          </Badge>
+                        </VStack>
+                      </Td>
+                      <Td>
+                        <Text fontSize="sm" noOfLines={1}>
+                          {due.pharmacyName}
+                        </Text>
+                      </Td>
+                      <Td>
+                        <Text fontSize="sm" fontWeight="medium">
+                          ₦{due.amount.toLocaleString()}
+                        </Text>
+                      </Td>
+                      <Td>
+                        <Badge
+                          colorScheme={getPriorityColorScheme(due.daysPastDue)}
+                          size="sm"
+                          borderRadius="full"
                         >
-                          {page}
-                        </button>
-                      )
-                    )}
-                  </nav>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+                          {due.daysPastDue} days
+                        </Badge>
+                      </Td>
+                      <Td>
+                        <Text fontSize="sm" color="red.500" fontWeight="medium">
+                          ₦{due.penaltyAmount.toLocaleString()}
+                        </Text>
+                      </Td>
+                      <Td>
+                        <Text fontSize="sm" fontWeight="bold">
+                          ₦{due.totalOwed.toLocaleString()}
+                        </Text>
+                      </Td>
+                      <Td>
+                        <ButtonGroup size="xs" spacing={1}>
+                          <Button
+                            leftIcon={<Icon as={FaBell} />}
+                            onClick={() => handleSendReminder()}
+                            colorScheme="blue"
+                            variant="outline"
+                            size="xs"
+                          >
+                            Remind
+                          </Button>
+                          <Button
+                            leftIcon={<Icon as={FaPlus} />}
+                            onClick={() => handleAddPenalty(due._id)}
+                            colorScheme="red"
+                            variant="outline"
+                            size="xs"
+                          >
+                            Penalty
+                          </Button>
+                        </ButtonGroup>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box p={4} borderTopWidth="1px" borderColor={borderColor}>
+                <Flex direction={{ base: 'column', sm: 'row' }} justify="space-between" align="center" gap={4}>
+                  {/* Mobile pagination */}
+                  <Flex justify="space-between" w="full" display={{ base: 'flex', sm: 'none' }}>
+                    <Button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      isDisabled={currentPage === 1}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                      }
+                      isDisabled={currentPage === totalPages}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Next
+                    </Button>
+                  </Flex>
+                  
+                  {/* Desktop pagination */}
+                  <Box display={{ base: 'none', sm: 'block' }}>
+                    <Text fontSize="sm" color="gray.500">
+                      Showing{' '}
+                      <Text as="span" fontWeight="medium" color={useColorModeValue('gray.900', 'gray.100')}>
+                        {startIndex + 1}
+                      </Text>{' '}
+                      to{' '}
+                      <Text as="span" fontWeight="medium" color={useColorModeValue('gray.900', 'gray.100')}>
+                        {Math.min(startIndex + itemsPerPage, filteredDues.length)}
+                      </Text>{' '}
+                      of{' '}
+                      <Text as="span" fontWeight="medium" color={useColorModeValue('gray.900', 'gray.100')}>
+                        {filteredDues.length}
+                      </Text>{' '}
+                      results
+                    </Text>
+                  </Box>
+                  
+                  <HStack spacing={0} display={{ base: 'none', sm: 'flex' }}>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          size="sm"
+                          variant={currentPage === pageNum ? "solid" : "outline"}
+                          colorScheme={currentPage === pageNum ? "blue" : "gray"}
+                          borderRadius="none"
+                          _first={{ borderLeftRadius: "md" }}
+                          _last={{ borderRightRadius: "md" }}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </HStack>
+                </Flex>
+              </Box>
+            )}
+          </Card>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 

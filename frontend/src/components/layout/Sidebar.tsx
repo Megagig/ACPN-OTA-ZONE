@@ -49,7 +49,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const ModernSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const location = useLocation();
   
@@ -190,7 +190,6 @@ const ModernSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </Tooltip>
     );
   };
-
   return (
     <Box
       as="nav"
@@ -204,21 +203,9 @@ const ModernSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       borderColor={borderColor}
       transition="width 0.3s ease"
       zIndex={1000}
-      overflowY="auto"
-      css={{
-        '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          width: '6px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: borderColor,
-          borderRadius: '24px',
-        },
-      }}
-    >
-      <VStack spacing={0} align="stretch" h="full">
+      display="flex"
+      flexDirection="column"
+    >      <VStack spacing={0} align="stretch" h="full">
         {/* Logo Section */}
         <Flex
           align="center"
@@ -227,6 +214,7 @@ const ModernSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           h="80px"
           borderBottom="1px"
           borderColor={borderColor}
+          flexShrink={0}
         >
           <Image
             src="/acpn-logo.png"
@@ -248,32 +236,41 @@ const ModernSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               Ota Zone
             </Text>
           </VStack>
-        </Flex>
-
-        {/* Navigation Links */}
-        <VStack spacing={1} align="stretch" p={2} flex={1}>
-          <Text
-            fontSize="xs"
-            fontWeight="600"
-            color={textColor}
-            textTransform="uppercase"
-            letterSpacing="wide"
-            p={2}
-            ml={2}
-            opacity={isOpen ? 1 : 0}
-            transition="opacity 0.2s"
-          >
-            Menu
-          </Text>
-          {navItems.map((item) => (
-            <NavLink key={item.path} item={item} />
-          ))}
-        </VStack>
-
-        <Divider />
+        </Flex>        {/* Navigation Links */}
+        <Box flex={1} overflowY="auto" css={{
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: borderColor,
+            borderRadius: '24px',
+          },
+        }}>
+          <VStack spacing={1} align="stretch" p={2}>
+            <Text
+              fontSize="xs"
+              fontWeight="600"
+              color={textColor}
+              textTransform="uppercase"
+              letterSpacing="wide"
+              p={2}
+              ml={2}
+              opacity={isOpen ? 1 : 0}
+              transition="opacity 0.2s"
+            >
+              Menu
+            </Text>
+            {navItems.map((item) => (
+              <NavLink key={item.path} item={item} />
+            ))}
+          </VStack>
+        </Box>        <Divider />
 
         {/* User Profile Section */}
-        <Box p={4}>
+        <Box p={4} flexShrink={0}>
           <Flex
             align="center"
             p={3}
@@ -310,4 +307,4 @@ const ModernSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default ModernSidebar;
+export default Sidebar;

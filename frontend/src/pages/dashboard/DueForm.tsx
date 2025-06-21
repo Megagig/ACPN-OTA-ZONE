@@ -1,5 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Card,
+  CardBody,
+  CardHeader,
+  Heading,
+  VStack,
+  HStack,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  useToast,
+  Text,
+  useColorModeValue,
+  Grid,
+  GridItem,
+  Switch,
+  Alert,
+  AlertIcon,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+} from '@chakra-ui/react';
+import { AddIcon } from '@chakra-ui/icons';
 import financialService from '../../services/financial.service';
 import type { DueType, Pharmacy } from '../../types/pharmacy.types';
 
@@ -20,10 +50,13 @@ interface FormData {
 
 const DueForm: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dueTypes, setDueTypes] = useState<DueType[]>([]);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  // Color mode values
+  const bgColor = useColorModeValue('white', 'gray.800');
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -40,14 +73,21 @@ const DueForm: React.FC = () => {
     fetchDueTypes();
     fetchPharmacies();
   }, []);
-
   const fetchDueTypes = async () => {
     try {
       const response = await financialService.getDueTypes();
       setDueTypes(response);
     } catch (err) {
       console.error('Failed to fetch due types:', err);
-      setError('Failed to load due types');
+      const errorMessage = 'Failed to load due types';
+      setError(errorMessage);
+      toast({
+        title: 'Error loading due types',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -57,7 +97,15 @@ const DueForm: React.FC = () => {
       setPharmacies(response);
     } catch (err) {
       console.error('Failed to fetch pharmacies:', err);
-      setError('Failed to load pharmacies');
+      const errorMessage = 'Failed to load pharmacies';
+      setError(errorMessage);
+      toast({
+        title: 'Error loading pharmacies',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -99,204 +147,218 @@ const DueForm: React.FC = () => {
       const response = await financialService.assignDue(
         formData.pharmacyId,
         dueData
-      );
-
-      if (response) {
+      );      if (response) {
+        toast({
+          title: 'Due created successfully',
+          description: 'The due has been assigned successfully.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
         navigate('/finances/dues');
       }
     } catch (err: any) {
       console.error('Error creating due:', err);
-      setError(err.message || 'Failed to create due');
+      const errorMessage = err.message || 'Failed to create due';
+      setError(errorMessage);
+      toast({
+        title: 'Error creating due',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
   };
-
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Create New Due
-        </h1>
-        <p className="text-muted-foreground">
-          Create a new due for assignment to pharmacies
-        </p>
-      </div>
+    <Container maxW="container.lg" py={6}>
+      <VStack spacing={6} align="stretch">
+        <Box>
+          <Heading size="xl" color="gray.800" mb={2}>
+            Create New Due
+          </Heading>
+          <Text color="gray.600">
+            Create a new due for assignment to pharmacies
+          </Text>
+        </Box>
 
-      {error && (
-        <div className="mb-6 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+        {error && (
+          <Alert status="error">
+            <AlertIcon />
+            {error}
+          </Alert>
+        )}
 
-      <div className="bg-card shadow-lg rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">Due Details</h2>
-        </div>
+        <Card bg={bgColor} shadow="md">
+          <CardHeader>
+            <Heading size="lg">Due Details</Heading>
+          </CardHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Pharmacy Selection */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Pharmacy *
-            </label>
-            <select
-              name="pharmacyId"
-              value={formData.pharmacyId}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-            >
-              <option value="">Select a pharmacy</option>
-              {pharmacies.map((pharmacy) => (
-                <option key={pharmacy._id} value={pharmacy._id}>
-                  {pharmacy.name} ({pharmacy.registrationNumber})
-                </option>
-              ))}
-            </select>
-          </div>
+          <CardBody>
+            <Box as="form" onSubmit={handleSubmit}>
+              <VStack spacing={6} align="stretch">
+                <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
+                  {/* Pharmacy Selection */}
+                  <GridItem>
+                    <FormControl isRequired>
+                      <FormLabel>Pharmacy</FormLabel>
+                      <Select
+                        name="pharmacyId"
+                        value={formData.pharmacyId}
+                        onChange={handleInputChange}
+                        placeholder="Select a pharmacy"
+                      >
+                        {pharmacies.map((pharmacy) => (
+                          <option key={pharmacy._id} value={pharmacy._id}>
+                            {pharmacy.name} ({pharmacy.registrationNumber})
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </GridItem>
 
-          {/* Due Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Due Type *
-            </label>
-            <select
-              name="dueTypeId"
-              value={formData.dueTypeId}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-            >
-              <option value="">Select a due type</option>
-              {dueTypes.map((dueType) => (
-                <option key={dueType._id} value={dueType._id}>
-                  {dueType.name}
-                </option>
-              ))}
-            </select>
-          </div>
+                  {/* Due Type Selection */}
+                  <GridItem>
+                    <FormControl isRequired>
+                      <FormLabel>Due Type</FormLabel>
+                      <Select
+                        name="dueTypeId"
+                        value={formData.dueTypeId}
+                        onChange={handleInputChange}
+                        placeholder="Select a due type"
+                      >
+                        {dueTypes.map((dueType) => (
+                          <option key={dueType._id} value={dueType._id}>
+                            {dueType.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </GridItem>
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Title *
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-              placeholder="Enter due title"
-            />
-          </div>
+                  {/* Title */}
+                  <GridItem colSpan={2}>
+                    <FormControl isRequired>
+                      <FormLabel>Title</FormLabel>
+                      <Input
+                        name="title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        placeholder="Enter due title"
+                      />
+                    </FormControl>
+                  </GridItem>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-              placeholder="Enter due description"
-            />
-          </div>
+                  {/* Description */}
+                  <GridItem colSpan={2}>
+                    <FormControl>
+                      <FormLabel>Description</FormLabel>
+                      <Textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="Enter due description"
+                      />
+                    </FormControl>
+                  </GridItem>
 
-          {/* Amount */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Amount *
-            </label>
-            <input
-              type="number"
-              name="amount"
-              value={formData.amount}
-              onChange={handleInputChange}
-              required
-              min="0"
-              step="0.01"
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-              placeholder="Enter amount"
-            />
-          </div>
+                  {/* Amount */}
+                  <GridItem>
+                    <FormControl isRequired>
+                      <FormLabel>Amount</FormLabel>
+                      <NumberInput
+                        min={0}
+                        precision={2}
+                        value={formData.amount}
+                        onChange={(valueString) =>
+                          setFormData((prev) => ({ ...prev, amount: Number(valueString) || 0 }))
+                        }
+                      >
+                        <NumberInputField
+                          name="amount"
+                          placeholder="Enter amount"
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
+                    </FormControl>
+                  </GridItem>
 
-          {/* Due Date */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Due Date *
-            </label>
-            <input
-              type="date"
-              name="dueDate"
-              value={formData.dueDate}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-            />
-          </div>
+                  {/* Due Date */}
+                  <GridItem>
+                    <FormControl isRequired>
+                      <FormLabel>Due Date</FormLabel>
+                      <Input
+                        type="date"
+                        name="dueDate"
+                        value={formData.dueDate}
+                        onChange={handleInputChange}
+                      />
+                    </FormControl>
+                  </GridItem>
 
-          {/* Recurring Options */}
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="isRecurring"
-                checked={formData.isRecurring}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
-              />
-              <label className="ml-2 block text-sm text-foreground">
-                Make this a recurring due
-              </label>
-            </div>
+                  {/* Recurring Options */}
+                  <GridItem colSpan={2}>
+                    <VStack spacing={4} align="stretch">
+                      <HStack>
+                        <Switch
+                          name="isRecurring"
+                          isChecked={formData.isRecurring}
+                          onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, isRecurring: e.target.checked }))
+                          }
+                        />
+                        <FormLabel mb={0}>Make this a recurring due</FormLabel>
+                      </HStack>
 
-            {formData.isRecurring && (
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Frequency
-                </label>
-                <select
-                  name="frequency"
-                  value={formData.frequency}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                >
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="annually">Annually</option>
-                </select>
-              </div>
-            )}
-          </div>
+                      {formData.isRecurring && (
+                        <FormControl>
+                          <FormLabel>Frequency</FormLabel>
+                          <Select
+                            name="frequency"
+                            value={formData.frequency}
+                            onChange={handleInputChange}
+                          >
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annually">Annually</option>
+                          </Select>
+                        </FormControl>
+                      )}
+                    </VStack>
+                  </GridItem>
+                </Grid>
 
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => navigate('/finances/dues')}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading ? 'Creating...' : 'Create Due'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+                {/* Submit Buttons */}
+                <HStack spacing={4} justify="flex-end" pt={4}>
+                  <Button
+                    variant="outline"
+                    colorScheme="gray"
+                    onClick={() => navigate('/finances/dues')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    colorScheme="blue"
+                    leftIcon={<AddIcon />}
+                    isLoading={loading}
+                    loadingText="Creating..."
+                  >
+                    Create Due
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </CardBody>
+        </Card>
+      </VStack>
+    </Container>
   );
 };
 

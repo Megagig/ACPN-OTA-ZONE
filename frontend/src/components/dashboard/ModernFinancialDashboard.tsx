@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   SimpleGrid,
@@ -22,26 +22,19 @@ import {
   StatHelpText,
   StatArrow,
   Divider,
-  Avatar,
   List,
   ListItem,
-  ListIcon,
 } from '@chakra-ui/react';
 import {
   FiDollarSign,
   FiTrendingUp,
   FiTrendingDown,
-  FiUsers,
   FiCreditCard,
-  FiPieChart,
-  FiBarChart,
   FiDownload,
   FiEye,
-  FiCalendar,
   FiArrowUpRight,
-  FiArrowDownRight,
 } from 'react-icons/fi';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -93,7 +86,7 @@ interface FinancialData {
 
 const ModernFinancialDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState('6months');
-  const [financialData, setFinancialData] = useState<FinancialData>({
+  const [financialData] = useState<FinancialData>({
     totalRevenue: 2450000,
     totalDues: 1850000,
     totalDonations: 600000,

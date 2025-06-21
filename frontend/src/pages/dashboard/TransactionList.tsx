@@ -1,5 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Heading,
+  Button,
+  VStack,
+  HStack,
+  Card,
+  CardBody,
+  CardHeader,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Grid,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Badge,
+  Text,
+  Flex,
+  Spinner,
+  Center,
+  useColorModeValue,
+  Icon,
+} from '@chakra-ui/react';
+import { FaPlus, FaSearch, FaTimes } from 'react-icons/fa';
 import financialService from '../../services/financial.service';
 import type { FinancialRecord } from '../../types/financial.types';
 
@@ -20,6 +51,10 @@ const TransactionList = () => {
     limit: 10,
     total: 0,
   });
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const tableBg = useColorModeValue('white', 'gray.700');
+  const headerBg = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
     fetchTransactions();
@@ -95,426 +130,316 @@ const TransactionList = () => {
       day: 'numeric',
     });
   };
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'green';
+      case 'pending': return 'yellow';
+      case 'rejected': return 'red';
+      default: return 'gray';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    return type === 'income' ? 'green' : 'red';
+  };
+
+  if (isLoading) {
+    return (
+      <Center h="300px">
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+      </Center>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">
-          Financial Transactions
-        </h1>
-        <button
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow mt-4 md:mt-0 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-          onClick={() => navigate('/finances/transactions/new')}
+    <Container maxW="7xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        {/* Header */}
+        <Flex 
+          direction={{ base: 'column', md: 'row' }} 
+          justify="space-between" 
+          align={{ base: 'stretch', md: 'center' }}
+          gap={4}
         >
-          <i className="fas fa-plus mr-2"></i>
-          Add Transaction
-        </button>
-      </div>
+          <Heading size="lg" color="gray.800">
+            Financial Transactions
+          </Heading>
+          <Button
+            colorScheme="blue"
+            leftIcon={<Icon as={FaPlus} />}
+            onClick={() => navigate('/finances/transactions/new')}
+          >
+            Add Transaction
+          </Button>
+        </Flex>
 
-      {/* Filters */}
-      <div className="bg-card border border-border rounded-lg shadow-md p-4 mb-6">
-        <h2 className="text-lg font-semibold mb-4 text-foreground">Filters</h2>
-        <form onSubmit={handleSearch}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label
-                htmlFor="search"
-                className="block text-sm font-medium text-foreground mb-1"
-              >
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                name="search"
-                value={filters.search}
-                onChange={handleFilterChange}
-                placeholder="Search title or description..."
-                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
-              />
-            </div>
+        {/* Filters Card */}
+        <Card bg={cardBg} shadow="md">
+          <CardHeader>
+            <Heading size="md">Filters</Heading>
+          </CardHeader>
+          <CardBody>
+            <Box as="form" onSubmit={handleSearch}>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4} mb={4}>
+                <FormControl>
+                  <FormLabel htmlFor="search">Search</FormLabel>
+                  <Input
+                    id="search"
+                    name="search"
+                    value={filters.search}
+                    onChange={handleFilterChange}
+                    placeholder="Search title or description..."
+                    bg="white"
+                  />
+                </FormControl>
 
-            <div>
-              <label
-                htmlFor="type"
-                className="block text-sm font-medium text-foreground mb-1"
-              >
-                Type
-              </label>
-              <select
-                id="type"
-                name="type"
-                value={filters.type}
-                onChange={handleFilterChange}
-                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
-              >
-                <option value="all">All Types</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-              </select>
-            </div>
+                <FormControl>
+                  <FormLabel htmlFor="type">Type</FormLabel>
+                  <Select
+                    id="type"
+                    name="type"
+                    value={filters.type}
+                    onChange={handleFilterChange}
+                    bg="white"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                  </Select>
+                </FormControl>
 
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium text-foreground mb-1"
-              >
-                Category
-              </label>
-              <select
-                id="category"
-                name="category"
-                value={filters.category}
-                onChange={handleFilterChange}
-                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
-              >
-                <option value="all">All Categories</option>
-                <option value="dues">Dues</option>
-                <option value="donation">Donation</option>
-                <option value="event">Event</option>
-                <option value="administrative">Administrative</option>
-                <option value="utility">Utility</option>
-                <option value="rent">Rent</option>
-                <option value="salary">Salary</option>
-                <option value="miscellaneous">Miscellaneous</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+                <FormControl>
+                  <FormLabel htmlFor="category">Category</FormLabel>
+                  <Select
+                    id="category"
+                    name="category"
+                    value={filters.category}
+                    onChange={handleFilterChange}
+                    bg="white"
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="dues">Dues</option>
+                    <option value="donation">Donation</option>
+                    <option value="event">Event</option>
+                    <option value="administrative">Administrative</option>
+                    <option value="utility">Utility</option>
+                    <option value="rent">Rent</option>
+                    <option value="salary">Salary</option>
+                    <option value="miscellaneous">Miscellaneous</option>
+                    <option value="other">Other</option>
+                  </Select>
+                </FormControl>
 
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-foreground mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={filters.status}
-                onChange={handleFilterChange}
-                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+                <FormControl>
+                  <FormLabel htmlFor="status">Status</FormLabel>
+                  <Select
+                    id="status"
+                    name="status"
+                    value={filters.status}
+                    onChange={handleFilterChange}
+                    bg="white"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </Select>
+                </FormControl>
 
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium text-foreground mb-1"
-              >
-                Start Date
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={filters.startDate}
-                onChange={handleFilterChange}
-                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
-              />
-            </div>
+                <FormControl>
+                  <FormLabel htmlFor="startDate">Start Date</FormLabel>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={filters.startDate}
+                    onChange={handleFilterChange}
+                    bg="white"
+                  />
+                </FormControl>
 
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium text-foreground mb-1"
-              >
-                End Date
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={filters.endDate}
-                onChange={handleFilterChange}
-                className="w-full p-2 border border-input rounded-md bg-background text-foreground focus:ring-ring focus:border-ring focus:outline-none focus:ring-2"
-              />
-            </div>
-          </div>
+                <FormControl>
+                  <FormLabel htmlFor="endDate">End Date</FormLabel>
+                  <Input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    value={filters.endDate}
+                    onChange={handleFilterChange}
+                    bg="white"
+                  />
+                </FormControl>
+              </Grid>
 
-          <div className="flex justify-end space-x-2">
-            <button
-              type="button"
-              className="px-4 py-2 border border-input rounded-md text-sm font-medium text-foreground bg-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-              onClick={handleClearFilters}
-            >
-              Clear Filters
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary hover:bg-primary/90 border border-transparent rounded-md text-sm font-medium text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-            >
-              Apply Filters
-            </button>
-          </div>
-        </form>
-      </div>
+              <Flex justify="flex-end" gap={2}>
+                <Button
+                  variant="outline"
+                  leftIcon={<Icon as={FaTimes} />}
+                  onClick={handleClearFilters}
+                >
+                  Clear Filters
+                </Button>
+                <Button
+                  type="submit"
+                  colorScheme="blue"
+                  leftIcon={<Icon as={FaSearch} />}
+                >
+                  Apply Filters
+                </Button>
+              </Flex>
+            </Box>
+          </CardBody>
+        </Card>
 
-      {/* Transactions Table */}
-      <div className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
-        {isLoading ? (
-          <div className="p-4">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-muted rounded w-1/4"></div>
-              <div className="h-10 bg-muted rounded"></div>
-              <div className="h-10 bg-muted rounded"></div>
-              <div className="h-10 bg-muted rounded"></div>
-              <div className="h-10 bg-muted rounded"></div>
-              <div className="h-10 bg-muted rounded"></div>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
+        {/* Transactions Table */}
+        <Card bg={cardBg} shadow="lg" overflow="hidden">
+          <TableContainer>
+            <Table variant="simple" bg={tableBg}>
+              <Thead bg={headerBg}>
+                <Tr>
+                  <Th>Title</Th>
+                  <Th>Type</Th>
+                  <Th>Category</Th>
+                  <Th>Date</Th>
+                  <Th>Amount</Th>
+                  <Th>Status</Th>
+                  <Th isNumeric>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
                 {transactions.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-4 text-center text-sm text-muted-foreground"
-                    >
-                      No transactions found
-                    </td>
-                  </tr>
+                  <Tr>
+                    <Td colSpan={7} textAlign="center" py={8}>
+                      <Text color="gray.500">No transactions found</Text>
+                    </Td>
+                  </Tr>
                 ) : (
                   transactions.map((transaction) => (
-                    <tr key={transaction._id} className="hover:bg-muted/50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                        {transaction.title}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            transaction.type === 'income'
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                          }`}
+                    <Tr 
+                      key={transaction._id} 
+                      _hover={{ bg: useColorModeValue('gray.50', 'gray.600') }}
+                    >
+                      <Td fontWeight="medium">{transaction.title}</Td>
+                      <Td>
+                        <Badge 
+                          colorScheme={getTypeColor(transaction.type)} 
+                          variant="subtle"
                         >
                           {transaction.type === 'income' ? 'Income' : 'Expense'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground capitalize">
-                        {transaction.category}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {formatDate(transaction.date)}
-                      </td>
-                      <td
-                        className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                          transaction.type === 'income'
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}
+                        </Badge>
+                      </Td>
+                      <Td textTransform="capitalize">{transaction.category}</Td>
+                      <Td>{formatDate(transaction.date)}</Td>
+                      <Td 
+                        fontWeight="medium"
+                        color={transaction.type === 'income' ? 'green.600' : 'red.600'}
                       >
                         {formatCurrency(transaction.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            transaction.status === 'approved'
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                              : transaction.status === 'pending'
-                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                          }`}
+                      </Td>
+                      <Td>
+                        <Badge 
+                          colorScheme={getStatusColor(transaction.status)} 
+                          variant="subtle"
+                          textTransform="capitalize"
                         >
-                          {transaction.status.charAt(0).toUpperCase() +
-                            transaction.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          className="text-primary hover:text-primary/80 mr-3 focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                          onClick={() =>
-                            navigate(
-                              `/finances/transactions/${transaction._id}`
-                            )
-                          }
-                        >
-                          <i className="fas fa-eye"></i>
-                        </button>
-                        <button
-                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 mr-3 focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                          onClick={() =>
-                            navigate(
-                              `/finances/transactions/${transaction._id}/edit`
-                            )
-                          }
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                          onClick={() => {
-                            // Add delete confirmation
-                            if (
-                              window.confirm(
-                                'Are you sure you want to delete this transaction?'
-                              )
-                            ) {
-                              financialService
-                                .deleteFinancialRecord(transaction._id)
-                                .then(() => {
-                                  fetchTransactions();
-                                })
-                                .catch((err) => {
-                                  console.error(
-                                    'Error deleting transaction:',
-                                    err
-                                  );
-                                  alert('Failed to delete transaction');
-                                });
-                            }
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
+                          {transaction.status}
+                        </Badge>
+                      </Td>
+                      <Td isNumeric>
+                        <HStack spacing={1} justify="flex-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="blue"
+                            onClick={() => navigate(`/finances/transactions/${transaction._id}`)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="purple"
+                            onClick={() => navigate(`/finances/transactions/${transaction._id}/edit`)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this transaction?')) {
+                                financialService
+                                  .deleteFinancialRecord(transaction._id)
+                                  .then(() => {
+                                    fetchTransactions();
+                                  })
+                                  .catch((err) => {
+                                    console.error('Error deleting transaction:', err);
+                                    alert('Failed to delete transaction');
+                                  });
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </HStack>
+                      </Td>
+                    </Tr>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </Tbody>
+            </Table>
+          </TableContainer>
 
-        {/* Pagination */}
-        <div className="bg-card px-4 py-3 flex items-center justify-between border-t border-border sm:px-6">
-          <div className="flex-1 flex justify-between sm:hidden">
-            <button
-              onClick={() =>
-                setPagination((prev) => ({
-                  ...prev,
-                  page: Math.max(1, prev.page - 1),
-                }))
-              }
-              disabled={pagination.page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md ${
-                pagination.page === 1
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
-              }`}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() =>
-                setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
-              }
-              disabled={pagination.page * pagination.limit >= pagination.total}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md ${
-                pagination.page * pagination.limit >= pagination.total
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
-              }`}
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Showing{' '}
-                <span className="font-medium text-foreground">
-                  {Math.min(
-                    (pagination.page - 1) * pagination.limit + 1,
-                    pagination.total
-                  )}
-                </span>{' '}
-                to{' '}
-                <span className="font-medium text-foreground">
-                  {Math.min(
-                    pagination.page * pagination.limit,
-                    pagination.total
-                  )}
-                </span>{' '}
-                of{' '}
-                <span className="font-medium text-foreground">
-                  {pagination.total}
-                </span>{' '}
-                results
-              </p>
-            </div>
-            <div>
-              <nav
-                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                aria-label="Pagination"
-              >
-                <button
-                  onClick={() =>
-                    setPagination((prev) => ({
-                      ...prev,
-                      page: Math.max(1, prev.page - 1),
-                    }))
-                  }
-                  disabled={pagination.page === 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-input text-sm font-medium ${
-                    pagination.page === 1
-                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                      : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
-                  }`}
-                >
-                  <span className="sr-only">Previous</span>
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-
-                {/* Page numbers would go here in a real implementation */}
-                <span className="relative inline-flex items-center px-4 py-2 border border-input bg-background text-sm font-medium text-foreground">
-                  {pagination.page}
-                </span>
-
-                <button
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
-                  }
-                  disabled={
-                    pagination.page * pagination.limit >= pagination.total
-                  }
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-input text-sm font-medium ${
-                    pagination.page * pagination.limit >= pagination.total
-                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                      : 'bg-background text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring'
-                  }`}
-                >
-                  <span className="sr-only">Next</span>
-                  <i className="fas fa-chevron-right"></i>
-                </button>
-              </nav>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          {/* Pagination */}
+          {pagination.total > pagination.limit && (
+            <Box p={4} borderTop="1px" borderColor="gray.200">
+              <Flex justify="space-between" align="center">
+                <Text fontSize="sm" color="gray.600">
+                  Showing{' '}
+                  {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}{' '}
+                  to{' '}
+                  {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
+                  of {pagination.total} results
+                </Text>
+                
+                <HStack spacing={2}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        page: Math.max(1, prev.page - 1),
+                      }))
+                    }
+                    isDisabled={pagination.page === 1}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <Text fontSize="sm" px={2}>
+                    Page {pagination.page}
+                  </Text>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+                    }
+                    isDisabled={pagination.page * pagination.limit >= pagination.total}
+                  >
+                    Next
+                  </Button>
+                </HStack>
+              </Flex>
+            </Box>
+          )}
+        </Card>
+      </VStack>
+    </Container>
   );
 };
 

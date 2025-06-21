@@ -1,11 +1,40 @@
 import { useState, useEffect } from 'react';
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  Card,
+  CardBody,
+  CardHeader,
+  VStack,
+  HStack,
+  Button,
+  Input,
+  FormControl,
+  FormLabel,
+  FormHelperText,
+  SimpleGrid,
+  Divider,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Spinner,
+  Center,
+  Badge,
+  Icon,
+  useToast,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import { EditIcon, LockIcon } from '@chakra-ui/icons';
 import api from '../../services/api';
 import authService from '../../services/auth.service';
 import type { User } from '../../types/auth.types';
-import { useToast } from '../../components/ui';
 
 const Profile = () => {
-  const { toast } = useToast();
+  const toast = useToast();
+  const cardBg = useColorModeValue('white', 'gray.800');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -185,118 +214,107 @@ const Profile = () => {
       setLoading(false);
     }
   };
-
   // Loading state
   if (loading && !user) {
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <Center minH="50vh">
+        <Spinner size="xl" color="brand.500" thickness="4px" />
+      </Center>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center">
-        <div className="text-red-500 mb-4">
-          <svg
-            className="h-12 w-12"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <Center minH="50vh">
+        <VStack spacing={4}>
+          <Alert status="error" borderRadius="lg" maxW="md">
+            <AlertIcon />
+            <Box>
+              <AlertTitle>Error Loading Profile</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Box>
+          </Alert>
+          <Button 
+            onClick={() => window.location.reload()}
+            colorScheme="brand"
+            variant="outline"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-        </div>
-        <p className="text-lg font-semibold text-gray-700">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
-        >
-          Try Again
-        </button>
-      </div>
+            Try Again
+          </Button>
+        </VStack>
+      </Center>
     );
   }
-
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
-      <p className="text-muted-foreground mb-8">
-        Manage your personal information and account settings
-      </p>
+    <Container maxW="4xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        <Box>
+          <Heading size="lg" mb={2}>My Profile</Heading>
+          <Text color="gray.500">
+            Manage your personal information and account settings
+          </Text>
+        </Box>
 
-      {/* Personal Information Section */}
-      <div className="bg-white shadow rounded-lg mb-8">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-medium text-gray-900">
-              Personal Information
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Your personal details and contact information
-            </p>
-          </div>
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              Edit
-            </button>
-          ) : null}
-        </div>
-
-        {!isEditing ? (
-          <div className="border-t border-gray-200">
-            <dl>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Full name</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.firstName} {user?.lastName}
-                </dd>
-              </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  Email address
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.email}
-                </dd>
-              </div>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  Phone number
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.phone || 'Not set'}
-                </dd>
-              </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  PCN License Number
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user?.pcnLicense || 'Not set'}
-                </dd>
-              </div>
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Role</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 capitalize">
+        {/* Personal Information Section */}
+        <Card bg={cardBg} shadow="lg">
+          <CardHeader>
+            <HStack justify="space-between" align="flex-start">
+              <VStack align="start" spacing={1}>
+                <Heading size="md">Personal Information</Heading>
+                <Text color="gray.500" fontSize="sm">
+                  Your personal details and contact information
+                </Text>
+              </VStack>
+              {!isEditing && (
+                <Button
+                  leftIcon={<EditIcon />}
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Edit
+                </Button>
+              )}
+            </HStack>
+          </CardHeader>        {!isEditing ? (
+          <CardBody>
+            <SimpleGrid columns={1} spacing={4}>
+              <HStack justify="space-between" align="center" py={3}>
+                <Text fontWeight="medium" color="gray.600">Full name</Text>
+                <Text>{user?.firstName} {user?.lastName}</Text>
+              </HStack>
+              <Divider />
+              
+              <HStack justify="space-between" align="center" py={3}>
+                <Text fontWeight="medium" color="gray.600">Email address</Text>
+                <Text>{user?.email}</Text>
+              </HStack>
+              <Divider />
+              
+              <HStack justify="space-between" align="center" py={3}>
+                <Text fontWeight="medium" color="gray.600">Phone number</Text>
+                <Text>{user?.phone || 'Not set'}</Text>
+              </HStack>
+              <Divider />
+              
+              <HStack justify="space-between" align="center" py={3}>
+                <Text fontWeight="medium" color="gray.600">PCN License Number</Text>
+                <Text>{user?.pcnLicense || 'Not set'}</Text>
+              </HStack>
+              <Divider />
+              
+              <HStack justify="space-between" align="center" py={3}>
+                <Text fontWeight="medium" color="gray.600">Role</Text>
+                <Badge colorScheme="blue" variant="subtle" textTransform="capitalize">
                   {user?.role || 'Member'}
-                </dd>
-              </div>
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">
-                  Member since
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                </Badge>
+              </HStack>
+              <Divider />
+              
+              <HStack justify="space-between" align="center" py={3}>
+                <Text fontWeight="medium" color="gray.600">Member since</Text>
+                <Text>
                   {user?.createdAt
                     ? new Date(user.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
@@ -304,207 +322,157 @@ const Profile = () => {
                         day: 'numeric',
                       })
                     : 'Unknown'}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        ) : (
-          <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-            <form onSubmit={handlePersonalInfoSubmit} className="space-y-6">
-              <div className="grid grid-cols-6 gap-6">
-                <div className="col-span-6 sm:col-span-3">
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    First name
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    id="firstName"
-                    value={personalInfo.firstName}
-                    onChange={handlePersonalInfoChange}
-                    required
-                    className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
+                </Text>
+              </HStack>
+            </SimpleGrid>
+          </CardBody>        ) : (
+          <CardBody>
+            <Box as="form" onSubmit={handlePersonalInfoSubmit}>
+              <VStack spacing={6} align="stretch">
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  <FormControl isRequired>
+                    <FormLabel>First name</FormLabel>
+                    <Input
+                      name="firstName"
+                      value={personalInfo.firstName}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="Enter your first name"
+                    />
+                  </FormControl>
 
-                <div className="col-span-6 sm:col-span-3">
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Last name
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    id="lastName"
-                    value={personalInfo.lastName}
-                    onChange={handlePersonalInfoChange}
-                    required
-                    className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
+                  <FormControl isRequired>
+                    <FormLabel>Last name</FormLabel>
+                    <Input
+                      name="lastName"
+                      value={personalInfo.lastName}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="Enter your last name"
+                    />
+                  </FormControl>
+                </SimpleGrid>
 
-                <div className="col-span-6 sm:col-span-4">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Email address
-                  </label>
-                  <input
+                <FormControl>
+                  <FormLabel>Email address</FormLabel>
+                  <Input
                     type="email"
                     name="email"
-                    id="email"
                     value={personalInfo.email}
-                    disabled
-                    className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md bg-gray-50"
+                    isDisabled
+                    bg="gray.50"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Email cannot be changed
-                  </p>
-                </div>
+                  <FormHelperText>Email cannot be changed</FormHelperText>
+                </FormControl>
 
-                <div className="col-span-6 sm:col-span-4">
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone number
-                  </label>
-                  <input
-                    type="text"
+                <FormControl>
+                  <FormLabel>Phone number</FormLabel>
+                  <Input
                     name="phone"
-                    id="phone"
                     value={personalInfo.phone}
                     onChange={handlePersonalInfoChange}
-                    className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your phone number"
                   />
-                </div>
+                </FormControl>
 
-                <div className="col-span-6 sm:col-span-4">
-                  <label
-                    htmlFor="pcnLicense"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    PCN License Number
-                  </label>
-                  <input
-                    type="text"
+                <FormControl>
+                  <FormLabel>PCN License Number</FormLabel>
+                  <Input
                     name="pcnLicense"
-                    id="pcnLicense"
                     value={personalInfo.pcnLicense}
                     onChange={handlePersonalInfoChange}
-                    className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your PCN license number"
                   />
-                </div>
-              </div>
+                </FormControl>
 
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  {loading ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-      </div>
+                <HStack justify="flex-end" spacing={3}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    colorScheme="blue"
+                    isLoading={loading}
+                    loadingText="Saving..."
+                  >
+                    Save Changes
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </CardBody>        )}
+        </Card>
 
-      {/* Change Password Section */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h2 className="text-lg font-medium text-gray-900">Change Password</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Update your account password
-          </p>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-          <form onSubmit={handlePasswordSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="currentPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  name="currentPassword"
-                  id="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  required
-                  className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
+        {/* Change Password Section */}
+        <Card bg={cardBg} shadow="lg">
+          <CardHeader>
+            <VStack align="start" spacing={1}>
+              <HStack>
+                <Icon as={LockIcon} color="gray.500" />
+                <Heading size="md">Change Password</Heading>
+              </HStack>
+              <Text color="gray.500" fontSize="sm">
+                Update your account password
+              </Text>
+            </VStack>
+          </CardHeader>
+          
+          <CardBody>
+            <Box as="form" onSubmit={handlePasswordSubmit}>
+              <VStack spacing={6} align="stretch">
+                <FormControl isRequired>
+                  <FormLabel>Current Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Enter your current password"
+                  />
+                </FormControl>
 
-              <div>
-                <label
-                  htmlFor="newPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  name="newPassword"
-                  id="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  required
-                  minLength={6}
-                  className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
+                <FormControl isRequired>
+                  <FormLabel>New Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Enter your new password"
+                    minLength={6}
+                  />
+                  <FormHelperText>Password must be at least 6 characters long</FormHelperText>
+                </FormControl>
 
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  id="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  required
-                  minLength={6}
-                  className="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
+                <FormControl isRequired>
+                  <FormLabel>Confirm New Password</FormLabel>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Confirm your new password"
+                    minLength={6}
+                  />
+                </FormControl>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              >
-                {loading ? 'Updating...' : 'Update Password'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+                <HStack justify="flex-end">
+                  <Button
+                    type="submit"
+                    colorScheme="blue"
+                    isLoading={loading}
+                    loadingText="Updating..."
+                  >
+                    Update Password
+                  </Button>
+                </HStack>
+              </VStack>
+            </Box>
+          </CardBody>
+        </Card>
+      </VStack>
+    </Container>
   );
 };
 

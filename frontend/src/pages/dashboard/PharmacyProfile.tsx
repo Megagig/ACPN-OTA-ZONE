@@ -1,5 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  Grid,
+  Heading,
+  Icon,
+  Text,
+  useColorModeValue,
+  Spinner,
+  VStack,
+  HStack,
+  Badge,
+  Divider,
+  SimpleGrid,
+  Card,
+  CardBody,
+  CardHeader,
+  LinkBox,
+  LinkOverlay,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from '@chakra-ui/react';
+import {
+  EditIcon,
+  ExternalLinkIcon,
+  WarningIcon,
+  CheckCircleIcon,
+} from '@chakra-ui/icons';
+import {
+  FaStore,
+  FaFileAlt,
+  FaCreditCard,
+  FaCalendarAlt,
+  FaFacebookSquare,
+  FaTwitterSquare,
+  FaInstagramSquare,
+} from 'react-icons/fa';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy } from '../../types/pharmacy.types';
 
@@ -7,6 +48,13 @@ const PharmacyProfile: React.FC = () => {
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Color mode values
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const headerBg = useColorModeValue('blue.50', 'blue.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const iconBg = useColorModeValue('blue.100', 'blue.900');
+  const linkHoverBg = useColorModeValue('gray.100', 'gray.700');
 
   useEffect(() => {
     const fetchPharmacy = async () => {
@@ -33,379 +81,351 @@ const PharmacyProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <i className="fas fa-circle-notch fa-spin text-3xl"></i>
-          </div>
-          <p className="mt-2 text-muted-foreground">
-            Loading pharmacy profile...
-          </p>
-        </div>
-      </div>
+      <Flex justify="center" align="center" h="64">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="blue.500" thickness="4px" />
+          <Text color="gray.500">Loading pharmacy profile...</Text>
+        </VStack>
+      </Flex>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="bg-destructive/15 border-l-4 border-destructive/20 text-destructive p-4"
-        role="alert"
+      <Alert
+        status="error"
+        variant="subtle"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        textAlign="center"
+        height="200px"
+        borderRadius="md"
+        my={4}
       >
-        <p className="font-bold">Error</p>
-        <p>{error}</p>
-        <div className="mt-4">
-          <button
+        <AlertIcon boxSize="40px" mr={0} />
+        <AlertTitle mt={4} mb={1} fontSize="lg">
+          Error
+        </AlertTitle>
+        <AlertDescription maxWidth="sm">
+          {error}
+          <Button
+            mt={4}
+            colorScheme="red"
+            size="sm"
             onClick={() => window.location.reload()}
-            className="text-destructive hover:text-destructive/80 underline"
           >
             Try Again
-          </button>
-        </div>
-      </div>
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   if (!pharmacy) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center">
-          <div className="bg-card rounded-lg shadow p-6">
-            <i className="fas fa-store text-muted-foreground text-5xl mb-4"></i>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              No Pharmacy Profile Found
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              You haven't registered a pharmacy yet. Create a pharmacy profile
-              to manage your pharmacy details.
-            </p>
-            <Link
-              to="/my-pharmacy/create"
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <i className="fas fa-plus-circle mr-2"></i>
-              Register Pharmacy
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Container maxW="container.xl" py={6} px={4}>
+        <Box textAlign="center">
+          <Card bg={cardBg} shadow="md" p={6}>
+            <CardBody>
+              <VStack spacing={4}>
+                <Icon as={FaStore} fontSize="5xl" color="gray.400" />
+                <Heading size="lg">No Pharmacy Profile Found</Heading>
+                <Text color="gray.500" mb={4}>
+                  You haven't registered a pharmacy yet. Create a pharmacy profile
+                  to manage your pharmacy details.
+                </Text>
+                <Button
+                  as={Link}
+                  to="/my-pharmacy/create"
+                  colorScheme="blue"
+                  leftIcon={<Icon as={EditIcon} />}
+                >
+                  Register Pharmacy
+                </Button>
+              </VStack>
+            </CardBody>
+          </Card>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Pharmacy Profile</h1>
-        <Link
+    <Container maxW="container.xl" py={6} px={4}>
+      <Flex justifyContent="space-between" alignItems="center" mb={6}>
+        <Heading size="lg">Pharmacy Profile</Heading>
+        <Button
+          as={Link}
           to="/my-pharmacy/edit"
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          colorScheme="blue"
+          leftIcon={<Icon as={EditIcon} />}
         >
-          <i className="fas fa-edit mr-2"></i>
           Edit Profile
-        </Link>
-      </div>
+        </Button>
+      </Flex>
 
       {/* Approval Status */}
       {pharmacy.registrationStatus === 'pending' && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 mb-6">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <i className="fas fa-exclamation-triangle text-yellow-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                <strong>Awaiting Approval:</strong> Your pharmacy profile is
-                pending approval by the administrator. Some features may be
-                limited until your pharmacy is approved.
-              </p>
-            </div>
-          </div>
-        </div>
+        <Alert status="warning" mb={6} borderRadius="md">
+          <AlertIcon />
+          <Box>
+            <AlertTitle fontWeight="bold">Awaiting Approval</AlertTitle>
+            <AlertDescription>
+              Your pharmacy profile is pending approval by the administrator. Some features
+              may be limited until your pharmacy is approved.
+            </AlertDescription>
+          </Box>
+        </Alert>
       )}
 
-      <div className="bg-card rounded-lg shadow overflow-hidden">
+      <Card bg={cardBg} shadow="md" mb={6} overflow="hidden">
         {/* Pharmacy Header */}
-        <div className="p-6 bg-primary/10 border-b border-border">
-          <div className="flex flex-col md:flex-row">
-            <div className="flex-shrink-0 flex items-center justify-center h-24 w-24 rounded-full bg-primary/20 text-primary text-3xl mb-4 md:mb-0">
-              <i className="fas fa-store"></i>
-            </div>
-            <div className="md:ml-6">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {pharmacy.name}
-              </h2>
-              <p className="text-muted-foreground mt-1">{pharmacy.address}</p>
-              <p className="text-muted-foreground">
-                {pharmacy.landmark}, {pharmacy.townArea}
-              </p>
-              <div className="mt-2">
-                <span
-                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    pharmacy.registrationStatus === 'active'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                      : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300'
-                  }`}
+        <Box p={6} bg={headerBg} borderBottomWidth="1px" borderColor={borderColor}>
+          <Flex direction={{ base: 'column', md: 'row' }} alignItems={{ md: 'center' }}>
+            <Flex 
+              alignItems="center" 
+              justifyContent="center" 
+              h="24" 
+              w="24" 
+              borderRadius="full" 
+              bg={iconBg} 
+              color="blue.500" 
+              fontSize="3xl"
+              mb={{ base: 4, md: 0 }}
+            >
+              <Icon as={FaStore} />
+            </Flex>
+            <Box ml={{ md: 6 }}>
+              <Heading size="lg" mb={1}>{pharmacy.name}</Heading>
+              <Text color="gray.600" mb={1}>{pharmacy.address}</Text>
+              <Text color="gray.600">{pharmacy.landmark}, {pharmacy.townArea}</Text>
+              <HStack mt={2} spacing={2}>
+                <Badge 
+                  colorScheme={pharmacy.registrationStatus === 'active' ? 'green' : 'gray'}
+                  px={2} 
+                  py={1} 
+                  borderRadius="full"
                 >
-                  {pharmacy.registrationStatus === 'active'
-                    ? 'Active'
-                    : 'Inactive'}
-                </span>
-                <span
-                  className={`ml-2 px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    pharmacy.registrationStatus === 'active'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                  }`}
+                  {pharmacy.registrationStatus === 'active' ? 'Active' : 'Inactive'}
+                </Badge>
+                <Badge 
+                  colorScheme={pharmacy.registrationStatus === 'active' ? 'green' : 'yellow'}
+                  px={2} 
+                  py={1} 
+                  borderRadius="full"
                 >
-                  {pharmacy.registrationStatus === 'active'
-                    ? 'Approved'
-                    : 'Pending Approval'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+                  {pharmacy.registrationStatus === 'active' ? 'Approved' : 'Pending Approval'}
+                </Badge>
+              </HStack>
+            </Box>
+          </Flex>
+        </Box>
 
         {/* Pharmacy Details */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">
-                Registration Details
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground block">
-                    Registration Number
-                  </span>
-                  <span className="text-foreground">
-                    {pharmacy.registrationNumber}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground block">
-                    PCN License Number
-                  </span>
-                  <span className="text-foreground">{pharmacy.pcnLicense}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground block">
-                    License Expiry Date
-                  </span>
-                  <span className="text-foreground">
-                    {formatDate(pharmacy.licenseExpiryDate)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground block">
-                    Director
-                  </span>
-                  <span className="text-foreground">
-                    {pharmacy.directorName}
-                  </span>
-                </div>
+        <CardBody>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+            <Box>
+              <Heading size="md" mb={4}>Registration Details</Heading>
+              <VStack align="stretch" spacing={3}>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.500">Registration Number</Text>
+                  <Text>{pharmacy.registrationNumber}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.500">PCN License Number</Text>
+                  <Text>{pharmacy.pcnLicense}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.500">License Expiry Date</Text>
+                  <Text>{formatDate(pharmacy.licenseExpiryDate)}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.500">Director</Text>
+                  <Text>{pharmacy.directorName}</Text>
+                </Box>
                 {pharmacy.superintendentName && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block">
-                      Superintendent Pharmacist
-                    </span>
-                    <span className="text-foreground">
-                      {pharmacy.superintendentName}
-                    </span>
-                  </div>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500">Superintendent Pharmacist</Text>
+                    <Text>{pharmacy.superintendentName}</Text>
+                  </Box>
                 )}
                 {pharmacy.superintendentLicenseNumber && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block">
-                      Superintendent License Number
-                    </span>
-                    <span className="text-foreground">
-                      {pharmacy.superintendentLicenseNumber}
-                    </span>
-                  </div>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500">Superintendent License Number</Text>
+                    <Text>{pharmacy.superintendentLicenseNumber}</Text>
+                  </Box>
                 )}
                 {pharmacy.numberOfStaff !== undefined && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block">
-                      Staff Count
-                    </span>
-                    <span className="text-foreground">
-                      {pharmacy.numberOfStaff}
-                    </span>
-                  </div>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500">Staff Count</Text>
+                    <Text>{pharmacy.numberOfStaff}</Text>
+                  </Box>
                 )}
-              </div>
-            </div>
+              </VStack>
+            </Box>
 
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">
-                Contact Information
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground block">
-                    Phone Number
-                  </span>
-                  <span className="text-foreground">{pharmacy.phone}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground block">
-                    Email
-                  </span>
-                  <span className="text-foreground">{pharmacy.email}</span>
-                </div>
+            <Box>
+              <Heading size="md" mb={4}>Contact Information</Heading>
+              <VStack align="stretch" spacing={3}>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.500">Phone Number</Text>
+                  <Text>{pharmacy.phone}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.500">Email</Text>
+                  <Text>{pharmacy.email}</Text>
+                </Box>
                 {pharmacy.websiteUrl && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block">
-                      Website
-                    </span>
-                    <a
-                      href={pharmacy.websiteUrl}
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500">Website</Text>
+                    <Link 
+                      to={pharmacy.websiteUrl} 
+                      color="blue.500" 
+                      _hover={{ textDecoration: 'underline' }}
+                      display="inline-flex"
+                      alignItems="center"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:text-primary/80"
                     >
-                      {pharmacy.websiteUrl}
-                    </a>
-                  </div>
+                      {pharmacy.websiteUrl} <Icon as={ExternalLinkIcon} ml={1} />
+                    </Link>
+                  </Box>
                 )}
                 {pharmacy.socialMedia && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block mb-1">
-                      Social Media
-                    </span>
-                    <div className="flex space-x-2">
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500" mb={1}>Social Media</Text>
+                    <HStack spacing={2}>
                       {pharmacy.socialMedia.facebookUrl && (
-                        <a
-                          href={pharmacy.socialMedia.facebookUrl}
+                        <Link 
+                          to={pharmacy.socialMedia.facebookUrl} 
+                          color="blue.600" 
+                          _hover={{ color: 'blue.800' }}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800"
                         >
-                          <i className="fab fa-facebook-square text-xl"></i>
-                        </a>
+                          <Icon as={FaFacebookSquare} fontSize="xl" />
+                        </Link>
                       )}
                       {pharmacy.socialMedia.twitterUrl && (
-                        <a
-                          href={pharmacy.socialMedia.twitterUrl}
+                        <Link 
+                          to={pharmacy.socialMedia.twitterUrl} 
+                          color="blue.400" 
+                          _hover={{ color: 'blue.600' }}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-600"
                         >
-                          <i className="fab fa-twitter-square text-xl"></i>
-                        </a>
+                          <Icon as={FaTwitterSquare} fontSize="xl" />
+                        </Link>
                       )}
                       {pharmacy.socialMedia.instagramUrl && (
-                        <a
-                          href={pharmacy.socialMedia.instagramUrl}
+                        <Link 
+                          to={pharmacy.socialMedia.instagramUrl} 
+                          color="pink.500" 
+                          _hover={{ color: 'pink.700' }}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-pink-600 hover:text-pink-800"
                         >
-                          <i className="fab fa-instagram-square text-xl"></i>
-                        </a>
+                          <Icon as={FaInstagramSquare} fontSize="xl" />
+                        </Link>
                       )}
-                    </div>
-                  </div>
+                    </HStack>
+                  </Box>
                 )}
-              </div>
-            </div>
-          </div>
+              </VStack>
+            </Box>
+          </SimpleGrid>
 
           {/* Additional Information */}
           {(pharmacy.yearEstablished ||
             pharmacy.operatingHours ||
             (pharmacy.servicesOffered &&
               pharmacy.servicesOffered.length > 0)) && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">
-                Additional Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Box mt={6}>
+              <Heading size="md" mb={4}>Additional Information</Heading>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                 {pharmacy.yearEstablished && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block">
-                      Established Year
-                    </span>
-                    <span className="text-foreground">
-                      {pharmacy.yearEstablished}
-                    </span>
-                  </div>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500">Established Year</Text>
+                    <Text>{pharmacy.yearEstablished}</Text>
+                  </Box>
                 )}
                 {pharmacy.operatingHours && (
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground block">
-                      Operating Hours
-                    </span>
-                    <span className="text-foreground">
-                      {pharmacy.operatingHours}
-                    </span>
-                  </div>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500">Operating Hours</Text>
+                    <Text>{pharmacy.operatingHours}</Text>
+                  </Box>
                 )}
-                {pharmacy.servicesOffered &&
-                  pharmacy.servicesOffered.length > 0 && (
-                    <div className="col-span-1 md:col-span-2">
-                      <span className="text-sm font-medium text-muted-foreground block mb-2">
-                        Services Offered
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {pharmacy.servicesOffered.map((service, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs"
-                          >
-                            {service}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-              </div>
-            </div>
+                {pharmacy.servicesOffered && pharmacy.servicesOffered.length > 0 && (
+                  <Box gridColumn={{ md: 'span 2' }}>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.500" mb={2}>Services Offered</Text>
+                    <Flex wrap="wrap" gap={2}>
+                      {pharmacy.servicesOffered.map((service, index) => (
+                        <Badge 
+                          key={index} 
+                          px={2} 
+                          py={1} 
+                          colorScheme="blue" 
+                          borderRadius="full"
+                          fontSize="xs"
+                        >
+                          {service}
+                        </Badge>
+                      ))}
+                    </Flex>
+                  </Box>
+                )}
+              </SimpleGrid>
+            </Box>
           )}
-        </div>
-      </div>
+        </CardBody>
+      </Card>
 
       {/* Quick Actions */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          to="/my-documents"
-          className="bg-card rounded-lg shadow p-6 flex flex-col items-center text-center hover:bg-muted/50 transition duration-200"
-        >
-          <i className="fas fa-file-alt text-primary text-3xl mb-3"></i>
-          <h3 className="text-lg font-medium text-foreground mb-1">
-            My Documents
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            Access and manage pharmacy-related documents
-          </p>
-        </Link>
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+        <LinkBox as={Card} bg={cardBg} shadow="md" _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }} transition="all 0.2s">
+          <CardBody display="flex" flexDir="column" alignItems="center" textAlign="center">
+            <Icon as={FaFileAlt} fontSize="3xl" color="blue.500" mb={3} />
+            <Heading size="md" mb={1}>
+              <LinkOverlay as={Link} to="/my-documents">
+                My Documents
+              </LinkOverlay>
+            </Heading>
+            <Text color="gray.500" fontSize="sm">
+              Access and manage pharmacy-related documents
+            </Text>
+          </CardBody>
+        </LinkBox>
 
-        <Link
-          to="/payments"
-          className="bg-card rounded-lg shadow p-6 flex flex-col items-center text-center hover:bg-muted/50 transition duration-200"
-        >
-          <i className="fas fa-credit-card text-green-500 text-3xl mb-3"></i>
-          <h3 className="text-lg font-medium text-foreground mb-1">
-            Dues & Payments
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            View and pay outstanding dues
-          </p>
-        </Link>
+        <LinkBox as={Card} bg={cardBg} shadow="md" _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }} transition="all 0.2s">
+          <CardBody display="flex" flexDir="column" alignItems="center" textAlign="center">
+            <Icon as={FaCreditCard} fontSize="3xl" color="green.500" mb={3} />
+            <Heading size="md" mb={1}>
+              <LinkOverlay as={Link} to="/payments">
+                Dues & Payments
+              </LinkOverlay>
+            </Heading>
+            <Text color="gray.500" fontSize="sm">
+              View and pay outstanding dues
+            </Text>
+          </CardBody>
+        </LinkBox>
 
-        <Link
-          to="/events"
-          className="bg-card rounded-lg shadow p-6 flex flex-col items-center text-center hover:bg-muted/50 transition duration-200"
-        >
-          <i className="fas fa-calendar-alt text-orange-500 text-3xl mb-3"></i>
-          <h3 className="text-lg font-medium text-foreground mb-1">Events</h3>
-          <p className="text-muted-foreground text-sm">
-            Register for upcoming events and trainings
-          </p>
-        </Link>
-      </div>
-    </div>
+        <LinkBox as={Card} bg={cardBg} shadow="md" _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }} transition="all 0.2s">
+          <CardBody display="flex" flexDir="column" alignItems="center" textAlign="center">
+            <Icon as={FaCalendarAlt} fontSize="3xl" color="orange.500" mb={3} />
+            <Heading size="md" mb={1}>
+              <LinkOverlay as={Link} to="/events">
+                Events
+              </LinkOverlay>
+            </Heading>
+            <Text color="gray.500" fontSize="sm">
+              Register for upcoming events and trainings
+            </Text>
+          </CardBody>
+        </LinkBox>
+      </SimpleGrid>
+    </Container>
   );
 };
 

@@ -115,11 +115,10 @@ class DashboardService {
 
   /**
    * Get recent activity across the system
-   */
-  async getRecentActivity(): Promise<ActivityItem[]> {
+   */  async getRecentActivity(): Promise<ActivityItem[]> {
     try {
       const response = await api.get('/api/dashboard/overview');
-      return response.data.data.recentActivity || [];
+      return response.data?.data?.recentActivity || response.data?.recentActivity || [];
     } catch (error) {
       console.error('Error fetching recent activity:', error);
       return [];

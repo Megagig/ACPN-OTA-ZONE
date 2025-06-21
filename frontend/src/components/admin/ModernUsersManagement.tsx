@@ -12,11 +12,6 @@ import {
   Select,
   Badge,
   Avatar,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   useToast,
   AlertDialog,
   AlertDialogBody,
@@ -26,21 +21,17 @@ import {
   AlertDialogOverlay,
   useDisclosure,
   Card,
-  CardHeader,
   CardBody,
   SimpleGrid,
   Flex,
-  Spinner,
   useColorModeValue,
 } from '@chakra-ui/react';
 import {
   FiSearch,
   FiPlus,
-  FiMoreHorizontal,
   FiEye,
   FiEdit,
   FiTrash2,
-  FiFilter,
   FiDownload,
   FiUsers,
   FiUserCheck,
@@ -137,22 +128,20 @@ const ModernUsersManagement: React.FC = () => {
     setFilteredUsers(filtered);
   }, [users, searchTerm, statusFilter, roleFilter]);
 
-  const columns = [
-    {
+  const columns = [    {
       key: 'avatar',
       label: 'Avatar',
-      render: (value: any, row: any) => (
+      render: (_: any, row: any) => (
         <Avatar
           size="sm"
           name={`${row.firstName} ${row.lastName}`}
           src={row.profilePicture}
         />
       ),
-    },
-    {
+    },{
       key: 'name',
       label: 'Name',
-      render: (value: any, row: any) => (
+      render: (_: any, row: any) => (
         <VStack align="start" spacing={0}>
           <Text fontWeight="600">{`${row.firstName} ${row.lastName}`}</Text>
           <Text fontSize="sm" color="gray.500">{row.email}</Text>
@@ -162,7 +151,7 @@ const ModernUsersManagement: React.FC = () => {
     {
       key: 'pharmacy',
       label: 'Pharmacy',
-      render: (value: any, row: any) => (
+      render: (_: any, row: any) => (
         <Text fontSize="sm">{row.pharmacy?.name || 'N/A'}</Text>
       ),
     },

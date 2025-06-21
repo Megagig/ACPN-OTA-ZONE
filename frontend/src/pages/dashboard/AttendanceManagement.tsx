@@ -1,11 +1,67 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Grid,
+  GridItem,
+  VStack,
+  HStack,
+  Input,
+  Select,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Checkbox,
+  Badge,
+  Spinner,
+  Center,
+  Icon,
+  InputGroup,
+  InputLeftElement,
+  useDisclosure,
+  useToast,
+  useColorModeValue,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatGroup,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+} from '@chakra-ui/react';
+import { 
+  CalendarIcon, 
+  SearchIcon, 
+  DownloadIcon, 
+  CheckCircleIcon,
+  EmailIcon
+} from '@chakra-ui/icons';
+import { FiUsers, FiCalendar } from 'react-icons/fi';
 import attendanceService from '../../services/attendanceService';
 import type { Event, AttendeeWithUser } from '../../services/attendanceService';
-import { toast } from 'react-toastify';
 
 const AttendanceManagement: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isWarningOpen, onOpen: onWarningOpen, onClose: onWarningClose } = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<AttendeeWithUser[]>([]);
@@ -16,10 +72,9 @@ const AttendanceManagement: React.FC = () => {
   const [eventType, setEventType] = useState<string>('all');
   const [calculatingPenalties, setCalculatingPenalties] = useState<boolean>(false);
   const [sendingWarnings, setSendingWarnings] = useState<boolean>(false);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isWarningOpen, setIsWarningOpen] = useState<boolean>(false);
-  
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  // Color mode values
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const bgGradient = useColorModeValue('linear(to-br, gray.50, gray.100)', 'linear(to-br, gray.900, gray.800)');
 
   const years = Array.from(
     { length: 5 },
@@ -30,7 +85,6 @@ const AttendanceManagement: React.FC = () => {
   useEffect(() => {
     fetchEvents();
   }, [year]);
-
   const fetchEvents = async () => {
     try {
       setLoading(true);
@@ -40,7 +94,13 @@ const AttendanceManagement: React.FC = () => {
         setSelectedEvent(fetchedEvents[0]);
       }
     } catch (error) {
-      toast.error('Failed to fetch events');
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch events',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error fetching events:', error);
     } finally {
       setLoading(false);
@@ -64,10 +124,15 @@ const AttendanceManagement: React.FC = () => {
           };
         }
         return acc;
-      }, {});
-      setAttendanceStatus(initialStatus);
+      }, {});      setAttendanceStatus(initialStatus);
     } catch (error) {
-      toast.error('Failed to fetch attendees');
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch attendees',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error fetching attendees:', error);
     } finally {
       setLoading(false);
@@ -90,39 +155,72 @@ const AttendanceManagement: React.FC = () => {
         userId,
         attended: present
       }));
-      
-      await attendanceService.updateAttendance(selectedEvent._id, attendanceData);
-      toast.success('Attendance has been successfully recorded!');
+        await attendanceService.updateAttendance(selectedEvent._id, attendanceData);
+      toast({
+        title: 'Success',
+        description: 'Attendance has been successfully recorded!',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
-      toast.error('Unable to save attendance. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Unable to save attendance. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error saving attendance:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCalculatePenalties = async () => {
-    try {
+  const handleCalculatePenalties = async () => {    try {
       setCalculatingPenalties(true);
       await attendanceService.calculatePenalties(year);
-      setIsOpen(false);
-      toast.success(`Penalties for ${year} have been calculated successfully.`);
+      onClose();
+      toast({
+        title: 'Success',
+        description: `Penalties for ${year} have been calculated successfully.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
-      toast.error('Unable to calculate penalties. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Unable to calculate penalties. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error calculating penalties:', error);
     } finally {
       setCalculatingPenalties(false);
     }
   };
 
-  const handleSendWarnings = async () => {
-    try {
+  const handleSendWarnings = async () => {    try {
       setSendingWarnings(true);
       await attendanceService.sendWarnings(year);
-      setIsWarningOpen(false);
-      toast.success(`Attendance warnings for ${year} have been sent successfully.`);
+      onWarningClose();
+      toast({
+        title: 'Success',
+        description: `Attendance warnings for ${year} have been sent successfully.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
-      toast.error('Unable to send warnings. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Unable to send warnings. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error sending warnings:', error);
     } finally {
       setSendingWarnings(false);
@@ -153,384 +251,505 @@ const AttendanceManagement: React.FC = () => {
       a.download = `${selectedEvent.title}-attendance.csv`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);      document.body.removeChild(a);
     } catch (error) {
-      toast.error('Failed to export attendance data');
+      toast({
+        title: 'Error',
+        description: 'Failed to export attendance data',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error exporting attendance:', error);
     }
   };
 
   const filteredAttendees = filterAttendees();
-
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeBadgeColor = (type: string) => {
     switch (type) {
-      case 'meetings': return 'bg-blue-100 text-blue-800';
-      case 'conference': return 'bg-purple-100 text-purple-800';
-      case 'workshop': return 'bg-yellow-100 text-yellow-800';
-      case 'training': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'meetings': return 'blue';
+      case 'conference': return 'purple';
+      case 'workshop': return 'yellow';
+      case 'training': return 'green';
+      default: return 'gray';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <Box 
+      minH="100vh" 
+      bgGradient={bgGradient}
+      p={{ base: 4, md: 6 }}
+    >
+      <Container maxW="7xl">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-          <div className="mb-6 md:mb-0">
-            <h1 className="text-3xl font-bold text-gray-800">Attendance Management</h1>
-            <p className="text-gray-600 mt-2">Track and manage attendance for events and meetings</p>
-          </div>
+        <Flex 
+          direction={{ base: 'column', md: 'row' }} 
+          justify="space-between" 
+          align={{ base: 'stretch', md: 'center' }}
+          mb={8}
+          gap={4}
+        >
+          <VStack align="flex-start" spacing={2}>
+            <Heading size="xl" color="gray.800">
+              Attendance Management
+            </Heading>
+            <Text color="gray.600">
+              Track and manage attendance for events and meetings
+            </Text>
+          </VStack>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200 shadow-md"
+          <HStack spacing={3} flexWrap="wrap">
+            <Button
+              leftIcon={<CalendarIcon />}
+              colorScheme="blue"
+              variant="solid"
+              size="md"
               onClick={() => navigate('/admin/events')}
             >
-              <span>Event Management</span>
-            </button>
+              Event Management
+            </Button>
 
             {year === new Date().getFullYear() && (
               <>
-                <button
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition duration-200 shadow-md"
-                  onClick={() => setIsWarningOpen(true)}
+                <Button
+                  leftIcon={<EmailIcon />}
+                  colorScheme="orange"
+                  variant="solid"
+                  size="md"
+                  onClick={onWarningOpen}
                 >
-                  <span>Send Warnings</span>
-                </button>
+                  Send Warnings
+                </Button>
 
-                <button
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200 shadow-md"
-                  onClick={() => setIsOpen(true)}
+                <Button
+                  leftIcon={<CheckCircleIcon />}
+                  colorScheme="green"
+                  variant="solid"
+                  size="md"
+                  onClick={onOpen}
                 >
-                  <span>Calculate Penalties</span>
-                </button>
+                  Calculate Penalties
+                </Button>
               </>
             )}
-          </div>
-        </div>
+          </HStack>
+        </Flex>
+
+        {/* Statistics Cards */}
+        <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={6} mb={8}>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Total Events</StatLabel>
+                <StatNumber>{events.length}</StatNumber>
+                <StatGroup>
+                  <Text fontSize="sm" color="gray.500">
+                    For {year}
+                  </Text>
+                </StatGroup>
+              </Stat>
+            </CardBody>
+          </Card>
+
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Selected Event Attendees</StatLabel>
+                <StatNumber>{selectedEvent?.attendees?.length || 0}</StatNumber>
+                <StatGroup>
+                  <Text fontSize="sm" color="gray.500">
+                    {selectedEvent ? 'Registered' : 'No event selected'}
+                  </Text>
+                </StatGroup>
+              </Stat>
+            </CardBody>
+          </Card>
+
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Present Attendees</StatLabel>
+                <StatNumber>
+                  {Object.values(attendanceStatus).filter(Boolean).length}
+                </StatNumber>
+                <StatGroup>
+                  <Text fontSize="sm" color="gray.500">
+                    Marked present
+                  </Text>
+                </StatGroup>
+              </Stat>
+            </CardBody>
+          </Card>
+
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Attendance Rate</StatLabel>
+                <StatNumber>
+                  {attendees.length > 0 
+                    ? Math.round((Object.values(attendanceStatus).filter(Boolean).length / attendees.length) * 100)
+                    : 0}%
+                </StatNumber>
+                <StatGroup>
+                  <Text fontSize="sm" color="gray.500">
+                    Current event
+                  </Text>
+                </StatGroup>
+              </Stat>
+            </CardBody>
+          </Card>
+        </Grid>
 
         {/* Filters Card */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Year</label>
-                <select
-                  value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}
-                  className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <Card bg={cardBg} shadow="md" mb={8}>
+          <CardBody>
+            <Flex 
+              direction={{ base: 'column', lg: 'row' }} 
+              justify="space-between" 
+              align={{ base: 'stretch', lg: 'end' }}
+              gap={4}
+            >
+              <HStack spacing={4} flexWrap="wrap">
+                <VStack align="flex-start" spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                    Filter by Year
+                  </Text>
+                  <Select
+                    value={year}
+                    onChange={(e) => setYear(Number(e.target.value))}
+                    w={{ base: 'full', sm: '160px' }}
+                  >
+                    {years.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </Select>
+                </VStack>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
-                <select
-                  value={eventType}
-                  onChange={(e) => setEventType(e.target.value)}
-                  className="w-full sm:w-44 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="all">All Events</option>
-                  <option value="meetings">Meetings Only</option>
-                  <option value="conference">Conferences</option>
-                  <option value="workshop">Workshops</option>
-                  <option value="seminar">Seminars</option>
-                  <option value="training">Training</option>
-                  <option value="social">Social</option>
-                </select>
-              </div>
-            </div>
+                <VStack align="flex-start" spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                    Event Type
+                  </Text>
+                  <Select
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    w={{ base: 'full', sm: '180px' }}
+                  >
+                    <option value="all">All Events</option>
+                    <option value="meetings">Meetings Only</option>
+                    <option value="conference">Conferences</option>
+                    <option value="workshop">Workshops</option>
+                    <option value="seminar">Seminars</option>
+                    <option value="training">Training</option>
+                    <option value="social">Social</option>
+                  </Select>
+                </VStack>
+              </HStack>
 
-            {selectedEvent && (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Search Attendees</label>
-                  <input
-                    type="text"
-                    placeholder="Search by name or email"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full sm:w-60 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
+              {selectedEvent && (
+                <HStack spacing={4} flexWrap="wrap">
+                  <VStack align="flex-start" spacing={1}>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                      Search Attendees
+                    </Text>
+                    <InputGroup w={{ base: 'full', sm: '240px' }}>
+                      <InputLeftElement>
+                        <SearchIcon color="gray.400" />
+                      </InputLeftElement>
+                      <Input
+                        placeholder="Search by name or email"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </InputGroup>
+                  </VStack>
 
-                <button
-                  className="flex items-center gap-2 px-4 py-2 mt-6 sm:mt-0 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition duration-200"
-                  onClick={exportAttendanceCSV}
-                  disabled={!selectedEvent || !attendees.length}
-                >
-                  <span>Export CSV</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Events Panel */}
-          <div className="w-full lg:w-1/3">
-            <div className="bg-white rounded-xl shadow-md p-6 h-full">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Events</h2>
-
-              {loading && !selectedEvent ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : events.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No events found for the selected filters
-                </div>
-              ) : (
-                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                  {events.map((event) => (
-                    <div
-                      key={event._id}
-                      className={`p-4 border rounded-lg cursor-pointer transition duration-200 hover:shadow-md ${
-                        selectedEvent?._id === event._id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 bg-white'
-                      }`}
-                      onClick={() => handleEventSelection(event)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-gray-800">{event.title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getEventTypeColor(event.eventType)}`}>
-                          {event.eventType}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {new Date(event.startDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                      <div className="flex items-center mt-3 text-sm text-gray-500">
-                        <span className="flex items-center mr-4">
-                          <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-                          {event.attendees?.length || 0} attendees
-                        </span>
-                        <span className="flex items-center">
-                          <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                          Completed
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                  <Button
+                    leftIcon={<DownloadIcon />}
+                    variant="outline"
+                    colorScheme="blue"
+                    mt={6}
+                    onClick={exportAttendanceCSV}
+                    isDisabled={!selectedEvent || !attendees.length}
+                  >
+                    Export CSV
+                  </Button>
+                </HStack>
               )}
-            </div>
-          </div>
+            </Flex>
+          </CardBody>
+        </Card>        {/* Main Content */}
+        <Grid templateColumns={{ base: '1fr', lg: '1fr 2fr' }} gap={6}>
+          {/* Events Panel */}
+          <GridItem>
+            <Card bg={cardBg} shadow="md" h="full">
+              <CardHeader>
+                <Heading size="lg">Events</Heading>
+              </CardHeader>
+              <CardBody>
+                {loading && !selectedEvent ? (
+                  <Center py={8}>
+                    <Spinner size="lg" color="blue.500" />
+                  </Center>
+                ) : events.length === 0 ? (
+                  <Center py={8}>
+                    <VStack spacing={3}>
+                      <Icon as={FiCalendar} boxSize={12} color="gray.400" />
+                      <Text color="gray.500" textAlign="center">
+                        No events found for the selected filters
+                      </Text>
+                    </VStack>
+                  </Center>
+                ) : (
+                  <VStack spacing={4} maxH="600px" overflowY="auto">
+                    {events.map((event) => (
+                      <Card
+                        key={event._id}
+                        w="full"
+                        cursor="pointer"
+                        variant={selectedEvent?._id === event._id ? 'filled' : 'outline'}
+                        colorScheme={selectedEvent?._id === event._id ? 'blue' : undefined}
+                        onClick={() => handleEventSelection(event)}
+                        _hover={{ shadow: 'md' }}
+                        transition="all 0.2s"
+                      >
+                        <CardBody>
+                          <Flex justify="space-between" align="flex-start" mb={2}>
+                            <Heading size="sm" color="gray.800">
+                              {event.title}
+                            </Heading>
+                            <Badge 
+                              colorScheme={getEventTypeBadgeColor(event.eventType)}
+                              variant="solid"
+                              fontSize="xs"
+                            >
+                              {event.eventType}
+                            </Badge>
+                          </Flex>
+                          <Text fontSize="sm" color="gray.600" mb={3}>
+                            {new Date(event.startDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </Text>
+                          <HStack spacing={4} fontSize="sm" color="gray.500">
+                            <HStack spacing={1}>
+                              <Icon as={FiUsers} color="blue.500" />
+                              <Text>{event.attendees?.length || 0} attendees</Text>
+                            </HStack>
+                            <HStack spacing={1}>
+                              <CheckCircleIcon color="green.500" />
+                              <Text>Completed</Text>
+                            </HStack>
+                          </HStack>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                )}
+              </CardBody>
+            </Card>
+          </GridItem>
 
           {/* Attendance Panel */}
-          <div className="w-full lg:w-2/3">
-            <div className="bg-white rounded-xl shadow-md p-6 h-full">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 sm:mb-0">
-                  {selectedEvent ? `${selectedEvent.title} Attendance` : 'Select an Event'}
-                </h2>
+          <GridItem>
+            <Card bg={cardBg} shadow="md" h="full">
+              <CardHeader>
+                <Flex justify="space-between" align="center">
+                  <Heading size="lg">
+                    {selectedEvent ? `${selectedEvent.title} Attendance` : 'Select an Event'}
+                  </Heading>
 
-                {selectedEvent && (
-                  <button
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200 shadow-md disabled:opacity-50"
-                    onClick={handleSaveAttendance}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Saving...
-                      </span>
-                    ) : (
-                      'Save Attendance'
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {loading && selectedEvent ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : !selectedEvent ? (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
-                  <p>Select an event to manage attendance</p>
-                </div>
-              ) : filteredAttendees.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                  </div>
-                  <p>No attendees found for this event</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Registration Date
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Present
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredAttendees.map((attendee) => {
-                        const user = attendee.userId;
-                        if (!user) return null; // Skip rendering if user is null
-                        return (
-                          <tr key={user._id || attendee._id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">
-                                {user.firstName} {user.lastName}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-500">{user.email}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(attendee.markedAt || '').toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <div className="flex justify-center">
-                                <input
-                                  type="checkbox"
-                                  checked={!!attendanceStatus[user._id]}
+                  {selectedEvent && (
+                    <Button
+                      colorScheme="green"
+                      size="md"
+                      onClick={handleSaveAttendance}
+                      isLoading={loading}
+                      loadingText="Saving..."
+                      leftIcon={<CheckCircleIcon />}
+                    >
+                      Save Attendance
+                    </Button>
+                  )}
+                </Flex>
+              </CardHeader>
+              <CardBody>
+                {loading && selectedEvent ? (
+                  <Center py={8}>
+                    <Spinner size="lg" color="blue.500" />
+                  </Center>
+                ) : !selectedEvent ? (
+                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Icon as={CalendarIcon} boxSize={16} color="gray.400" />
+                      <Text color="gray.500" textAlign="center">
+                        Select an event to manage attendance
+                      </Text>
+                    </VStack>
+                  </Center>
+                ) : filteredAttendees.length === 0 ? (
+                  <Center py={12}>
+                    <VStack spacing={4}>
+                      <Icon as={FiUsers} boxSize={16} color="gray.400" />
+                      <Text color="gray.500" textAlign="center">
+                        No attendees found for this event
+                      </Text>
+                    </VStack>
+                  </Center>
+                ) : (
+                  <TableContainer>
+                    <Table variant="simple" size="md">
+                      <Thead>
+                        <Tr>
+                          <Th>Name</Th>
+                          <Th>Email</Th>
+                          <Th>Registration Date</Th>
+                          <Th textAlign="center">Present</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredAttendees.map((attendee) => {
+                          const user = attendee.userId;
+                          if (!user) return null;
+                          return (
+                            <Tr key={user._id || attendee._id} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
+                              <Td>
+                                <Text fontWeight="medium">
+                                  {user.firstName} {user.lastName}
+                                </Text>
+                              </Td>
+                              <Td>
+                                <Text color="gray.600">{user.email}</Text>
+                              </Td>
+                              <Td>
+                                <Text color="gray.600">
+                                  {new Date(attendee.markedAt || '').toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })}
+                                </Text>
+                              </Td>
+                              <Td textAlign="center">
+                                <Checkbox
+                                  colorScheme="green"
+                                  size="lg"
+                                  isChecked={!!attendanceStatus[user._id]}
                                   onChange={(e) =>
                                     handleAttendanceChange(
                                       user._id,
                                       e.target.checked
                                     )
                                   }
-                                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
                                 />
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+                              </Td>
+                            </Tr>
+                          );
+                        })}
+                      </Tbody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </CardBody>
+            </Card>
+          </GridItem>
+        </Grid>
+      </Container>      {/* Calculate Penalties Modal */}
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Calculate Attendance Penalties
+            </AlertDialogHeader>
 
-      {/* Calculate Penalties Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Calculate Attendance Penalties</h3>
-              <p className="text-gray-600 mb-4">
-                This will calculate penalties for members who didn't meet the 50%
-                attendance threshold for meetings in {year}.
-              </p>
-              <p className="text-gray-600 mb-4">
-                The penalty will be half of the total annual dues for each member
-                below the threshold.
-              </p>
-              <p className="text-gray-600 mb-6">Are you sure you want to continue?</p>
-              <div className="flex justify-end gap-3">
-                <button
-                  ref={cancelRef}
-                  onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCalculatePenalties}
-                  disabled={calculatingPenalties}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200 disabled:opacity-50"
-                >
-                  {calculatingPenalties ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Calculating...
-                    </span>
-                  ) : (
-                    'Calculate Penalties'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            <AlertDialogBody>
+              <VStack spacing={4} align="flex-start">
+                <Text>
+                  This will calculate penalties for members who didn't meet the 50%
+                  attendance threshold for meetings in {year}.
+                </Text>
+                <Text>
+                  The penalty will be half of the total annual dues for each member
+                  below the threshold.
+                </Text>
+                <Text fontWeight="medium" color="orange.600">
+                  Are you sure you want to continue?
+                </Text>
+              </VStack>
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                colorScheme="red" 
+                onClick={handleCalculatePenalties}
+                isLoading={calculatingPenalties}
+                loadingText="Calculating..."
+                ml={3}
+              >
+                Calculate Penalties
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
 
       {/* Send Warnings Modal */}
-      {isWarningOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Send Attendance Warnings</h3>
-              <p className="text-gray-600 mb-4">
-                This will send warning notifications to members who are currently
-                below the 50% attendance threshold for meetings in {year}.
-              </p>
-              <p className="text-gray-600 mb-4">
-                The warnings will help members avoid penalties by encouraging them
-                to attend remaining meetings this year.
-              </p>
-              <p className="text-gray-600 mb-6">Are you sure you want to send these warnings?</p>
-              <div className="flex justify-end gap-3">
-                <button
-                  ref={cancelRef}
-                  onClick={() => setIsWarningOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSendWarnings}
-                  disabled={sendingWarnings}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition duration-200 disabled:opacity-50"
-                >
-                  {sendingWarnings ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Sending...
-                    </span>
-                  ) : (
-                    'Send Warnings'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <AlertDialog
+        isOpen={isWarningOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onWarningClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Send Attendance Warnings
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              <VStack spacing={4} align="flex-start">
+                <Text>
+                  This will send warning notifications to members who are currently
+                  below the 50% attendance threshold for meetings in {year}.
+                </Text>
+                <Text>
+                  The warnings will help members avoid penalties by encouraging them
+                  to attend remaining meetings this year.
+                </Text>
+                <Text fontWeight="medium" color="orange.600">
+                  Are you sure you want to send these warnings?
+                </Text>
+              </VStack>
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button onClick={onWarningClose}>
+                Cancel
+              </Button>
+              <Button 
+                colorScheme="orange" 
+                onClick={handleSendWarnings}
+                isLoading={sendingWarnings}
+                loadingText="Sending..."
+                ml={3}
+              >
+                Send Warnings
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </Box>
   );
 };
 

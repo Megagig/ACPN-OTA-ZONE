@@ -1,92 +1,122 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  SimpleGrid,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Select,
+  HStack,
+  Spinner,
+  Badge,
+  Card,
+  CardBody,
+  CardHeader,
+  Stack,
+  useToast,
+  useColorModeValue,
+  Icon,
+} from '@chakra-ui/react';
+import { 
+  FaFilePdf
+} from 'react-icons/fa';
+import { 
+  CheckCircleIcon, 
+  CalendarIcon, 
+  WarningIcon 
+} from '@chakra-ui/icons';
 import financialService from '../../services/financial.service';
 import type { Pharmacy } from '../../types/pharmacy.types';
-import type { Due as FinancialDue, Payment } from '../../types/financial.types';
+import type { Payment } from '../../types/financial.types';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 interface CertificateData {
   pharmacyId: string;
   issueDate: Date;
   validUntil: Date;
   certificateNumber: string;
-  pharmacy?: Pharmacy;
-  clearedDues: FinancialDue[];
+  pharmacy: Pharmacy;
+  clearedDues: string[];
   totalAmountPaid: number;
 }
 
 const ClearanceCertificateGeneration: React.FC = () => {
+  const toast = useToast();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [generating, setGenerating] = useState<boolean>(false);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [eligiblePharmacies, setEligiblePharmacies] = useState<Pharmacy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
+  const [ineligiblePharmacies, setIneligiblePharmacies] = useState<Pharmacy[]>([]);
   const [selectedPharmacy, setSelectedPharmacy] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [currentYear] = useState<number>(new Date().getFullYear());
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  
+  // Color mode values
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const hoverBg = useColorModeValue('gray.50', 'gray.600');
 
-  const currentYear = new Date().getFullYear();
-  const validUntil = new Date(currentYear, 11, 31); // December 31st of current year
-
-  const filterPharmacies = React.useCallback(() => {
-    let filtered = [...pharmacies];
-
-    if (filterStatus === 'eligible') {
-      filtered = eligiblePharmacies;
-    } else if (filterStatus === 'outstanding') {
-      filtered = pharmacies.filter(
-        (p) => !eligiblePharmacies.some((ep) => ep._id === p._id)
-      );
-    }
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (pharmacy) =>
-          pharmacy.name.toLowerCase().includes(term) ||
-          pharmacy.registrationNumber?.toLowerCase().includes(term) ||
-          pharmacy.address.toLowerCase().includes(term)
-      );
-    }
-
-    return filtered;
-  }, [searchTerm, filterStatus, pharmacies, eligiblePharmacies]);
+  // Calculate valid until date (December 31st of current year)
+  const validUntil = new Date(currentYear, 11, 31);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [pharmaciesRes, paymentsRes] = await Promise.all([
-        financialService.getAllPharmacies(),
-        financialService.getAllPayments({ status: 'all' }),
-      ]);
+      
+      // Fetch all pharmacies
+      const allPharmacies = await financialService.getAllPharmacies();
+      setPharmacies(allPharmacies);
 
-      setPharmacies(pharmaciesRes || []);
+      // Check for dues to determine eligibility
+      const duesPromises = allPharmacies.map(async (pharmacy) => {
+        try {          const eligibility = await financialService.checkClearanceEligibility(pharmacy._id);
+          return {
+            pharmacy,
+            eligible: eligibility.isEligible,
+          };
+        } catch (err) {
+          console.error(`Failed to check eligibility for ${pharmacy.name}:`, err);
+          return {
+            pharmacy,
+            eligible: false,
+          };
+        }
+      });
 
-      // Find pharmacies eligible for clearance certificates
-      // (those with all dues paid for the current year)
-      const eligible = pharmaciesRes
-        ? pharmaciesRes.filter((pharmacy: Pharmacy) => {
-            const pharmacyPayments =
-              paymentsRes?.payments?.filter?.(
-                (payment: Payment) =>
-                  payment.pharmacyId === pharmacy._id &&
-                  (payment.status === 'approved' ||
-                    payment.approvalStatus === 'approved') &&
-                  new Date(payment.paymentDate || '').getFullYear() === currentYear
-              ) || [];
-            return pharmacyPayments.length > 0; // Has approved payments for current year
-          })
-        : [];
-
+      const eligibilityResults = await Promise.all(duesPromises);
+      
+      const eligible = eligibilityResults
+        .filter((result) => result.eligible)
+        .map((result) => result.pharmacy);
+      
+      const ineligible = eligibilityResults
+        .filter((result) => !result.eligible)
+        .map((result) => result.pharmacy);
+      
       setEligiblePharmacies(eligible);
-    } catch (err: unknown) {
+      setIneligiblePharmacies(ineligible);
+    } catch (err) {
       console.error('Failed to load pharmacy data:', err);
-      setError('Failed to load pharmacy data');
+      toast({
+        title: 'Error',
+        description: 'Failed to load pharmacy data',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
-  }, [currentYear]);
+  }, [currentYear, toast]);
 
   useEffect(() => {
     fetchData();
@@ -193,60 +223,32 @@ const ClearanceCertificateGeneration: React.FC = () => {
 
       const mainText = `This is to certify that ${
         pharmacy.name
-      } with registration number ${
-        pharmacy.registrationNumber || 'N/A'
       } located at ${
         pharmacy.address
-      } has fulfilled all financial obligations to the Association of Community Pharmacists of Nigeria, Ota Zone for the year ${currentYear}.`;
+      } has fulfilled all financial obligations to the Association of Community Pharmacists of Nigeria, Ota Zone, for the year ${currentYear}.`;
 
+      // Add text with word wrapping
       const splitText = pdf.splitTextToSize(mainText, 170);
-      pdf.text(splitText, 20, 95);
+      pdf.text(splitText, 20, 100);
 
-      // Financial summary
+      // Payment details
+      pdf.setFontSize(11);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('FINANCIAL SUMMARY', 20, 130);
+      pdf.text('Payment Details:', 20, 130);
 
+      pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
-      // Use the Naira symbol with a space after it for better readability
-      pdf.text(`Total Amount Paid: ₦ ${totalPaid.toLocaleString()}`, 20, 140);
-      pdf.text(`Number of Payments: ${pharmacyPayments.length}`, 20, 145);
-      pdf.text('Outstanding Balance: ₦ 0.00', 20, 150);
+      pdf.text(`Total Amount Paid: ₦${totalPaid.toLocaleString()}`, 20, 140);
+      pdf.text(`Payment Status: CLEARED`, 20, 147);
 
-      // Payment breakdown if any
-      if (pharmacyPayments.length > 0) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('PAYMENT BREAKDOWN', 20, 165);
-
-        pdf.setFont('helvetica', 'normal');
-        let yPos = 175;
-        pharmacyPayments
-          .slice(0, 5)
-          .forEach((payment: Payment, index: number) => {
-            const paymentDate = new Date(
-              payment.paymentDate || ''
-            ).toLocaleDateString();
-            pdf.text(
-              `${
-                index + 1
-              }. Payment on ${paymentDate}: ₦ ${payment.amount.toLocaleString()}`,
-              25,
-              yPos
-            );
-            yPos += 5;
-          });
-
-        if (pharmacyPayments.length > 5) {
-          pdf.text(
-            `... and ${pharmacyPayments.length - 5} more payments`,
-            25,
-            yPos
-          );
-        }
-      }
+      // Border
+      pdf.setDrawColor(...secondaryColor);
+      pdf.setLineWidth(0.5);
+      pdf.rect(10, 50, 190, 200);
 
       // Footer
-      pdf.setFillColor(...secondaryColor);
-      pdf.rect(0, 250, 210, 47, 'F');
+      pdf.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      pdf.rect(0, 260, 210, 20, 'F');
 
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(10);
@@ -286,10 +288,22 @@ const ClearanceCertificateGeneration: React.FC = () => {
       )}-${currentYear}.pdf`;
       pdf.save(fileName);
 
-      setSuccess(`Certificate generated successfully for ${pharmacy.name}`);
+      toast({
+        title: 'Success',
+        description: `Certificate generated successfully for ${pharmacy.name}`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (err: unknown) {
       console.error('Failed to generate certificate:', err);
-      setError('Failed to generate certificate');
+      toast({
+        title: 'Error',
+        description: 'Failed to generate certificate',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setGenerating(false);
     }
@@ -298,20 +312,29 @@ const ClearanceCertificateGeneration: React.FC = () => {
   const generateBulkCertificates = async () => {
     try {
       setGenerating(true);
-      setError(null);
-
+      
       for (const pharmacy of eligiblePharmacies) {
         await generateCertificatePDF(pharmacy);
         // Small delay between generations to prevent overwhelming
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      setSuccess(
-        `Generated certificates for ${eligiblePharmacies.length} pharmacies`
-      );
+      toast({
+        title: 'Success',
+        description: `Generated certificates for ${eligiblePharmacies.length} pharmacies`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (err: unknown) {
       console.error('Failed to generate bulk certificates:', err);
-      setError('Failed to generate bulk certificates');
+      toast({
+        title: 'Error',
+        description: 'Failed to generate bulk certificates',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setGenerating(false);
     }
@@ -319,13 +342,25 @@ const ClearanceCertificateGeneration: React.FC = () => {
 
   const handleSingleGeneration = async () => {
     if (!selectedPharmacy) {
-      setError('Please select a pharmacy');
+      toast({
+        title: 'Error',
+        description: 'Please select a pharmacy',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       return;
     }
 
     const pharmacy = pharmacies.find((p) => p._id === selectedPharmacy);
     if (!pharmacy) {
-      setError('Pharmacy not found');
+      toast({
+        title: 'Error',
+        description: 'Pharmacy not found',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       return;
     }
 
@@ -334,302 +369,266 @@ const ClearanceCertificateGeneration: React.FC = () => {
       (p) => p._id === selectedPharmacy
     );
     if (!isEligible) {
-      setError(
-        'This pharmacy has outstanding dues and is not eligible for clearance certificate'
-      );
+      toast({
+        title: 'Error',
+        description: 'This pharmacy has outstanding dues and is not eligible for clearance certificate',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       return;
     }
 
     await generateCertificatePDF(pharmacy);
-  };
-
-  if (loading) {
+  };  if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
+      <DashboardLayout>
+        <Flex direction="column" align="center" width="100%">
+          <Container maxW="container.xl" p={{ base: 4, md: 6 }} width="100%">
+            <Flex justify="center" align="center" width="100%" minH="50vh">
+              <Spinner size="xl" thickness="4px" color="blue.600" />
+            </Flex>
+          </Container>
+        </Flex>
+      </DashboardLayout>
     );
   }
 
-  const filteredPharmaciesList = filterPharmacies();
+  const filterPharmacies = () => {
+    if (filterStatus === 'eligible') {
+      return eligiblePharmacies;
+    } else if (filterStatus === 'ineligible') {
+      return ineligiblePharmacies;
+    }
+    return pharmacies;
+  };
+  const filteredPharmaciesList = filterPharmacies();  return (
+    <DashboardLayout>
+      <Flex direction="column" align="center" width="100%">
+        <Container maxW="container.xl" p={{ base: 4, md: 6 }} width="100%">
+          <Box mb={{ base: 4, md: 6 }} textAlign="left" width="100%">
+            <Heading as="h1" size="xl" fontWeight="bold">
+              Clearance Certificate Generation
+            </Heading>
+            <Text color="gray.600" mt={2}>
+              Generate clearance certificates for pharmacies with no outstanding dues
+            </Text>
+          </Box>
+            {/* Summary Stats */}
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 4, md: 6 }} mb={{ base: 6, md: 8 }} w="100%">
+            <Card bg={cardBg} shadow="md" borderRadius="lg" overflow="hidden">
+              <CardBody>
+                <Flex alignItems="center">
+                  <Box p={3} bg="green.100" borderRadius="lg">
+                    <Icon as={CheckCircleIcon} w={8} h={8} color="green.600" />
+                  </Box>
+                  <Box ml={4}>
+                    <Text fontSize="2xl" fontWeight="bold">
+                      {eligiblePharmacies.length}
+                    </Text>
+                    <Text color="gray.600">Eligible Pharmacies</Text>
+                  </Box>
+                </Flex>
+              </CardBody>
+            </Card>            <Card bg={cardBg} shadow="md" borderRadius="lg" overflow="hidden">
+              <CardBody>
+                <Flex alignItems="center">
+                  <Box p={3} bg="red.100" borderRadius="lg">
+                    <Icon as={WarningIcon} w={8} h={8} color="red.600" />
+                  </Box>
+                  <Box ml={4}>
+                    <Text fontSize="2xl" fontWeight="bold">
+                      {ineligiblePharmacies.length}
+                    </Text>
+                    <Text color="gray.600">Ineligible Pharmacies</Text>
+                  </Box>
+                </Flex>
+              </CardBody>
+            </Card>            <Card bg={cardBg} shadow="md" borderRadius="lg" overflow="hidden">
+              <CardBody>
+                <Flex alignItems="center">
+                  <Box p={3} bg="blue.100" borderRadius="lg">
+                    <Icon as={CalendarIcon} w={8} h={8} color="blue.600" />
+                  </Box>
+                  <Box ml={4}>
+                    <Text fontSize="2xl" fontWeight="bold">
+                      {validUntil.toLocaleDateString()}
+                    </Text>
+                    <Text color="gray.600">Certificate Valid Until</Text>
+                  </Box>
+                </Flex>
+              </CardBody>
+            </Card></SimpleGrid>
+            {/* Generation Options */}
+          <Card bg={cardBg} shadow="md" mb={{ base: 6, md: 8 }} w="100%" borderRadius="lg" overflow="hidden">
+            <CardHeader>
+              <Heading size="md">Certificate Generation</Heading>
+            </CardHeader>
+            <CardBody>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 5, md: 6 }}>
+                {/* Single Certificate */}
+                <Box border="1px" borderColor={borderColor} borderRadius="lg" p={{ base: 3, md: 4 }}>
+                  <Heading as="h3" size="sm" mb={3}>
+                    Generate Single Certificate
+                  </Heading>
 
-  return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Clearance Certificate Generation
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Generate clearance certificates for pharmacies with no outstanding
-          dues
-        </p>
-      </div>
+                <Stack spacing={4}>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" mb={2}>
+                      Select Pharmacy
+                    </Text>
+                    <Select
+                      value={selectedPharmacy}
+                      onChange={(e) => setSelectedPharmacy(e.target.value)}
+                      placeholder="Choose a pharmacy..."
+                    >
+                      {eligiblePharmacies.map((pharmacy) => (
+                        <option key={pharmacy._id} value={pharmacy._id}>
+                          {pharmacy.name} - {pharmacy.address}
+                        </option>
+                      ))}
+                    </Select>
+                  </Box>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{error}</p>
-        </div>
-      )}
+                  <Button
+                    onClick={handleSingleGeneration}
+                    isDisabled={generating || !selectedPharmacy}
+                    colorScheme="blue"
+                    isLoading={generating}
+                    loadingText="Generating..."
+                  >
+                    Generate Certificate
+                  </Button>
+                </Stack>
+              </Box>                {/* Bulk Generation */}
+                <Box border="1px" borderColor={borderColor} borderRadius="lg" p={{ base: 3, md: 4 }}>
+                  <Heading as="h3" size="sm" mb={3}>
+                    Generate Bulk Certificates
+                  </Heading>
 
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-600">{success}</p>
-        </div>
-      )}
+                <Stack spacing={4}>
+                  <Box p={3} bg="gray.50" borderRadius="lg">
+                    <Text fontSize="sm" color="gray.600" mb={2}>
+                      Generate certificates for all {eligiblePharmacies.length}{' '}
+                      eligible pharmacies
+                    </Text>
+                    <Text fontSize="xs" color="gray.500">
+                      This will create individual PDF certificates for each pharmacy
+                      with no outstanding dues.
+                    </Text>
+                  </Box>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {eligiblePharmacies.length}
-              </p>
-              <p className="text-gray-600">Eligible for Clearance</p>
-            </div>
-          </div>
-        </div>
+                  <Button
+                    onClick={generateBulkCertificates}
+                    isDisabled={generating || eligiblePharmacies.length === 0}
+                    colorScheme="green"
+                    isLoading={generating}
+                    loadingText="Generating..."
+                  >
+                    {`Generate ${eligiblePharmacies.length} Certificates`}
+                  </Button>
+                </Stack>
+              </Box>            </SimpleGrid>
+          </CardBody>
+        </Card>
+          {/* Pharmacy List */}
+        <Card bg={cardBg} shadow="md" w="100%" borderRadius="lg" overflow="hidden">          <CardBody px={{ base: 3, md: 4 }} py={4}>
+            <Flex justify="space-between" align="center" mb={4} wrap="wrap" gap={2}>
+              <Heading size="md">Pharmacy Status</Heading>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <svg
-                className="w-8 h-8 text-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {pharmacies.length - eligiblePharmacies.length}
-              </p>
-              <p className="text-gray-600">With Outstanding Dues</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <svg
-                className="w-8 h-8 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {validUntil.toLocaleDateString()}
-              </p>
-              <p className="text-gray-600">Certificate Valid Until</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Generation Options */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Certificate Generation</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Single Certificate */}
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium mb-3">
-              Generate Single Certificate
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Pharmacy
-                </label>
-                <select
-                  value={selectedPharmacy}
-                  onChange={(e) => setSelectedPharmacy(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              <HStack spacing={4}>
+                <Select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  size="sm"
+                  width="auto"
                 >
-                  <option value="">Choose a pharmacy...</option>
-                  {eligiblePharmacies.map((pharmacy) => (
-                    <option key={pharmacy._id} value={pharmacy._id}>
-                      {pharmacy.name} - {pharmacy.address}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={handleSingleGeneration}
-                disabled={generating || !selectedPharmacy}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {generating ? 'Generating...' : 'Generate Certificate'}
-              </button>
-            </div>
-          </div>
-
-          {/* Bulk Generation */}
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium mb-3">
-              Generate Bulk Certificates
-            </h3>
-
-            <div className="space-y-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">
-                  Generate certificates for all {eligiblePharmacies.length}{' '}
-                  eligible pharmacies
-                </p>
-                <p className="text-xs text-gray-500">
-                  This will create individual PDF certificates for each pharmacy
-                  with no outstanding dues.
-                </p>
-              </div>
-
-              <button
-                onClick={generateBulkCertificates}
-                disabled={generating || eligiblePharmacies.length === 0}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {generating
-                  ? 'Generating...'
-                  : `Generate ${eligiblePharmacies.length} Certificates`}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Pharmacy List */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Pharmacy Status</h2>
-
-          <div className="flex space-x-4">
-            <div>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Pharmacies</option>
-                <option value="eligible">Eligible for Clearance</option>
-                <option value="outstanding">With Outstanding Dues</option>
-              </select>
-            </div>
-
-            <div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search pharmacies..."
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pharmacy
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPharmaciesList.map((pharmacy) => {
-                const isEligible = eligiblePharmacies.some(
-                  (p) => p._id === pharmacy._id
-                );
-                return (
-                  <tr key={pharmacy._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {pharmacy.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {pharmacy.registrationNumber || 'No reg. number'}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {pharmacy.address}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isEligible ? (
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          Eligible
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                          Outstanding Dues
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {isEligible ? (
-                        <button
-                          onClick={() => generateCertificatePDF(pharmacy)}
-                          disabled={generating}
-                          className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                        >
-                          Generate Certificate
-                        </button>
-                      ) : (
-                        <span className="text-gray-400">Not Eligible</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                  <option value="all">All Pharmacies</option>
+                  <option value="eligible">Eligible Only</option>
+                  <option value="ineligible">Ineligible Only</option>
+                </Select>
+              </HStack>
+            </Flex>
+              <Box overflowX="auto" width="100%" sx={{
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "thin",
+              "&::-webkit-scrollbar": {
+                height: "8px",
+                backgroundColor: "transparent"
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "gray.300",
+                borderRadius: "8px"
+              }
+            }}>
+              <Table variant="simple" size={{ base: "sm", md: "md" }} width="100%">
+                <Thead>
+                  <Tr>
+                    <Th>Pharmacy</Th>
+                    <Th>Address</Th>
+                    <Th>Status</Th>
+                    <Th>Action</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredPharmaciesList.map((pharmacy) => {
+                    const isEligible = eligiblePharmacies.some(
+                      (p) => p._id === pharmacy._id
+                    );
+                    return (
+                      <Tr key={pharmacy._id} _hover={{ bg: hoverBg }}>
+                        <Td>
+                          <Box>
+                            <Text fontWeight="medium">
+                              {pharmacy.name}
+                            </Text>
+                            <Text fontSize="sm" color="gray.500">
+                              {pharmacy.registrationNumber || 'No reg. number'}
+                            </Text>
+                          </Box>
+                        </Td>
+                        <Td>
+                          {pharmacy.address}
+                        </Td>
+                        <Td>
+                          {isEligible ? (
+                            <Badge colorScheme="green" borderRadius="full" px={2} py={1}>
+                              Eligible
+                            </Badge>
+                          ) : (
+                            <Badge colorScheme="red" borderRadius="full" px={2} py={1}>
+                              Outstanding Dues
+                            </Badge>
+                          )}
+                        </Td>
+                        <Td>
+                          {isEligible ? (
+                            <Button
+                              onClick={() => generateCertificatePDF(pharmacy)}
+                              isDisabled={generating}
+                              size="sm"
+                              colorScheme="blue"
+                              variant="link"
+                              leftIcon={<Icon as={FaFilePdf} />}
+                            >
+                              Generate Certificate
+                            </Button>
+                          ) : (
+                            <Text fontSize="sm" color="gray.400">
+                              Not Eligible
+                            </Text>
+                          )}
+                        </Td>
+                      </Tr>
+                    );                  })}
+                </Tbody>
+              </Table>
+            </Box>
+          </CardBody>
+        </Card>
+      </Container>
+      </Flex>
+    </DashboardLayout>
   );
 };
 

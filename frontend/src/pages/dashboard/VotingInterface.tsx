@@ -14,11 +14,14 @@ import {
   Progress,
   SimpleGrid,
   Alert,
+  AlertIcon,
   CardBody,
   Stack,
+  Container,
+  useColorModeValue,
+  useToast,
 } from '@chakra-ui/react';
 import {
-  AlertIcon,
   Avatar,
   Card,
   Image,
@@ -26,7 +29,6 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import type { Election, Position, Candidate } from '../../types/election.types';
 import electionService from '../../services/election.service';
-import { toast } from 'react-toastify';
 
 interface SelectedCandidates {
   [positionId: string]: string;
@@ -35,6 +37,7 @@ interface SelectedCandidates {
 const VotingInterface: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const [election, setElection] = useState<Election | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -42,6 +45,13 @@ const VotingInterface: React.FC = () => {
   const [selectedCandidates, setSelectedCandidates] =
     useState<SelectedCandidates>({});
   const [hasVoted, setHasVoted] = useState<boolean>(false);
+
+  // Color mode values
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const selectedBg = useColorModeValue('blue.50', 'blue.900');
+  const selectedBorder = useColorModeValue('blue.300', 'blue.600');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const mutedColor = useColorModeValue('gray.500', 'gray.400');
 
   useEffect(() => {
     const fetchElection = async () => {
@@ -51,8 +61,12 @@ const VotingInterface: React.FC = () => {
           const data = await electionService.getElectionById(id);
 
           if (data.status !== 'ongoing') {
-            toast.warn('This election is not currently active for voting', {
-              autoClose: 3000,
+            toast({
+              title: 'Warning',
+              description: 'This election is not currently active for voting',
+              status: 'warning',
+              duration: 3000,
+              isClosable: true,
             });
             navigate(`/elections/${id}`);
             return;
@@ -66,14 +80,20 @@ const VotingInterface: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading election:', error);
-        toast.error('Unable to load election details', { autoClose: 3000 });
+        toast({
+          title: 'Error',
+          description: 'Unable to load election details',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchElection();
-  }, [id, navigate]);
+  }, [id, navigate, toast]);
 
   const handleSelectCandidate = (positionId: string, candidateId: string) => {
     setSelectedCandidates({
@@ -110,13 +130,23 @@ const VotingInterface: React.FC = () => {
 
       await electionService.submitVotes(id, votes);
 
-      toast.success('Your votes have been recorded', { autoClose: 3000 });
+      toast({
+        title: 'Success',
+        description: 'Your votes have been recorded',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
       navigate(`/elections/${id}`);
     } catch (error) {
       console.error('Error submitting votes:', error);
-      toast.error('There was a problem recording your votes', {
-        autoClose: 3000,
+      toast({
+        title: 'Error',
+        description: 'There was a problem recording your votes',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
       });
     } finally {
       setSubmitting(false);
@@ -126,9 +156,9 @@ const VotingInterface: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <Box className="p-5">
+        <Container maxW="container.xl" py={5}>
           <Text>Loading election details...</Text>
-        </Box>
+        </Container>
       </DashboardLayout>
     );
   }
@@ -136,12 +166,12 @@ const VotingInterface: React.FC = () => {
   if (!election) {
     return (
       <DashboardLayout>
-        <Box className="p-5">
+        <Container maxW="container.xl" py={5}>
           <Text>Election not found</Text>
-          <Button className="mt-4" onClick={() => navigate('/elections/list')}>
+          <Button mt={4} onClick={() => navigate('/elections/list')}>
             Back to Elections
           </Button>
-        </Box>
+        </Container>
       </DashboardLayout>
     );
   }
@@ -149,15 +179,15 @@ const VotingInterface: React.FC = () => {
   if (hasVoted) {
     return (
       <DashboardLayout>
-        <Box className="p-5">
-          <Alert status="info" className="mb-5">
+        <Container maxW="container.xl" py={5}>
+          <Alert status="info" mb={5}>
             <AlertIcon />
             You have already cast your vote in this election.
           </Alert>
           <Button onClick={() => navigate(`/elections/${id}`)}>
             View Election Details
           </Button>
-        </Box>
+        </Container>
       </DashboardLayout>
     );
   }
@@ -166,30 +196,31 @@ const VotingInterface: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box className="p-5">
-        <Heading size="lg" className="mb-2">
+      <Container maxW="container.xl" py={5}>
+        <Heading size="lg" mb={2}>
           {election.title}
         </Heading>
-        <Text className="mb-4">Cast your vote for each position</Text>
+        <Text mb={4}>Cast your vote for each position</Text>
 
         <Progress
           value={(currentStep / election.positions.length) * 100}
           size="sm"
           colorScheme="blue"
-          className="mb-5 rounded-md"
+          mb={5}
+          borderRadius="md"
         />
 
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
           <Box>
-            <Card variant="outline" className="mb-5">
+            <Card variant="outline" mb={5}>
               <CardBody>
-                <Heading size="md" className="mb-3">
+                <Heading size="md" mb={3}>
                   Position {currentStep + 1} of {election.positions.length}:{' '}
                   {currentPosition?.name}
                 </Heading>
-                <Text className="mb-4">{currentPosition?.description}</Text>
+                <Text mb={4}>{currentPosition?.description}</Text>
 
-                <Divider className="my-4" />
+                <Divider my={4} />
 
                 {election.candidates.filter(
                   (candidate) =>
@@ -212,33 +243,45 @@ const VotingInterface: React.FC = () => {
                         .map((candidate: Candidate) => (
                           <Card
                             key={candidate._id}
-                            className={`p-3 border ${
+                            p={3}
+                            borderWidth="1px"
+                            borderColor={
                               selectedCandidates[currentPosition?._id || ''] ===
                               candidate._id
-                                ? 'border-blue-300 bg-blue-50'
-                                : 'border-gray-200 bg-white'
-                            }`}
+                                ? selectedBorder
+                                : borderColor
+                            }
+                            bg={
+                              selectedCandidates[currentPosition?._id || ''] ===
+                              candidate._id
+                                ? selectedBg
+                                : cardBg
+                            }
                           >
-                            <Radio value={candidate._id} className="w-full">
+                            <Radio value={candidate._id} width="full">
                               <Flex align="center">
                                 {candidate.photoUrl ? (
                                   <Image
                                     src={candidate.photoUrl}
                                     alt={candidate.fullName}
-                                    className="w-[50px] h-[50px] object-cover rounded-full mr-3"
+                                    width="50px"
+                                    height="50px"
+                                    objectFit="cover"
+                                    borderRadius="full"
+                                    mr={3}
                                   />
                                 ) : (
                                   <Avatar
                                     size="md"
                                     name={candidate.fullName}
-                                    className="mr-3"
+                                    mr={3}
                                   />
                                 )}
                                 <Box>
-                                  <Text className="font-semibold">
+                                  <Text fontWeight="semibold">
                                     {candidate.fullName}
                                   </Text>
-                                  <Text className="text-sm line-clamp-1">
+                                  <Text fontSize="sm" noOfLines={1}>
                                     {candidate.manifesto?.substring(0, 70) ||
                                       'No manifesto available'}
                                   </Text>
@@ -250,14 +293,14 @@ const VotingInterface: React.FC = () => {
                     </Stack>
                   </RadioGroup>
                 ) : (
-                  <Text className="text-gray-500">
+                  <Text color={mutedColor}>
                     No candidates available for this position
                   </Text>
                 )}
               </CardBody>
             </Card>
 
-            <Flex justify="between">
+            <Flex justify="space-between">
               <Button onClick={handlePrevious} isDisabled={currentStep === 0}>
                 Previous
               </Button>
@@ -301,7 +344,7 @@ const VotingInterface: React.FC = () => {
           <Box>
             <Card variant="outline">
               <CardBody>
-                <Heading size="md" className="mb-4">
+                <Heading size="md" mb={4}>
                   Your Selections
                 </Heading>
                 <VStack align="stretch" spacing={4}>
@@ -309,14 +352,16 @@ const VotingInterface: React.FC = () => {
                     (position: Position, index: number) => (
                       <Box
                         key={position._id}
-                        className={`p-3 border rounded-md ${
-                          currentStep === index
-                            ? 'border-blue-300 bg-blue-50'
-                            : 'border-gray-200 bg-white'
-                        }`}
+                        p={3}
+                        borderWidth="1px"
+                        borderRadius="md"
+                        borderColor={
+                          currentStep === index ? selectedBorder : borderColor
+                        }
+                        bg={currentStep === index ? selectedBg : cardBg}
                       >
-                        <Flex justify="between" align="center">
-                          <Text className="font-medium">{position.name}</Text>
+                        <Flex justify="space-between" align="center">
+                          <Text fontWeight="medium">{position.name}</Text>
                           {selectedCandidates[position._id] ? (
                             <Badge colorScheme="green">
                               {election.candidates.find(
@@ -334,7 +379,8 @@ const VotingInterface: React.FC = () => {
                 </VStack>
 
                 <Button
-                  className="mt-6 w-full"
+                  mt={6}
+                  width="full"
                   colorScheme="red"
                   variant="outline"
                   onClick={() => navigate(`/elections/${id}`)}
@@ -345,7 +391,7 @@ const VotingInterface: React.FC = () => {
             </Card>
           </Box>
         </SimpleGrid>
-      </Box>
+      </Container>
     </DashboardLayout>
   );
 };

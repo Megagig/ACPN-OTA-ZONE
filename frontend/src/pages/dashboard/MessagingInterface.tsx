@@ -1,5 +1,50 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Flex,
+  Text,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Heading,
+  Avatar,
+  Badge,
+  Divider,
+  IconButton,
+  Container,
+  VStack,
+  HStack,
+  Spinner,
+  useToast,
+  useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  ModalFooter,
+  Textarea,
+  FormControl,
+  FormLabel,
+  Tooltip,
+  Card,
+  CardHeader,
+  CardBody,
+  SimpleGrid,
+  Icon
+} from '@chakra-ui/react';
+import {
+  SearchIcon,
+  BellIcon,
+  ChatIcon,
+  CheckIcon,
+  AddIcon,
+  ChevronRightIcon,
+} from '@chakra-ui/icons';
+import { FaPaperPlane, FaComments } from 'react-icons/fa';
 import messageService, {
   type MessageThread,
   type ThreadMessage,
@@ -7,17 +52,16 @@ import messageService, {
 import SocketService from '../../services/socket.service';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 
 const MessagingInterface = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const { user } = useAuth();
-  const { notifications, unreadCount, fetchNotifications, markAsRead } =
-    useNotification();
+  const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotification();
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(
-    null
-  );
+  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showNewThreadForm, setShowNewThreadForm] = useState(false);
@@ -33,9 +77,21 @@ const MessagingInterface = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketService = useRef(new SocketService());
 
+  // Color mode values
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const inputBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const hoverBg = useColorModeValue('gray.50', 'gray.600');
+  const selectedBg = useColorModeValue('blue.50', 'blue.900');
+  const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
+  const senderMsgBg = useColorModeValue('blue.50', 'blue.800');
+  const recipientMsgBg = useColorModeValue('gray.100', 'gray.700');
+  const notificationBg = useColorModeValue('blue.50', 'blue.900');
+  const notificationBorder = useColorModeValue('blue.200', 'blue.700');
+
   useEffect(() => {
     fetchThreads();
-    fetchNotifications(); // Fetch recent notifications
+    fetchNotifications();
   }, []);
 
   useEffect(() => {
@@ -57,6 +113,13 @@ const MessagingInterface = () => {
       }
     } catch (error) {
       console.error('Error fetching threads:', error);
+      toast({
+        title: 'Error loading messages',
+        description: 'There was a problem fetching your messages. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +139,13 @@ const MessagingInterface = () => {
       );
     } catch (error) {
       console.error('Error fetching thread:', error);
+      toast({
+        title: 'Error loading conversation',
+        description: 'There was a problem fetching this conversation. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -118,6 +188,13 @@ const MessagingInterface = () => {
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
+      toast({
+        title: 'Error sending message',
+        description: 'Your message could not be sent. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsSending(false);
     }
@@ -129,6 +206,13 @@ const MessagingInterface = () => {
       !newThreadData.subject.trim() ||
       !newThreadData.message.trim()
     ) {
+      toast({
+        title: 'Missing information',
+        description: 'Please fill in all required fields',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
       return;
     }
 
@@ -154,8 +238,23 @@ const MessagingInterface = () => {
         message: '',
       });
       setShowNewThreadForm(false);
+      
+      toast({
+        title: 'Message sent',
+        description: 'Your new conversation has been created',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Error creating thread:', error);
+      toast({
+        title: 'Error starting conversation',
+        description: 'Your message could not be sent. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsSending(false);
     }
@@ -175,6 +274,13 @@ const MessagingInterface = () => {
     } catch (error) {
       console.error('Error searching users:', error);
       setSearchResults([]);
+      toast({
+        title: 'Search error',
+        description: 'Could not search for users. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsSearching(false);
     }
@@ -198,9 +304,7 @@ const MessagingInterface = () => {
     // If it's yesterday, show "Yesterday"
     if (messageDate.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
-    }
-
-    // If it's this year, show month and day
+    }    // If it's this year, show month and day
     if (messageDate.getFullYear() === today.getFullYear()) {
       return messageDate.toLocaleDateString('en-NG', {
         month: 'short',
@@ -306,186 +410,418 @@ const MessagingInterface = () => {
     // Implement typing indicator UI
     console.log('User typing:', data);
   }, []);
-
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Communications</h1>
-        <div className="flex space-x-2">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
-            onClick={() => navigate('/notifications')}
-          >
-            <i className="fas fa-bell mr-2"></i>
-            View All Notifications
-            {unreadCount > 0 && (
-              <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm shadow"
-            onClick={() => setShowNewThreadForm(true)}
-          >
-            <i className="fas fa-plus mr-2"></i>
-            New Message
-          </button>
-          <button
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm shadow"
-            onClick={() => navigate('/communications/dashboard')}
-          >
-            <i className="fas fa-tachometer-alt mr-2"></i>
-            Dashboard
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Notifications Section */}
-      {notifications.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-blue-800">
-              <i className="fas fa-bell mr-2"></i>
-              Recent Notifications
-            </h3>
-            <button
+    <DashboardLayout>
+      <Container maxW="container.xl" p={{ base: 2, md: 4 }}>
+        {/* Page Header */}
+        <Flex 
+          justify="space-between" 
+          align={{ base: "start", md: "center" }} 
+          mb={6}
+          direction={{ base: "column", md: "row" }}
+          gap={{ base: 4, md: 0 }}
+        >
+          <Box>
+            <Heading as="h1" size="xl" fontWeight="bold">
+              Messaging
+            </Heading>
+            <Text color={mutedTextColor} mt={1}>
+              Communicate with other members and administrators
+            </Text>
+          </Box>
+          <HStack spacing={3}>
+            <Button
+              leftIcon={<BellIcon />}
+              colorScheme="blue"
+              variant="outline"
+              size="md"
               onClick={() => navigate('/notifications')}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              View All →
-            </button>
-          </div>
-          <div className="space-y-2">
-            {notifications.slice(0, 3).map((notification) => (
-              <div
-                key={notification._id}
-                className={`p-3 rounded-md border ${
-                  notification.isRead
-                    ? 'bg-white border-gray-200'
-                    : 'bg-blue-100 border-blue-300'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {notification.title}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {new Date(notification.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {!notification.isRead && (
-                    <button
-                      onClick={() => markAsRead(notification._id)}
-                      className="ml-3 text-blue-600 hover:text-blue-800 text-xs"
+              Notifications
+              {unreadCount > 0 && (
+                <Badge ml={2} colorScheme="red" borderRadius="full">
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              size="md"
+              onClick={() => setShowNewThreadForm(true)}
+            >
+              New Message
+            </Button>
+          </HStack>
+        </Flex>
+
+        {/* Recent Notifications Section */}
+        {notifications.length > 0 && (
+          <Card bg={notificationBg} borderColor={notificationBorder} mb={6} variant="outline">
+            <CardHeader py={3} px={4}>
+              <Flex justify="space-between" align="center">
+                <Heading size="sm" display="flex" alignItems="center">
+                  <BellIcon mr={2} />
+                  Recent Notifications
+                </Heading>
+                <Button 
+                  size="sm" 
+                  variant="link" 
+                  rightIcon={<ChevronRightIcon />}
+                  onClick={() => navigate('/notifications')}
+                >
+                  View All
+                </Button>
+              </Flex>
+            </CardHeader>
+            <CardBody pt={0} px={4} pb={4}>
+              <SimpleGrid spacing={3}>
+                {notifications.slice(0, 3).map((notification) => (
+                  <Box
+                    key={notification._id}
+                    p={3}
+                    borderRadius="md"
+                    bg={notification.isRead ? 'white' : 'blue.100'}
+                    _dark={{
+                      bg: notification.isRead ? 'gray.700' : 'blue.800',
+                    }}
+                    borderWidth="1px"
+                    borderColor={notification.isRead ? borderColor : 'blue.300'}
+                  >
+                    <Flex justify="space-between" align="flex-start">
+                      <Box>
+                        <Text fontWeight="medium">{notification.title}</Text>
+                        <Text fontSize="sm" mt={1}>{notification.message}</Text>
+                        <Text fontSize="xs" color={mutedTextColor} mt={2}>
+                          {new Date(notification.createdAt).toLocaleDateString()}
+                        </Text>
+                      </Box>
+                      {!notification.isRead && (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          colorScheme="blue"
+                          onClick={() => markAsRead(notification._id)}
+                        >
+                          Mark read
+                        </Button>
+                      )}
+                    </Flex>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Main Messaging Interface */}
+        <Card 
+          bg={cardBg} 
+          shadow="md" 
+          borderRadius="lg" 
+          overflow="hidden"
+          height={{ base: 'auto', md: '75vh' }}
+        >
+          <Flex 
+            direction={{ base: 'column', md: 'row' }} 
+            h={{ base: 'auto', md: '100%' }}
+          >
+            {/* Threads Sidebar */}
+            <Box 
+              width={{ base: '100%', md: '35%', lg: '30%' }} 
+              borderRight="1px" 
+              borderColor={borderColor}
+              overflowY="auto"
+              height={{ base: 'auto', md: '100%' }}
+              maxHeight={{ base: '300px', md: '100%' }}
+            >
+              <Box p={3} borderBottom="1px" borderColor={borderColor}>
+                <InputGroup>
+                  <InputLeftElement pointerEvents="none">
+                    <SearchIcon color="gray.400" />
+                  </InputLeftElement>
+                  <Input 
+                    placeholder="Search messages..." 
+                    bg={inputBg}
+                    borderColor={borderColor}
+                  />
+                </InputGroup>
+              </Box>
+
+              {isLoading ? (
+                <VStack py={10} spacing={4}>
+                  <Spinner size="lg" color="blue.500" thickness="3px" />
+                  <Text color={mutedTextColor}>Loading conversations...</Text>
+                </VStack>              ) : threads.length === 0 ? (
+                <Box textAlign="center" py={10}>
+                  <Icon as={FaComments} boxSize={10} color="gray.400" mb={3} />
+                  <Text fontWeight="medium" fontSize="lg">No messages yet</Text>
+                  <Text color={mutedTextColor} mb={4}>Start a new conversation to begin messaging</Text>
+                  <Button
+                    colorScheme="blue"
+                    leftIcon={<AddIcon />}
+                    onClick={() => setShowNewThreadForm(true)}
+                  >
+                    New Message
+                  </Button>
+                </Box>
+              ) : (
+                <VStack spacing={0} align="stretch" divider={<Divider />}>
+                  {threads.map((thread) => (
+                    <Box
+                      key={thread._id}
+                      p={3}
+                      cursor="pointer"
+                      bg={selectedThread?._id === thread._id ? selectedBg : 'transparent'}
+                      _hover={{ bg: selectedThread?._id === thread._id ? selectedBg : hoverBg }}
+                      transition="background 0.2s"
+                      onClick={() => selectThread(thread._id)}
                     >
-                      Mark as read
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+                      <Flex align="center" mb={1}>
+                        <Avatar 
+                          size="sm" 
+                          name={getOtherParticipantName(thread)} 
+                          mr={3}
+                          bg="blue.500"
+                        />
+                        <Box flex="1" minW={0}>
+                          <Flex justify="space-between" align="center">
+                            <Text fontWeight="medium" noOfLines={1}>
+                              {getOtherParticipantName(thread)}
+                            </Text>
+                            <Text fontSize="xs" color={mutedTextColor}>
+                              {formatDate(thread.lastMessageAt || thread.updatedAt)}
+                            </Text>
+                          </Flex>
+                          <Text fontSize="xs" color={mutedTextColor} noOfLines={1}>
+                            {thread.subject}
+                          </Text>
+                        </Box>
+                      </Flex>
+                      <Flex align="center">
+                        <Text fontSize="sm" color={mutedTextColor} noOfLines={1} flex="1">
+                          {thread.lastMessage}
+                        </Text>
+                        {thread.unreadCount > 0 && (
+                          <Badge 
+                            colorScheme="blue" 
+                            borderRadius="full" 
+                            ml={2}
+                          >
+                            {thread.unreadCount}
+                          </Badge>
+                        )}
+                      </Flex>
+                    </Box>
+                  ))}
+                </VStack>
+              )}
+            </Box>
+
+            {/* Messages Area */}
+            <Box 
+              width={{ base: '100%', md: '65%', lg: '70%' }} 
+              display="flex" 
+              flexDirection="column"
+              height={{ base: 'auto', md: '100%' }}
+            >
+              {selectedThread ? (
+                <>
+                  {/* Thread Header */}
+                  <Flex 
+                    align="center" 
+                    p={4} 
+                    borderBottom="1px" 
+                    borderColor={borderColor}
+                  >
+                    <Avatar 
+                      size="sm" 
+                      name={getOtherParticipantName(selectedThread)} 
+                      mr={3}
+                      bg="blue.500"
+                    />
+                    <Box>
+                      <Text fontWeight="medium">
+                        {getOtherParticipantName(selectedThread)}
+                      </Text>
+                      <Text fontSize="sm" color={mutedTextColor}>
+                        {selectedThread.subject}
+                      </Text>
+                    </Box>
+                  </Flex>
+
+                  {/* Messages Container */}
+                  <Box 
+                    flex="1" 
+                    p={4} 
+                    overflowY="auto"
+                    maxHeight={{ base: '300px', md: '60vh' }}
+                  >
+                    <VStack spacing={4} align="stretch">
+                      {selectedThread.messages?.map((message: ThreadMessage) => (
+                        <Flex
+                          key={message._id}
+                          justifyContent={user && message.senderId === user._id ? 'flex-end' : 'flex-start'}
+                        >
+                          <Box
+                            maxW={{ base: '80%', md: '70%' }}
+                            bg={user && message.senderId === user._id ? senderMsgBg : recipientMsgBg}
+                            borderRadius="lg"
+                            p={3}
+                          >
+                            <Text fontSize="sm">{message.content}</Text>
+                            <Flex justify="flex-end" align="center" mt={1}>
+                              <Text fontSize="xs" color={mutedTextColor} mr={1}>
+                                {formatDate(message.createdAt)}
+                              </Text>
+                              {message.readBy.length > 0 && user && message.senderId === user._id && (
+                                <CheckIcon color="blue.500" boxSize={3} />
+                              )}
+                            </Flex>
+                          </Box>
+                        </Flex>
+                      ))}
+                      <Box ref={messagesEndRef}></Box>
+                    </VStack>
+                  </Box>
+
+                  {/* Message Input */}
+                  <Flex 
+                    p={3} 
+                    borderTop="1px" 
+                    borderColor={borderColor}
+                    align="center"
+                  >
+                    <Input
+                      placeholder="Type a message..."
+                      mr={2}
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      bg={inputBg}
+                    />
+                    <Tooltip label="Send message">
+                      <IconButton
+                        aria-label="Send message"
+                        icon={isSending ? <Spinner size="sm" /> : <FaPaperPlane />}
+                        colorScheme="blue"
+                        isDisabled={isSending || !newMessage.trim()}
+                        onClick={handleSendMessage}
+                      />
+                    </Tooltip>
+                  </Flex>
+                </>
+              ) : (                <Flex
+                  justify="center"
+                  align="center"
+                  height="100%"
+                  p={8}
+                >
+                  <Box textAlign="center">
+                    <Icon as={ChatIcon} boxSize={10} color="gray.400" mb={3} />
+                    <Heading size="md" mb={2}>No conversation selected</Heading>
+                    <Text color={mutedTextColor} mb={4}>
+                      Select a conversation from the sidebar or start a new one
+                    </Text>
+                    <Button
+                      colorScheme="blue"
+                      leftIcon={<AddIcon />}
+                      onClick={() => setShowNewThreadForm(true)}
+                    >
+                      New Message
+                    </Button>
+                  </Box>
+                </Flex>
+              )}
+            </Box>
+          </Flex>
+        </Card>
+      </Container>
 
       {/* New Thread Form Modal */}
-      {showNewThreadForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">New Message</h3>
-              <button
-                onClick={() => setShowNewThreadForm(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="relative">
-                <label
-                  htmlFor="recipient"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Recipient <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="recipient"
-                  type="text"
-                  className="border border-gray-300 rounded-md shadow-sm p-2 w-full"
-                  placeholder="Search for users..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    handleSearchUsers(e.target.value);
-                  }}
-                />
-
-                {/* Search Results Dropdown */}
-                {searchQuery && (searchResults.length > 0 || isSearching) && (
-                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
-                    {isSearching ? (
-                      <div className="p-3 text-center text-gray-500">
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        Searching...
-                      </div>
-                    ) : searchResults.length > 0 ? (
-                      searchResults.map((user) => (
-                        <div
-                          key={user._id}
-                          className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                          onClick={() => {
-                            setNewThreadData({
-                              ...newThreadData,
-                              recipient: user._id,
-                            });
-                            setSearchQuery(
-                              `${user.firstName} ${user.lastName}`
-                            );
-                            setSearchResults([]);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-3">
-                              {user.firstName.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {user.firstName} {user.lastName}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {user.email}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-3 text-center text-gray-500">
-                        No users found
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Subject <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="subject"
-                  type="text"
-                  className="border border-gray-300 rounded-md shadow-sm p-2 w-full"
+      <Modal isOpen={showNewThreadForm} onClose={() => setShowNewThreadForm(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>New Message</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Recipient</FormLabel>
+                <Box position="relative">
+                  <Input
+                    placeholder="Search for users..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      handleSearchUsers(e.target.value);
+                    }}
+                  />
+                  {searchQuery && (searchResults.length > 0 || isSearching) && (
+                    <Box 
+                      position="absolute" 
+                      zIndex={1} 
+                      width="100%" 
+                      bg={cardBg}
+                      border="1px" 
+                      borderColor={borderColor} 
+                      borderRadius="md" 
+                      shadow="md" 
+                      mt={1}
+                      maxH="200px"
+                      overflowY="auto"
+                    >
+                      {isSearching ? (
+                        <Flex p={3} justify="center" align="center">
+                          <Spinner size="sm" mr={2} />
+                          <Text>Searching...</Text>
+                        </Flex>
+                      ) : searchResults.length > 0 ? (
+                        searchResults.map((user) => (
+                          <Box
+                            key={user._id}
+                            p={3}
+                            _hover={{ bg: hoverBg }}
+                            cursor="pointer"
+                            onClick={() => {
+                              setNewThreadData({
+                                ...newThreadData,
+                                recipient: user._id,
+                              });
+                              setSearchQuery(`${user.firstName} ${user.lastName}`);
+                              setSearchResults([]);
+                            }}
+                          >
+                            <Flex align="center">
+                              <Avatar 
+                                size="xs"
+                                name={`${user.firstName} ${user.lastName}`}
+                                mr={2}
+                              />
+                              <Box>
+                                <Text fontWeight="medium">
+                                  {user.firstName} {user.lastName}
+                                </Text>
+                                <Text fontSize="xs" color={mutedTextColor}>
+                                  {user.email}
+                                </Text>
+                              </Box>
+                            </Flex>
+                          </Box>
+                        ))
+                      ) : (
+                        <Box p={3} textAlign="center">
+                          <Text color={mutedTextColor}>No users found</Text>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel>Subject</FormLabel>
+                <Input
                   placeholder="Message subject"
                   value={newThreadData.subject}
                   onChange={(e) =>
@@ -495,20 +831,13 @@ const MessagingInterface = () => {
                     })
                   }
                 />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Message <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="message"
-                  rows={4}
-                  className="border border-gray-300 rounded-md shadow-sm p-2 w-full"
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel>Message</FormLabel>
+                <Textarea
                   placeholder="Type your message here..."
+                  rows={4}
                   value={newThreadData.message}
                   onChange={(e) =>
                     setNewThreadData({
@@ -516,214 +845,28 @@ const MessagingInterface = () => {
                       message: e.target.value,
                     })
                   }
-                ></textarea>
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm"
-                  onClick={() => setShowNewThreadForm(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
-                  onClick={handleCreateThread}
-                  disabled={isSending}
-                >
-                  {isSending ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin mr-2"></i>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-paper-plane mr-2"></i>
-                      Send
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="flex h-[calc(75vh-4rem)]">
-          {/* Threads Sidebar */}
-          <div className="w-1/3 border-r overflow-y-auto">
-            <div className="p-4 border-b">
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded-md"
-                placeholder="Search messages..."
-              />
-            </div>
-
-            {isLoading ? (
-              <div className="animate-pulse p-4 space-y-4">
-                {[...Array(5)].map((_, index) => (
-                  <div key={index} className="h-16 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            ) : threads.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No messages yet
-              </div>
-            ) : (
-              <div>
-                {threads.map((thread) => (
-                  <div
-                    key={thread._id}
-                    className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
-                      selectedThread?._id === thread._id ? 'bg-indigo-50' : ''
-                    }`}
-                    onClick={() => selectThread(thread._id)}
-                  >
-                    <div className="flex items-center mb-1">
-                      <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center mr-3">
-                        {getOtherParticipantName(thread).charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {getOtherParticipantName(thread)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(
-                              thread.lastMessageAt || thread.updatedAt
-                            )}
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-500 truncate">
-                          {thread.subject}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex">
-                      <p className="text-sm text-gray-600 truncate flex-1">
-                        {thread.lastMessage}
-                      </p>
-                      {thread.unreadCount > 0 && (
-                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-indigo-600 rounded-full">
-                          {thread.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Messages Area */}
-          <div className="w-2/3 flex flex-col">
-            {selectedThread ? (
-              <>
-                {/* Thread Header */}
-                <div className="p-4 border-b flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold">
-                      {getOtherParticipantName(selectedThread)}
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                      {selectedThread.subject}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Messages Container */}
-                <div className="flex-1 p-4 overflow-y-auto">
-                  {selectedThread.messages?.map((message: ThreadMessage) => (
-                    <div
-                      key={message._id}
-                      className={`flex mb-4 ${
-                        user && message.senderId === user._id
-                          ? 'justify-end'
-                          : 'justify-start'
-                      }`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md rounded-lg p-3 ${
-                          user && message.senderId === user._id
-                            ? 'bg-indigo-100 text-indigo-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(message.createdAt)}
-                          {message.readBy.length > 0 &&
-                            user &&
-                            message.senderId === user._id && (
-                              <span className="ml-2 text-blue-500">
-                                <i className="fas fa-check-double"></i>
-                              </span>
-                            )}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef}></div>
-                </div>
-
-                {/* Message Input */}
-                <div className="p-4 border-t">
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      className="flex-1 border border-gray-300 rounded-md shadow-sm p-2"
-                      placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) =>
-                        e.key === 'Enter' && handleSendMessage()
-                      }
-                    />
-                    <button
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
-                      onClick={handleSendMessage}
-                      disabled={isSending || !newMessage.trim()}
-                    >
-                      {isSending ? (
-                        <i className="fas fa-spinner fa-spin"></i>
-                      ) : (
-                        <i className="fas fa-paper-plane"></i>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-gray-400 text-5xl mb-4">
-                    <i className="fas fa-comments"></i>
-                  </div>
-                  <h3 className="text-xl font-medium text-gray-700 mb-2">
-                    No conversation selected
-                  </h3>
-                  <p className="text-gray-500">
-                    Select a conversation from the sidebar or start a new one
-                  </p>
-                  <button
-                    className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
-                    onClick={() => setShowNewThreadForm(true)}
-                  >
-                    <i className="fas fa-plus mr-2"></i>
-                    New Message
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+                />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={() => setShowNewThreadForm(false)}>
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="blue" 
+              leftIcon={isSending ? <Spinner size="sm" /> : <FaPaperPlane />}
+              onClick={handleCreateThread}
+              isLoading={isSending}
+              loadingText="Sending"
+            >
+              Send
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </DashboardLayout>
   );
 };
 

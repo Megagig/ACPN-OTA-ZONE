@@ -87,9 +87,8 @@ const ModernMemberDashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        setLoading(true);
-        const data = await memberDashboardService.getDashboardStats();
-        setStats(data);
+        setLoading(true);        const data = await memberDashboardService.getMemberDashboardStats();
+        setStats(data as unknown as MemberDashboardStats);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
@@ -172,30 +171,28 @@ const ModernMemberDashboard: React.FC = () => {
       </Card>
 
       {/* Stats Cards */}
-      <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6} mb={8}>
-        <StatsCard
+      <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6} mb={8}>        <StatsCard
           title="Outstanding Dues"
-          value={`₦${stats.remainingBalance.toLocaleString()}`}
+          value={`₦${(stats?.remainingBalance || 0).toLocaleString()}`}
           icon={FiDollarSign}
           iconColor="red.500"
-          progress={stats.totalDue > 0 ? ((stats.totalPaid / stats.totalDue) * 100) : 0}
+          progress={stats?.totalDue > 0 ? (((stats?.totalPaid || 0) / (stats?.totalDue || 1)) * 100) : 0}
           progressColor="red"
         />
         <StatsCard
           title="Total Paid"
-          value={`₦${stats.totalPaid.toLocaleString()}`}
+          value={`₦${(stats?.totalPaid || 0).toLocaleString()}`}
           icon={FiCheckCircle}
           iconColor="green.500"
-        />
-        <StatsCard
+        />        <StatsCard
           title="Upcoming Events"
-          value={stats.upcomingEvents}
+          value={stats?.upcomingEvents || 0}
           icon={FiCalendar}
           iconColor="blue.500"
         />
         <StatsCard
           title="My Documents"
-          value={stats.documentsCount}
+          value={stats?.documentsCount || 0}
           icon={FiFileText}
           iconColor="purple.500"
         />
@@ -263,8 +260,7 @@ const ModernMemberDashboard: React.FC = () => {
               Recent Activity
             </Text>
           </CardHeader>
-          <CardBody pt={0}>
-            {stats.recentActivity.length === 0 ? (
+          <CardBody pt={0}>            {!stats?.recentActivity || stats.recentActivity.length === 0 ? (
               <Text color="gray.500" textAlign="center" py={4}>
                 No recent activity
               </Text>
@@ -323,9 +319,8 @@ const ModernMemberDashboard: React.FC = () => {
           <CardBody pt={0}>
             <VStack spacing={4}>
               <HStack justify="space-between" w="full">
-                <VStack align="start" spacing={1}>
-                  <Text fontSize="2xl" fontWeight="bold" color="green.500">
-                    {stats.attendedEvents}
+                <VStack align="start" spacing={1}>                  <Text fontSize="2xl" fontWeight="bold" color="green.500">
+                    {stats?.attendedEvents || 0}
                   </Text>
                   <Text fontSize="sm" color="gray.500">
                     Attended
@@ -333,7 +328,7 @@ const ModernMemberDashboard: React.FC = () => {
                 </VStack>
                 <VStack align="center" spacing={1}>
                   <Text fontSize="2xl" fontWeight="bold" color="blue.500">
-                    {stats.upcomingEvents}
+                    {stats?.upcomingEvents || 0}
                   </Text>
                   <Text fontSize="sm" color="gray.500">
                     Upcoming
@@ -341,23 +336,22 @@ const ModernMemberDashboard: React.FC = () => {
                 </VStack>
                 <VStack align="end" spacing={1}>
                   <Text fontSize="2xl" fontWeight="bold" color="red.500">
-                    {stats.missedEvents}
+                    {stats?.missedEvents || 0}
                   </Text>
                   <Text fontSize="sm" color="gray.500">
                     Missed
                   </Text>
                 </VStack>
               </HStack>
-              
-              {(stats.attendedEvents + stats.missedEvents) > 0 && (
+                {((stats?.attendedEvents || 0) + (stats?.missedEvents || 0)) > 0 && (
                 <Box w="full">
                   <Text fontSize="sm" color="gray.500" mb={2}>
                     Attendance Rate
                   </Text>
                   <Progress
                     value={
-                      (stats.attendedEvents / 
-                      (stats.attendedEvents + stats.missedEvents)) * 100
+                      ((stats?.attendedEvents || 0) / 
+                      ((stats?.attendedEvents || 0) + (stats?.missedEvents || 0))) * 100
                     }
                     colorScheme="green"
                     size="lg"
@@ -384,15 +378,14 @@ const ModernMemberDashboard: React.FC = () => {
           <CardBody pt={0}>
             <VStack spacing={3} align="stretch">
               <HStack>
-                <Icon as={FiAlertCircle} color="orange.500" />
-                <Text fontSize="sm">
-                  You have {stats.remainingBalance > 0 ? 'outstanding dues' : 'no outstanding dues'}
+                <Icon as={FiAlertCircle} color="orange.500" />                <Text fontSize="sm">
+                  You have {(stats?.remainingBalance || 0) > 0 ? 'outstanding dues' : 'no outstanding dues'}
                 </Text>
               </HStack>
               <HStack>
                 <Icon as={FiCalendar} color="blue.500" />
                 <Text fontSize="sm">
-                  {stats.upcomingEvents} upcoming events this month
+                  {stats?.upcomingEvents || 0} upcoming events this month
                 </Text>
               </HStack>
               <Button

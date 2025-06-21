@@ -7,29 +7,29 @@ import {
   HStack,
   Heading,
   Text,
-  FormControl,
-  FormLabel,
-  Input,
-  InputGroup,
-  InputRightElement,
   Button,
   Link,
   Alert,
   AlertIcon,
   useColorModeValue,
-  IconButton,
   Image,
-  useToast,
-  Card,
-  CardBody,
   SimpleGrid,
   Progress,
   Badge,
   List,
   ListItem,
   ListIcon,
+  Card,
+  CardBody,
+  FormControl,
+  FormLabel,
+  Input,
+  InputGroup,
+  InputRightElement,
+  IconButton,
+  useToast,
 } from '@chakra-ui/react';
-import { FaEye, FaEyeSlash, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 import authService from '../../services/auth.service';
 
@@ -43,11 +43,12 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
     pcnLicense: '',
+    agreeToTerms: false,
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const bg = useColorModeValue('white', 'gray.800');

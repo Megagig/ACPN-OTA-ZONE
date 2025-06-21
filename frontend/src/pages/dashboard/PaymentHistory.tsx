@@ -1,11 +1,38 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-// CSVLink removed, will implement manual download
+import {
+  Box,
+  Container,
+  Text,
+  Badge,
+  Spinner,
+  Center,
+  Alert,
+  AlertIcon,
+  Heading,
+  VStack,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Button,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Card,
+  CardBody,
+  Flex,
+  useColorModeValue,
+  Link,
+} from '@chakra-ui/react';
 import {
   FiSearch,
   FiChevronLeft,
   FiChevronRight,
-  FiAlertCircle,
-  FiDownload, // Keep FiDownload for the button icon
+  FiDownload,
+  FiExternalLink,
 } from 'react-icons/fi';
 import { getAllPayments } from '../../services/financial.service';
 import type { Payment } from '../../types/financial.types';
@@ -59,27 +86,28 @@ const formatDate = (dateString: string | undefined | null): string => {
 
 const getStatusBadge = (status: Payment['approvalStatus'] | undefined) => {
   const lowerStatus = status?.toLowerCase() || 'pending';
-  switch (lowerStatus) {
-    case 'approved':
-      return (
-        <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">
-          Approved
-        </span>
-      );
-    case 'rejected':
-      return (
-        <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-200 rounded-full">
-          Rejected
-        </span>
-      );
-    case 'pending':
-    default:
-      return (
-        <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
-          Pending
-        </span>
-      );
-  }
+  
+  const colorSchemes = {
+    approved: 'green',
+    rejected: 'red',
+    pending: 'yellow',
+  };
+
+  const labels = {
+    approved: 'Approved',
+    rejected: 'Rejected',
+    pending: 'Pending',
+  };
+
+  return (
+    <Badge 
+      colorScheme={colorSchemes[lowerStatus as keyof typeof colorSchemes] || 'yellow'} 
+      variant="subtle"
+      textTransform="capitalize"
+    >
+      {labels[lowerStatus as keyof typeof labels] || 'Pending'}
+    </Badge>
+  );
 };
 
 // Helper function to get Payment Type label
@@ -130,6 +158,10 @@ const PaymentHistory: React.FC = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const tableBg = useColorModeValue('white', 'gray.700');
+  const headerBg = useColorModeValue('gray.50', 'gray.600');
 
   // Debounce search term
   useEffect(() => {
@@ -251,188 +283,208 @@ const PaymentHistory: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }
-  };
-
-  if (loading) {
+  };  if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <Center h="300px">
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+      </Center>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="p-4 my-4 text-sm text-red-700 bg-red-100 rounded-lg"
-        role="alert"
-      >
-        <FiAlertCircle className="inline w-5 h-5 mr-2" />
-        <span className="font-medium">Error:</span> {error}
-      </div>
+      <Container maxW="6xl" py={6}>
+        <Alert status="error" borderRadius="lg">
+          <AlertIcon />
+          <Box>
+            <Text fontWeight="medium">Error:</Text>
+            <Text>{error}</Text>
+          </Box>
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-        Payment History
-      </h1>
+    <Container maxW="6xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        {/* Header */}
+        <Heading size="lg" color="gray.800">
+          Payment History
+        </Heading>
 
-      <div className="mb-4 flex justify-between items-center">
-        <div className="relative w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search payments..."
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-        </div>
-        {filteredPayments.length > 0 && (
-          <button
-            onClick={handleExportCSV}
-            className="btn btn-primary flex items-center"
-          >
-            <FiDownload className="mr-2" />
-            Export to CSV
-          </button>
-        )}
-      </div>
-
-      {filteredPayments.length === 0 && !loading ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500 text-lg">No payment records found.</p>
-          {debouncedSearchTerm && (
-            <p className="text-gray-400 text-sm">
-              Try adjusting your search term.
-            </p>
+        {/* Search and Export */}
+        <Flex 
+          direction={{ base: 'column', md: 'row' }} 
+          justify="space-between" 
+          align={{ base: 'stretch', md: 'center' }}
+          gap={4}
+        >
+          <InputGroup maxW={{ base: 'full', md: '320px' }}>
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Search payments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              bg={cardBg}
+              border="1px"
+              borderColor="gray.300"
+              _focus={{
+                borderColor: 'blue.500',
+                boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)',
+              }}
+            />
+          </InputGroup>
+          
+          {filteredPayments.length > 0 && (
+            <Button
+              onClick={handleExportCSV}
+              colorScheme="blue"
+              leftIcon={<FiDownload />}
+              size="md"
+            >
+              Export CSV
+            </Button>
           )}
-        </div>
-      ) : (
-        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Payment Type
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Title/Purpose
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Amount
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Transaction ID
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Receipt
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPayments.map((payment) => (
-                <tr
-                  key={payment._id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {formatDate(
-                      payment.paymentDate ||
-                        payment.submittedAt ||
-                        payment.createdAt
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {getPaymentTypeLabel(payment)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {getPaymentTitle(payment)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {payment.amount?.toLocaleString(undefined, {
-                      style: 'currency',
-                      currency: 'NGN',
-                    }) || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {getStatusBadge(payment.approvalStatus)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {payment.paymentReference || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {payment.receiptUrl ? (
-                      <a
-                        href={payment.receiptUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
-                      >
-                        View Receipt
-                      </a>
-                    ) : (
-                      <span className="text-gray-400">No Receipt</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        </Flex>
 
-      {totalPages > 1 && (
-        <div className="mt-6 flex justify-between items-center">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="btn btn-outline flex items-center gap-2 disabled:opacity-50"
-          >
-            <FiChevronLeft /> Previous
-          </button>
-          <span className="text-sm text-gray-700">
-            Page {currentPage} of {totalPages} (Total: {totalItems} items)
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="btn btn-outline flex items-center gap-2 disabled:opacity-50"
-          >
-            Next <FiChevronRight />
-          </button>
-        </div>
-      )}
-    </div>
+        {/* Table Content */}
+        {filteredPayments.length === 0 && !loading ? (
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Center py={10}>
+                <VStack spacing={2}>
+                  <Text color="gray.500" fontSize="lg">
+                    No payment records found.
+                  </Text>
+                  {debouncedSearchTerm && (
+                    <Text color="gray.400" fontSize="sm">
+                      Try adjusting your search term.
+                    </Text>
+                  )}
+                </VStack>
+              </Center>
+            </CardBody>
+          </Card>
+        ) : (
+          <Card bg={cardBg} shadow="lg" overflow="hidden">
+            <TableContainer>
+              <Table variant="simple" bg={tableBg}>
+                <Thead bg={headerBg}>
+                  <Tr>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Date
+                    </Th>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Payment Type
+                    </Th>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Title/Purpose
+                    </Th>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Amount
+                    </Th>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Status
+                    </Th>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Transaction ID
+                    </Th>
+                    <Th color="gray.600" fontSize="xs" fontWeight="semibold" letterSpacing="wider">
+                      Receipt
+                    </Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredPayments.map((payment) => (
+                    <Tr
+                      key={payment._id}
+                      _hover={{ bg: useColorModeValue('gray.50', 'gray.600') }}
+                      transition="background-color 0.15s"
+                    >
+                      <Td fontSize="sm" color="gray.700">
+                        {formatDate(
+                          payment.paymentDate ||
+                            payment.submittedAt ||
+                            payment.createdAt
+                        )}
+                      </Td>
+                      <Td fontSize="sm" color="gray.700">
+                        {getPaymentTypeLabel(payment)}
+                      </Td>
+                      <Td fontSize="sm" color="gray.900" fontWeight="medium">
+                        {getPaymentTitle(payment)}
+                      </Td>
+                      <Td fontSize="sm" color="gray.700">
+                        {payment.amount?.toLocaleString(undefined, {
+                          style: 'currency',
+                          currency: 'NGN',
+                        }) || 'N/A'}
+                      </Td>
+                      <Td fontSize="sm">
+                        {getStatusBadge(payment.approvalStatus)}
+                      </Td>
+                      <Td fontSize="sm" color="gray.500">
+                        {payment.paymentReference || 'N/A'}
+                      </Td>
+                      <Td fontSize="sm">
+                        {payment.receiptUrl ? (
+                          <Link
+                            href={payment.receiptUrl}
+                            isExternal
+                            color="blue.600"
+                            _hover={{ color: 'blue.800', textDecoration: 'underline' }}
+                            display="flex"
+                            alignItems="center"
+                            gap={1}
+                          >
+                            View Receipt
+                            <FiExternalLink size="12px" />
+                          </Link>
+                        ) : (
+                          <Text color="gray.400">No Receipt</Text>
+                        )}
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </Card>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Flex justify="space-between" align="center" pt={4}>
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              isDisabled={currentPage === 1}
+              leftIcon={<FiChevronLeft />}
+              variant="outline"
+              size="sm"
+            >
+              Previous
+            </Button>
+            
+            <Text fontSize="sm" color="gray.700">
+              Page {currentPage} of {totalPages} (Total: {totalItems} items)
+            </Text>
+            
+            <Button
+              onClick={() => handlePageChange(currentPage + 1)}
+              isDisabled={currentPage === totalPages}
+              rightIcon={<FiChevronRight />}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
+          </Flex>
+        )}
+      </VStack>
+    </Container>
   );
 };
 

@@ -1,33 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Heading,
+  Text,
+  Card,
+  CardBody,
+  CardHeader,
+  VStack,
+  HStack,
+  Button,
+  Badge,
+  SimpleGrid,
+  Skeleton,
+  useColorModeValue,
+  Center,
+  Alert,
+  AlertIcon,
+} from '@chakra-ui/react';
+import { format } from 'date-fns';
 import electionService from '../../services/election.service';
 import type { Election, Position } from '../../types/election.types';
-import { Button } from '../../components/shadcn/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/shadcn/card';
-import { Badge } from '../../components/shadcn/badge';
-import { Skeleton } from '../../components/shadcn/skeleton';
-import { format } from 'date-fns';
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const getStatusColor = (status: string) => {
+  const getStatusColorScheme = (status: string) => {
     switch (status.toLowerCase()) {
       case 'upcoming':
-        return 'bg-blue-100 text-blue-800';
+        return 'blue';
       case 'ongoing':
-        return 'bg-green-100 text-green-800';
+        return 'green';
       case 'ended':
-        return 'bg-gray-100 text-gray-800';
+        return 'gray';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'red';
       case 'draft':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'yellow';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'gray';
     }
   };
 
   return (
-    <Badge className={`${getStatusColor(status)} px-2 py-1 rounded-full text-xs font-medium`}>
+    <Badge colorScheme={getStatusColorScheme(status)} variant="subtle">
       {status}
     </Badge>
   );
@@ -36,15 +50,19 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 const ElectionList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [elections, setElections] = useState<Election[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const cardBg = useColorModeValue('white', 'gray.800');
 
   useEffect(() => {
     const fetchElections = async () => {
       try {
+        setLoading(true);
         const data = await electionService.getElections();
         setElections(data);
       } catch (error) {
         console.error('Error fetching elections:', error);
+        setError('Failed to load elections. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -59,84 +77,147 @@ const ElectionList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-1/2 mb-2" />
-                <Skeleton className="h-4 w-1/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <Container maxW="6xl" py={6}>
+        <VStack spacing={6} align="stretch">
+          <HStack justify="space-between" align="center">
+            <Skeleton height="40px" width="200px" />
+            <Skeleton height="40px" width="150px" />
+          </HStack>
+          
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            {[1, 2, 3].map((i) => (
+              <Card key={i} bg={cardBg} shadow="md">
+                <CardHeader>
+                  <Skeleton height="24px" width="75%" />
+                </CardHeader>
+                <CardBody>
+                  <VStack spacing={3} align="stretch">
+                    <Skeleton height="16px" width="50%" />
+                    <Skeleton height="16px" width="33%" />
+                  </VStack>
+                </CardBody>
+              </Card>
+            ))}
+          </SimpleGrid>
+        </VStack>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxW="6xl" py={6}>
+        <Alert status="error" borderRadius="lg">
+          <AlertIcon />
+          {error}
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Elections</h1>
-        <Button onClick={() => navigate('/elections/create')}>
-          Create Election
-        </Button>
-      </div>
+    <Container maxW="6xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        <HStack justify="space-between" align="center">
+          <Heading size="lg">Elections</Heading>
+          <Button 
+            colorScheme="blue" 
+            onClick={() => navigate('/elections/create')}
+          >
+            Create Election
+          </Button>
+        </HStack>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {elections.map((election) => (
-          <Card key={election._id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg font-semibold">
-                  {election.title}
-                </CardTitle>
-                <StatusBadge status={election.status} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">Start Date:</span>{' '}
-                  {formatDate(election.startDate)}
-                </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">End Date:</span>{' '}
-                  {formatDate(election.endDate)}
-                </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">Positions:</span>{' '}
-                  {election.positions?.length || 0}
-                </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">Candidates:</span>{' '}
-                  {election.positions?.reduce(
-                    (acc: number, pos: Position) => acc + (pos.candidates?.length || 0),
-                    0
-                  ) || 0}
-                </div>
-                <div className="pt-2">
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {elections.map((election) => (
+            <Card 
+              key={election._id} 
+              bg={cardBg} 
+              shadow="md" 
+              _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }}
+              transition="all 0.2s"
+              cursor="pointer"
+              onClick={() => navigate(`/elections/${election._id}`)}
+            >
+              <CardHeader>
+                <HStack justify="space-between" align="flex-start">
+                  <Heading size="md" noOfLines={2}>
+                    {election.title}
+                  </Heading>                  <StatusBadge status={election.status} />
+                </HStack>
+              </CardHeader>
+              
+              <CardBody>
+                <VStack spacing={3} align="stretch">
+                  <VStack spacing={2} align="stretch">
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Start Date:
+                      </Text>
+                      <Text fontSize="sm">{formatDate(election.startDate)}</Text>
+                    </HStack>
+                    
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        End Date:
+                      </Text>
+                      <Text fontSize="sm">{formatDate(election.endDate)}</Text>
+                    </HStack>
+                    
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Positions:
+                      </Text>
+                      <Text fontSize="sm">{election.positions?.length || 0}</Text>
+                    </HStack>
+                    
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Candidates:
+                      </Text>
+                      <Text fontSize="sm">
+                        {election.positions?.reduce(
+                          (acc: number, pos: Position) => acc + (pos.candidates?.length || 0),
+                          0
+                        ) || 0}
+                      </Text>
+                    </HStack>
+                  </VStack>
+                  
                   <Button
                     variant="outline"
-                    className="w-full"
-                    onClick={() => navigate(`/elections/${election._id}`)}
+                    size="sm"
+                    colorScheme="blue"
+                    w="full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/elections/${election._id}`);
+                    }}
                   >
                     View Details
                   </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+                </VStack>
+              </CardBody>
+            </Card>
+          ))}
+        </SimpleGrid>
+        
+        {elections.length === 0 && (
+          <Center py={10}>
+            <VStack spacing={3}>
+              <Text color="gray.500" fontSize="lg">No elections found</Text>
+              <Button 
+                colorScheme="blue" 
+                variant="outline"
+                onClick={() => navigate('/elections/create')}
+              >
+                Create Your First Election
+              </Button>
+            </VStack>
+          </Center>
+        )}
+      </VStack>
+    </Container>
   );
 };
 

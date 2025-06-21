@@ -14,10 +14,9 @@ class PharmacyService {
   ): Promise<{ pharmacies: Pharmacy[]; total: number }> {
     const response = await api.get('/api/pharmacies', {
       params: { page, limit, ...filters },
-    });
-    return {
-      pharmacies: response.data.data.pharmacies,
-      total: response.data.data.total,
+    });    return {
+      pharmacies: response.data?.data?.pharmacies || response.data?.pharmacies || [],
+      total: response.data?.data?.total || response.data?.total || 0,
     };
   }
 

@@ -1,8 +1,32 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  Card,
+  CardBody,
+  CardHeader,
+  VStack,
+  HStack,
+  Button,
+  Badge,
+  SimpleGrid,
+  Skeleton,
+  useColorModeValue,
+  Center,
+  Alert,
+  AlertIcon,
+  Avatar,
+  Flex,
+  Icon,
+  Divider,
+} from '@chakra-ui/react';
+import { CalendarIcon, TimeIcon } from '@chakra-ui/icons';
+import { FaUsers, FaVoteYea, FaUser } from 'react-icons/fa';
 import electionService from '../../services/election.service';
 import type { Election, Candidate } from '../../types/election.types';
-import StatCard from '../../components/common/StatCard';
 
 // Assume you have access to currentUserId (replace with actual user id logic)
 const currentUserId = '';
@@ -13,6 +37,7 @@ const ElectionDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [election, setElection] = useState<Election | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const cardBg = useColorModeValue('white', 'gray.800');
 
   useEffect(() => {
     const fetchElectionData = async () => {
@@ -47,34 +72,34 @@ const ElectionDetails = () => {
       year: 'numeric',
     });
   };
-
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
-    const getBadgeClasses = (status: string) => {
+    const getStatusColorScheme = (status: string) => {
       switch (status) {
         case 'upcoming':
-          return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+          return 'blue';
         case 'ongoing':
-          return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+          return 'green';
         case 'ended':
-          return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300';
+          return 'gray';
         case 'cancelled':
-          return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
+          return 'red';
         case 'draft':
-          return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
+          return 'yellow';
         default:
-          return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300';
+          return 'gray';
       }
     };
 
     return (
-      <span
-        className={`${getBadgeClasses(
-          status
-        )} text-xs font-medium px-2.5 py-0.5 rounded-full capitalize`}
+      <Badge 
+        colorScheme={getStatusColorScheme(status)} 
+        variant="subtle" 
+        textTransform="capitalize"
+        fontSize="sm"
       >
         {status}
-      </span>
+      </Badge>
     );
   };
 
@@ -100,136 +125,168 @@ const ElectionDetails = () => {
     if (!election) return 0;
     return election.candidates.reduce((sum, c) => sum + (c.votes || 0), 0);
   }, [election]);
-
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/4"></div>
-          <div className="h-4 bg-muted rounded w-1/2"></div>
-          <div className="h-64 bg-muted rounded"></div>
-        </div>
-      </div>
+      <Container maxW="6xl" py={6}>
+        <VStack spacing={6} align="stretch">
+          <Skeleton height="40px" width="300px" />
+          <Skeleton height="20px" width="500px" />
+          <Skeleton height="200px" />
+        </VStack>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-8 text-red-500">
+      <Container maxW="6xl" py={6}>
+        <Alert status="error" borderRadius="lg">
+          <AlertIcon />
           {error}
-        </div>
-      </div>
+        </Alert>
+      </Container>
     );
   }
 
   if (!election) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-8 text-muted-foreground">
-          Election not found
-        </div>
-      </div>
+      <Container maxW="6xl" py={6}>
+        <Center py={10}>
+          <Text color="gray.500" fontSize="lg">
+            Election not found
+          </Text>
+        </Center>
+      </Container>
     );
   }
-
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            {election.title}
-          </h1>
-          <p className="text-muted-foreground">{election.description}</p>
-        </div>
-        <div className="flex space-x-2 mt-4 md:mt-0">
-          <StatusBadge status={election.status} />
-          {election.status === 'ongoing' && !isUserCandidate && (
-            <button
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm shadow"
-              onClick={() => navigate(`/elections/${election._id}/vote`)}
-            >
-              <i className="fas fa-vote-yea mr-2"></i>
-              Vote Now
-            </button>
-          )}
-        </div>
-      </div>
+    <Container maxW="6xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        {/* Header Section */}
+        <Flex direction={{ base: 'column', md: 'row' }} justify="space-between" align="flex-start" gap={4}>
+          <Box>
+            <Heading size="lg" mb={2}>
+              {election.title}
+            </Heading>
+            <Text color="gray.600">{election.description}</Text>
+          </Box>
+          <HStack spacing={3}>
+            <StatusBadge status={election.status} />
+            {election.status === 'ongoing' && !isUserCandidate && (
+              <Button
+                colorScheme="blue"
+                leftIcon={<Icon as={FaVoteYea} />}
+                onClick={() => navigate(`/elections/${election._id}/vote`)}
+              >
+                Vote Now
+              </Button>
+            )}
+          </HStack>
+        </Flex>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          title="Start Date"
-          value={formatDate(election.startDate)}
-          icon={<i className="fas fa-calendar-alt"></i>}
-          className="border-l-4 border-blue-500"
-        />
-        <StatCard
-          title="End Date"
-          value={formatDate(election.endDate)}
-          icon={<i className="fas fa-calendar-check"></i>}
-          className="border-l-4 border-green-500"
-        />
-        <StatCard
-          title="Positions"
-          value={Object.keys(candidatesByPosition || {}).length.toString()}
-          icon={<i className="fas fa-users"></i>}
-          className="border-l-4 border-purple-500"
-        />
-        <StatCard
-          title="Votes Cast"
-          value={`${voteCount || 0} / ${election.totalVoters || 0}`}
-          icon={<i className="fas fa-vote-yea"></i>}
-          className="border-l-4 border-indigo-500"
-        />
-      </div>
-
-      {/* Positions and Candidates */}
-      <div className="bg-card rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold text-foreground mb-4">
-          Positions & Candidates
-        </h2>
-        <div className="space-y-6">
-          {Object.entries(candidatesByPosition || {}).map(([positionId, positionCandidates]) => (
-            <div key={positionId} className="border-b border-border pb-6 last:border-0">
-              <h3 className="text-lg font-medium text-foreground mb-4">
-                {positionCandidates[0]?.positionName || 'Position'}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {positionCandidates.map((candidate) => (
-                  <div
-                    key={candidate._id}
-                    className="bg-muted/50 rounded-lg p-4"
-                  >
-                    <div className="flex items-center space-x-4">
-                      {candidate.photoUrl ? (
-                        <img
-                          src={candidate.photoUrl}
-                          alt={candidate.fullName}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                          <i className="fas fa-user text-2xl text-primary"></i>
-                        </div>
-                      )}
-                      <div>
-                        <h4 className="font-medium text-foreground">
-                          {candidate.fullName}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {candidate.manifesto || 'No manifesto available'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+        {/* Stats Cards */}
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
+          <Card bg={cardBg} shadow="md" borderLeft="4px" borderLeftColor="blue.500">
+            <CardBody>
+              <HStack>
+                <Icon as={CalendarIcon} color="blue.500" boxSize={6} />
+                <Box>
+                  <Text fontSize="sm" color="gray.600" fontWeight="medium">Start Date</Text>
+                  <Text fontSize="lg" fontWeight="bold">{formatDate(election.startDate)}</Text>
+                </Box>
+              </HStack>
+            </CardBody>
+          </Card>
+          
+          <Card bg={cardBg} shadow="md" borderLeft="4px" borderLeftColor="green.500">
+            <CardBody>
+              <HStack>
+                <Icon as={TimeIcon} color="green.500" boxSize={6} />
+                <Box>
+                  <Text fontSize="sm" color="gray.600" fontWeight="medium">End Date</Text>
+                  <Text fontSize="lg" fontWeight="bold">{formatDate(election.endDate)}</Text>
+                </Box>
+              </HStack>
+            </CardBody>
+          </Card>
+          
+          <Card bg={cardBg} shadow="md" borderLeft="4px" borderLeftColor="purple.500">
+            <CardBody>
+              <HStack>
+                <Icon as={FaUsers} color="purple.500" boxSize={6} />
+                <Box>
+                  <Text fontSize="sm" color="gray.600" fontWeight="medium">Positions</Text>
+                  <Text fontSize="lg" fontWeight="bold">{Object.keys(candidatesByPosition || {}).length}</Text>
+                </Box>
+              </HStack>
+            </CardBody>
+          </Card>
+          
+          <Card bg={cardBg} shadow="md" borderLeft="4px" borderLeftColor="indigo.500">
+            <CardBody>
+              <HStack>
+                <Icon as={FaVoteYea} color="indigo.500" boxSize={6} />
+                <Box>
+                  <Text fontSize="sm" color="gray.600" fontWeight="medium">Votes Cast</Text>
+                  <Text fontSize="lg" fontWeight="bold">{voteCount || 0} / {election.totalVoters || 0}</Text>
+                </Box>
+              </HStack>
+            </CardBody>
+          </Card>
+        </SimpleGrid>        {/* Positions and Candidates */}
+        <Card bg={cardBg} shadow="lg">
+          <CardHeader>
+            <Heading size="md">Positions & Candidates</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              {Object.entries(candidatesByPosition || {}).map(([positionId, positionCandidates]) => (
+                <Box key={positionId}>
+                  <Heading size="sm" mb={4} color="gray.700">
+                    {positionCandidates[0]?.positionName || 'Position'}
+                  </Heading>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                    {positionCandidates.map((candidate) => (
+                      <Card key={candidate._id} bg="gray.50" _dark={{ bg: 'gray.700' }}>
+                        <CardBody>
+                          <HStack spacing={4}>
+                            {candidate.photoUrl ? (
+                              <Avatar
+                                src={candidate.photoUrl}
+                                name={candidate.fullName}
+                                size="lg"
+                              />
+                            ) : (
+                              <Avatar
+                                name={candidate.fullName}
+                                size="lg"
+                                bg="blue.500"
+                                icon={<Icon as={FaUser} fontSize="1.5rem" />}
+                              />
+                            )}
+                            <Box flex={1}>
+                              <Text fontWeight="semibold" fontSize="md">
+                                {candidate.fullName}
+                              </Text>
+                              <Text fontSize="sm" color="gray.600" noOfLines={3}>
+                                {candidate.manifesto || 'No manifesto available'}
+                              </Text>
+                            </Box>
+                          </HStack>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </SimpleGrid>
+                  {positionId !== Object.keys(candidatesByPosition)[Object.keys(candidatesByPosition).length - 1] && (
+                    <Divider mt={6} />
+                  )}
+                </Box>
+              ))}
+            </VStack>
+          </CardBody>
+        </Card>
+      </VStack>
+    </Container>
   );
 };
 

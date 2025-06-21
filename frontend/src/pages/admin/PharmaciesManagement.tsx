@@ -1,545 +1,632 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  VStack,
+  HStack,
+  Heading,
+  Text,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  SimpleGrid,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Badge,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,  useColorModeValue,
+  useToast,
+  Spinner,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Input,
+  Select,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  InputGroup,
+  InputLeftElement,
+  Divider,
+  Flex,
+  Container,
+} from '@chakra-ui/react';
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiMoreVertical,
+  FiMapPin,
+  FiPhone,
+  FiMail,
+  FiSearch,
+  FiDownload,
+  FiRefreshCw,  FiEye,
+  FiAlertCircle,
+  FiCheckCircle,
+} from 'react-icons/fi';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import pharmacyService from '../../services/pharmacy.service';
 import type { Pharmacy, PharmacyStats } from '../../types/pharmacy.types';
-import type { AxiosError } from 'axios';
 
-interface ErrorResponse {
-  message?: string;
-}
-
-interface PharmacyFilters {
-  status?: 'active' | 'pending' | 'expired' | 'suspended';
-  search?: string;
-}
-
-const initialStats: PharmacyStats = {
-  totalPharmacies: 0,
-  activePharmacies: 0,
-  pendingApproval: 0,
-  recentlyAdded: 0,
-  duesCollected: 0,
-  duesOutstanding: 0,
-};
-
-const StatsCardSkeleton = () => (
-  <div className="bg-card overflow-hidden shadow rounded-lg animate-pulse">
-    <div className="p-5">
-      <div className="flex items-center">
-        <div className="flex-shrink-0 h-12 w-12 rounded-md bg-muted"></div>
-        <div className="ml-5 w-0 flex-1">
-          <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
-          <div className="h-6 bg-muted rounded w-1/4"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const TableRowSkeleton = () => (
-  <tr>
-    <td className="whitespace-nowrap px-3 py-4">
-      <div className="h-4 bg-muted rounded w-3/4"></div>
-    </td>
-    <td className="whitespace-nowrap px-3 py-4">
-      <div className="h-4 bg-muted rounded w-1/2"></div>
-    </td>
-    <td className="whitespace-nowrap px-3 py-4">
-      <div className="h-4 bg-muted rounded w-1/3"></div>
-    </td>
-    <td className="whitespace-nowrap px-3 py-4">
-      <div className="h-4 bg-muted rounded w-1/4"></div>
-    </td>
-    <td className="whitespace-nowrap px-3 py-4">
-      <div className="h-4 bg-muted rounded w-1/2"></div>
-    </td>
-  </tr>
-);
+const MotionBox = motion(Box);
 
 const PharmaciesManagement: React.FC = () => {
   const navigate = useNavigate();
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [stats, setStats] = useState<PharmacyStats>(initialStats);
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<
-    'all' | 'active' | 'pending' | 'expired' | 'suspended'
-  >('all');
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [stats, setStats] = useState<PharmacyStats>({
+    totalPharmacies: 0,
+    activePharmacies: 0,
+    pendingApproval: 0,
+    recentlyAdded: 0,
+    duesCollected: 0,
+    duesOutstanding: 0,
+  });
+  const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  const itemsPerPage = 10;
+  // Color mode values
+  const bg = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const headingColor = useColorModeValue('gray.800', 'white');
 
-  const fetchPharmacies = useCallback(async () => {
+  // Modal controls
+  const { isOpen: isViewModalOpen, onOpen: onViewModalOpen, onClose: onViewModalClose } = useDisclosure();
+
+  // Load data
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     try {
       setLoading(true);
-      setError(null);
+      const [pharmaciesData, statsData] = await Promise.all([
+        pharmacyService.getPharmacies(),
+        pharmacyService.getPharmacyStats(),
+      ]);
 
-      const filters: PharmacyFilters = {};
-      if (filterStatus !== 'all') {
-        filters.status = filterStatus;
-      }
-      if (searchQuery) {
-        filters.search = searchQuery;
-      }
-
-      const response = await pharmacyService.getPharmacies(
-        currentPage,
-        itemsPerPage,
-        filters
-      );
-      const pharmacyData = response?.pharmacies ?? [];
-      const total = response?.total ?? 0;
-
-      setPharmacies(pharmacyData);
-      setTotalPages(Math.ceil(total / itemsPerPage));
-    } catch (err) {
-      const error = err as AxiosError<ErrorResponse>;
-      setError(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to fetch pharmacies. Please try again later.'
-      );
-      setPharmacies([]);
+      setPharmacies(pharmaciesData?.pharmacies || []);
+      setStats(statsData || {
+        totalPharmacies: 0,
+        activePharmacies: 0,
+        pendingApproval: 0,
+        recentlyAdded: 0,
+        duesCollected: 0,
+        duesOutstanding: 0,
+      });
+    } catch (error) {
+      console.error('Error loading pharmacies:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load pharmacies data',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filterStatus, searchQuery]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const statsData = await pharmacyService.getPharmacyStats();
-      if (statsData) {
-        setStats({
-          totalPharmacies: statsData.totalPharmacies ?? 0,
-          activePharmacies: statsData.activePharmacies ?? 0,
-          pendingApproval: statsData.pendingApproval ?? 0,
-          recentlyAdded: statsData.recentlyAdded ?? 0,
-          duesCollected: statsData.duesCollected ?? 0,
-          duesOutstanding: statsData.duesOutstanding ?? 0,
-        });
-      } else {
-        setStats(initialStats);
-      }
-    } catch (err) {
-      const error = err as AxiosError<ErrorResponse>;
-      console.error('Failed to fetch pharmacy stats:', error.message);
-      setStats(initialStats);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPharmacies();
-  }, [fetchPharmacies]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
-  const handleViewDetails = (pharmacyId: string) => {
-    navigate(`/admin/pharmacies/${pharmacyId}`);
   };
 
-  const handleApprove = async (pharmacyId: string) => {
+  // Filter pharmacies
+  const filteredPharmacies = pharmacies.filter((pharmacy) => {
+    const matchesSearch = 
+      pharmacy.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pharmacy.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (pharmacy as any).ownerName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || (pharmacy as any).status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+  // Handle pharmacy approval
+  const handleApprovePharmacy = async (pharmacyId: string) => {
     try {
       await pharmacyService.approvePharmacy(pharmacyId);
-      fetchPharmacies();
-      fetchStats();
-    } catch (err) {
-      const error = err as AxiosError<ErrorResponse>;
-      setError(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to approve pharmacy'
-      );
+      setPharmacies(prev => prev.map(p => 
+        p._id === pharmacyId ? { ...p, status: 'active' } : p
+      ));
+      toast({
+        title: 'Success',
+        description: 'Pharmacy approved successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      loadData(); // Refresh stats
+    } catch (error: any) {
+      console.error('Error approving pharmacy:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to approve pharmacy',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+  // Handle pharmacy suspension
+  const handleSuspendPharmacy = async (pharmacyId: string) => {
+    if (!confirm('Are you sure you want to suspend this pharmacy?')) return;
+
+    try {
+      await pharmacyService.updatePharmacy(pharmacyId, { status: 'suspended' } as any);
+      setPharmacies(prev => prev.map(p => 
+        p._id === pharmacyId ? { ...p, status: 'suspended' } : p
+      ));
+      toast({
+        title: 'Success',
+        description: 'Pharmacy suspended successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      loadData(); // Refresh stats
+    } catch (error: any) {
+      console.error('Error suspending pharmacy:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to suspend pharmacy',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+  // Handle pharmacy deletion
+  const handleDeletePharmacy = async (pharmacyId: string) => {
+    if (!confirm('Are you sure you want to delete this pharmacy? This action cannot be undone.')) return;
+
+    try {
+      await pharmacyService.deletePharmacy(pharmacyId);
+      setPharmacies(prev => prev.filter(p => p._id !== pharmacyId));
+      toast({
+        title: 'Success',
+        description: 'Pharmacy deleted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      loadData(); // Refresh stats
+    } catch (error: any) {
+      console.error('Error deleting pharmacy:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to delete pharmacy',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchPharmacies();
+  const openViewModal = (pharmacy: Pharmacy) => {
+    setSelectedPharmacy(pharmacy);
+    onViewModalOpen();
   };
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'green';
+      case 'pending': return 'yellow';
+      case 'suspended': return 'red';
+      case 'expired': return 'orange';      default: return 'gray';
     }
-
-    // Sort pharmacies locally
-    const sortedPharmacies = [...pharmacies].sort((a, b) => {
-      let aValue = (a as any)[field];
-      let bValue = (b as any)[field];
-
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    setPharmacies(sortedPharmacies);
   };
+
+  if (loading) {
+    return (
+      <Box bg={bg} minH="100vh" p={6}>
+        <VStack spacing={4} align="center" justify="center" minH="400px">
+          <Spinner size="xl" color="brand.500" thickness="4px" />
+          <Text color={textColor}>Loading pharmacies...</Text>
+        </VStack>
+      </Box>
+    );
+  }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-foreground">
-            Pharmacies Management
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            View and manage all registered pharmacies in the system
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
-            onClick={() => navigate('/admin/pharmacies/add')}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:w-auto"
-          >
-            Add Pharmacy
-          </button>
-        </div>
-      </div>
+    <Box bg={bg} minH="100vh" p={6}>
+      <Container maxW="7xl">
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Header */}
+          <VStack spacing={6} align="stretch">
+            <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+              <Box>
+                <Heading size="lg" color={headingColor} mb={2}>
+                  Pharmacies Management
+                </Heading>
+                <Text color={textColor}>
+                  Manage and monitor registered pharmacies
+                </Text>
+              </Box>
+              <HStack spacing={3}>
+                <Button
+                  leftIcon={<FiRefreshCw />}
+                  variant="outline"
+                  onClick={loadData}
+                  isLoading={loading}
+                >
+                  Refresh
+                </Button>
+                <Button
+                  leftIcon={<FiDownload />}
+                  variant="outline"
+                  colorScheme="gray"
+                >
+                  Export
+                </Button>
+                <Button
+                  leftIcon={<FiPlus />}
+                  colorScheme="brand"
+                  onClick={() => navigate('/admin/pharmacies/create')}
+                >
+                  Add Pharmacy
+                </Button>
+              </HStack>
+            </Flex>
 
-      {/* Stats Cards */}
-      {loading ? (
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <StatsCardSkeleton />
-          <StatsCardSkeleton />
-          <StatsCardSkeleton />
-        </div>
-      ) : (
-        stats && (
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-card overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-primary rounded-md p-3">
-                    <i className="fas fa-hospital text-primary-foreground text-xl" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-muted-foreground truncate">
-                        Total Pharmacies
-                      </dt>
-                      <dd className="text-lg font-medium text-foreground">
-                        {stats.totalPharmacies}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Statistics Cards */}
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+              <Card bg={cardBg} shadow="sm" borderColor={borderColor}>
+                <CardBody>
+                  <Stat>
+                    <StatLabel color={textColor}>Total Pharmacies</StatLabel>
+                    <StatNumber>{stats.totalPharmacies}</StatNumber>
+                    <StatHelpText>
+                      <StatArrow type="increase" />
+                      Registered
+                    </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
 
-            <div className="bg-card overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-md p-3">
-                    <i className="fas fa-check-circle text-green-600 dark:text-green-400 text-xl" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-muted-foreground truncate">
-                        Active Pharmacies
-                      </dt>
-                      <dd className="text-lg font-medium text-foreground">
-                        {stats.activePharmacies}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <Card bg={cardBg} shadow="sm" borderColor={borderColor}>
+                <CardBody>
+                  <Stat>
+                    <StatLabel color={textColor}>Active</StatLabel>
+                    <StatNumber color="green.500">{stats.activePharmacies}</StatNumber>
+                    <StatHelpText>
+                      {stats.totalPharmacies > 0 ? Math.round((stats.activePharmacies / stats.totalPharmacies) * 100) : 0}% of total
+                    </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
 
-            <div className="bg-card overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-md p-3">
-                    <i className="fas fa-clock text-yellow-600 dark:text-yellow-400 text-xl" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-muted-foreground truncate">
-                        Pending Approval
-                      </dt>
-                      <dd className="text-lg font-medium text-foreground">
-                        {stats.pendingApproval}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      )}
+              <Card bg={cardBg} shadow="sm" borderColor={borderColor}>
+                <CardBody>
+                  <Stat>
+                    <StatLabel color={textColor}>Pending Approval</StatLabel>
+                    <StatNumber color="yellow.500">{stats.pendingApproval}</StatNumber>
+                    <StatHelpText>Awaiting review</StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="mt-6 rounded-md bg-destructive/10 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <i
-                className="fas fa-exclamation-circle text-destructive"
-                aria-hidden="true"
-              />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
+              <Card bg={cardBg} shadow="sm" borderColor={borderColor}>
+                <CardBody>
+                  <Stat>
+                    <StatLabel color={textColor}>Recently Added</StatLabel>
+                    <StatNumber color="blue.500">{stats.recentlyAdded}</StatNumber>
+                    <StatHelpText>Last 30 days</StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </SimpleGrid>
 
-      {/* Empty State */}
-      {!loading && !error && pharmacies.length === 0 && (
-        <div className="mt-6 text-center">
-          <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-            <i className="fas fa-store text-4xl text-muted-foreground" />
-          </div>
-          <h3 className="mt-2 text-sm font-medium text-foreground">
-            No pharmacies found
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {searchQuery
-              ? 'No pharmacies match your search criteria'
-              : filterStatus !== 'all'
-              ? `No ${filterStatus} pharmacies found`
-              : 'No pharmacies have been registered yet'}
-          </p>
-        </div>
-      )}
+            {/* Filters */}
+            <Card bg={cardBg} shadow="sm" borderColor={borderColor}>
+              <CardBody>
+                <HStack spacing={4} wrap="wrap">
+                  <InputGroup maxW="300px">
+                    <InputLeftElement>
+                      <FiSearch />
+                    </InputLeftElement>
+                    <Input
+                      placeholder="Search pharmacies..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </InputGroup>
 
-      {/* Search and Filter */}
-      <div className="mt-8 grid grid-cols-1 sm:flex sm:flex-wrap gap-4">
-        <form onSubmit={handleSearch} className="flex-1 min-w-[250px]">
-          <div className="flex rounded-md shadow-sm">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search pharmacies..."
-              className="block w-full rounded-l-md border-input bg-background py-2 px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm"
-            />
-            <button
-              type="submit"
-              className="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-sm font-semibold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              <i className="fas fa-search"></i>
-              <span className="sr-only">Search</span>
-            </button>
-          </div>
-        </form>
-
-        <div className="w-full sm:w-auto">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="block w-full rounded-md border-input bg-background py-2 px-3 text-foreground shadow-sm focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="suspended">Suspended</option>
-            <option value="expired">Expired</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Pharmacies List */}
-      {!error && pharmacies.length > 0 && (
-        <div className="mt-8 flex flex-col">
-          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle">
-              <div className="overflow-hidden shadow ring-1 ring-border md:rounded-lg">
-                <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th
-                        onClick={() => handleSort('name')}
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
-                      >
-                        <div className="flex items-center gap-1">
-                          Name
-                          {sortField === 'name' && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortDirection === 'asc' ? 'up' : 'down'
-                              } ml-1`}
-                            ></i>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        onClick={() => handleSort('address')}
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
-                      >
-                        <div className="flex items-center gap-1">
-                          Location
-                          {sortField === 'address' && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortDirection === 'asc' ? 'up' : 'down'
-                              } ml-1`}
-                            ></i>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        onClick={() => handleSort('pcnLicense')}
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
-                      >
-                        <div className="flex items-center gap-1">
-                          Registration
-                          {sortField === 'pcnLicense' && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortDirection === 'asc' ? 'up' : 'down'
-                              } ml-1`}
-                            ></i>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        onClick={() => handleSort('registrationStatus')}
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-foreground cursor-pointer hover:bg-muted/70"
-                      >
-                        <div className="flex items-center gap-1">
-                          Status
-                          {sortField === 'registrationStatus' && (
-                            <i
-                              className={`fas fa-sort-${
-                                sortDirection === 'asc' ? 'up' : 'down'
-                              } ml-1`}
-                            ></i>
-                          )}
-                        </div>
-                      </th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-card">
-                    {loading ? (
-                      <>
-                        <TableRowSkeleton />
-                        <TableRowSkeleton />
-                        <TableRowSkeleton />
-                        <TableRowSkeleton />
-                        <TableRowSkeleton />
-                      </>
-                    ) : (
-                      pharmacies.map((pharmacy) => (
-                        <tr key={pharmacy._id}>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-foreground">
-                            {pharmacy.name}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
-                            {pharmacy.address}, {pharmacy.townArea}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
-                            PCN: {pharmacy.pcnLicense}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm">
-                            <span
-                              className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                                pharmacy.registrationStatus === 'active'
-                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                                  : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                              }`}
-                            >
-                              {pharmacy.registrationStatus === 'active'
-                                ? 'Active'
-                                : 'Pending'}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">
-                            <button
-                              onClick={() => handleViewDetails(pharmacy._id)}
-                              className="text-primary hover:text-primary/80 mr-4"
-                            >
-                              View Details
-                            </button>
-                            {pharmacy.registrationStatus !== 'active' && (
-                              <button
-                                onClick={() => handleApprove(pharmacy._id)}
-                                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                              >
-                                Approve
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex-1 flex justify-between sm:hidden">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Showing page <span className="font-medium">{currentPage}</span>{' '}
-                of <span className="font-medium">{totalPages}</span>
-              </p>
-            </div>
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      currentPage === i + 1
-                        ? 'z-10 bg-primary/10 border-primary text-primary'
-                        : 'bg-card border-input text-muted-foreground hover:bg-muted'
-                    }`}
+                  <Select
+                    maxW="200px"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
                   >
-                    {i + 1}
-                  </button>
-                ))}
-              </nav>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="expired">Expired</option>
+                  </Select>
+
+                  {(searchTerm || statusFilter !== 'all') && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setStatusFilter('all');
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </HStack>
+              </CardBody>
+            </Card>
+
+            {/* Pharmacies Table */}
+            <Card bg={cardBg} shadow="sm" borderColor={borderColor}>
+              <CardHeader>
+                <Heading size="md" color={headingColor}>
+                  Pharmacies List ({filteredPharmacies.length})
+                </Heading>
+              </CardHeader>
+              <CardBody>
+                {filteredPharmacies.length === 0 ? (
+                  <VStack spacing={4} py={8}>
+                    <Text color={textColor} textAlign="center">
+                      No pharmacies found matching your criteria
+                    </Text>
+                    <Button
+                      leftIcon={<FiPlus />}
+                      colorScheme="brand"
+                      onClick={() => navigate('/admin/pharmacies/create')}
+                    >
+                      Add First Pharmacy
+                    </Button>
+                  </VStack>
+                ) : (
+                  <Box overflowX="auto">
+                    <Table variant="simple">
+                      <Thead>
+                        <Tr>
+                          <Th>Pharmacy</Th>
+                          <Th>Owner</Th>
+                          <Th>Contact</Th>
+                          <Th>Status</Th>
+                          <Th>Registration Date</Th>
+                          <Th>Actions</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredPharmacies.map((pharmacy) => (
+                          <Tr key={pharmacy._id}>
+                            <Td>
+                              <VStack align="start" spacing={1}>
+                                <Text fontWeight="medium">{pharmacy.name}</Text>
+                                <Text fontSize="sm" color={textColor} noOfLines={1}>
+                                  <FiMapPin style={{ display: 'inline', marginRight: '4px' }} />
+                                  {pharmacy.address}
+                                </Text>
+                                {pharmacy.registrationNumber && (
+                                  <Text fontSize="xs" color={textColor}>
+                                    Reg: {pharmacy.registrationNumber}
+                                  </Text>
+                                )}
+                              </VStack>
+                            </Td>
+                            <Td>
+                              <VStack align="start" spacing={1}>
+                                <Text fontWeight="medium">{(pharmacy as any).ownerName || 'N/A'}</Text>
+                                {pharmacy.pcnLicense && (
+                                  <Text fontSize="sm" color={textColor}>
+                                    PCN: {pharmacy.pcnLicense}
+                                  </Text>
+                                )}
+                              </VStack>
+                            </Td>
+                            <Td>
+                              <VStack align="start" spacing={1}>
+                                {pharmacy.phone && (
+                                  <Text fontSize="sm">
+                                    <FiPhone style={{ display: 'inline', marginRight: '4px' }} />
+                                    {pharmacy.phone}
+                                  </Text>
+                                )}
+                                {pharmacy.email && (
+                                  <Text fontSize="sm" color={textColor}>
+                                    <FiMail style={{ display: 'inline', marginRight: '4px' }} />
+                                    {pharmacy.email}
+                                  </Text>
+                                )}
+                              </VStack>
+                            </Td>
+                            <Td>
+                              <Badge                                colorScheme={getStatusColor((pharmacy as any).status || 'pending')}
+                                variant="subtle"
+                                textTransform="capitalize"
+                              >
+                                {(pharmacy as any).status || 'pending'}
+                              </Badge>
+                            </Td>
+                            <Td>
+                              <Text>
+                                {pharmacy.createdAt 
+                                  ? new Date(pharmacy.createdAt).toLocaleDateString()
+                                  : 'N/A'
+                                }
+                              </Text>
+                            </Td>
+                            <Td>
+                              <Menu>
+                                <MenuButton
+                                  as={IconButton}
+                                  aria-label="More actions"
+                                  icon={<FiMoreVertical />}
+                                  variant="ghost"
+                                  size="sm"
+                                />
+                                <MenuList>
+                                  <MenuItem
+                                    icon={<FiEye />}
+                                    onClick={() => openViewModal(pharmacy)}
+                                  >
+                                    View Details
+                                  </MenuItem>
+                                  <MenuItem
+                                    icon={<FiEdit2 />}
+                                    onClick={() => navigate(`/admin/pharmacies/${pharmacy._id}/edit`)}
+                                  >
+                                    Edit
+                                  </MenuItem>
+                                  {(pharmacy as any).status === 'pending' && (
+                                    <MenuItem
+                                      icon={<FiCheckCircle />}
+                                      onClick={() => handleApprovePharmacy(pharmacy._id)}
+                                      color="green.600"
+                                    >
+                                      Approve
+                                    </MenuItem>
+                                  )}
+                                  {(pharmacy as any).status === 'active' && (
+                                    <MenuItem
+                                      icon={<FiAlertCircle />}
+                                      onClick={() => handleSuspendPharmacy(pharmacy._id)}
+                                      color="orange.600"
+                                    >
+                                      Suspend
+                                    </MenuItem>
+                                  )}
+                                  <Divider />
+                                  <MenuItem
+                                    icon={<FiTrash2 />}
+                                    onClick={() => handleDeletePharmacy(pharmacy._id)}
+                                    color="red.600"
+                                  >
+                                    Delete
+                                  </MenuItem>
+                                </MenuList>
+                              </Menu>
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+              </CardBody>
+            </Card>
+          </VStack>
+        </MotionBox>
+
+        {/* View Pharmacy Modal */}
+        <Modal isOpen={isViewModalOpen} onClose={onViewModalClose} size="lg">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Pharmacy Details</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              {selectedPharmacy && (
+                <VStack spacing={4} align="stretch">
+                  <SimpleGrid columns={2} spacing={4}>
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Pharmacy Name</Text>
+                      <Text fontWeight="semibold">{selectedPharmacy.name}</Text>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Status</Text>
+                      <Badge                        colorScheme={getStatusColor((selectedPharmacy as any).status || 'pending')}
+                        variant="subtle"
+                        textTransform="capitalize"
+                      >
+                        {(selectedPharmacy as any).status || 'pending'}
+                      </Badge>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Owner Name</Text>
+                      <Text>{(selectedPharmacy as any).ownerName || 'N/A'}</Text>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>PCN License</Text>
+                      <Text>{selectedPharmacy.pcnLicense || 'Not provided'}</Text>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Phone</Text>
+                      <Text>{selectedPharmacy.phone || 'Not provided'}</Text>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Email</Text>
+                      <Text>{selectedPharmacy.email || 'Not provided'}</Text>
+                    </Box>
+                  </SimpleGrid>
+
+                  <Box>
+                    <Text fontSize="sm" color={textColor} mb={1}>Address</Text>
+                    <Text>{selectedPharmacy.address}</Text>
+                  </Box>
+
+                  {selectedPharmacy.registrationNumber && (
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Registration Number</Text>
+                      <Text>{selectedPharmacy.registrationNumber}</Text>
+                    </Box>
+                  )}
+
+                  <SimpleGrid columns={2} spacing={4}>
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Registration Date</Text>
+                      <Text>
+                        {selectedPharmacy.createdAt 
+                          ? new Date(selectedPharmacy.createdAt).toLocaleDateString()
+                          : 'N/A'
+                        }
+                      </Text>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={textColor} mb={1}>Last Updated</Text>
+                      <Text>
+                        {selectedPharmacy.updatedAt 
+                          ? new Date(selectedPharmacy.updatedAt).toLocaleDateString()
+                          : 'N/A'
+                        }
+                      </Text>
+                    </Box>
+                  </SimpleGrid>
+                </VStack>
+              )}
+            </ModalBody>
+
+            <ModalFooter>
+              <Button onClick={onViewModalClose}>Close</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Container>
+    </Box>
   );
 };
 

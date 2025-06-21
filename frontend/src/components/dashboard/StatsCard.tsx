@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardBody,
-  StatArrow,
   Icon,
   Flex,
   useColorModeValue,
@@ -11,6 +10,7 @@ import {
   Progress,
 } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 
 interface StatsCardProps {
   title: string;
@@ -46,10 +46,13 @@ const StatsCard: React.FC<StatsCardProps> = ({
             </Text>
             <Text fontSize="2xl" fontWeight="bold" mb={2}>
               {value}
-            </Text>
-            {change !== undefined && (
-              <Flex align="center">
-                <StatArrow type={change >= 0 ? 'increase' : 'decrease'} />
+            </Text>            {change !== undefined && (
+              <Flex align="center">                <Icon 
+                  as={change >= 0 ? FiTrendingUp : FiTrendingDown} 
+                  color={change >= 0 ? 'green.500' : 'red.500'}
+                  mr={1}
+                  boxSize={4}
+                />
                 <Text
                   fontSize="sm"
                   color={change >= 0 ? 'green.500' : 'red.500'}

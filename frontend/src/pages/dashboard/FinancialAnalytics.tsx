@@ -1,5 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,  Grid,
+  VStack,
+  HStack,
+  Select,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Spinner,
+  Center,
+  Icon,
+  useToast,
+  useColorModeValue,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Badge,
+} from '@chakra-ui/react';
+import {
   BarChart,
   Bar,
   XAxis,
@@ -14,6 +55,14 @@ import {
   Line,
   Legend,
 } from 'recharts';
+import { 
+  FiDollarSign, 
+  FiAlertCircle, 
+  FiHome, 
+  FiBarChart, 
+  FiTrendingUp, 
+  FiRefreshCw 
+} from 'react-icons/fi';
 import financialService from '../../services/financial.service';
 import type { PaymentSubmission } from '../../types/pharmacy.types';
 
@@ -36,6 +85,8 @@ interface SummaryStats {
 }
 
 const FinancialAnalytics: React.FC = () => {
+  const toast = useToast();
+  
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     monthlyCollections: [],
     paymentStatusDistribution: [],
@@ -53,29 +104,63 @@ const FinancialAnalytics: React.FC = () => {
     collectionRate: 0,
     monthlyGrowth: 0,
   });
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState('12months');
-  const [selectedChart, setSelectedChart] = useState('overview');
 
   useEffect(() => {
     fetchAnalyticsData();
   }, [selectedPeriod]);
-
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [payments, dues, pharmacies, dueAnalytics] = await Promise.all([
-        financialService.getAllPayments({ status: 'all' }),
-        financialService.getDues(),
-        financialService.getAllPharmacies(),
-        financialService.getDueAnalytics(),
-      ]);
+      console.log('Fetching analytics data...');
 
-      const paymentsData = payments.payments || [];
+      // Fetch data with better error handling
+      let payments = { payments: [] };
+      let dues: any[] = [];
+      let pharmacies: any[] = [];
+      let dueAnalytics = { outstandingAmount: 0 };
+
+      try {
+        console.log('Fetching payments...');
+        payments = await financialService.getAllPayments({ status: 'all' });
+        console.log('Payments fetched:', payments);
+      } catch (err) {
+        console.error('Error fetching payments:', err);
+        // Continue with empty data
+      }
+
+      try {
+        console.log('Fetching dues...');
+        dues = await financialService.getDues();
+        console.log('Dues fetched:', dues);
+      } catch (err) {
+        console.error('Error fetching dues:', err);
+        // Continue with empty data
+      }
+
+      try {
+        console.log('Fetching pharmacies...');
+        pharmacies = await financialService.getAllPharmacies();
+        console.log('Pharmacies fetched:', pharmacies);
+      } catch (err) {
+        console.error('Error fetching pharmacies:', err);
+        // Continue with empty data
+      }
+
+      try {
+        console.log('Fetching due analytics...');
+        dueAnalytics = await financialService.getDueAnalytics();
+        console.log('Due analytics fetched:', dueAnalytics);
+      } catch (err) {
+        console.error('Error fetching due analytics:', err);
+        // Continue with empty data
+      }
+
+      const paymentsData = payments.payments || payments || [];
       const periodMonths =
         selectedPeriod === '12months'
           ? 12
@@ -116,7 +201,9 @@ const FinancialAnalytics: React.FC = () => {
           ? totalCollected / approvedPayments.length
           : 0;
       const collectionRate =
-        (totalCollected / (totalCollected + totalOutstanding)) * 100;
+        totalCollected + totalOutstanding > 0
+          ? (totalCollected / (totalCollected + totalOutstanding)) * 100
+          : 0;
 
       setSummaryStats({
         totalCollected,
@@ -126,8 +213,19 @@ const FinancialAnalytics: React.FC = () => {
         collectionRate,
         monthlyGrowth: calculateMonthlyGrowth(approvedPayments),
       });
+
+      console.log('Analytics data processed successfully');
     } catch (err) {
-      setError('Failed to load analytics data');
+      const errorMessage = 'Failed to load analytics data';
+      console.error('Analytics error:', err);
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -285,406 +383,416 @@ const FinancialAnalytics: React.FC = () => {
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('en-NG').format(num);
   };
+  // Color mode values
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const bgGradient = useColorModeValue('linear(to-br, gray.50, gray.100)', 'linear(to-br, gray.900, gray.800)');
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient} p={6}>
+        <Container maxW="7xl">
+          <Center minH="50vh">
+            <VStack spacing={4}>
+              <Spinner size="xl" color="blue.500" thickness="4px" />
+              <Text fontSize="lg" color="gray.600">
+                Loading financial analytics...
+              </Text>
+            </VStack>
+          </Center>
+        </Container>
+      </Box>
     );
   }
-
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600">{error}</p>
-        </div>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient} p={6}>
+        <Container maxW="7xl">
+          <Alert status="error" borderRadius="lg" mb={6}>
+            <AlertIcon />
+            <Box>
+              <AlertTitle>Unable to load financial data!</AlertTitle>
+              <AlertDescription>
+                {error}. Some services may be unavailable. You can still view the analytics interface below.
+              </AlertDescription>
+            </Box>
+          </Alert>
+          
+          {/* Show empty dashboard */}
+          <VStack spacing={8} align="stretch">
+            {/* Header */}
+            <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+              <VStack align="flex-start" spacing={2}>
+                <Heading size="xl" color="gray.800">
+                  Financial Analytics
+                </Heading>
+                <Text color="gray.600">
+                  Comprehensive financial insights and performance metrics
+                </Text>
+              </VStack>
+              
+              <HStack spacing={4}>
+                <Select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  w="180px"
+                  bg={cardBg}
+                >
+                  <option value="3months">Last 3 Months</option>
+                  <option value="6months">Last 6 Months</option>
+                  <option value="12months">Last 12 Months</option>
+                </Select>
+                <Button
+                  leftIcon={<Icon as={FiRefreshCw} />}
+                  colorScheme="blue"
+                  onClick={fetchAnalyticsData}
+                >
+                  Retry
+                </Button>
+              </HStack>
+            </Flex>
+
+            {/* Empty Stats Cards */}
+            <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }} gap={6}>
+              {[
+                { label: 'Total Collected', value: '₦0', color: 'green.600', icon: FiDollarSign },
+                { label: 'Outstanding', value: '₦0', color: 'red.600', icon: FiAlertCircle },
+                { label: 'Total Pharmacies', value: '0', color: 'blue.600', icon: FiHome },
+                { label: 'Average Payment', value: '₦0', color: 'purple.600', icon: FiBarChart },
+                { label: 'Collection Rate', value: '0%', color: 'indigo.600', icon: FiTrendingUp },
+                { label: 'Monthly Growth', value: '0%', color: 'green.600', icon: FiTrendingUp },
+              ].map((stat, index) => (
+                <Card key={index} bg={cardBg} shadow="md">
+                  <CardBody>
+                    <Stat>
+                      <StatLabel>{stat.label}</StatLabel>
+                      <StatNumber color={stat.color}>{stat.value}</StatNumber>
+                      <StatHelpText>
+                        <Icon as={stat.icon} mr={1} />
+                        No data available
+                      </StatHelpText>
+                    </Stat>
+                  </CardBody>
+                </Card>
+              ))}
+            </Grid>
+
+            {/* Empty Charts */}
+            <Card bg={cardBg} shadow="md">
+              <CardBody>
+                <Center h="400px">
+                  <VStack spacing={4}>
+                    <Icon as={FiBarChart} boxSize={16} color="gray.400" />
+                    <Text color="gray.500" textAlign="center">
+                      Financial charts will appear here when data is available
+                    </Text>
+                    <Button
+                      leftIcon={<Icon as={FiRefreshCw} />}
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={fetchAnalyticsData}
+                    >
+                      Retry Loading Data
+                    </Button>
+                  </VStack>
+                </Center>
+              </CardBody>
+            </Card>
+          </VStack>
+        </Container>
+      </Box>
     );
   }
-
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+    <Box minH="100vh" bgGradient={bgGradient} p={6}>
+      <Container maxW="7xl">
+        {/* Header */}
+        <Flex justify="space-between" align="center" mb={8} wrap="wrap" gap={4}>
+          <VStack align="flex-start" spacing={2}>
+            <Heading size="xl" color="gray.800">
               Financial Analytics
-            </h1>
-            <p className="text-gray-600 mt-2">
+            </Heading>
+            <Text color="gray.600">
               Comprehensive financial insights and performance metrics
-            </p>
-          </div>
-          <div className="flex space-x-4">
-            <select
+            </Text>
+          </VStack>
+          
+          <HStack spacing={4}>
+            <Select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              w="180px"
+              bg={cardBg}
             >
               <option value="3months">Last 3 Months</option>
               <option value="6months">Last 6 Months</option>
               <option value="12months">Last 12 Months</option>
-            </select>
-            <button
+            </Select>
+            <Button
+              leftIcon={<Icon as={FiRefreshCw} />}
+              colorScheme="blue"
               onClick={fetchAnalyticsData}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Refresh
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button>
+          </HStack>
+        </Flex>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(summaryStats.totalCollected)}
-              </p>
-              <p className="text-gray-600">Total Collected</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+        {/* Summary Stats */}
+        <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }} gap={6} mb={8}>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Total Collected</StatLabel>
+                <StatNumber color="green.600">
+                  {formatCurrency(summaryStats.totalCollected)}
+                </StatNumber>
+                <StatHelpText>
+                  <Icon as={FiDollarSign} mr={1} />
+                  Revenue
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(summaryStats.totalOutstanding)}
-              </p>
-              <p className="text-gray-600">Outstanding</p>
-            </div>
-            <div className="p-3 bg-red-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Outstanding</StatLabel>
+                <StatNumber color="red.600">
+                  {formatCurrency(summaryStats.totalOutstanding)}
+                </StatNumber>
+                <StatHelpText>
+                  <Icon as={FiAlertCircle} mr={1} />
+                  Pending
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatNumber(summaryStats.totalPharmacies)}
-              </p>
-              <p className="text-gray-600">Total Pharmacies</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Total Pharmacies</StatLabel>
+                <StatNumber color="blue.600">
+                  {formatNumber(summaryStats.totalPharmacies)}
+                </StatNumber>
+                <StatHelpText>
+                  <Icon as={FiHome} mr={1} />
+                  Registered
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(summaryStats.averagePayment)}
-              </p>
-              <p className="text-gray-600">Average Payment</p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Average Payment</StatLabel>
+                <StatNumber color="purple.600">
+                  {formatCurrency(summaryStats.averagePayment)}
+                </StatNumber>
+                <StatHelpText>
+                  <Icon as={FiBarChart} mr={1} />
+                  Per payment
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {summaryStats.collectionRate.toFixed(1)}%
-              </p>
-              <p className="text-gray-600">Collection Rate</p>
-            </div>
-            <div className="p-3 bg-indigo-100 rounded-lg">
-              <svg
-                className="w-6 h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Collection Rate</StatLabel>
+                <StatNumber color="indigo.600">
+                  {summaryStats.collectionRate.toFixed(1)}%
+                </StatNumber>
+                <StatHelpText>
+                  <Icon as={FiTrendingUp} mr={1} />
+                  Success rate
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p
-                className={`text-2xl font-bold ${
-                  summaryStats.monthlyGrowth >= 0
-                    ? 'text-green-600'
-                    : 'text-red-600'
-                }`}
-              >
-                {summaryStats.monthlyGrowth >= 0 ? '+' : ''}
-                {summaryStats.monthlyGrowth.toFixed(1)}%
-              </p>
-              <p className="text-gray-600">Monthly Growth</p>
-            </div>
-            <div
-              className={`p-3 rounded-lg ${
-                summaryStats.monthlyGrowth >= 0 ? 'bg-green-100' : 'bg-red-100'
-              }`}
-            >
-              <svg
-                className={`w-6 h-6 ${
-                  summaryStats.monthlyGrowth >= 0
-                    ? 'text-green-600'
-                    : 'text-red-600'
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d={
-                    summaryStats.monthlyGrowth >= 0
-                      ? 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
-                      : 'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6'
-                  }
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
+          <Card bg={cardBg} shadow="md">
+            <CardBody>
+              <Stat>
+                <StatLabel>Monthly Growth</StatLabel>
+                <StatNumber color={summaryStats.monthlyGrowth >= 0 ? 'green.600' : 'red.600'}>
+                  {summaryStats.monthlyGrowth >= 0 ? '+' : ''}
+                  {summaryStats.monthlyGrowth.toFixed(1)}%
+                </StatNumber>
+                <StatHelpText>
+                  <StatArrow type={summaryStats.monthlyGrowth >= 0 ? 'increase' : 'decrease'} />
+                  vs last month
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
+        </Grid>        {/* Charts Section */}
+        <Card bg={cardBg} shadow="md" mb={8}>
+          <CardBody>
+            <Tabs variant="line" colorScheme="blue">
+              <TabList mb={6}>
+                <Tab>Overview</Tab>
+                <Tab>Collection Trends</Tab>
+                <Tab>Status Distribution</Tab>
+                <Tab>Geographic Analysis</Tab>
+              </TabList>
 
-      {/* Chart Selection */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex space-x-4 border-b border-gray-200 pb-4 mb-6">
-          {[
-            { key: 'overview', label: 'Overview' },
-            { key: 'trends', label: 'Collection Trends' },
-            { key: 'distribution', label: 'Status Distribution' },
-            { key: 'geographic', label: 'Geographic Analysis' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setSelectedChart(tab.key)}
-              className={`px-4 py-2 rounded-lg font-medium ${
-                selectedChart === tab.key
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+              <TabPanels>
+                <TabPanel px={0}>
+                  <Box h="400px">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analyticsData.monthlyCollections}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                        <Tooltip
+                          formatter={(value) => [
+                            formatCurrency(Number(value)),
+                            'Amount',
+                          ]}
+                        />
+                        <Legend />
+                        <Bar dataKey="amount" fill="#3B82F6" name="Collection Amount" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </TabPanel>
 
-        <div className="h-96">
-          {selectedChart === 'overview' && (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analyticsData.monthlyCollections}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip
-                  formatter={(value) => [
-                    formatCurrency(Number(value)),
-                    'Amount',
-                  ]}
-                />
-                <Legend />
-                <Bar dataKey="amount" fill="#3B82F6" name="Collection Amount" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+                <TabPanel px={0}>
+                  <Box h="400px">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={analyticsData.collectionTrends}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                        <Tooltip
+                          formatter={(value) => [
+                            formatCurrency(Number(value)),
+                            'Amount',
+                          ]}
+                        />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="cumulative"
+                          stroke="#10B981"
+                          strokeWidth={2}
+                          name="Cumulative"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="daily"
+                          stroke="#3B82F6"
+                          strokeWidth={2}
+                          name="Daily"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </TabPanel>
 
-          {selectedChart === 'trends' && (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={analyticsData.collectionTrends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip
-                  formatter={(value) => [
-                    formatCurrency(Number(value)),
-                    'Amount',
-                  ]}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="cumulative"
-                  stroke="#10B981"
-                  strokeWidth={2}
-                  name="Cumulative"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="daily"
-                  stroke="#3B82F6"
-                  strokeWidth={2}
-                  name="Daily"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
+                <TabPanel px={0}>
+                  <Box h="400px">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analyticsData.paymentStatusDistribution}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) =>
+                            `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                          }
+                          outerRadius={120}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {analyticsData.paymentStatusDistribution.map(
+                            (entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            )
+                          )}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </TabPanel>
 
-          {selectedChart === 'distribution' && (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analyticsData.paymentStatusDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                  }
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {analyticsData.paymentStatusDistribution.map(
-                    (entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    )
-                  )}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-
-          {selectedChart === 'geographic' && (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={analyticsData.stateWiseCollection}
-                layout="horizontal"
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  tickFormatter={(value) => formatCurrency(value)}
-                />
-                <YAxis dataKey="state" type="category" width={100} />
-                <Tooltip
-                  formatter={(value) => [
-                    formatCurrency(Number(value)),
-                    'Amount',
-                  ]}
-                />
-                <Bar dataKey="amount" fill="#8B5CF6" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Top Paying Pharmacies */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Top Paying Pharmacies</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pharmacy
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Paid
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payments
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Average
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {analyticsData.topPayingPharmacies.map((pharmacy, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="text-sm font-medium text-gray-900">
-                        {pharmacy.name}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatCurrency(pharmacy.amount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {pharmacy.payments}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatCurrency(pharmacy.amount / pharmacy.payments)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                <TabPanel px={0}>
+                  <Box h="400px">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analyticsData.stateWiseCollection}
+                        layout="horizontal"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          type="number"
+                          tickFormatter={(value) => formatCurrency(value)}
+                        />
+                        <YAxis dataKey="state" type="category" width={100} />
+                        <Tooltip
+                          formatter={(value) => [
+                            formatCurrency(Number(value)),
+                            'Amount',
+                          ]}
+                        />
+                        <Bar dataKey="amount" fill="#8B5CF6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </CardBody>
+        </Card>        {/* Top Paying Pharmacies */}
+        <Card bg={cardBg} shadow="md">
+          <CardHeader>
+            <Heading size="lg">Top Paying Pharmacies</Heading>
+          </CardHeader>
+          <CardBody>
+            <TableContainer>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Pharmacy</Th>
+                    <Th>Total Paid</Th>
+                    <Th>Payments</Th>
+                    <Th>Average</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {analyticsData.topPayingPharmacies.map((pharmacy, index) => (
+                    <Tr key={index} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
+                      <Td>
+                        <Text fontWeight="medium">{pharmacy.name}</Text>
+                      </Td>
+                      <Td>
+                        <Text fontWeight="semibold" color="green.600">
+                          {formatCurrency(pharmacy.amount)}
+                        </Text>
+                      </Td>
+                      <Td>
+                        <Badge colorScheme="blue">{pharmacy.payments}</Badge>
+                      </Td>
+                      <Td>
+                        <Text color="gray.600">
+                          {formatCurrency(pharmacy.amount / pharmacy.payments)}
+                        </Text>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </CardBody>
+        </Card>
+      </Container>
+    </Box>
   );
 };
 

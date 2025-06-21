@@ -1,5 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Grid,
+  GridItem,
+  Card,
+  CardBody,
+  CardHeader,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  Flex,
+  Stat,
+  StatLabel,
+  Button,
+  Badge,
+  Avatar,
+  Spinner,
+  Center,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+  Icon,
+  useColorModeValue,
+  Divider,
+  List,
+  ListItem,
+  Stack
+} from '@chakra-ui/react';
+import {
+  FaWallet,
+  FaCalendarAlt,
+  FaUser,
+  FaBuilding,
+  FaTicketAlt,
+  FaFileAlt,
+  FaMapMarkerAlt,
+  FaClock,
+  FaMoneyBillWave,
+  FaUserCheck
+} from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { EventService } from '../../services/event.service';
@@ -32,8 +74,7 @@ interface MemberDashboardStats {
   }>;
 }
 
-const MemberDashboard: React.FC = () => {
-  const navigate = useNavigate();
+const MemberDashboard: React.FC = () => {  const navigate = useNavigate();
   const { user } = useAuth();
   const { unreadCount } = useNotification();
   const [loading, setLoading] = useState(true);
@@ -54,6 +95,18 @@ const MemberDashboard: React.FC = () => {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+
+  // Color mode values
+  const bgGradient = useColorModeValue(
+    'linear(to-br, blue.50, purple.50, pink.50)',
+    'linear(to-br, gray.900, blue.900, purple.900)'
+  );
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const welcomeBg = useColorModeValue(
+    'linear(to-r, blue.500, purple.600)',
+    'linear(to-r, blue.600, purple.700)'
+  );
 
   // Check for login notifications
   useEffect(() => {
@@ -137,17 +190,13 @@ const MemberDashboard: React.FC = () => {
               return false;
             }
           })
-          .slice(0, 3);
-
-        setUpcomingEvents(upcoming);
+          .slice(0, 3);        setUpcomingEvents(upcoming);
 
         // Set payments and pharmacy data
-        setRecentPayments(memberPaymentsData.payments || []);
-        setPharmacy(pharmacyData || null);
-
-        // Calculate aggregated stats from member dashboard data
+        setRecentPayments(memberPaymentsData?.payments || []);
+        setPharmacy(pharmacyData || null);        // Calculate aggregated stats from member dashboard data
         const { userFinancialSummary, userAttendanceSummary, recentActivity } =
-          memberDashboardStats;
+          memberDashboardStats || {};
 
         setStats({
           totalDue: userFinancialSummary?.totalDue || 0,
@@ -170,16 +219,14 @@ const MemberDashboard: React.FC = () => {
 
     fetchDashboardData();
   }, [user?._id]);
-
   // Format currency function
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | undefined | null) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(amount || 0);
   };
-
   // Format date function
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -195,639 +242,478 @@ const MemberDashboard: React.FC = () => {
       return 'Invalid date';
     }
   };
-
-  // Get status badge color function
-  const getStatusBadgeColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'success':
-      case 'approved':
-      case 'completed':
-      case 'attended':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
-      case 'pending':
-      case 'in progress':
-      case 'awaiting':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
-      case 'warning':
-      case 'late':
-        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300';
-      case 'error':
-      case 'rejected':
-      case 'denied':
-      case 'failed':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
-      default:
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient}>
+        <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+          <Center h="400px">
+            <VStack spacing={4}>
+              <Spinner size="xl" color="blue.500" thickness="4px" />
+              <Text fontSize="lg" fontWeight="medium">Loading dashboard...</Text>
+              <Text color="gray.500" fontSize="sm">Please wait while data is being loaded.</Text>
+            </VStack>
+          </Center>
+        </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-destructive/15 border border-destructive/20 p-4 rounded-md">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-destructive"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-destructive">Error</h3>
-            <div className="mt-2 text-sm text-destructive">
-              <p>{error}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient}>
+        <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+          <Alert status="error" borderRadius="md">
+            <AlertIcon />
+            <VStack align="start" spacing={2} flex={1}>
+              <AlertDescription>{error}</AlertDescription>
+              <Button
+                onClick={() => window.location.reload()}
+                colorScheme="red"
+                size="sm"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </VStack>
+          </Alert>
+        </Container>
+      </Box>
     );
   }
-
   return (
-    <div className="space-y-6">
-      {showLoginModal && <LoginNotificationModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />}
-
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg p-6 shadow-lg">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">
-              Welcome back, {user?.firstName || 'Member'}!
-            </h1>
-            <p className="text-primary-foreground/90">
-              Here's an overview of your account and recent activities
-            </p>
-          </div>
-
-          {pharmacy && (
-            <div className="mt-4 md:mt-0 p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-              <p className="text-sm text-primary-foreground/80">
-                Registered pharmacy
-              </p>
-              <p className="font-medium">{pharmacy.name}</p>
-            </div>
+    <Box minH="100vh" bgGradient={bgGradient}>
+      <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+        <VStack spacing={8} align="stretch">
+          {showLoginModal && (
+            <LoginNotificationModal
+              isOpen={showLoginModal}
+              onClose={() => setShowLoginModal(false)}
+            />
           )}
-        </div>
-      </div>
 
-      {/* Quick Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Financial Summary */}
-        <div className="bg-card rounded-lg shadow p-5 border border-border hover:border-primary/40 transition-colors">
-          <div className="flex items-center mb-1">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-full mr-3">
-              <svg
-                className="h-5 w-5 text-blue-600 dark:text-blue-400"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          {/* Welcome Section */}
+          <Card bgGradient={welcomeBg} color="white" shadow="lg">
+            <CardBody p={8}>
+              <Flex 
+                direction={{ base: 'column', md: 'row' }} 
+                justify="space-between" 
+                align={{ base: 'start', md: 'center' }}
+                gap={6}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-foreground">Financial Status</h3>
-          </div>
+                <VStack align="start" spacing={3}>
+                  <Heading size={{ base: 'lg', md: 'xl' }}>
+                    Welcome back, {user?.firstName || 'Member'}!
+                  </Heading>
+                  <Text fontSize={{ base: 'md', md: 'lg' }} opacity={0.9}>
+                    Here's an overview of your account and recent activities
+                  </Text>
+                </VStack>                {pharmacy && (
+                  <Card bg="whiteAlpha.200" backdropFilter="blur(10px)">
+                    <CardBody p={4}>
+                      <VStack spacing={1}>
+                        <Text fontSize="sm" opacity={0.8}>
+                          Registered pharmacy
+                        </Text>
+                        <Text fontWeight="medium" textAlign="center">
+                          {pharmacy.name}
+                        </Text>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                )}
+              </Flex>
+            </CardBody>
+          </Card>          {/* Quick Stats Section */}
+          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={6}>
+            {/* Financial Summary */}
+            <GridItem>
+              <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor} h="full">
+                <CardBody>
+                  <Stat>
+                    <HStack spacing={3} mb={4}>
+                      <Icon as={FaWallet} boxSize={6} color="blue.500" />
+                      <StatLabel fontSize="md" fontWeight="semibold">Financial Status</StatLabel>
+                    </HStack>
+                    
+                    <VStack spacing={3} align="stretch">                      <Flex justify="space-between">
+                        <Text fontSize="sm" color="gray.500">Total Due</Text>
+                        <Text fontWeight="medium">{formatCurrency(stats?.totalDue || 0)}</Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text fontSize="sm" color="gray.500">Amount Paid</Text>
+                        <Text fontWeight="medium">{formatCurrency(stats?.totalPaid || 0)}</Text>
+                      </Flex>
+                      <Divider />                      <Flex justify="space-between">
+                        <Text fontSize="sm" fontWeight="medium">Balance</Text>
+                        <Text 
+                          fontWeight="bold" 
+                          color={(stats?.remainingBalance || 0) > 0 ? "red.500" : "green.500"}
+                        >
+                          {formatCurrency(stats?.remainingBalance || 0)}
+                        </Text>
+                      </Flex>
+                    </VStack>
+                    
+                    <Button
+                      mt={4}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      w="full"
+                      onClick={() => navigate('/payments')}
+                    >
+                      View Payment History
+                    </Button>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
 
-          <div className="mt-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Total Due</span>
-              <span className="font-medium">
-                {formatCurrency(stats.totalDue)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Amount Paid</span>
-              <span className="font-medium">
-                {formatCurrency(stats.totalPaid)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t border-border">
-              <span className="text-sm font-medium">Balance</span>
-              <span
-                className={`font-bold ${
-                  stats.remainingBalance > 0
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-green-600 dark:text-green-400'
-                }`}
-              >
-                {formatCurrency(stats.remainingBalance)}
-              </span>
-            </div>
-          </div>
+            {/* Event Attendance */}
+            <GridItem>
+              <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor} h="full">
+                <CardBody>
+                  <Stat>
+                    <HStack spacing={3} mb={4}>
+                      <Icon as={FaCalendarAlt} boxSize={6} color="green.500" />
+                      <StatLabel fontSize="md" fontWeight="semibold">Event Attendance</StatLabel>
+                    </HStack>
+                    
+                    <VStack spacing={3} align="stretch">                      <Flex justify="space-between">
+                        <Text fontSize="sm" color="gray.500">Attended</Text>
+                        <Text fontWeight="medium" color="green.500">{stats?.attendedEvents || 0}</Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text fontSize="sm" color="gray.500">Missed</Text>
+                        <Text fontWeight="medium" color="red.500">{stats?.missedEvents || 0}</Text>
+                      </Flex>
+                      <Divider />
+                      <Flex justify="space-between">
+                        <Text fontSize="sm" fontWeight="medium">Upcoming</Text>
+                        <Text fontWeight="bold" color="blue.500">{stats?.upcomingEvents || 0}</Text>
+                      </Flex>
+                    </VStack>
+                    
+                    <Button
+                      mt={4}
+                      size="sm"
+                      colorScheme="green"
+                      variant="outline"
+                      w="full"
+                      onClick={() => navigate('/dashboard/attendance-status')}
+                    >
+                      View Attendance Record
+                    </Button>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </GridItem>
 
-          <div className="mt-4">
-            <button
-              onClick={() => navigate('/payments')}
-              className="w-full text-sm px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              View Payment History
-            </button>
-          </div>
-        </div>
+            {/* Notifications Widget */}
+            <GridItem>
+              <NotificationWidget />
+            </GridItem>
 
-        {/* Event Attendance */}
-        <div className="bg-card rounded-lg shadow p-5 border border-border hover:border-primary/40 transition-colors">
-          <div className="flex items-center mb-1">
-            <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-full mr-3">
-              <svg
-                className="h-5 w-5 text-green-600 dark:text-green-400"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-foreground">Event Attendance</h3>
-          </div>
-
-          <div className="mt-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Attended</span>
-              <span className="font-medium text-green-600 dark:text-green-400">
-                {stats.attendedEvents}
-              </span>
-            </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Missed</span>
-              <span className="font-medium text-red-600 dark:text-red-400">
-                {stats.missedEvents}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t border-border">
-              <span className="text-sm font-medium">Upcoming</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">
-                {stats.upcomingEvents}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <button
-              onClick={() => navigate('/dashboard/attendance-status')}
-              className="w-full text-sm px-3 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-md hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-            >
-              View Attendance Record
-            </button>
-          </div>
-        </div>
-
-        {/* Notifications Widget */}
-        <NotificationWidget />
-
-        {/* Quick Access */}
-        <div className="bg-card rounded-lg shadow p-5 border border-border hover:border-primary/40 transition-colors">
-          <div className="flex items-center mb-1">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-full mr-3">
-              <svg
-                className="h-5 w-5 text-purple-600 dark:text-purple-400"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-foreground">Quick Access</h3>
-          </div>
-
-          <div className="mt-3 space-y-2">
-            <button
-              onClick={() => navigate('/my-pharmacy')}
-              className="w-full text-left text-sm px-3 py-2 bg-card hover:bg-accent rounded-md flex items-center"
-            >
-              <svg
-                className="h-4 w-4 mr-2 text-muted-foreground"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-              My Pharmacy
-            </button>
-            <button
-              onClick={() => navigate('/member/events')}
-              className="w-full text-left text-sm px-3 py-2 bg-card hover:bg-accent rounded-md flex items-center"
-            >
-              <svg
-                className="h-4 w-4 mr-2 text-muted-foreground"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              Event Registration
-            </button>
-            <button
-              onClick={() => navigate('/my-documents')}
-              className="w-full text-left text-sm px-3 py-2 bg-card hover:bg-accent rounded-md flex items-center"
-            >
-              <svg
-                className="h-4 w-4 mr-2 text-muted-foreground"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              My Documents
-            </button>
-          </div>
-        </div>
-
-        {/* Profile Completion */}
-        <div className="bg-card rounded-lg shadow p-5 border border-border hover:border-primary/40 transition-colors">
-          <div className="flex items-center mb-1">
-            <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-full mr-3">
-              <svg
-                className="h-5 w-5 text-amber-600 dark:text-amber-400"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
-            <h3 className="font-semibold text-foreground">My Profile</h3>
-          </div>
-
-          <div className="mt-3 text-center">
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-800 text-xl font-bold mb-3">
-              {user?.firstName?.[0]}
-              {user?.lastName?.[0]}
-            </div>
-            <h4 className="font-medium">
-              {user?.firstName} {user?.lastName}
-            </h4>
-            <p className="text-sm text-muted-foreground capitalize">
-              {user?.role || 'Member'}
-            </p>
-          </div>
-
-          <div className="mt-4">
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-full text-sm px-3 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-md hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
-            >
-              Edit My Profile
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Upcoming Events and Recent Payments Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Events */}
-        <div className="bg-card rounded-lg shadow border border-border overflow-hidden">
-          <div className="px-6 py-4 bg-accent border-b border-border flex justify-between items-center">
-            <h3 className="text-lg font-medium">Upcoming Events</h3>
-            <button
-              onClick={() => navigate('/member/events')}
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
-            >
-              View All
-            </button>
-          </div>
-
-          {upcomingEvents.length > 0 ? (
-            <div className="divide-y divide-border">
-              {upcomingEvents.map((event) => (
-                <div
-                  key={event._id}
-                  className="p-4 hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-800/20 text-blue-800 dark:text-blue-300 rounded-lg p-3 mr-4">
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+            {/* Quick Access & Profile */}
+            <GridItem>
+              <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor} h="full">
+                <CardBody>
+                  <VStack spacing={4}>
+                    <HStack spacing={3}>
+                      <Icon as={FaUser} boxSize={6} color="purple.500" />
+                      <Text fontSize="md" fontWeight="semibold">My Profile</Text>
+                    </HStack>
+                    
+                    <VStack spacing={3}>
+                      <Avatar
+                        size="lg"
+                        name={`${user?.firstName} ${user?.lastName}`}
+                        bg="blue.500"
+                        color="white"
+                      />
+                      <VStack spacing={1}>
+                        <Text fontWeight="medium" textAlign="center">
+                          {user?.firstName} {user?.lastName}
+                        </Text>
+                        <Badge colorScheme="blue" textTransform="capitalize">
+                          {user?.role || 'Member'}
+                        </Badge>
+                      </VStack>
+                    </VStack>
+                    
+                    <Stack spacing={2} w="full">
+                      <Button
+                        size="sm"
+                        leftIcon={<Icon as={FaBuilding} />}
+                        variant="ghost"
+                        onClick={() => navigate('/my-pharmacy')}
+                        justifyContent="flex-start"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <div className="mt-1 space-y-1 text-sm">
-                        <div className="flex items-center text-muted-foreground">
-                          <svg
-                            className="h-4 w-4 mr-1"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          <span>{formatDate(event.startDate)}</span>
-                        </div>
-                        {event.location && (
-                          <div className="flex items-center text-muted-foreground">
-                            <svg
-                              className="h-4 w-4 mr-1"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
+                        My Pharmacy
+                      </Button>
+                      <Button
+                        size="sm"
+                        leftIcon={<Icon as={FaTicketAlt} />}
+                        variant="ghost"
+                        onClick={() => navigate('/member/events')}
+                        justifyContent="flex-start"
+                      >
+                        Event Registration
+                      </Button>
+                      <Button
+                        size="sm"
+                        leftIcon={<Icon as={FaFileAlt} />}
+                        variant="ghost"
+                        onClick={() => navigate('/my-documents')}
+                        justifyContent="flex-start"
+                      >
+                        My Documents
+                      </Button>
+                    </Stack>
+                    
+                    <Button
+                      size="sm"
+                      colorScheme="purple"
+                      variant="outline"
+                      w="full"
+                      onClick={() => navigate('/profile')}
+                    >
+                      Edit My Profile
+                    </Button>
+                  </VStack>
+                </CardBody>
+              </Card>
+            </GridItem>
+          </Grid>          {/* Upcoming Events and Recent Payments Section */}
+          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={6}>
+            {/* Upcoming Events */}
+            <GridItem>
+              <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor} h="full">
+                <CardHeader>
+                  <Flex justify="space-between" align="center">
+                    <Heading size="md">Upcoming Events</Heading>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="blue"
+                      onClick={() => navigate('/member/events')}
+                    >
+                      View All
+                    </Button>
+                  </Flex>
+                </CardHeader>
+                  <CardBody pt={0}>
+                  {upcomingEvents?.length > 0 ? (
+                    <VStack spacing={4} align="stretch">
+                      {upcomingEvents.map((event) => (
+                        <Card key={event._id} variant="outline" size="sm">
+                          <CardBody>
+                            <HStack spacing={4}>
+                              <Icon as={FaCalendarAlt} color="blue.500" boxSize={5} />
+                              <VStack align="start" spacing={1} flex={1}>
+                                <Text fontWeight="medium" noOfLines={2}>
+                                  {event.title}
+                                </Text>
+                                <HStack spacing={4} fontSize="sm" color="gray.500">
+                                  <HStack spacing={1}>
+                                    <Icon as={FaClock} boxSize={3} />
+                                    <Text>{formatDate(event.startDate)}</Text>
+                                  </HStack>
+                                  {event.location && (
+                                    <HStack spacing={1}>
+                                      <Icon as={FaMapMarkerAlt} boxSize={3} />
+                                      <Text noOfLines={1}>
+                                        {event.location?.name || event.location?.address || 'Virtual'}
+                                      </Text>
+                                    </HStack>
+                                  )}
+                                </HStack>
+                                <Button
+                                  size="xs"
+                                  colorScheme="blue"
+                                  variant="outline"
+                                  onClick={() => navigate(`/member/events/${event._id}`)}
+                                >
+                                  View Details
+                                </Button>
+                              </VStack>
+                            </HStack>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </VStack>
+                  ) : (
+                    <Center py={8}>
+                      <VStack spacing={3}>
+                        <Icon as={FaCalendarAlt} boxSize={12} color="gray.300" />
+                        <Text color="gray.500" textAlign="center">
+                          No upcoming events scheduled.
+                        </Text>
+                      </VStack>
+                    </Center>
+                  )}
+                </CardBody>
+              </Card>
+            </GridItem>
+
+            {/* Recent Payments */}
+            <GridItem>
+              <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor} h="full">
+                <CardHeader>
+                  <Flex justify="space-between" align="center">
+                    <Heading size="md">Recent Payments</Heading>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="blue"
+                      onClick={() => navigate('/payments')}
+                    >
+                      View All
+                    </Button>
+                  </Flex>
+                </CardHeader>
+                  <CardBody pt={0}>
+                  {recentPayments?.length > 0 ? (
+                    <VStack spacing={4} align="stretch">
+                      {recentPayments.map((payment) => (
+                        <Card key={payment._id} variant="outline" size="sm">
+                          <CardBody>
+                            <HStack spacing={4}>
+                              <Icon as={FaMoneyBillWave} color="green.500" boxSize={5} />
+                              <VStack align="start" spacing={1} flex={1}>
+                                <Flex justify="space-between" w="full" align="center">                                  <Text fontWeight="medium" noOfLines={1}>
+                                    {payment?.paymentMethod || 'Payment'}
+                                  </Text>                                  <Badge
+                                    colorScheme={
+                                      (payment?.status || payment?.approvalStatus) === 'approved'
+                                        ? 'green'
+                                        : (payment?.status || payment?.approvalStatus) === 'pending'
+                                        ? 'yellow'
+                                        : 'red'
+                                    }
+                                    size="sm"
+                                  >
+                                    {payment?.status || payment?.approvalStatus || 'Pending'}
+                                  </Badge>
+                                </Flex>
+                                <HStack spacing={4} fontSize="sm" color="gray.500">
+                                  <HStack spacing={1}>
+                                    <Icon as={FaClock} boxSize={3} />                                    <Text>
+                                      {payment?.paymentDate
+                                        ? formatDate(payment.paymentDate)
+                                        : formatDate(payment?.createdAt)}
+                                    </Text>
+                                  </HStack>
+                                </HStack>
+                                <Text fontWeight="medium" color="green.600">
+                                  {formatCurrency(payment?.amount || 0)}
+                                </Text>
+                              </VStack>
+                            </HStack>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </VStack>
+                  ) : (
+                    <Center py={8}>
+                      <VStack spacing={3}>
+                        <Icon as={FaMoneyBillWave} boxSize={12} color="gray.300" />
+                        <Text color="gray.500" textAlign="center">
+                          No recent payment records.
+                        </Text>
+                      </VStack>
+                    </Center>
+                  )}
+                </CardBody>
+              </Card>
+            </GridItem>
+          </Grid>          {/* Recent Activity Section */}
+          <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+            <CardHeader>
+              <VStack align="start" spacing={2}>
+                <Heading size="md">Recent Activity</Heading>
+                <Text fontSize="sm" color="gray.500">
+                  Latest updates and system activities.
+                </Text>
+              </VStack>
+            </CardHeader>
+            
+            <CardBody pt={0}>
+              {stats?.recentActivity && stats.recentActivity.length > 0 ? (
+                <List spacing={4}>
+                  {stats.recentActivity.map((activity) => (
+                    <ListItem                      key={activity?.id}
+                      p={4}
+                      borderWidth="1px"
+                      borderColor={borderColor}
+                      borderRadius="md"
+                      _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}
+                      transition="all 0.2s"
+                    >
+                      <Flex justify="space-between" align="start" gap={4}>
+                        <VStack align="start" spacing={2} flex={1}>
+                          <Flex justify="space-between" w="full" align="center">
+                            <Text fontWeight="medium" color="blue.500" noOfLines={2}>
+                              {activity?.title}
+                            </Text>
+                            <Badge
+                              colorScheme={
+                                activity?.status === 'success' || activity?.status === 'completed'
+                                  ? 'green'
+                                  : activity?.status === 'pending'
+                                  ? 'yellow'
+                                  : activity?.status === 'error'
+                                  ? 'red'
+                                  : 'blue'
+                              }
+                              size="sm"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                            <span>
-                              {event.location.name ||
-                                event.location.address ||
-                                'Virtual'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-2">
-                        <button
-                          onClick={() =>
-                            navigate(`/member/events/${event._id}`)
-                          }
-                          className="text-sm text-primary hover:text-primary/80 transition-colors"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center text-muted-foreground">
-              <p>No upcoming events scheduled.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Recent Payments */}
-        <div className="bg-card rounded-lg shadow border border-border overflow-hidden">
-          <div className="px-6 py-4 bg-accent border-b border-border flex justify-between items-center">
-            <h3 className="text-lg font-medium">Recent Payments</h3>
-            <button
-              onClick={() => navigate('/payments')}
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
-            >
-              View All
-            </button>
-          </div>
-
-          {recentPayments.length > 0 ? (
-            <div className="divide-y divide-border">
-              {recentPayments.map((payment) => (
-                <div
-                  key={payment._id}
-                  className="p-4 hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 bg-green-100 dark:bg-green-800/20 text-green-800 dark:text-green-300 rounded-lg p-3 mr-4">
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h4 className="font-medium">
-                          {payment.paymentMethod || 'Payment'}
-                        </h4>
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(
-                            payment.status || payment.approvalStatus || ''
-                          )}`}
-                        >
-                          {payment.status ||
-                            payment.approvalStatus ||
-                            'Pending'}
-                        </span>
-                      </div>
-                      <div className="mt-1 space-y-1 text-sm">
-                        <div className="flex items-center text-muted-foreground">
-                          <svg
-                            className="h-4 w-4 mr-1"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          <span>
-                            {payment.paymentDate
-                              ? formatDate(payment.paymentDate)
-                              : formatDate(payment.createdAt)}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-foreground font-medium">
-                          <span>Amount: </span>
-                          <span className="ml-1">
-                            {formatCurrency(payment.amount)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center text-muted-foreground">
-              <p>No recent payment records.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Activity Section */}
-      <div className="bg-card shadow overflow-hidden sm:rounded-md border border-border">
-        <div className="px-4 py-5 sm:px-6 border-b border-border">
-          <h3 className="text-lg leading-6 font-medium text-foreground">
-            Recent Activity
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Latest updates and system activities.
-          </p>
-        </div>
-
-        <ul className="divide-y divide-border">
-          {stats.recentActivity && stats.recentActivity.length > 0 ? (
-            stats.recentActivity.map((activity) => (
-              <li
-                key={activity.id}
-                className="hover:bg-accent/50 transition-colors"
-              >
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-primary truncate">
-                      {activity.title}
-                    </p>
-                    <div className="ml-2 flex-shrink-0 flex">
-                      <p
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
-                          activity.status || 'default'
-                        )}`}
-                      >
-                        {activity.status || 'Activity'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
-                    <div className="sm:flex">
-                      <p className="flex items-center text-sm text-muted-foreground">
-                        {(() => {
-                          try {
-                            if (
-                              typeof activity.description === 'object' &&
-                              activity.description !== null
-                            ) {
-                              return JSON.stringify(activity.description);
-                            }
-                            return (
-                              activity.description?.toString() ||
-                              'No description'
-                            );
-                          } catch (error) {
-                            return 'Activity description unavailable';
-                          }
-                        })()}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-muted-foreground sm:mt-0">
-                      <svg
-                        className="flex-shrink-0 mr-1.5 h-5 w-5 text-muted-foreground"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <p>{formatDate(activity.timestamp)}</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))
-          ) : (
-            <li>
-              <div className="px-4 py-4 sm:px-6">
-                <p className="text-sm text-muted-foreground text-center">
-                  No recent activity to display.
-                </p>
-              </div>
-            </li>
-          )}
-        </ul>
-      </div>
-
-      {/* Login Notification Modal */}
-      <LoginNotificationModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
-    </div>
+                              {activity?.status || 'Activity'}
+                            </Badge>
+                          </Flex>
+                            <Text fontSize="sm" color="gray.600" noOfLines={3}>
+                            {(() => {
+                              try {
+                                if (
+                                  typeof activity?.description === 'object' &&
+                                  activity?.description !== null
+                                ) {
+                                  return JSON.stringify(activity?.description);
+                                }
+                                return (
+                                  activity?.description?.toString() ||
+                                  'No description'
+                                );
+                              } catch (error) {
+                                return 'Activity description unavailable';
+                              }
+                            })()}
+                          </Text>
+                          
+                          <HStack spacing={1} fontSize="sm" color="gray.500">
+                            <Icon as={FaClock} boxSize={3} />
+                            <Text>{formatDate(activity?.timestamp)}</Text>
+                          </HStack>
+                        </VStack>
+                      </Flex>
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Center py={8}>
+                  <VStack spacing={3}>
+                    <Icon as={FaUserCheck} boxSize={12} color="gray.300" />
+                    <Text color="gray.500" textAlign="center">
+                      No recent activity to display.
+                    </Text>
+                  </VStack>
+                </Center>
+              )}
+            </CardBody>
+          </Card>
+        </VStack>
+      </Container>
+    </Box>
   );
 };
 

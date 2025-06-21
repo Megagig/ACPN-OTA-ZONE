@@ -1,5 +1,47 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  VStack,
+  HStack,
+  Select,
+  FormControl,
+  FormLabel,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  SimpleGrid,
+  Spinner,
+  Center,
+  Icon,
+  useToast,
+  useColorModeValue,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Progress,
+  Alert,
+  AlertIcon,
+  AlertDescription
+} from '@chakra-ui/react';
+import { 
+  FaChartBar,
+  FaMapMarkedAlt,
+  FaFileExport
+} from 'react-icons/fa';
+import {
   BarChart,
   Bar,
   XAxis,
@@ -36,6 +78,17 @@ const CollectionReports: React.FC = () => {
   const [viewType, setViewType] = useState<'monthly' | 'quarterly' | 'yearly'>(
     'monthly'
   );
+
+  // Chakra UI hooks
+  const toast = useToast();
+  
+  // Color mode values
+  const bgGradient = useColorModeValue(
+    'linear(to-br, blue.50, purple.50, pink.50)',
+    'linear(to-br, gray.900, blue.900, purple.900)'
+  );
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => Array.from({ length: 5 }, (_, i) => currentYear - i), [currentYear]);
@@ -133,10 +186,17 @@ const CollectionReports: React.FC = () => {
           outstanding: 250000,
           pharmacyCount: 55,
         },
-      ];
-      setStateData(mockStateData);
+      ];      setStateData(mockStateData);
     } catch (err) {
-      setError('Failed to fetch collection data');
+      const errorMessage = 'Failed to fetch collection data';
+      setError(errorMessage);
+      toast({
+        title: 'Error Loading Data',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
       console.error('Error fetching collection data:', err);
     } finally {
       setLoading(false);
@@ -193,253 +253,329 @@ const CollectionReports: React.FC = () => {
   );
   const overallPercentage =
     totalTarget > 0 ? (totalCollected / totalTarget) * 100 : 0;
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient}>
+        <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+          <Center h="400px">
+            <VStack spacing={4}>
+              <Spinner size="xl" color="blue.500" thickness="4px" />
+              <Text fontSize="lg" fontWeight="medium">Loading collection reports...</Text>
+              <Text color="gray.500" fontSize="sm">Please wait while data is being loaded.</Text>
+            </VStack>
+          </Center>
+        </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-red-800">{error}</p>
-        <button
-          onClick={fetchCollectionData}
-          className="mt-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
+      <Box minH="100vh" bgGradient={bgGradient}>
+        <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+          <Alert status="error" borderRadius="md">
+            <AlertIcon />
+            <VStack align="start" spacing={2} flex={1}>
+              <AlertDescription>{error}</AlertDescription>
+              <Button
+                onClick={fetchCollectionData}
+                colorScheme="red"
+                size="sm"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </VStack>
+          </Alert>
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Collection Reports</h1>
-        <button
-          onClick={exportReport}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Export Report
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Year
-          </label>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
+    <Box minH="100vh" bgGradient={bgGradient}>
+      <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+        <VStack spacing={6} align="stretch">
+          {/* Header */}
+          <Flex 
+            direction={{ base: 'column', md: 'row' }} 
+            justify="space-between" 
+            align={{ base: 'start', md: 'center' }}
+            gap={4}
           >
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            View Type
-          </label>
-          <select
-            value={viewType}
-            onChange={(e) =>
-              setViewType(e.target.value as 'monthly' | 'quarterly' | 'yearly')
-            }
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
-          >
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </div>
-      </div>
+            <VStack align="start" spacing={2}>
+              <Heading 
+                size={{ base: 'lg', md: 'xl' }}
+                bgGradient="linear(to-r, blue.400, purple.500)"
+                bgClip="text"
+              >
+                Collection Reports
+              </Heading>
+              <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
+                Track and analyze pharmacy dues collection performance
+              </Text>
+            </VStack>
+            <Button
+              leftIcon={<Icon as={FaFileExport} />}
+              onClick={exportReport}
+              colorScheme="blue"
+              variant="solid"
+              size={{ base: 'sm', md: 'md' }}
+            >
+              Export Report
+            </Button>
+          </Flex>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Collected</h3>
-          <p className="text-2xl font-bold text-green-600">
-            ₦{totalCollected.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Target</h3>
-          <p className="text-2xl font-bold text-blue-600">
-            ₦{totalTarget.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">
-            Achievement Rate
-          </h3>
-          <p className="text-2xl font-bold text-purple-600">
-            {overallPercentage.toFixed(1)}%
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Active States</h3>
-          <p className="text-2xl font-bold text-gray-900">{stateData.length}</p>
-        </div>
-      </div>
+          {/* Filters */}
+          <Card bg={cardBg} shadow="sm" borderWidth="1px" borderColor={borderColor}>
+            <CardBody>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel fontSize="sm" fontWeight="medium">Year</FormLabel>
+                  <Select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={borderColor}
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <FormLabel fontSize="sm" fontWeight="medium">View Type</FormLabel>
+                  <Select
+                    value={viewType}
+                    onChange={(e) =>
+                      setViewType(e.target.value as 'monthly' | 'quarterly' | 'yearly')
+                    }
+                    bg={useColorModeValue('white', 'gray.700')}
+                    borderColor={borderColor}
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                  </Select>
+                </FormControl>
+              </SimpleGrid>
+            </CardBody>
+          </Card>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Collection vs Target Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Collection vs Target ({viewType})
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={collectionData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="period" />
-              <YAxis
-                tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
-              />
-              <Tooltip
-                formatter={(value: any, name: string) => [
-                  `${name}: ${value}`,
-                  `Total: ${value}`,
-                ]}
-              />
-              <Legend />
-              <Bar dataKey="collected" fill="#10b981" name="collected" />
-              <Bar dataKey="target" fill="#3b82f6" name="target" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+          {/* Summary Cards */}
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <StatLabel color="gray.500" fontSize="sm">Total Collected</StatLabel>
+                  <StatNumber color="green.500" fontSize={{ base: 'xl', md: '2xl' }}>
+                    ₦{totalCollected.toLocaleString()}
+                  </StatNumber>
+                  <StatHelpText>
+                    <Icon as={FaChartBar} mr={1} />
+                    Current period
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+            
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <StatLabel color="gray.500" fontSize="sm">Total Target</StatLabel>
+                  <StatNumber color="blue.500" fontSize={{ base: 'xl', md: '2xl' }}>
+                    ₦{totalTarget.toLocaleString()}
+                  </StatNumber>
+                  <StatHelpText>
+                    <Icon as={FaChartBar} mr={1} />
+                    Expected amount
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+            
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <StatLabel color="gray.500" fontSize="sm">Achievement Rate</StatLabel>
+                  <StatNumber color="purple.500" fontSize={{ base: 'xl', md: '2xl' }}>
+                    {overallPercentage.toFixed(1)}%
+                  </StatNumber>
+                  <StatHelpText>
+                    <Progress 
+                      value={overallPercentage} 
+                      colorScheme="purple" 
+                      size="sm" 
+                      borderRadius="full"
+                      mt={2}
+                    />
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+            
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardBody>
+                <Stat>
+                  <StatLabel color="gray.500" fontSize="sm">Active States</StatLabel>
+                  <StatNumber color="gray.700" fontSize={{ base: 'xl', md: '2xl' }}>
+                    {stateData.length}
+                  </StatNumber>
+                  <StatHelpText>
+                    <Icon as={FaMapMarkedAlt} mr={1} />
+                    Reporting states
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+          </SimpleGrid>          {/* Charts */}
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+            {/* Collection vs Target Chart */}
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardHeader>
+                <Heading size="md">
+                  Collection vs Target ({viewType})
+                </Heading>
+              </CardHeader>
+              <CardBody>
+                <Box h="300px">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={collectionData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis
+                        tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
+                      />
+                      <Tooltip
+                        formatter={(value: any, name: string) => [
+                          `${name}: ${value}`,
+                          `Total: ${value}`,
+                        ]}
+                      />
+                      <Legend />
+                      <Bar dataKey="collected" fill="#10b981" name="collected" />
+                      <Bar dataKey="target" fill="#3b82f6" name="target" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </CardBody>
+            </Card>
 
-        {/* Achievement Percentage Trend */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Achievement Trend
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={collectionData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="period" />
-              <YAxis tickFormatter={(value) => `${value}%`} />
-              <Tooltip
-                formatter={(value: any) => [
-                  `${value.toFixed(1)}%`,
-                  'Achievement',
-                ]}
-              />
-              <Line
-                type="monotone"
-                dataKey="percentage"
-                stroke="#8b5cf6"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+            {/* Achievement Percentage Trend */}
+            <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+              <CardHeader>
+                <Heading size="md">Achievement Trend</Heading>
+              </CardHeader>
+              <CardBody>
+                <Box h="300px">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={collectionData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis tickFormatter={(value) => `${value}%`} />
+                      <Tooltip
+                        formatter={(value: any) => [
+                          `${value.toFixed(1)}%`,
+                          'Achievement',
+                        ]}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="percentage"
+                        stroke="#8b5cf6"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </CardBody>
+            </Card>
+          </SimpleGrid>
 
-        {/* State-wise Collections */}
-        <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            State-wise Collections
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stateData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="state" />
-              <YAxis
-                tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
-              />
-              <Tooltip
-                formatter={(value: any, name: string) => [
-                  `${name}: ${value}`,
-                  `Total: ${value}`,
-                ]}
-              />
-              <Legend />
-              <Bar dataKey="collected" fill="#10b981" name="collected" />
-              <Bar dataKey="outstanding" fill="#f59e0b" name="outstanding" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+          {/* State-wise Collections Chart */}
+          <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+            <CardHeader>
+              <Heading size="md">State-wise Collections</Heading>
+            </CardHeader>
+            <CardBody>
+              <Box h="300px">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stateData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="state" />
+                    <YAxis
+                      tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`}
+                    />
+                    <Tooltip
+                      formatter={(value: any, name: string) => [
+                        `${name}: ${value}`,
+                        `Total: ${value}`,
+                      ]}
+                    />
+                    <Legend />
+                    <Bar dataKey="collected" fill="#10b981" name="collected" />
+                    <Bar dataKey="outstanding" fill="#f59e0b" name="outstanding" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardBody>
+          </Card>
 
-      {/* State-wise Details Table */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
-            State-wise Collection Details
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  State
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Collected
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Outstanding
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pharmacies
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Collection Rate
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {stateData.map((state) => {
-                const total = state.collected + state.outstanding;
-                const rate = total > 0 ? (state.collected / total) * 100 : 0;
+          {/* State-wise Details Table */}
+          <Card bg={cardBg} shadow="md" borderWidth="1px" borderColor={borderColor}>
+            <CardHeader>
+              <Heading size="md">State-wise Collection Details</Heading>
+            </CardHeader>
+            <CardBody px={0}>
+              <TableContainer>
+                <Table variant="simple" size="sm">
+                  <Thead bg={useColorModeValue('gray.50', 'gray.700')}>
+                    <Tr>
+                      <Th>State</Th>
+                      <Th>Collected</Th>
+                      <Th>Outstanding</Th>
+                      <Th>Pharmacies</Th>
+                      <Th>Collection Rate</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {stateData.map((state) => {
+                      const total = state.collected + state.outstanding;
+                      const rate = total > 0 ? (state.collected / total) * 100 : 0;
 
-                return (
-                  <tr key={state.state}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {state.state}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                      ₦{state.collected.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-yellow-600">
-                      ₦{state.outstanding.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {state.pharmacyCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                          <div
-                            className="bg-green-600 h-2 rounded-full"
-                            style={{ width: `${Math.min(rate, 100)}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-gray-600">
-                          {rate.toFixed(1)}%
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+                      return (
+                        <Tr key={state.state}>
+                          <Td fontWeight="medium">{state.state}</Td>
+                          <Td color="green.500">₦{state.collected.toLocaleString()}</Td>
+                          <Td color="yellow.500">₦{state.outstanding.toLocaleString()}</Td>
+                          <Td color="gray.600">{state.pharmacyCount}</Td>
+                          <Td>
+                            <HStack spacing={2}>
+                              <Progress 
+                                value={Math.min(rate, 100)} 
+                                colorScheme="green" 
+                                size="sm" 
+                                w="60px"
+                                borderRadius="full"
+                              />
+                              <Text fontSize="sm" color="gray.600">
+                                {rate.toFixed(1)}%
+                              </Text>
+                            </HStack>
+                          </Td>
+                        </Tr>
+                      );
+                    })}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+            </CardBody>
+          </Card>
+        </VStack>
+      </Container>
+    </Box>  );
 };
 
 export default CollectionReports;

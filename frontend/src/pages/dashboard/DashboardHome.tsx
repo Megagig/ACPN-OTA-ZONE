@@ -1,8 +1,8 @@
 import React from 'react';
-import ModernAdminDashboard from '../../components/dashboard/ModernAdminDashboard';
+import AdminDashboard from '../../components/dashboard/AdminDashboard';
 
 const DashboardHome: React.FC = () => {
-  return <ModernAdminDashboard />;
+  return <AdminDashboard />;
 };
 
 export default DashboardHome;

@@ -1,8 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Container,
+  Card,
+  CardBody,
+  CardHeader,
+  Heading,
+  VStack,
+  HStack,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  useToast,
+  Text,
+  useColorModeValue,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Flex,
+} from '@chakra-ui/react';
+import { ArrowBackIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
 import financialService from '../../services/financial.service';
 import pharmacyService from '../../services/pharmacy.service';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 
 const RecordPaymentForm: React.FC = () => {
   const [pharmacies, setPharmacies] = useState<any[]>([]);
@@ -11,10 +37,14 @@ const RecordPaymentForm: React.FC = () => {
   const [selectedDue, setSelectedDue] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
-  const [paymentReference, setPaymentReference] = useState('');
-  const [receipt, setReceipt] = useState<File | null>(null);
+  const [paymentReference, setPaymentReference] = useState('');  const [receipt, setReceipt] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  
   const navigate = useNavigate();
+  const toast = useToast();
+  const cardBg = useColorModeValue('white', 'gray.800');
+  
   const paymentTypes = [
     { value: 'due', label: 'Dues' },
     { value: 'donation', label: 'Donation' },
@@ -46,17 +76,33 @@ const RecordPaymentForm: React.FC = () => {
       setDues([]);
     }
   }, [selectedPharmacy, paymentType]);
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+    
+    if (!selectedPharmacy) newErrors.pharmacy = 'Please select a pharmacy';
+    if (!amount || parseFloat(amount) <= 0) newErrors.amount = 'Please enter a valid amount';
+    if (!paymentMethod) newErrors.paymentMethod = 'Please select a payment method';
+    if (!receipt) newErrors.receipt = 'Please upload a receipt';
+    if (paymentType === 'due' && !selectedDue) newErrors.due = 'Please select a due';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPharmacy || !amount || !paymentMethod || !receipt) {
-      toast.error('Please fill all required fields and upload a receipt.');
+    
+    if (!validateForm()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill all required fields correctly.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
       return;
     }
-    if (paymentType === 'due' && !selectedDue) {
-      toast.error('Please select a due.');
-      return;
-    }
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -65,168 +111,248 @@ const RecordPaymentForm: React.FC = () => {
       formData.append('amount', amount);
       formData.append('paymentMethod', paymentMethod);
       formData.append('paymentReference', paymentReference);
-      formData.append('receipt', receipt);
+      formData.append('receipt', receipt!);
       if (paymentType === 'due') formData.append('dueId', selectedDue);
       if (purpose) formData.append('purpose', purpose);
       if (description) formData.append('description', description);
       if (participant) formData.append('participant', participant);
       if (eventId) formData.append('eventId', eventId);
+      
       await financialService.recordPayment(formData);
-      toast.success('Payment recorded successfully!');
+      
+      toast({
+        title: 'Success',
+        description: 'Payment recorded successfully!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      
       navigate('/finances/payment-history');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to record payment.');
+      toast({
+        title: 'Error',
+        description: err.response?.data?.message || 'Failed to record payment.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
   };
-
   return (
-    <div className="container mx-auto max-w-lg p-6 bg-white rounded shadow mt-8">
-      <h2 className="text-xl font-bold mb-4">Record New Payment</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-1 font-medium">Payment Type</label>
-          <select
-            className="w-full border p-2 rounded"
-            value={paymentType}
-            onChange={e => setPaymentType(e.target.value)}
-            required
+    <Container maxW="2xl" py={6}>
+      <VStack spacing={6} align="stretch">
+        {/* Header */}
+        <Flex justify="space-between" align="center">
+          <Heading size="lg" color="gray.800">
+            Record New Payment
+          </Heading>
+          <Button
+            variant="outline"
+            leftIcon={<ArrowBackIcon />}
+            onClick={() => navigate(-1)}
           >
-            {paymentTypes.map(pt => (
-              <option key={pt.value} value={pt.value}>{pt.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Pharmacy</label>
-          <select
-            className="w-full border p-2 rounded"
-            value={selectedPharmacy}
-            onChange={e => setSelectedPharmacy(e.target.value)}
-            required
-          >
-            <option value="">Select Pharmacy</option>
-            {pharmacies.map(pharm => (
-              <option key={pharm._id} value={pharm._id}>{pharm.name}</option>
-            ))}
-          </select>
-        </div>
-        {paymentType === 'due' && (
-          <div>
-            <label className="block mb-1 font-medium">Due</label>
-            <select
-              className="w-full border p-2 rounded"
-              value={selectedDue}
-              onChange={e => setSelectedDue(e.target.value)}
-              required
-              disabled={!selectedPharmacy}
-            >
-              <option value="">Select Due</option>
-              {dues.map(due => (
-                <option key={due._id} value={due._id}>{due.title} (₦{due.amount})</option>
-              ))}
-            </select>
-          </div>
-        )}
-        {paymentType === 'event_fee' && (
-          <div>
-            <label className="block mb-1 font-medium">Event ID</label>
-            <input
-              className="w-full border p-2 rounded"
-              type="text"
-              value={eventId}
-              onChange={e => setEventId(e.target.value)}
-              placeholder="Enter Event ID or Name"
-              required
-            />
-            <label className="block mb-1 font-medium mt-2">Participant</label>
-            <input
-              className="w-full border p-2 rounded"
-              type="text"
-              value={participant}
-              onChange={e => setParticipant(e.target.value)}
-              placeholder="Participant Name"
-            />
-          </div>
-        )}
-        {(paymentType === 'donation' || paymentType === 'other' || paymentType === 'conference_fee' || paymentType === 'accommodation' || paymentType === 'seminar' || paymentType === 'transportation' || paymentType === 'building' || paymentType === 'registration_fee') && (
-          <div>
-            <label className="block mb-1 font-medium">Purpose</label>
-            <input
-              className="w-full border p-2 rounded"
-              type="text"
-              value={purpose}
-              onChange={e => setPurpose(e.target.value)}
-              placeholder="Purpose/Title"
-              required
-            />
-          </div>
-        )}
-        <div>
-          <label className="block mb-1 font-medium">Amount</label>
-          <input
-            className="w-full border p-2 rounded"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Description</label>
-          <textarea
-            className="w-full border p-2 rounded"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            placeholder="Description (optional)"
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Payment Method</label>
-          <select
-            className="w-full border p-2 rounded"
-            value={paymentMethod}
-            onChange={e => setPaymentMethod(e.target.value)}
-            required
-          >
-            <option value="bank_transfer">Bank Transfer</option>
-            <option value="cash">Cash</option>
-            <option value="cheque">Cheque</option>
-            <option value="mobile_payment">Mobile Payment</option>
-          </select>
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Payment Reference</label>
-          <input
-            className="w-full border p-2 rounded"
-            type="text"
-            value={paymentReference}
-            onChange={e => setPaymentReference(e.target.value)}
-            placeholder="e.g. Bank transaction ID"
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Receipt Upload</label>
-          <input
-            className="w-full border p-2 rounded"
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={e => setReceipt(e.target.files?.[0] || null)}
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
-          disabled={loading}
-        >
-          {loading ? 'Recording...' : 'Record Payment'}
-        </button>
-      </form>
-    </div>
+            Back
+          </Button>
+        </Flex>
+
+        {/* Form Card */}
+        <Card bg={cardBg} shadow="lg">
+          <CardHeader>
+            <Heading size="md">Payment Details</Heading>
+          </CardHeader>
+          <CardBody>
+            <Box as="form" onSubmit={handleSubmit}>
+              <VStack spacing={6}>
+                {/* Payment Type */}
+                <FormControl isInvalid={!!errors.paymentType}>
+                  <FormLabel>Payment Type <Text as="span" color="red.500">*</Text></FormLabel>
+                  <Select
+                    value={paymentType}
+                    onChange={e => setPaymentType(e.target.value)}
+                    bg="white"
+                  >
+                    {paymentTypes.map(pt => (
+                      <option key={pt.value} value={pt.value}>{pt.label}</option>
+                    ))}
+                  </Select>
+                  <FormErrorMessage>{errors.paymentType}</FormErrorMessage>
+                </FormControl>
+
+                {/* Pharmacy Selection */}
+                <FormControl isInvalid={!!errors.pharmacy}>
+                  <FormLabel>Pharmacy <Text as="span" color="red.500">*</Text></FormLabel>
+                  <Select
+                    value={selectedPharmacy}
+                    onChange={e => setSelectedPharmacy(e.target.value)}
+                    placeholder="Select Pharmacy"
+                    bg="white"
+                  >
+                    {pharmacies.map(pharm => (
+                      <option key={pharm._id} value={pharm._id}>{pharm.name}</option>
+                    ))}
+                  </Select>
+                  <FormErrorMessage>{errors.pharmacy}</FormErrorMessage>
+                </FormControl>
+
+                {/* Due Selection (conditional) */}
+                {paymentType === 'due' && (
+                  <FormControl isInvalid={!!errors.due}>
+                    <FormLabel>Due <Text as="span" color="red.500">*</Text></FormLabel>
+                    <Select
+                      value={selectedDue}
+                      onChange={e => setSelectedDue(e.target.value)}
+                      placeholder="Select Due"
+                      bg="white"
+                      isDisabled={!selectedPharmacy}
+                    >
+                      {dues.map(due => (
+                        <option key={due._id} value={due._id}>
+                          {due.title} (₦{due.amount})
+                        </option>
+                      ))}
+                    </Select>
+                    <FormErrorMessage>{errors.due}</FormErrorMessage>
+                  </FormControl>
+                )}
+
+                {/* Event Details (conditional) */}
+                {paymentType === 'event_fee' && (
+                  <VStack spacing={4} w="full">
+                    <FormControl>
+                      <FormLabel>Event ID</FormLabel>
+                      <Input
+                        value={eventId}
+                        onChange={e => setEventId(e.target.value)}
+                        placeholder="Enter Event ID or Name"
+                        bg="white"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>Participant</FormLabel>
+                      <Input
+                        value={participant}
+                        onChange={e => setParticipant(e.target.value)}
+                        placeholder="Participant Name"
+                        bg="white"
+                      />
+                    </FormControl>
+                  </VStack>
+                )}
+
+                {/* Purpose (conditional) */}
+                {(paymentType === 'donation' || paymentType === 'other' || 
+                  paymentType === 'conference_fee' || paymentType === 'accommodation' || 
+                  paymentType === 'seminar' || paymentType === 'transportation' || 
+                  paymentType === 'building' || paymentType === 'registration_fee') && (
+                  <FormControl>
+                    <FormLabel>Purpose <Text as="span" color="red.500">*</Text></FormLabel>
+                    <Input
+                      value={purpose}
+                      onChange={e => setPurpose(e.target.value)}
+                      placeholder="Purpose/Title"
+                      bg="white"
+                    />
+                  </FormControl>
+                )}
+
+                {/* Amount and Payment Method */}
+                <HStack w="full" spacing={4}>
+                  <FormControl isInvalid={!!errors.amount} flex={1}>
+                    <FormLabel>Amount (NGN) <Text as="span" color="red.500">*</Text></FormLabel>
+                    <NumberInput 
+                      min={0.01} 
+                      precision={2}
+                      value={amount}
+                      onChange={(value) => setAmount(value)}
+                    >
+                      <NumberInputField bg="white" placeholder="0.00" />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                    <FormErrorMessage>{errors.amount}</FormErrorMessage>
+                  </FormControl>
+
+                  <FormControl isInvalid={!!errors.paymentMethod} flex={1}>
+                    <FormLabel>Payment Method <Text as="span" color="red.500">*</Text></FormLabel>
+                    <Select
+                      value={paymentMethod}
+                      onChange={e => setPaymentMethod(e.target.value)}
+                      bg="white"
+                    >
+                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="cash">Cash</option>
+                      <option value="cheque">Cheque</option>
+                      <option value="mobile_payment">Mobile Payment</option>
+                    </Select>
+                    <FormErrorMessage>{errors.paymentMethod}</FormErrorMessage>
+                  </FormControl>
+                </HStack>
+
+                {/* Payment Reference */}
+                <FormControl>
+                  <FormLabel>Payment Reference</FormLabel>
+                  <Input
+                    value={paymentReference}
+                    onChange={e => setPaymentReference(e.target.value)}
+                    placeholder="e.g. Bank transaction ID"
+                    bg="white"
+                  />
+                </FormControl>
+
+                {/* Description */}
+                <FormControl>
+                  <FormLabel>Description</FormLabel>
+                  <Textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Description (optional)"
+                    rows={3}
+                    bg="white"
+                  />
+                </FormControl>
+
+                {/* Receipt Upload */}
+                <FormControl isInvalid={!!errors.receipt}>
+                  <FormLabel>Receipt Upload <Text as="span" color="red.500">*</Text></FormLabel>
+                  <Input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={e => setReceipt(e.target.files?.[0] || null)}
+                    bg="white"
+                    border="2px dashed"
+                    borderColor="gray.300"
+                    _hover={{ borderColor: 'gray.400' }}
+                    py={2}
+                  />
+                  <Text fontSize="sm" color="gray.500" mt={1}>
+                    Upload payment receipt (Image or PDF format)
+                  </Text>
+                  <FormErrorMessage>{errors.receipt}</FormErrorMessage>
+                </FormControl>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  colorScheme="blue"
+                  size="lg"
+                  w="full"
+                  isLoading={loading}
+                  loadingText="Recording Payment..."
+                  mt={4}
+                >
+                  Record Payment
+                </Button>
+              </VStack>
+            </Box>
+          </CardBody>
+        </Card>
+      </VStack>
+    </Container>
   );
 };
 

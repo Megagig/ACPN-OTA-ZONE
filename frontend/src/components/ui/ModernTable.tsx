@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardBody,
   Text,
-  HStack,
   Badge,
   Avatar,
   IconButton,
@@ -24,7 +23,7 @@ import {
   Skeleton,
   SkeletonText,
 } from '@chakra-ui/react';
-import { FiMoreHorizontal, FiEye, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiMoreHorizontal } from 'react-icons/fi';
 
 interface Column {
   key: string;
